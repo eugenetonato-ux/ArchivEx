@@ -64,10 +64,13 @@
             </a>
 
             <!-- DESKTOP NAV LINKS -->
-            <nav class="hidden md:flex items-center space-x-8 text-sm font-semibold text-slate-200">
+            <nav class="hidden md:flex items-center space-x-6 text-sm font-semibold text-slate-200">
                 <a href="{% url 'academics:home' %}" class="nav-link-navy {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Accueil</a>
                 <a href="{% url 'exams:liste' %}" class="nav-link-navy {% if request.resolver_match.url_name == 'liste' %}active{% endif %}">Épreuves</a>
                 <a href="{% url 'academics:filieres' %}" class="nav-link-navy {% if request.resolver_match.url_name == 'filieres' or request.resolver_match.url_name == 'matieres' %}active{% endif %}">UE</a>
+                <a href="{% url 'content:summary_list' %}" class="nav-link-navy {% if 'resumes' in request.path %}active{% endif %}">Résumés</a>
+                <a href="{% url 'content:guide_list' %}" class="nav-link-navy {% if 'guides' in request.path %}active{% endif %}">Guides</a>
+                <a href="{% url 'content:article_list' %}" class="nav-link-navy {% if 'conseils' in request.path %}active{% endif %}">Conseils</a>
                 <a href="{% url 'academics:about' %}" class="nav-link-navy {% if request.resolver_match.url_name == 'about' %}active{% endif %}">À propos</a>
             </nav>
 
@@ -80,8 +83,9 @@
                         <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                         </svg>
-                        <!-- RED/GOLD UNREAD DOT BADGE -->
-                        <span id="notification-badge" class="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-[#FBBF24] ring-2 ring-[#071A49]"></span>
+                        {% if unread_notifications_count > 0 %}
+                            <span id="notification-badge" class="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-[#FBBF24] ring-2 ring-[#071A49]"></span>
+                        {% endif %}
                     </button>
 
                     <!-- FUNCTIONAL NOTIFICATION DROPDOWN POPOVER -->
@@ -89,56 +93,40 @@
                         <div class="px-4 py-2 border-b border-slate-100 flex items-center justify-between">
                             <div class="flex items-center space-x-2">
                                 <h3 class="text-sm font-extrabold text-[#071A49]">Notifications</h3>
-                                <span id="notification-unread-count" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-[#2563EB]">3 nouvelles</span>
+                                {% if unread_notifications_count > 0 %}
+                                    <span id="notification-unread-count" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-[#2563EB]">{{ unread_notifications_count }} nouvelle{{ unread_notifications_count|pluralize }}</span>
+                                {% endif %}
                             </div>
-                            <button onclick="markAllNotificationsAsRead()" class="text-[11px] font-semibold text-[#2563EB] hover:underline">
-                                Tout marquer comme lu
-                            </button>
+                            <a href="{% url 'notifications:list' %}" class="text-[11px] font-semibold text-[#2563EB] hover:underline">
+                                Voir tout
+                            </a>
                         </div>
 
                         <!-- NOTIFICATION ITEMS -->
                         <div class="divide-y divide-slate-100 max-h-80 overflow-y-auto">
-                            <!-- ITEM 1 -->
-                            <div class="notification-item p-3.5 hover:bg-slate-50 transition-colors flex items-start space-x-3 cursor-pointer bg-blue-50/40">
-                                <div class="w-8 h-8 rounded-xl bg-blue-100 text-[#2563EB] flex items-center justify-center flex-shrink-0">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path></svg>
+                            {% for notif in recent_notifications %}
+                                <a href="{% url 'notifications:mark_read' notif.pk %}" class="notification-item p-3.5 hover:bg-slate-50 transition-colors flex items-start space-x-3 cursor-pointer {% if not notif.is_read %}bg-blue-50/40{% endif %}">
+                                    <div class="w-8 h-8 rounded-xl bg-blue-100 text-[#2563EB] flex items-center justify-center flex-shrink-0 font-bold text-xs">
+                                        🔔
+                                    </div>
+                                    <div class="flex-grow">
+                                        <p class="text-xs font-bold text-[#071A49] mb-0.5">{{ notif.title }}</p>
+                                        <p class="text-[11px] text-slate-600 leading-tight line-clamp-2">{{ notif.message }}</p>
+                                        <span class="text-[10px] text-slate-400 font-medium mt-1 block">{{ notif.created_at|date:"d M H:i" }}</span>
+                                    </div>
+                                </a>
+                            {% empty %}
+                                <div class="p-6 text-center text-xs text-slate-400 font-medium">
+                                    Aucune notification récente.
                                 </div>
-                                <div class="flex-grow">
-                                    <p class="text-xs font-bold text-[#071A49] mb-0.5">Bienvenue sur ArchivEx !</p>
-                                    <p class="text-[11px] text-slate-600 leading-tight">Accède facilement à la banque complète des anciennes épreuves</p>
-                                    <span class="text-[10px] text-slate-400 font-medium mt-1 block">Il y a 5 minutes</span>
-                                </div>
-                            </div>
-
-                            <!-- ITEM 2 -->
-                            <div class="notification-item p-3.5 hover:bg-slate-50 transition-colors flex items-start space-x-3 cursor-pointer bg-blue-50/40">
-                                <div class="w-8 h-8 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                </div>
-                                <div class="flex-grow">
-                                    <p class="text-xs font-bold text-[#071A49] mb-0.5">Nouvelle épreuve disponible</p>
-                                    <p class="text-[11px] text-slate-600 leading-tight">L'épreuve d'Analyse Mathématique 2024 (Session Normale) vient d'être ajoutée.</p>
-                                    <span class="text-[10px] text-slate-400 font-medium mt-1 block">Il y a 2 heures</span>
-                                </div>
-                            </div>
-
-                            <!-- ITEM 3 -->
-                            <div class="notification-item p-3.5 hover:bg-slate-50 transition-colors flex items-start space-x-3 cursor-pointer bg-blue-50/40">
-                                <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                                </div>
-                                <div class="flex-grow">
-                                    <p class="text-xs font-bold text-[#071A49] mb-0.5">Espace Annales ArchivEx</p>
-                                    <p class="text-[11px] text-slate-600 leading-tight">Accède à l'ensemble des épreuves et sujets de ton semestre.</p>
-                                    <span class="text-[10px] text-slate-400 font-medium mt-1 block">Hier</span>
-                                </div>
-                            </div>
+                            {% endfor %}
+                        </div>
                         </div>
 
                         <!-- DROPDOWN FOOTER -->
                         <div class="px-4 pt-2.5 pb-1 border-t border-slate-100 text-center">
-                            <a href="{% url 'exams:liste' %}" class="text-xs font-bold text-[#2563EB] hover:underline">
-                                Explorer toutes les épreuves 
+                            <a href="{% url 'notifications:list' %}" class="text-xs font-bold text-[#2563EB] hover:underline">
+                                Voir toutes les notifications
                             </a>
                         </div>
                     </div>

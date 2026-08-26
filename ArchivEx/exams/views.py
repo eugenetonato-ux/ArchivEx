@@ -12,6 +12,9 @@ from payments.models import SemesterAccess
 from academics.models import Subject
 
 
+from subscriptions.services import can_user_access
+
+
 @login_required
 def exam_list(request):
     """Vue des épreuves d'une UE ou de recherche d'épreuves (Connexion requise)."""
@@ -63,20 +66,12 @@ def exam_list(request):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    # Compute access and favorites for current user
-    user_accesses = set(
-        SemesterAccess.objects.filter(
-            Q(user=request.user) & (Q(activated_at__isnull=False) | Q(payments__status="reussi"))
-        ).values_list("semester_id", flat=True)
-    )
     user_favorites = set(
         Favorite.objects.filter(user=request.user).values_list("exam_id", flat=True)
     )
 
     for exam in page_obj:
-        exam.user_has_access = exam.is_free or (exam.semester_id in user_accesses) or SemesterAccess.objects.filter(
-            Q(user=request.user) & Q(filiere=exam.filiere) & (Q(activated_at__isnull=False) | Q(payments__status="reussi"))
-        ).exists()
+        exam.user_has_access = can_user_access(request.user, exam)
         exam.is_favorited = exam.id in user_favorites
 
     context = {
@@ -102,13 +97,7 @@ def exam_detail(request, pk):
         is_published=True
     )
 
-    has_access = exam.is_free
-    if not has_access:
-        has_access = SemesterAccess.objects.filter(
-            Q(user=request.user) &
-            (Q(semester=exam.semester) | Q(filiere=exam.filiere)) &
-            (Q(activated_at__isnull=False) | Q(payments__status="reussi"))
-        ).exists()
+    has_access = can_user_access(request.user, exam)
     is_favorited = Favorite.objects.filter(user=request.user, exam=exam).exists()
 
     context = {
@@ -124,20 +113,15 @@ def stream_exam_pdf(request, pk):
     """Vue de sécurité : Sert le fichier PDF de l'épreuve (Connexion requise)."""
     exam = get_object_or_404(Exam, pk=pk, is_published=True)
 
-    has_access = exam.is_free
-    if not has_access:
-        has_access = SemesterAccess.objects.filter(
-            Q(user=request.user) &
-            (Q(semester=exam.semester) | Q(filiere=exam.filiere)) &
-            (Q(activated_at__isnull=False) | Q(payments__status="reussi"))
-        ).exists()
+    has_access = can_user_access(request.user, exam)
 
     if not has_access:
         messages.warning(
             request,
-            "Cette épreuve est réservée aux étudiants disposant du Pass Semestre actif pour ce semestre."
+            "Cette épreuve est réservée aux étudiants disposant du Pass actif pour ce semestre."
         )
         return redirect("payments:pass_semestre", semester_id=exam.semester.id)
+
 
     if not exam.file or not os.path.exists(exam.file.path):
         raise Http404("Le fichier de l'épreuve est introuvable sur le serveur.")

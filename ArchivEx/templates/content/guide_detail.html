@@ -1,0 +1,70 @@
+{% extends "base/base.html" %}
+
+{% block title %}{{ guide.title }} — Guide {{ guide.subject.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-sm mb-8">
+        <span class="text-xs font-black text-[#2563EB] bg-blue-50 px-3 py-1 rounded-full uppercase mb-3 inline-block">
+            GUIDE — {{ guide.subject.name }}
+        </span>
+
+        <h1 class="text-2xl sm:text-3xl font-black text-[#071A49] mb-4">{{ guide.title }}</h1>
+
+        {% if guide.introduction %}
+            <p class="text-sm text-slate-600 bg-blue-50/50 p-4 rounded-xl border border-blue-100 mb-6 leading-relaxed">
+                {{ guide.introduction }}
+            </p>
+        {% endif %}
+
+        {% if has_access %}
+            <div class="space-y-6 text-sm text-slate-800 leading-relaxed pt-4">
+                {% if guide.objectives %}
+                    <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                        <h3 class="text-xs font-extrabold text-[#071A49] uppercase tracking-wider mb-2">🎯 Objectifs de la Matière</h3>
+                        <p class="text-xs text-slate-700 whitespace-pre-line">{{ guide.objectives }}</p>
+                    </div>
+                {% endif %}
+
+                {% if guide.how_to_study %}
+                    <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                        <h3 class="text-xs font-extrabold text-[#071A49] uppercase tracking-wider mb-2">📚 Méthodologie d'Étude</h3>
+                        <p class="text-xs text-slate-700 whitespace-pre-line">{{ guide.how_to_study }}</p>
+                    </div>
+                {% endif %}
+
+                {% if guide.key_concepts %}
+                    <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                        <h3 class="text-xs font-extrabold text-[#071A49] uppercase tracking-wider mb-2">💡 Notions & Concepts Clés</h3>
+                        <p class="text-xs text-slate-700 whitespace-pre-line">{{ guide.key_concepts }}</p>
+                    </div>
+                {% endif %}
+
+                {% if guide.common_mistakes %}
+                    <div class="bg-amber-50 p-5 rounded-2xl border border-amber-200 text-amber-900">
+                        <h3 class="text-xs font-extrabold uppercase tracking-wider mb-2">⚠️ Pièges Courants à Éviter</h3>
+                        <p class="text-xs text-amber-800 whitespace-pre-line">{{ guide.common_mistakes }}</p>
+                    </div>
+                {% endif %}
+
+                {% if guide.exam_strategy %}
+                    <div class="bg-emerald-50 p-5 rounded-2xl border border-emerald-200 text-emerald-900">
+                        <h3 class="text-xs font-extrabold uppercase tracking-wider mb-2">🏆 Stratégie pour l'Examen</h3>
+                        <p class="text-xs text-emerald-800 whitespace-pre-line">{{ guide.exam_strategy }}</p>
+                    </div>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="p-8 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 text-center my-6">
+                <h3 class="text-lg font-bold text-amber-900 mb-2">🔒 Guide Réservé aux Abonnés Premium</h3>
+                <p class="text-xs text-amber-800 mb-6 max-w-md mx-auto leading-relaxed">
+                    Débloquez l'accès à ce guide méthodologique en vous abonnant.
+                </p>
+                <a href="{% url 'payments:pass_semestre' guide.subject.semester.id %}" class="btn-primary py-3 px-8 text-xs font-black uppercase tracking-wider rounded-xl inline-block shadow-lg shadow-blue-600/25">
+                    Débloquer le Pass Semestre
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

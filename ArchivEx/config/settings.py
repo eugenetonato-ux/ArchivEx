@@ -42,6 +42,10 @@ INSTALLED_APPS = [
     "academics",
     "exams",
     "payments",
+    "subscriptions",
+    "content",
+    "contributors",
+    "notifications",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -66,10 +70,12 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "notifications.context_processors.notifications_context",
             ],
         },
     },
 ]
+
 
 WSGI_APPLICATION = "config.wsgi.application"
 
@@ -141,3 +147,4 @@ MAILERS = {
     },
 }
 PASS_SEMESTRE_PRIX_DEFAUT = config("PASS_SEMESTRE_PRIX_DEFAUT", default=2000, cast=int)
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

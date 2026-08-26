@@ -1,0 +1,26 @@
+{% extends "base/base.html" %}
+
+{% block title %}{{ article.title }} — Conseil ArchivEx{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-sm mb-8">
+        <span class="text-xs font-black text-[#2563EB] bg-blue-50 px-3 py-1 rounded-full uppercase mb-3 inline-block">
+            {{ article.get_category_display }}
+        </span>
+
+        <h1 class="text-2xl sm:text-3xl font-black text-[#071A49] mb-4">{{ article.title }}</h1>
+        <p class="text-xs text-slate-400 font-medium mb-6">Publié le {{ article.created_at|date:"d F Y" }}</p>
+
+        {% if article.summary %}
+            <p class="text-sm font-semibold text-[#071A49] bg-slate-50 p-4 rounded-xl border border-slate-200/80 mb-6 leading-relaxed">
+                {{ article.summary }}
+            </p>
+        {% endif %}
+
+        <div class="prose prose-slate max-w-none text-slate-800 text-sm leading-relaxed border-t border-slate-100 pt-6">
+            {{ article.content|linebreaks }}
+        </div>
+    </div>
+</div>
+{% endblock %}

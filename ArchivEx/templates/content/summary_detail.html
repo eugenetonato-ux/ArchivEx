@@ -1,0 +1,55 @@
+{% extends "base/base.html" %}
+
+{% block title %}{{ summary.title }} — Résumé {{ summary.subject.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-sm mb-8">
+        <div class="flex items-center gap-2 mb-4">
+            <span class="text-xs font-black text-[#2563EB] bg-blue-50 px-3 py-1 rounded-full uppercase">
+                {{ summary.subject.name }}
+            </span>
+            {% if summary.is_free %}
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded bg-emerald-50 text-emerald-700">GRATUIT</span>
+            {% else %}
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded bg-amber-50 text-amber-700">PREMIUM</span>
+            {% endif %}
+        </div>
+
+        <h1 class="text-2xl sm:text-3xl font-black text-[#071A49] mb-4">{{ summary.title }}</h1>
+
+        {% if summary.introduction %}
+            <p class="text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-200/80 mb-6 italic leading-relaxed">
+                {{ summary.introduction }}
+            </p>
+        {% endif %}
+
+        {% if has_access %}
+            <!-- WEB READER (Readable directly on the page!) -->
+            <div class="prose prose-slate max-w-none text-slate-800 text-sm leading-relaxed border-t border-slate-100 pt-6">
+                {{ summary.content|linebreaks }}
+            </div>
+
+            {% if summary.file %}
+                <div class="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
+                    <span class="text-xs text-slate-500 font-medium">Fichier PDF associé disponible</span>
+                    <a href="{{ summary.file.url }}" download class="btn-primary py-2.5 px-5 text-xs font-bold rounded-xl">
+                        Télécharger le PDF
+                    </a>
+                </div>
+            {% endif %}
+        {% else %}
+            <!-- PAYWALL ENFORCEMENT -->
+            <div class="p-8 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 text-center my-6">
+                <h3 class="text-lg font-bold text-amber-900 mb-2">🔒 Contenu Réservé aux Abonnés Premium</h3>
+                <p class="text-xs text-amber-800 mb-6 max-w-md mx-auto leading-relaxed">
+                    Ce résumé de cours est réservé aux étudiants disposant du Pass Semestre ou d'un abonnement actif pour {{ summary.subject.semester.filiere.name }}.
+                </p>
+                <a href="{% url 'payments:pass_semestre' summary.subject.semester.id %}" class="btn-primary py-3 px-8 text-xs font-black uppercase tracking-wider rounded-xl inline-block shadow-lg shadow-blue-600/25">
+                    Débloquer l'accès maintenant (Pass Semestre)
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

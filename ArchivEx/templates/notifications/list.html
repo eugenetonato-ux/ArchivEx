@@ -1,0 +1,50 @@
+{% extends "base/base.html" %}
+
+{% block title %}Mes Notifications — ArchivEx V2{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-black text-[#071A49]">Notifications</h1>
+            <p class="text-sm text-slate-500 font-medium mt-1">Restez informé des nouvelles épreuves, résumés et conseils de votre filière</p>
+        </div>
+        {% if unread_notifications_count > 0 %}
+            <a href="{% url 'notifications:mark_all_read' %}" class="text-xs font-bold text-[#2563EB] hover:underline bg-blue-50 px-4 py-2 rounded-xl">
+                Tout marquer comme lu
+            </a>
+        {% endif %}
+    </div>
+
+    <div class="space-y-3">
+        {% for notif in notifications %}
+            <div class="p-5 rounded-2xl border transition-all flex items-start justify-between {% if not notif.is_read %}bg-blue-50/40 border-blue-200{% else %}bg-white border-slate-200/80{% endif %}">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-blue-100 text-[#2563EB]">
+                            {{ notif.get_notification_type_display }}
+                        </span>
+                        {% if not notif.is_read %}
+                            <span class="w-2 h-2 rounded-full bg-blue-600 inline-block"></span>
+                        {% endif %}
+                        <span class="text-[11px] text-slate-400 font-medium">{{ notif.created_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    <h3 class="text-sm font-bold text-[#071A49]">{{ notif.title }}</h3>
+                    <p class="text-xs text-slate-600">{{ notif.message }}</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    {% if notif.link %}
+                        <a href="{% url 'notifications:mark_read' notif.pk %}" class="text-xs font-extrabold text-[#2563EB] hover:underline">
+                            Voir →
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <div class="text-center py-12 bg-white rounded-2xl border border-slate-200">
+                <p class="text-sm text-slate-500 font-medium">Vous n'avez aucune notification pour le moment.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

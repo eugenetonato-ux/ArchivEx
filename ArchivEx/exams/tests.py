@@ -7,8 +7,10 @@ from django.utils import timezone
 from academics.models import School, Level, Filiere, AcademicYear, Semester, Subject
 from exams.models import Exam
 from payments.models import SemesterAccess
+from subscriptions.services import can_user_access
 
 User = get_user_model()
+
 
 
 class ArchivExFlowTest(TestCase):
@@ -99,3 +101,68 @@ class ArchivExFlowTest(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "application/pdf")
+
+    def test_v2_summaries_guides_and_notifications(self):
+        from content.models import Summary, Guide
+        from subscriptions.models import UserSubscription
+        from contributors.models import ContributorProfile
+        from contributors.permissions import check_school_permission
+        from notifications.services import notify_target_students
+
+        # 1. Summary creation & access
+        summary = Summary.objects.create(
+            title="Résumé de Maths",
+            subject=self.subject,
+            content="Contenu résumé de maths...",
+            access_type="PREMIUM",
+            publication_status="PUBLISHED"
+        )
+        self.client.login(username="student@univ.edu", password="Password123!")
+
+        # Unsubscribed student -> Paywall active
+        res = self.client.get(reverse("content:summary_detail", kwargs={"pk": summary.id}))
+        self.assertFalse(res.context["has_access"])
+
+        # Grant Subscription -> Access allowed
+        UserSubscription.objects.create(
+            user=self.student,
+            semester=self.semester,
+            filiere=self.filiere,
+            school=self.school,
+            is_active=True
+        )
+        res = self.client.get(reverse("content:summary_detail", kwargs={"pk": summary.id}))
+        self.assertTrue(res.context["has_access"])
+
+
+        # 2. Contributor School Permission check
+        school_b = School.objects.create(name="FLASH", slug="flash", is_active=True)
+        contrib_user = User.objects.create_user(username="contrib@univ.edu", password="Password123!")
+        contrib_prof = ContributorProfile.objects.create(
+            user=contrib_user,
+            role="SCHOOL_CONTENT_MANAGER",
+            is_active=True
+        )
+        contrib_prof.assigned_schools.add(self.school)
+
+        self.assertTrue(check_school_permission(contrib_user, self.school))
+        self.assertFalse(check_school_permission(contrib_user, school_b))
+
+        # 3. Targeted Notification Engine test
+        from accounts.models import StudentProfile
+        StudentProfile.objects.create(
+            user=self.student,
+            school=self.school,
+            level=self.level,
+            filiere=self.filiere
+        )
+        count = notify_target_students(
+            school=self.school,
+            notification_type="NEW_SUMMARY",
+            title="Nouveau résumé de Maths",
+            message="Un nouveau résumé a été mis en ligne.",
+            link="/ressources/resumes/"
+        )
+        self.assertGreaterEqual(count, 1)
+
+

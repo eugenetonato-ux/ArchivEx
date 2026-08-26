@@ -90,12 +90,11 @@ def initier_paiement(request, semester_id):
 def confirmer_paiement(request, payment_id):
     """
     Simule la confirmation serveur d'un paiement (callback / webhook).
-    Active le SemesterAccess une fois le paiement valide.
-
-    Protégé par @require_POST : confirme un paiement et active un accès —
-    une requête GET (lien direct, prefetch) ne doit jamais déclencher cette
-    transition d'état.
+    Active le SemesterAccess et crée un UserSubscription valide 180 jours.
     """
+    from datetime import timedelta
+    from subscriptions.models import UserSubscription
+
     payment = get_object_or_404(Payment, pk=payment_id, user=request.user)
 
     if payment.status == "en_attente":
@@ -108,6 +107,20 @@ def confirmer_paiement(request, payment_id):
         if not access.activated_at:
             access.activated_at = now
             access.save()
+
+        # Créer / Activer l'abonnement V2
+        UserSubscription.objects.get_or_create(
+            user=request.user,
+            semester=access.semester,
+            filiere=access.filiere,
+            school=access.school,
+            payment=payment,
+            defaults={
+                "start_date": now,
+                "end_date": now + timedelta(days=180),
+                "is_active": True,
+            }
+        )
 
         messages.success(
             request,

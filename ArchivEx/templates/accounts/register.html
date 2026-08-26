@@ -101,6 +101,39 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const schoolSelect = document.getElementById("id_school");
+    const levelSelect = document.getElementById("id_level");
+    const filiereSelect = document.getElementById("id_filiere");
+
+    if (!schoolSelect || !levelSelect || !filiereSelect) return;
+
+    function updateFilieres() {
+        const schoolId = schoolSelect.value;
+        const levelId = levelSelect.value;
+        if (!schoolId) return;
+
+        fetch("{% url 'accounts:api_filieres' %}?school_id=" + schoolId + "&level_id=" + (levelId || ''))
+            .then(res => res.json())
+            .then(data => {
+                const currentVal = filiereSelect.value;
+                filiereSelect.innerHTML = '<option value="">-- Choisir la filière --</option>';
+                data.filieres.forEach(item => {
+                    const opt = document.createElement("option");
+                    opt.value = item.id;
+                    opt.textContent = item.name;
+                    if (item.id == currentVal) opt.selected = true;
+                    filiereSelect.appendChild(opt);
+                });
+            });
+    }
+
+    schoolSelect.addEventListener("change", updateFilieres);
+    levelSelect.addEventListener("change", updateFilieres);
+});
+</script>
 {% endblock %}
 
 {% block footer %}{% endblock %}

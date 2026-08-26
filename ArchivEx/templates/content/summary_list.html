@@ -1,0 +1,49 @@
+{% extends "base/base.html" %}
+
+{% block title %}Résumés de cours — ArchivEx V2{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-3xl font-black text-[#071A49]">Fiches & Résumés de Cours</h1>
+            <p class="text-sm text-slate-500 font-medium mt-1">Lisez vos résumés directement en ligne pour réviser efficacement vos UE</p>
+        </div>
+        <form method="get" class="flex gap-2">
+            <input type="text" name="q" value="{{ q }}" placeholder="Rechercher un résumé..." class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#2563EB] outline-none">
+            <button type="submit" class="px-4 py-2.5 bg-[#2563EB] text-white text-xs font-bold rounded-xl hover:bg-blue-700">Chercher</button>
+        </form>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for summary in summaries %}
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-full bg-blue-50 text-[#2563EB] border border-blue-100">
+                            {{ summary.subject.name }}
+                        </span>
+                        {% if summary.is_free %}
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">GRATUIT</span>
+                        {% else %}
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-700">PREMIUM</span>
+                        {% endif %}
+                    </div>
+                    <h3 class="text-lg font-bold text-[#071A49] mb-2 leading-snug">{{ summary.title }}</h3>
+                    <p class="text-xs text-slate-500 line-clamp-3 mb-4">{{ summary.introduction|default:summary.content|striptags|truncatewords:20 }}</p>
+                </div>
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+                    <span class="text-[11px] text-slate-400 font-medium">{{ summary.created_at|date:"d M Y" }}</span>
+                    <a href="{% url 'content:summary_detail' summary.pk %}" class="inline-flex items-center text-xs font-extrabold text-[#2563EB] hover:underline">
+                        Consulter →
+                    </a>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-span-full text-center py-12 bg-white rounded-2xl border border-slate-200">
+                <p class="text-sm text-slate-500 font-medium">Aucun résumé de cours disponible pour le moment.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

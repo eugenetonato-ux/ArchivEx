@@ -1,0 +1,36 @@
+{% extends "base/base.html" %}
+
+{% block title %}Guides de Matière — ArchivEx V2{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="mb-8">
+        <h1 class="text-3xl font-black text-[#071A49]">Guides Méthodologiques par Matière</h1>
+        <p class="text-sm text-slate-500 font-medium mt-1">Découvrez comment aborder vos UE, réussir vos examens et éviter les pièges classiques</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for guide in guides %}
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                <div>
+                    <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-full bg-blue-50 text-[#2563EB] border border-blue-100 mb-3 inline-block">
+                        {{ guide.subject.name }}
+                    </span>
+                    <h3 class="text-lg font-bold text-[#071A49] mb-2 leading-snug">{{ guide.title }}</h3>
+                    <p class="text-xs text-slate-500 line-clamp-3 mb-4">{{ guide.introduction|default:"Guide complet sur la méthodologie et la stratégie de préparation de cette UE." }}</p>
+                </div>
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+                    <span class="text-[11px] text-slate-400 font-medium">{{ guide.created_at|date:"d M Y" }}</span>
+                    <a href="{% url 'content:guide_detail' guide.pk %}" class="inline-flex items-center text-xs font-extrabold text-[#2563EB] hover:underline">
+                        Lire le guide →
+                    </a>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-span-full text-center py-12 bg-white rounded-2xl border border-slate-200">
+                <p class="text-sm text-slate-500 font-medium">Aucun guide de matière disponible pour le moment.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

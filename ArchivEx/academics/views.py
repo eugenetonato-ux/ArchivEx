@@ -42,6 +42,9 @@ def about_view(request):
     return render(request, "academics/about.html")
 
 
+from subscriptions.services import can_user_access
+
+
 @login_required
 def filiere_list_view(request):
     """
@@ -78,11 +81,7 @@ def filiere_list_view(request):
         subjects = Subject.objects.filter(semester=semester).annotate(
             exams_num=Count("exams")
         )
-        has_semester_access = SemesterAccess.objects.filter(
-            Q(user=request.user) &
-            (Q(semester=semester) | Q(filiere=semester.filiere)) &
-            (Q(activated_at__isnull=False) | Q(payments__status="reussi"))
-        ).exists()
+        has_semester_access = can_user_access(request.user, semester)
 
         total_exams_count = Exam.objects.filter(semester=semester, is_published=True).count()
         premium_exams_count = Exam.objects.filter(semester=semester, is_published=True, is_free=False).count()
@@ -108,17 +107,11 @@ def semester_list_view(request, filiere_id):
         exams_num=Count("subjects__exams")
     )
 
-    user_accesses = set(
-        SemesterAccess.objects.filter(
-            Q(user=request.user) & (Q(activated_at__isnull=False) | Q(payments__status="reussi"))
-        ).values_list("semester_id", flat=True)
-    )
-
     semesters_data = []
     for sem in semesters:
         semesters_data.append({
             "semester": sem,
-            "has_access": sem.id in user_accesses,
+            "has_access": can_user_access(request.user, sem),
         })
 
     context = {
@@ -140,11 +133,7 @@ def subject_list_view(request, semester_id):
         exams_num=Count("exams")
     )
 
-    has_semester_access = SemesterAccess.objects.filter(
-        Q(user=request.user) &
-        (Q(semester=semester) | Q(filiere=semester.filiere)) &
-        (Q(activated_at__isnull=False) | Q(payments__status="reussi"))
-    ).exists()
+    has_semester_access = can_user_access(request.user, semester)
 
     total_exams_count = Exam.objects.filter(semester=semester, is_published=True).count()
     premium_exams_count = Exam.objects.filter(semester=semester, is_published=True, is_free=False).count()
@@ -159,3 +148,4 @@ def subject_list_view(request, semester_id):
         "profile": getattr(request.user, "profile", None),
     }
     return render(request, "academics/matieres.html", context)
+

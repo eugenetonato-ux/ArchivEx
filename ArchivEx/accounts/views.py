@@ -57,19 +57,26 @@ def logout_view(request):
 @login_required
 def dashboard_view(request):
     profile = getattr(request.user, "profile", None)
-    
-    # Active accesses
+
+    # Active accesses (Legacy & V2)
     active_accesses = SemesterAccess.objects.filter(
         Q(user=request.user) & (Q(activated_at__isnull=False) | Q(payments__status="reussi"))
     ).select_related("semester", "filiere", "level", "school").distinct()
-    user_accesses = set(active_accesses.values_list("semester_id", flat=True))
+
+    from subscriptions.models import UserSubscription
+    from subscriptions.services import can_user_access
+    from content.models import Summary, Guide, Article
+
+    user_subscriptions = UserSubscription.objects.filter(
+        user=request.user, is_active=True
+    ).select_related("school", "filiere", "semester")
 
     # Favorites
     favorites = Favorite.objects.filter(user=request.user).select_related(
         "exam", "exam__subject", "exam__filiere"
     ).order_by("-created_at")[:6]
 
-    # Personalized UEs & Recent Exams matching student's academic context
+    # Personalized UEs & Content matching student's academic context
     user_ues = []
     active_semester = None
     if profile and profile.filiere:
@@ -88,17 +95,33 @@ def dashboard_view(request):
         ).select_related("subject", "semester", "filiere")[:6]
 
     for exam in recent_exams:
-        exam.user_has_access = exam.is_free or (exam.semester_id in user_accesses)
+        exam.user_has_access = can_user_access(request.user, exam)
+
+    # Summaries, Guides, Articles
+    recent_summaries = Summary.objects.filter(publication_status="PUBLISHED").select_related("subject")[:4]
+    for s in recent_summaries:
+        s.user_has_access = can_user_access(request.user, s)
+
+    recent_guides = Guide.objects.filter(publication_status="PUBLISHED").select_related("subject")[:4]
+    for g in recent_guides:
+        g.user_has_access = can_user_access(request.user, g)
+
+    recent_articles = Article.objects.filter(publication_status="PUBLISHED")[:3]
 
     context = {
         "profile": profile,
         "active_accesses": active_accesses,
+        "user_subscriptions": user_subscriptions,
         "active_semester": active_semester,
         "user_ues": user_ues,
         "favorites": favorites,
         "recent_exams": recent_exams,
+        "recent_summaries": recent_summaries,
+        "recent_guides": recent_guides,
+        "recent_articles": recent_articles,
     }
     return render(request, "dashboard/dashboard.html", context)
+
 
 
 @login_required
@@ -164,4 +187,31 @@ def profile_view(request):
         "active_accesses": active_accesses,
     }
     return render(request, "dashboard/profil.html", context)
+
+
+from django.http import JsonResponse
+from academics.models import Level, Filiere
+
+def api_levels_view(request):
+    """API JSON retournant les niveaux d'études filtrés par école."""
+    school_id = request.GET.get("school_id")
+    levels = Level.objects.filter(is_active=True)
+    if school_id:
+        levels = levels.filter(Q(school_id=school_id) | Q(school__isnull=True))
+    data = [{"id": l.id, "name": l.name, "code": l.code} for l in levels]
+    return JsonResponse({"levels": data})
+
+
+def api_filieres_view(request):
+    """API JSON retournant les filières filtrées par école et niveau."""
+    school_id = request.GET.get("school_id")
+    level_id = request.GET.get("level_id")
+    filieres = Filiere.objects.filter(is_active=True)
+    if school_id:
+        filieres = filieres.filter(school_id=school_id)
+    if level_id:
+        filieres = filieres.filter(level_id=level_id)
+    data = [{"id": f.id, "name": f.name} for f in filieres]
+    return JsonResponse({"filieres": data})
+
 
