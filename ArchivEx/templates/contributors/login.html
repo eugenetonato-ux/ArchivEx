@@ -1,0 +1,153 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion Administration — ArchivEx Staff</title>
+    
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', '"Inter"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Font Awesome 6 Icon System -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="min-h-screen bg-[#071A49] text-white flex items-center justify-center p-4 font-sans relative overflow-x-hidden">
+
+    <!-- BACKGROUND GLOW DECORATIONS -->
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- MAIN LOGIN CARD -->
+    <div class="max-w-md w-full bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-3xl p-7 sm:p-10 shadow-2xl shadow-black/50 relative z-10">
+        
+        <!-- BRANDING HEADER -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center space-x-2 bg-blue-500/10 border border-blue-500/30 px-3.5 py-1.5 rounded-full mb-4">
+                <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                <span class="text-[11px] font-extrabold uppercase tracking-widest text-blue-300">ESPACE STAFF & ADMIN</span>
+            </div>
+
+            <div class="flex justify-center mb-3">
+                <div class="w-12 h-12 rounded-2xl bg-white p-1 flex items-center justify-center shadow-lg">
+                    <img src="{% static 'images/logo.jpg' %}" alt="ArchivEx Logo" class="w-full h-full object-contain">
+                </div>
+            </div>
+
+            <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                Portail Administration
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-400 font-medium mt-1">
+                Authentification réservée aux gestionnaires de contenu et modérateurs ArchivEx.
+            </p>
+        </div>
+
+        <!-- MESSAGES FEEDBACK -->
+        {% if messages %}
+            <div class="mb-5 space-y-2">
+                {% for message in messages %}
+                    <div class="p-3.5 rounded-xl text-xs font-bold flex items-center space-x-2 border shadow-sm {% if message.tags == 'error' %}bg-rose-500/10 border-rose-500/30 text-rose-300{% elif message.tags == 'success' %}bg-emerald-500/10 border-emerald-500/30 text-emerald-300{% else %}bg-blue-500/10 border-blue-500/30 text-blue-300{% endif %}">
+                        <i class="fa-solid fa-circle-exclamation text-sm flex-shrink-0"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if error %}
+            <div class="mb-5 p-3.5 rounded-xl text-xs font-bold flex items-center space-x-2 bg-rose-500/10 border border-rose-500/30 text-rose-300 shadow-sm">
+                <i class="fa-solid fa-triangle-exclamation text-sm flex-shrink-0"></i>
+                <span>{{ error }}</span>
+            </div>
+        {% endif %}
+
+        <!-- FORM -->
+        <form method="post" action="{% url 'contributors:admin_login' %}{% if next %}?next={{ next }}{% endif %}" class="space-y-5">
+            {% csrf_token %}
+
+            {% if next %}
+                <input type="hidden" name="next" value="{{ next }}">
+            {% endif %}
+
+            <!-- USERNAME FIELD -->
+            <div>
+                <label for="id_username" class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-300 mb-1.5">
+                    Nom d'utilisateur ou E-mail
+                </label>
+                <div class="relative flex items-center">
+                    <div class="absolute left-3.5 pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-user text-sm"></i>
+                    </div>
+                    <input type="text" id="id_username" name="username" required value="{{ username|default:'' }}" placeholder="Ex: admin_school ou staff@archivex.cd" class="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/15 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:bg-white/10 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition-all font-medium">
+                </div>
+            </div>
+
+            <!-- PASSWORD FIELD -->
+            <div>
+                <label for="id_password" class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-300 mb-1.5">
+                    Mot de passe
+                </label>
+                <div class="relative flex items-center">
+                    <div class="absolute left-3.5 pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-lock text-sm"></i>
+                    </div>
+                    <input type="password" id="id_password" name="password" required placeholder="••••••••••••" class="w-full pl-10 pr-11 py-3 bg-white/5 border border-white/15 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:bg-white/10 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition-all font-medium">
+                    
+                    <button type="button" onclick="toggleAdminPasswordVisibility()" class="absolute right-3.5 text-slate-400 hover:text-slate-200 focus:outline-none" title="Afficher/Masquer">
+                        <i id="admin-eye-icon" class="fa-solid fa-eye text-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SUBMIT BUTTON -->
+            <button type="submit" class="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-extrabold rounded-xl shadow-lg shadow-blue-600/30 transition-all transform active:scale-[0.99] flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-right-to-bracket text-sm"></i>
+                <span>Se connecter au Dashboard Staff</span>
+            </button>
+        </form>
+
+        <!-- BACK TO MAIN SITE -->
+        <div class="mt-7 pt-6 border-t border-white/10 text-center">
+            <a href="{% url 'academics:home' %}" class="text-xs font-semibold text-slate-400 hover:text-white transition-colors inline-flex items-center space-x-1.5">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Retour au site principal ArchivEx</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function toggleAdminPasswordVisibility() {
+            const pwd = document.getElementById('id_password');
+            const icon = document.getElementById('admin-eye-icon');
+            if (pwd && icon) {
+                if (pwd.type === 'password') {
+                    pwd.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    pwd.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

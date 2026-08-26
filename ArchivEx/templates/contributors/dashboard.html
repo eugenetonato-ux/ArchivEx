@@ -1,0 +1,178 @@
+{% extends "contributors/admin_base.html" %}
+
+{% block title %}Tableau de bord Administration — ArchivEx{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+
+    <!-- ACTIVE CONTEXT HEADER BANNER -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-[#2563EB] mb-1 block">Vue d'ensemble contextuelle</span>
+            <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">
+                Administration — {{ active_school.name|default:"Toutes les universités" }}
+            </h1>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">
+                {% if active_filiere %}
+                    Gestion ciblée sur la filière <strong class="text-[#071A49]">{{ active_filiere.name }}</strong> ({{ active_filiere.level.name }}).
+                {% else %}
+                    Sélectionnez une filière spécifique pour restreindre la gestion.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="flex items-center space-x-2 shrink-0">
+            <a href="{% url 'contributors:exam_create' %}" class="btn-primary text-xs px-4 py-2.5 font-bold rounded-xl shadow-sm flex items-center space-x-2">
+                <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i>
+                <span>Ajouter une épreuve</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- METRICS CARDS GRID -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div class="w-8 h-8 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center text-sm font-bold mb-2">
+                <i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-black text-[#071A49]">{{ students_count }}</p>
+                <p class="text-[11px] font-bold text-slate-500">Étudiants</p>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div class="w-8 h-8 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center text-sm font-bold mb-2">
+                <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-black text-[#071A49]">{{ published_exams }}<span class="text-xs font-semibold text-slate-400">/{{ exams_count }}</span></p>
+                <p class="text-[11px] font-bold text-slate-500">Épreuves (publiées)</p>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold mb-2">
+                <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-black text-[#071A49]">{{ summaries_count }}</p>
+                <p class="text-[11px] font-bold text-slate-500">Résumés</p>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div class="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-sm font-bold mb-2">
+                <i class="fa-solid fa-compass" aria-hidden="true"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-black text-[#071A49]">{{ guides_count }}</p>
+                <p class="text-[11px] font-bold text-slate-500">Guides</p>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm font-bold mb-2">
+                <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-black text-[#071A49]">{{ articles_count }}</p>
+                <p class="text-[11px] font-bold text-slate-500">Conseils</p>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold mb-2">
+                <i class="fa-solid fa-credit-card" aria-hidden="true"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-black text-[#071A49]">{{ active_pass_count }}</p>
+                <p class="text-[11px] font-bold text-slate-500">Pass Actifs</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUICK CREATION ACTIONS BAR -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 mb-3">Actions d'édition rapides</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <a href="{% url 'contributors:exam_create' %}" class="p-3 rounded-xl bg-slate-50 border border-slate-200/80 hover:border-[#2563EB] hover:bg-blue-50/50 transition-all flex items-center space-x-2.5">
+                <i class="fa-solid fa-file-circle-plus text-[#2563EB] text-base" aria-hidden="true"></i>
+                <span class="text-xs font-bold text-[#071A49]">Publier une épreuve</span>
+            </a>
+            <a href="{% url 'contributors:summary_create' %}" class="p-3 rounded-xl bg-slate-50 border border-slate-200/80 hover:border-emerald-500 hover:bg-emerald-50/50 transition-all flex items-center space-x-2.5">
+                <i class="fa-solid fa-book-medical text-emerald-600 text-base" aria-hidden="true"></i>
+                <span class="text-xs font-bold text-[#071A49]">Ajouter un résumé</span>
+            </a>
+            <a href="{% url 'contributors:guide_create' %}" class="p-3 rounded-xl bg-slate-50 border border-slate-200/80 hover:border-purple-500 hover:bg-purple-50/50 transition-all flex items-center space-x-2.5">
+                <i class="fa-solid fa-compass text-purple-600 text-base" aria-hidden="true"></i>
+                <span class="text-xs font-bold text-[#071A49]">Ajouter un guide</span>
+            </a>
+            <a href="{% url 'contributors:article_create' %}" class="p-3 rounded-xl bg-slate-50 border border-slate-200/80 hover:border-amber-500 hover:bg-amber-50/50 transition-all flex items-center space-x-2.5">
+                <i class="fa-solid fa-pen-to-square text-amber-600 text-base" aria-hidden="true"></i>
+                <span class="text-xs font-bold text-[#071A49]">Rédiger un conseil</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- RECENT PUBLICATIONS TABLE -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm font-black text-[#071A49]">Dernières épreuves ajoutées</h2>
+            <a href="{% url 'contributors:exam_list' %}" class="text-xs font-bold text-[#2563EB] hover:underline">
+                Voir toutes les épreuves
+            </a>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="border-b border-slate-200 text-slate-400 font-bold uppercase text-[10px]">
+                        <th class="py-2.5 px-3">Titre de l'épreuve</th>
+                        <th class="py-2.5 px-3">Matière</th>
+                        <th class="py-2.5 px-3">Filière / Semestre</th>
+                        <th class="py-2.5 px-3">Accès</th>
+                        <th class="py-2.5 px-3">Statut</th>
+                        <th class="py-2.5 px-3 text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium">
+                    {% for ex in recent_exams %}
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="py-3 px-3 font-extrabold text-[#071A49]">{{ ex.title }}</td>
+                            <td class="py-3 px-3 text-slate-600">{{ ex.subject.name }}</td>
+                            <td class="py-3 px-3 text-slate-500">{{ ex.filiere.name }} ({{ ex.semester.label }})</td>
+                            <td class="py-3 px-3">
+                                {% if ex.is_free %}
+                                    <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold text-[10px]">Gratuit</span>
+                                {% else %}
+                                    <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-800 font-bold text-[10px]">Pass Semestre</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-3">
+                                {% if ex.is_published %}
+                                    <span class="px-2 py-0.5 rounded bg-blue-50 text-[#2563EB] font-bold text-[10px]">Publié</span>
+                                {% else %}
+                                    <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-bold text-[10px]">Brouillon</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-3 text-right">
+                                <a href="{% url 'contributors:exam_edit' ex.pk %}" class="text-xs font-bold text-[#2563EB] hover:underline">
+                                    Modifier
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="py-6 text-center text-slate-400 font-medium">
+                                Aucune épreuve enregistrée dans le contexte actif.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

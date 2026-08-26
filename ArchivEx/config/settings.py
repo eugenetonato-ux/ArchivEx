@@ -15,11 +15,7 @@ SECRET_KEY = config("SECRET_KEY")
 
 DEBUG = config("DEBUG", default=False, cast=bool)
 
-ALLOWED_HOSTS = config(
-    "ALLOWED_HOSTS",
-    default="localhost,127.0.0.1",
-    cast=Csv()
-)
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="127.0.0.1,localhost", cast=Csv())
 
 CSRF_TRUSTED_ORIGINS = config(
     "CSRF_TRUSTED_ORIGINS",
@@ -89,6 +85,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "notifications.context_processors.notifications_context",
+                "contributors.context_processors.admin_academic_context",
             ],
         },
     },
@@ -203,4 +200,15 @@ LOGGING = {
 }
 
 PASS_SEMESTRE_PRIX_DEFAUT = config("PASS_SEMESTRE_PRIX_DEFAUT", default=2000, cast=int)
+
+# Patch de compatibilité Python 3.14 pour les tests Django (duplication de Context)
+import sys
+if sys.version_info >= (3, 14):
+    from django.template.context import BaseContext
+    def _base_context_copy(self):
+        duplicate = self.__class__.__new__(self.__class__)
+        duplicate.dicts = self.dicts[:]
+        return duplicate
+    BaseContext.__copy__ = _base_context_copy
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

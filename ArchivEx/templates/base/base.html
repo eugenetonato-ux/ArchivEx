@@ -57,7 +57,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative">
             
             <!-- BRAND LOGO WITH VISIBLE WHITE BACKGROUND EMBLEM -->
-            <a href="{% url 'academics:home' %}" class="flex items-center space-x-3 group">
+            <a href="{% url 'academics:home' %}" class="flex items-center space-x-3 group shrink-0">
                 <div class="w-10 h-10 rounded-xl overflow-hidden border border-white/20 flex items-center justify-center bg-white shadow-md p-1 group-hover:scale-105 transition-transform">
                     <img src="{% static 'images/logo.jpg' %}" alt="ArchivEx Logo" class="w-full h-full object-contain">
                 </div>
@@ -66,118 +66,260 @@
                 </div>
             </a>
 
-            <!-- DESKTOP NAV LINKS -->
-            <nav class="hidden md:flex items-center space-x-6 text-sm font-semibold text-slate-200">
-                <a href="{% url 'academics:home' %}" class="nav-link-navy {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Accueil</a>
-                <a href="{% url 'exams:liste' %}" class="nav-link-navy {% if request.resolver_match.url_name == 'liste' %}active{% endif %}">Épreuves</a>
-                <a href="{% url 'academics:filieres' %}" class="nav-link-navy {% if request.resolver_match.url_name == 'filieres' or request.resolver_match.url_name == 'matieres' %}active{% endif %}">UE</a>
-                <a href="{% url 'content:summary_list' %}" class="nav-link-navy {% if 'resumes' in request.path %}active{% endif %}">Résumés</a>
-                <a href="{% url 'content:guide_list' %}" class="nav-link-navy {% if 'guides' in request.path %}active{% endif %}">Guides</a>
-                <a href="{% url 'content:student_guide' %}" class="nav-link-navy {% if 'guide-etudiant' in request.path %}active{% endif %}">Guide Étudiant</a>
-                <a href="{% url 'content:article_list' %}" class="nav-link-navy {% if 'conseils' in request.path %}active{% endif %}">Conseils</a>
-            </nav>
+            {% if user.is_authenticated %}
+                <!-- DESKTOP PRIMARY NAVIGATION LINKS (AUTHENTICATED ONLY) -->
+                <nav aria-label="Navigation principale" class="hidden md:flex items-center space-x-1 lg:space-x-2 text-sm font-semibold text-slate-200">
+                    <!-- ACCUEIL -->
+                    <a href="{% url 'academics:home' %}" class="px-3 py-2 rounded-xl hover:bg-white/10 hover:text-white transition-colors flex items-center space-x-1.5 {% if request.resolver_match.url_name == 'home' %}text-white font-bold bg-white/10{% else %}text-slate-200{% endif %}">
+                        <span>Accueil</span>
+                    </a>
 
-            <!-- GLOBAL NAVBAR SEARCH INPUT -->
-            <form action="{% url 'academics:global_search' %}" method="get" class="hidden lg:flex items-center relative">
-                <input type="text" name="q" placeholder="Rechercher une matière..." class="w-56 px-3.5 py-1.5 pl-8 rounded-xl bg-white/10 text-white placeholder-slate-300 text-xs border border-white/20 focus:outline-none focus:bg-white/20 focus:border-blue-400 transition-all font-medium">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 text-slate-300 text-xs"></i>
-            </form>
-
-            <!-- RIGHT ACTION BUTTONS / FUNCTIONAL NOTIFICATION BELL / USER PROFILE -->
-            <div class="flex items-center space-x-3">
-
-                
-                <!-- NOTIFICATION BELL APP BUTTON & POPUP CONTAINER -->
-                <div class="relative">
-                    <button type="button" id="notification-bell-btn" onclick="toggleNotifications()" aria-label="Notifications" aria-expanded="false" aria-haspopup="true" class="p-2 rounded-xl text-slate-200 hover:text-white hover:bg-white/10 transition-all relative">
-                        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                        </svg>
-                        {% if unread_notifications_count > 0 %}
-                            <span id="notification-badge" class="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-[#FBBF24] ring-2 ring-[#071A49]"></span>
-                        {% endif %}
-                    </button>
-
-                    <!-- FUNCTIONAL NOTIFICATION DROPDOWN POPOVER -->
-                    <div id="notification-dropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 py-3 z-50 text-left text-slate-800 animate-in fade-in slide-in-from-top-2 duration-200" role="region" aria-label="Menu des notifications">
-                        <div class="px-4 py-2 border-b border-slate-100 flex items-center justify-between">
-                            <div class="flex items-center space-x-2">
-                                <h3 class="text-sm font-extrabold text-[#071A49]">Notifications</h3>
-                                {% if unread_notifications_count > 0 %}
-                                    <span id="notification-unread-count" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-[#2563EB]">{{ unread_notifications_count }} nouvelle{{ unread_notifications_count|pluralize }}</span>
-                                {% endif %}
-                            </div>
-                            <a href="{% url 'notifications:list' %}" class="text-[11px] font-semibold text-[#2563EB] hover:underline">
-                                Voir tout
-                            </a>
-                        </div>
-
-                        <!-- NOTIFICATION ITEMS -->
-                        <div class="divide-y divide-slate-100 max-h-80 overflow-y-auto">
-                            {% for notif in recent_notifications %}
-                                <a href="{% url 'notifications:mark_read' notif.pk %}" class="notification-item p-3.5 hover:bg-slate-50 transition-colors flex items-start space-x-3 cursor-pointer {% if not notif.is_read %}bg-blue-50/40{% endif %}">
-                                    <div class="w-8 h-8 rounded-xl bg-blue-100 text-[#2563EB] flex items-center justify-center flex-shrink-0 font-bold text-xs">
-                                        <i class="fa-solid fa-bell text-[#2563EB]" aria-hidden="true"></i>
-                                    </div>
-                                    <div class="flex-grow">
-                                        <p class="text-xs font-bold text-[#071A49] mb-0.5">{{ notif.title }}</p>
-                                        <p class="text-[11px] text-slate-600 leading-tight line-clamp-2">{{ notif.message }}</p>
-                                        <span class="text-[10px] text-slate-400 font-medium mt-1 block">{{ notif.created_at|date:"d M H:i" }}</span>
-                                    </div>
-                                </a>
-                            {% empty %}
-                                <div class="p-6 text-center text-xs text-slate-400 font-medium">
-                                    Aucune notification récente.
+                    <!-- PARCOURS DROPDOWN -->
+                    <div class="relative group" id="parcours-dropdown-wrapper">
+                        <button type="button" id="parcours-menu-btn" onclick="toggleDropdown('parcours-dropdown')" aria-expanded="false" aria-haspopup="true" aria-controls="parcours-dropdown" class="px-3 py-2 rounded-xl hover:bg-white/10 hover:text-white transition-colors flex items-center space-x-1.5 text-slate-200 focus:outline-none {% if request.resolver_match.url_name == 'filieres' or request.resolver_match.url_name == 'semestres' or request.resolver_match.url_name == 'matieres' %}text-white font-bold bg-white/10{% endif %}">
+                            <span>Parcours</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-white transition-transform" aria-hidden="true"></i>
+                        </button>
+                        <div id="parcours-dropdown" class="hidden absolute left-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 text-left text-slate-800 animate-in fade-in slide-in-from-top-2 duration-150" role="menu">
+                            <a href="{% url 'academics:filieres' %}" class="px-4 py-2.5 hover:bg-slate-50 flex items-center space-x-3 text-xs font-bold text-[#071A49] transition-colors" role="menuitem">
+                                <div class="w-7 h-7 rounded-lg bg-blue-50 text-[#2563EB] flex items-center justify-center text-xs shrink-0">
+                                    <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
                                 </div>
-                            {% endfor %}
-                        </div>
-
-                        </div>
-
-                        <!-- DROPDOWN FOOTER -->
-                        <div class="px-4 pt-2.5 pb-1 border-t border-slate-100 text-center">
-                            <a href="{% url 'notifications:list' %}" class="text-xs font-bold text-[#2563EB] hover:underline">
-                                Voir toutes les notifications
+                                <div>
+                                    <span>Mon parcours</span>
+                                    <span class="block text-[10px] text-slate-400 font-normal">Filières & diplômes</span>
+                                </div>
+                            </a>
+                            <a href="{% url 'academics:filieres' %}" class="px-4 py-2.5 hover:bg-slate-50 flex items-center space-x-3 text-xs font-bold text-[#071A49] transition-colors" role="menuitem">
+                                <div class="w-7 h-7 rounded-lg bg-blue-50 text-[#2563EB] flex items-center justify-center text-xs shrink-0">
+                                    <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+                                </div>
+                                <div>
+                                    <span>Mon semestre</span>
+                                    <span class="block text-[10px] text-slate-400 font-normal">Semestres d'études</span>
+                                </div>
+                            </a>
+                            <a href="{% url 'academics:filieres' %}" class="px-4 py-2.5 hover:bg-slate-50 flex items-center space-x-3 text-xs font-bold text-[#071A49] transition-colors" role="menuitem">
+                                <div class="w-7 h-7 rounded-lg bg-blue-50 text-[#2563EB] flex items-center justify-center text-xs shrink-0">
+                                    <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+                                </div>
+                                <div>
+                                    <span>Mes matières</span>
+                                    <span class="block text-[10px] text-slate-400 font-normal">Unités d'enseignement</span>
+                                </div>
                             </a>
                         </div>
                     </div>
-                </div>
 
-                {% if user.is_authenticated %}
-                    <a href="{% url 'accounts:dashboard' %}" class="hidden sm:inline-flex items-center px-3.5 py-1.5 text-xs font-bold rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all">
-                        Tableau de bord
+                    <!-- RESSOURCES DROPDOWN -->
+                    <div class="relative group" id="ressources-dropdown-wrapper">
+                        <button type="button" id="ressources-menu-btn" onclick="toggleDropdown('ressources-dropdown')" aria-expanded="false" aria-haspopup="true" aria-controls="ressources-dropdown" class="px-3 py-2 rounded-xl hover:bg-white/10 hover:text-white transition-colors flex items-center space-x-1.5 text-slate-200 focus:outline-none {% if 'epreuves' in request.path or 'resumes' in request.path or 'guides' in request.path or 'conseils' in request.path %}text-white font-bold bg-white/10{% endif %}">
+                            <span>Ressources</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-white transition-transform" aria-hidden="true"></i>
+                        </button>
+                        <div id="ressources-dropdown" class="hidden absolute left-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 text-left text-slate-800 animate-in fade-in slide-in-from-top-2 duration-150" role="menu">
+                            <a href="{% url 'exams:liste' %}" class="px-4 py-2.5 hover:bg-slate-50 flex items-center space-x-3 text-xs font-bold text-[#071A49] transition-colors" role="menuitem">
+                                <div class="w-7 h-7 rounded-lg bg-blue-50 text-[#2563EB] flex items-center justify-center text-xs shrink-0">
+                                    <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+                                </div>
+                                <div>
+                                    <span>Épreuves</span>
+                                    <span class="block text-[10px] text-slate-400 font-normal">Annales & corrigés</span>
+                                </div>
+                            </a>
+                            <a href="{% url 'content:summary_list' %}" class="px-4 py-2.5 hover:bg-slate-50 flex items-center space-x-3 text-xs font-bold text-[#071A49] transition-colors" role="menuitem">
+                                <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs shrink-0">
+                                    <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+                                </div>
+                                <div>
+                                    <span>Résumés</span>
+                                    <span class="block text-[10px] text-slate-400 font-normal">Fiches de cours</span>
+                                </div>
+                            </a>
+                            <a href="{% url 'content:guide_list' %}" class="px-4 py-2.5 hover:bg-slate-50 flex items-center space-x-3 text-xs font-bold text-[#071A49] transition-colors" role="menuitem">
+                                <div class="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-xs shrink-0">
+                                    <i class="fa-solid fa-compass" aria-hidden="true"></i>
+                                </div>
+                                <div>
+                                    <span>Guides</span>
+                                    <span class="block text-[10px] text-slate-400 font-normal">Méthodologie d'examen</span>
+                                </div>
+                            </a>
+                            <a href="{% url 'content:article_list' %}" class="px-4 py-2.5 hover:bg-slate-50 flex items-center space-x-3 text-xs font-bold text-[#071A49] transition-colors" role="menuitem">
+                                <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs shrink-0">
+                                    <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
+                                </div>
+                                <div>
+                                    <span>Conseils</span>
+                                    <span class="block text-[10px] text-slate-400 font-normal">Astuces & réussite</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- GUIDE ÉTUDIANT -->
+                    <a href="{% url 'content:student_guide' %}" class="px-3 py-2 rounded-xl hover:bg-white/10 hover:text-white transition-colors text-slate-200 text-sm font-semibold {% if 'guide-etudiant' in request.path %}text-white font-bold bg-white/10{% endif %}">
+                        Guide étudiant
                     </a>
-                    <a href="{% url 'accounts:profile' %}" class="flex items-center space-x-2 p-1 rounded-full bg-white/10 border border-white/20 hover:border-[#3B82F6] transition-all">
-                        {% if user.profile and user.profile.avatar %}
-                            <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}" class="w-8 h-8 rounded-full object-cover">
-                        {% else %}
-                            <div class="w-8 h-8 rounded-full bg-[#2563EB] flex items-center justify-center text-xs font-bold text-white shadow-inner">
-                                {{ user.first_name|default:user.username|slice:":1"|upper }}
+                </nav>
+
+                <!-- RIGHT ACTION BUTTONS / SEARCH / NOTIFICATIONS / PROFILE MENU (AUTHENTICATED ONLY) -->
+                <div class="flex items-center space-x-2 sm:space-x-3">
+
+                    <!-- GLOBAL NAVBAR SEARCH INPUT (DESKTOP) -->
+                    <form action="{% url 'academics:global_search' %}" method="get" class="hidden lg:flex items-center relative">
+                        <input type="text" name="q" placeholder="Rechercher..." aria-label="Rechercher une matière" class="w-48 lg:w-56 px-3.5 py-1.5 pl-8 rounded-xl bg-white/10 text-white placeholder-slate-300 text-xs border border-white/20 focus:outline-none focus:bg-white/20 focus:border-blue-400 transition-all font-medium">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 text-slate-300 text-xs" aria-hidden="true"></i>
+                    </form>
+
+                    <!-- SEARCH ICON BUTTON (MOBILE ONLY) -->
+                    <button type="button" onclick="toggleMobileSearch()" aria-label="Rechercher" class="md:hidden p-2 rounded-xl text-slate-200 hover:text-white hover:bg-white/10 transition-all">
+                        <i class="fa-solid fa-magnifying-glass text-base" aria-hidden="true"></i>
+                    </button>
+                    
+                    <!-- NOTIFICATION BELL BUTTON & POPUP CONTAINER -->
+                    <div class="relative">
+                        <button type="button" id="notification-bell-btn" onclick="toggleNotifications()" aria-label="Notifications" aria-expanded="false" aria-haspopup="true" aria-controls="notification-dropdown" class="p-2 rounded-xl text-slate-200 hover:text-white hover:bg-white/10 transition-all relative">
+                            <i class="fa-solid fa-bell text-base" aria-hidden="true"></i>
+                            {% if unread_notifications_count > 0 %}
+                                <span id="notification-badge" class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#FBBF24] ring-2 ring-[#071A49]"></span>
+                            {% endif %}
+                        </button>
+
+                        <!-- FUNCTIONAL NOTIFICATION DROPDOWN POPOVER (MOBILE RESPONSIVE CENTERED FIX) -->
+                        <div id="notification-dropdown" class="hidden fixed inset-x-4 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 py-3 z-50 text-left text-slate-800 animate-in fade-in slide-in-from-top-2 duration-200" role="region" aria-label="Menu des notifications">
+                            <div class="px-4 py-2 border-b border-slate-100 flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <h3 class="text-sm font-extrabold text-[#071A49]">Notifications</h3>
+                                    {% if unread_notifications_count > 0 %}
+                                        <span id="notification-unread-count" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-[#2563EB]">{{ unread_notifications_count }} nouvelle{{ unread_notifications_count|pluralize }}</span>
+                                    {% endif %}
+                                </div>
+                                <a href="{% url 'notifications:list' %}" class="text-[11px] font-semibold text-[#2563EB] hover:underline">
+                                    Voir tout
+                                </a>
                             </div>
+
+                            <!-- NOTIFICATION ITEMS -->
+                            <div class="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+                                {% for notif in recent_notifications %}
+                                    <a href="{% url 'notifications:mark_read' notif.pk %}" class="notification-item p-3.5 hover:bg-slate-50 transition-colors flex items-start space-x-3 cursor-pointer {% if not notif.is_read %}bg-blue-50/40{% endif %}">
+                                        <div class="w-8 h-8 rounded-xl bg-blue-100 text-[#2563EB] flex items-center justify-center flex-shrink-0 font-bold text-xs">
+                                            <i class="fa-solid fa-bell text-[#2563EB]" aria-hidden="true"></i>
+                                        </div>
+                                        <div class="flex-grow">
+                                            <p class="text-xs font-bold text-[#071A49] mb-0.5">{{ notif.title }}</p>
+                                            <p class="text-[11px] text-slate-600 leading-tight line-clamp-2">{{ notif.message }}</p>
+                                            <span class="text-[10px] text-slate-400 font-medium mt-1 block">{{ notif.created_at|date:"d M H:i" }}</span>
+                                        </div>
+                                    </a>
+                                {% empty %}
+                                    <div class="p-6 text-center text-xs text-slate-400 font-medium">
+                                        Aucune notification récente.
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- DROPDOWN FOOTER -->
+                            <div class="px-4 pt-2.5 pb-1 border-t border-slate-100 text-center">
+                                <a href="{% url 'notifications:list' %}" class="text-xs font-bold text-[#2563EB] hover:underline">
+                                    Voir toutes les notifications
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PROFILE MENU DROPDOWN -->
+                    <div class="relative group" id="profile-dropdown-wrapper">
+                        <button type="button" id="profile-menu-btn" onclick="toggleDropdown('profile-dropdown')" aria-expanded="false" aria-haspopup="true" aria-controls="profile-dropdown" aria-label="Menu profil" class="flex items-center space-x-2 p-1.5 rounded-xl bg-white/10 border border-white/20 hover:border-[#3B82F6] hover:bg-white/20 transition-all focus:outline-none">
+                            {% if user.profile and user.profile.avatar %}
+                                <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}" class="w-7 h-7 rounded-full object-cover">
+                            {% else %}
+                                <div class="w-7 h-7 rounded-full bg-[#2563EB] flex items-center justify-center text-xs font-bold text-white shadow-inner">
+                                    {{ user.first_name|default:user.username|slice:":1"|upper }}
+                                </div>
+                            {% endif %}
+                            <span class="hidden md:inline-block text-xs font-bold text-white max-w-[100px] truncate">{{ user.first_name|default:user.username }}</span>
+                            <i class="hidden md:inline-block fa-solid fa-chevron-down text-[10px] text-slate-300" aria-hidden="true"></i>
+                        </button>
+                        
+                        <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 text-left text-slate-800 animate-in fade-in slide-in-from-top-2 duration-150" role="menu">
+                            <div class="px-4 py-2.5 border-b border-slate-100">
+                                <p class="text-xs font-extrabold text-[#071A49] truncate">{{ user.get_full_name|default:user.username }}</p>
+                                <p class="text-[10px] text-slate-500 truncate">{{ user.email }}</p>
+                            </div>
+                            <div class="py-1">
+                                <a href="{% url 'accounts:profile' %}" class="px-4 py-2 hover:bg-slate-50 flex items-center space-x-3 text-xs font-bold text-[#071A49] transition-colors" role="menuitem">
+                                    <i class="fa-solid fa-user text-slate-400 w-4" aria-hidden="true"></i>
+                                    <span>Mon profil</span>
+                                </a>
+                                <a href="{% url 'accounts:dashboard' %}" class="px-4 py-2 hover:bg-slate-50 flex items-center space-x-3 text-xs font-bold text-[#071A49] transition-colors" role="menuitem">
+                                    <i class="fa-solid fa-gauge text-slate-400 w-4" aria-hidden="true"></i>
+                                    <span>Tableau de bord</span>
+                                </a>
+                                <a href="{% url 'accounts:favoris' %}" class="px-4 py-2 hover:bg-slate-50 flex items-center space-x-3 text-xs font-bold text-[#071A49] transition-colors" role="menuitem">
+                                    <i class="fa-solid fa-star text-amber-400 w-4" aria-hidden="true"></i>
+                                    <span>Mes favoris</span>
+                                </a>
+                                <a href="{% url 'accounts:dashboard' %}" class="px-4 py-2 hover:bg-slate-50 flex items-center space-x-3 text-xs font-bold text-[#071A49] transition-colors" role="menuitem">
+                                    <i class="fa-solid fa-id-card text-[#2563EB] w-4" aria-hidden="true"></i>
+                                    <span>Mon Pass</span>
+                                </a>
+                            </div>
+                            <div class="pt-1 border-t border-slate-100">
+                                <a href="{% url 'accounts:logout' %}" class="px-4 py-2 hover:bg-rose-50 flex items-center space-x-3 text-xs font-bold text-rose-600 transition-colors" role="menuitem">
+                                    <i class="fa-solid fa-right-from-bracket text-rose-500 w-4" aria-hidden="true"></i>
+                                    <span>Déconnexion</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <!-- CLEAN MINIMAL PUBLIC NAVBAR ACTIONS (ANONYMOUS USER) -->
+                {% if request.resolver_match.url_name != 'home' %}
+                    <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
+                        <a href="{% url 'accounts:login' %}" class="btn-primary text-xs sm:text-sm px-3.5 sm:px-4 py-1.5 font-bold rounded-xl shadow-md shrink-0">
+                            Se connecter
+                        </a>
+                        {% if request.resolver_match.url_name != 'about' and request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' %}
+                            <a href="{% url 'accounts:register' %}" class="hidden sm:inline-block text-xs sm:text-sm font-semibold text-slate-200 hover:text-white px-2.5 sm:px-3.5 py-1.5 rounded-xl hover:bg-white/10 transition-colors">
+                                Créer un compte
+                            </a>
                         {% endif %}
-                    </a>
-                {% else %}
-                    <a href="{% url 'accounts:login' %}" class="text-xs sm:text-sm font-semibold text-slate-200 hover:text-white px-3 py-1.5 transition-colors">Se connecter</a>
-                    <a href="{% url 'accounts:register' %}" class="btn-primary text-xs sm:text-sm px-4 py-2">
-                        Créer un compte
-                    </a>
+                    </div>
                 {% endif %}
-            </div>
+            {% endif %}
         </div>
+
+        {% if user.is_authenticated %}
+            <!-- EXPANDABLE MOBILE SEARCH INPUT BAR (AUTHENTICATED ONLY) -->
+            <div id="mobile-search-bar" class="hidden md:hidden bg-[#071A49] border-b border-blue-900/60 px-4 py-2.5 transition-all">
+                <form action="{% url 'academics:global_search' %}" method="get" class="flex items-center space-x-2">
+                    <div class="relative flex-grow">
+                        <input type="text" name="q" placeholder="Rechercher une matière, épreuve..." aria-label="Rechercher" class="w-full px-3.5 py-2 pl-9 rounded-xl bg-white/10 text-white placeholder-slate-300 text-xs border border-white/20 focus:outline-none focus:bg-white/20 focus:border-blue-400 font-medium">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-300 text-xs" aria-hidden="true"></i>
+                    </div>
+                    <button type="submit" class="px-3.5 py-2 rounded-xl bg-[#2563EB] text-white text-xs font-bold shrink-0">
+                        Rechercher
+                    </button>
+                </form>
+            </div>
+        {% endif %}
     </header>
 
-    <!-- NOTIFICATION MESSAGES -->
+    <!-- NOTIFICATION MESSAGES FLASH ALERTS -->
     {% if messages %}
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
             {% for message in messages %}
                 <div class="mb-3 p-4 rounded-xl flex items-center justify-between border {% if message.tags == 'error' %}bg-rose-50 border-rose-200 text-rose-700{% elif message.tags == 'success' %}bg-emerald-50 border-emerald-200 text-emerald-700{% else %}bg-blue-50 border-blue-200 text-blue-700{% endif %} shadow-sm">
                     <div class="flex items-center space-x-3">
                         {% if message.tags == 'error' %}
-                            <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            <i class="fa-solid fa-triangle-exclamation text-rose-500 text-base" aria-hidden="true"></i>
                         {% elif message.tags == 'success' %}
-                            <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <i class="fa-solid fa-circle-check text-emerald-500 text-base" aria-hidden="true"></i>
                         {% else %}
-                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <i class="fa-solid fa-circle-info text-blue-500 text-base" aria-hidden="true"></i>
                         {% endif %}
                         <p class="text-sm font-medium">{{ message }}</p>
                     </div>
@@ -208,7 +350,7 @@
                         </div>
                     </a>
                     <p class="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-sm">
-                        La plateforme académique de référence conçue pour les étudiants afin de rechercher et consulter les épreuves des années précédentes.
+                        La plateforme de référence conçue pour les étudiants afin de rechercher et consulter les épreuves des années précédentes.
                     </p>
                 </div>
 
@@ -236,104 +378,218 @@
                     </ul>
                 </div>
 
-                <div>
-                    <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-4 border-b border-slate-700/60 pb-2">ArchivEx Pass</h3>
-                    <ul class="space-y-2.5 text-xs font-medium">
-                        <li><span class="text-slate-300">Accès épreuves Premium</span></li>
-                        <li><span class="text-slate-300">Paiement sécurisé</span></li>
-                    </ul>
-                </div>
-
             </div>
 
             <!-- SUB FOOTER -->
             <div class="mt-10 pt-6 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 text-xs text-slate-400">
                 <p>© {% now "Y" %} ArchivEx. Tous droits réservés.</p>
-                
             </div>
         </div>
     </footer>
     {% endblock %}
 
-    <!-- MOBILE BOTTOM NAVIGATION DOCK -->
-    <nav class="md:hidden mobile-bottom-dock">
-        <!-- ACCUEIL -->
-        <a href="{% url 'academics:home' %}" class="dock-item {% if request.resolver_match.url_name == 'home' %}dock-item-active{% endif %}">
-            <svg class="w-5 h-5 mb-1" fill="{% if request.resolver_match.url_name == 'home' %}currentColor{% else %}none{% endif %}" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-            </svg>
-            <span>Accueil</span>
-        </a>
+    {% if user.is_authenticated %}
+        <!-- MOBILE BOTTOM NAVIGATION DOCK (AUTHENTICATED ONLY) -->
+        <nav class="md:hidden mobile-bottom-dock" aria-label="Navigation principale mobile">
+            <!-- ACCUEIL -->
+            <a href="{% url 'academics:home' %}" class="dock-item {% if request.resolver_match.url_name == 'home' %}dock-item-active{% endif %}">
+                <i class="fa-solid fa-house text-base mb-0.5" aria-hidden="true"></i>
+                <span>Accueil</span>
+            </a>
 
-        <!-- UE (EX-MATIÈRES) -->
-        <a href="{% url 'academics:filieres' %}" class="dock-item {% if request.resolver_match.url_name == 'filieres' or request.resolver_match.url_name == 'matieres' %}dock-item-active{% endif %}">
-            <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-            </svg>
-            <span>UE</span>
-        </a>
+            <!-- PARCOURS -->
+            <a href="{% url 'academics:filieres' %}" class="dock-item {% if request.resolver_match.url_name == 'filieres' or request.resolver_match.url_name == 'semestres' or request.resolver_match.url_name == 'matieres' %}dock-item-active{% endif %}">
+                <i class="fa-solid fa-graduation-cap text-base mb-0.5" aria-hidden="true"></i>
+                <span>Parcours</span>
+            </a>
 
-        <!-- RECHERCHE / ÉPREUVES -->
-        <a href="{% url 'exams:liste' %}" class="dock-item {% if request.resolver_match.url_name == 'liste' %}dock-item-active{% endif %}">
-            <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
-            <span>Recherche</span>
-        </a>
+            <!-- RESSOURCES -->
+            <button type="button" onclick="openMobileResourcesSheet()" aria-label="Menu des ressources" aria-haspopup="true" aria-expanded="false" class="dock-item {% if 'epreuves' in request.path or 'resumes' in request.path or 'guides' in request.path or 'conseils' in request.path or 'guide-etudiant' in request.path %}dock-item-active{% endif %}">
+                <i class="fa-solid fa-layer-group text-base mb-0.5" aria-hidden="true"></i>
+                <span>Ressources</span>
+            </button>
 
-        <!-- FAVORIS -->
-        <a href="{% url 'accounts:favoris' %}" class="dock-item {% if request.resolver_match.url_name == 'favoris' %}dock-item-active{% endif %}">
-            <svg class="w-5 h-5 mb-1" fill="{% if request.resolver_match.url_name == 'favoris' %}currentColor{% else %}none{% endif %}" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-            </svg>
-            <span>Favoris</span>
-        </a>
+            <!-- NOTIFICATIONS -->
+            <a href="{% url 'notifications:list' %}" class="dock-item {% if request.resolver_match.url_name == 'list' and 'notifications' in request.path %}dock-item-active{% endif %} relative">
+                <i class="fa-solid fa-bell text-base mb-0.5" aria-hidden="true"></i>
+                {% if unread_notifications_count > 0 %}
+                    <span class="absolute top-1 right-3 w-2 h-2 rounded-full bg-[#FBBF24] ring-2 ring-white"></span>
+                {% endif %}
+                <span>Notifs</span>
+            </a>
 
-        <!-- PROFIL -->
-        <a href="{% if user.is_authenticated %}{% url 'accounts:profile' %}{% else %}{% url 'accounts:login' %}{% endif %}" class="dock-item {% if request.resolver_match.url_name == 'profile' or request.resolver_match.url_name == 'login' %}dock-item-active{% endif %}">
-            <svg class="w-5 h-5 mb-1" fill="{% if request.resolver_match.url_name == 'profile' %}currentColor{% else %}none{% endif %}" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-            </svg>
-            <span>Profil</span>
-        </a>
-    </nav>
+            <!-- PROFIL -->
+            <a href="{% url 'accounts:profile' %}" class="dock-item {% if request.resolver_match.url_name == 'profile' or request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'favoris' %}dock-item-active{% endif %}">
+                <i class="fa-solid fa-user text-base mb-0.5" aria-hidden="true"></i>
+                <span>Profil</span>
+            </a>
+        </nav>
+    {% endif %}
 
-    <!-- JAVASCRIPT FOR FUNCTIONAL NOTIFICATION BELL DROPDOWN APP -->
+    <!-- MOBILE RESOURCES BOTTOM SHEET -->
+    <div id="mobile-resources-sheet" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeMobileResourcesSheet()">
+        <div class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl border-t border-slate-200 p-6 shadow-2xl md:hidden" onclick="event.stopPropagation()">
+            <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-5"></div>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-extrabold text-[#071A49]">Ressources académiques</h3>
+                <button type="button" onclick="closeMobileResourcesSheet()" aria-label="Fermer le menu des ressources" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:text-slate-800">
+                    <i class="fa-solid fa-xmark text-sm" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <a href="{% url 'exams:liste' %}" class="flex items-center space-x-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-100 hover:border-[#2563EB]/40 hover:bg-blue-50/50 transition-all">
+                    <div class="w-9 h-9 rounded-xl bg-blue-100 text-[#2563EB] flex items-center justify-center font-bold text-sm shrink-0">
+                        <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-[#071A49]">Épreuves</p>
+                        <p class="text-[10px] text-slate-500">Annales & sujets</p>
+                    </div>
+                </a>
+                <a href="{% url 'content:summary_list' %}" class="flex items-center space-x-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-100 hover:border-[#2563EB]/40 hover:bg-blue-50/50 transition-all">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm shrink-0">
+                        <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-[#071A49]">Résumés</p>
+                        <p class="text-[10px] text-slate-500">Fiches de cours</p>
+                    </div>
+                </a>
+                <a href="{% url 'content:guide_list' %}" class="flex items-center space-x-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-100 hover:border-[#2563EB]/40 hover:bg-blue-50/50 transition-all">
+                    <div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-sm shrink-0">
+                        <i class="fa-solid fa-compass" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-[#071A49]">Guides</p>
+                        <p class="text-[10px] text-slate-500">Méthodologie</p>
+                    </div>
+                </a>
+                <a href="{% url 'content:article_list' %}" class="flex items-center space-x-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-100 hover:border-[#2563EB]/40 hover:bg-blue-50/50 transition-all">
+                    <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-sm shrink-0">
+                        <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-[#071A49]">Conseils</p>
+                        <p class="text-[10px] text-slate-500">Astuces études</p>
+                    </div>
+                </a>
+            </div>
+            <a href="{% url 'content:student_guide' %}" class="flex items-center justify-between p-3.5 rounded-2xl bg-[#071A49] text-white transition-all">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-[#3B82F6]">
+                        <i class="fa-solid fa-graduation-cap text-xs" aria-hidden="true"></i>
+                    </div>
+                    <span class="text-xs font-bold">Guide étudiant ArchivEx</span>
+                </div>
+                <i class="fa-solid fa-arrow-right text-xs text-blue-300" aria-hidden="true"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT FOR FUNCTIONAL DROPDOWNS & NAVIGATION -->
     <script>
-        function toggleNotifications() {
-            const bellBtn = document.getElementById('notification-bell-btn');
-            const dropdown = document.getElementById('notification-dropdown');
-            if (dropdown) {
-                const isHidden = dropdown.classList.toggle('hidden');
-                if (bellBtn) {
-                    bellBtn.setAttribute('aria-expanded', !isHidden);
-                }
-            }
-        }
-
-        function markAllNotificationsAsRead() {
-            const badge = document.getElementById('notification-badge');
-            const unreadCount = document.getElementById('notification-unread-count');
-            const items = document.querySelectorAll('.notification-item');
+        function toggleDropdown(dropdownId) {
+            const targetDropdown = document.getElementById(dropdownId);
+            const allDropdowns = ['parcours-dropdown', 'ressources-dropdown', 'profile-dropdown', 'notification-dropdown'];
             
-            if (badge) badge.classList.add('hidden');
-            if (unreadCount) {
-                unreadCount.textContent = '0 nouvelle';
-                unreadCount.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500';
-            }
-            items.forEach(item => {
-                item.classList.remove('bg-blue-50/40');
+            allDropdowns.forEach(id => {
+                if (id !== dropdownId) {
+                    const el = document.getElementById(id);
+                    if (el && !el.classList.contains('hidden')) {
+                        el.classList.add('hidden');
+                        updateAria(id, false);
+                    }
+                }
             });
+
+            if (targetDropdown) {
+                const isHidden = targetDropdown.classList.toggle('hidden');
+                updateAria(dropdownId, !isHidden);
+            }
         }
 
-        // Close dropdown when clicking outside
+        function toggleNotifications() {
+            toggleDropdown('notification-dropdown');
+        }
+
+        function toggleMobileSearch() {
+            const searchBar = document.getElementById('mobile-search-bar');
+            if (searchBar) {
+                searchBar.classList.toggle('hidden');
+            }
+        }
+
+        function openMobileResourcesSheet() {
+            const sheet = document.getElementById('mobile-resources-sheet');
+            if (sheet) {
+                sheet.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+        }
+
+        function closeMobileResourcesSheet() {
+            const sheet = document.getElementById('mobile-resources-sheet');
+            if (sheet) {
+                sheet.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+
+        function updateAria(dropdownId, isExpanded) {
+            let btnId = '';
+            if (dropdownId === 'parcours-dropdown') btnId = 'parcours-menu-btn';
+            else if (dropdownId === 'ressources-dropdown') btnId = 'ressources-menu-btn';
+            else if (dropdownId === 'profile-dropdown') btnId = 'profile-menu-btn';
+            else if (dropdownId === 'notification-dropdown') btnId = 'notification-bell-btn';
+
+            if (btnId) {
+                const btn = document.getElementById(btnId);
+                if (btn) btn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+            }
+        }
+
+        // Close dropdowns on outside click or Escape key
         document.addEventListener('click', function(event) {
-            const bellBtn = document.getElementById('notification-bell-btn');
-            const dropdown = document.getElementById('notification-dropdown');
-            if (dropdown && !dropdown.classList.contains('hidden')) {
-                if (bellBtn && !bellBtn.contains(event.target) && !dropdown.contains(event.target)) {
-                    dropdown.classList.add('hidden');
-                    if (bellBtn) bellBtn.setAttribute('aria-expanded', 'false');
+            const wrappers = [
+                { dropdownId: 'parcours-dropdown', wrapperId: 'parcours-dropdown-wrapper' },
+                { dropdownId: 'ressources-dropdown', wrapperId: 'ressources-dropdown-wrapper' },
+                { dropdownId: 'profile-dropdown', wrapperId: 'profile-dropdown-wrapper' },
+                { dropdownId: 'notification-dropdown', btnId: 'notification-bell-btn' }
+            ];
+
+            wrappers.forEach(item => {
+                const dropdown = document.getElementById(item.dropdownId);
+                if (dropdown && !dropdown.classList.contains('hidden')) {
+                    let inside = false;
+                    if (item.wrapperId) {
+                        const wrapper = document.getElementById(item.wrapperId);
+                        if (wrapper && wrapper.contains(event.target)) inside = true;
+                    }
+                    if (item.btnId) {
+                        const btn = document.getElementById(item.btnId);
+                        if (btn && (btn.contains(event.target) || dropdown.contains(event.target))) inside = true;
+                    }
+                    if (!inside) {
+                        dropdown.classList.add('hidden');
+                        updateAria(item.dropdownId, false);
+                    }
+                }
+            });
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                ['parcours-dropdown', 'ressources-dropdown', 'profile-dropdown', 'notification-dropdown'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el && !el.classList.contains('hidden')) {
+                        el.classList.add('hidden');
+                        updateAria(id, false);
+                    }
+                });
+                closeMobileResourcesSheet();
+                const searchBar = document.getElementById('mobile-search-bar');
+                if (searchBar && !searchBar.classList.contains('hidden')) {
+                    searchBar.classList.add('hidden');
                 }
             }
         });

@@ -209,3 +209,150 @@ class GlobalErrorPagesAndUIStatesTest(TestCase):
             for emoji in emojis:
                 self.assertNotIn(emoji, content, f"Emoji {emoji} found in response for {endpoint}")
 
+
+class Phase10PublicAndSearchTests(TestCase):
+    """Suite de tests automatisés pour la Phase 10 (Expérience Publique & Recherche Intelligente)."""
+
+    def setUp(self):
+        self.client = Client()
+
+        # Academic hierarchy setup
+        self.school = School.objects.create(name="ENEAM", code="ENEAM", slug="eneam", is_active=True)
+        self.level = Level.objects.create(name="Licence 1", code="L1")
+        self.filiere = Filiere.objects.create(school=self.school, level=self.level, name="Informatique")
+        self.year = AcademicYear.objects.create(label="2025-2026")
+        self.semester = Semester.objects.create(filiere=self.filiere, academic_year=self.year, label="Semestre 1")
+
+        # Subjects for search testing
+        self.subject_math = Subject.objects.create(semester=self.semester, name="Mathématiques approfondies")
+        self.subject_droit = Subject.objects.create(semester=self.semester, name="Introduction au droit")
+        self.subject_droit_exact = Subject.objects.create(semester=self.semester, name="Droit")
+        self.subject_eco = Subject.objects.create(semester=self.semester, name="Économie générale")
+
+        # Exam for search testing
+        self.exam_published = Exam.objects.create(
+            title="Analyse mathématique L1",
+            subject=self.subject_math,
+            filiere=self.filiere,
+            level=self.level,
+            academic_year=self.year,
+            semester=self.semester,
+            year="2025",
+            exam_type="EXAM",
+            is_published=True,
+            is_free=True
+        )
+
+        self.exam_draft = Exam.objects.create(
+            title="Sujet confidentiel brouillon",
+            subject=self.subject_math,
+            filiere=self.filiere,
+            level=self.level,
+            academic_year=self.year,
+            semester=self.semester,
+            year="2025",
+            exam_type="EXAM",
+            is_published=False
+        )
+
+        # Authenticated student setup
+        self.student = User.objects.create_user(username="phase10_student@univ.edu", password="Password123!")
+        StudentProfile.objects.create(user=self.student, school=self.school, level=self.level, filiere=self.filiere)
+
+    def test_public_navbar_rendering_for_anonymous_users(self):
+        """Anonymous users see minimal navbar with only logo, login, and register buttons."""
+        res = self.client.get(reverse("academics:home"))
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "Se connecter")
+        self.assertContains(res, "Créer un compte")
+        # Ensure notifications dropdown / bell button is absent for anonymous users
+        self.assertNotContains(res, 'id="notification-bell-btn"')
+
+    def test_authenticated_navbar_preservation(self):
+        """Logged-in users see the full authenticated navbar with notifications and profile menu."""
+        self.client.login(username="phase10_student@univ.edu", password="Password123!")
+        res = self.client.get(reverse("academics:home"))
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, 'id="notification-bell-btn"')
+        self.assertContains(res, 'id="profile-menu-btn"')
+
+    def test_homepage_content_and_accessibility(self):
+        """Homepage renders V2 messaging, resource overview, 5-step journey, and ArchivEx Pass."""
+        res = self.client.get(reverse("academics:home"))
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "Votre espace de ressources pour")
+        self.assertContains(res, "Pass Semestre")
+        self.assertContains(res, "Comment fonctionne ArchivEx")
+
+    def test_student_dashboard_cta_for_authenticated_users(self):
+        """Authenticated students see a direct welcome CTA block on homepage linking to dashboard."""
+        self.client.login(username="phase10_student@univ.edu", password="Password123!")
+        res = self.client.get(reverse("academics:home"))
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "Accéder à mon tableau de bord")
+        self.assertContains(res, "Bienvenue, phase10_student@univ.edu")
+
+    def test_about_page_content_and_accessibility(self):
+        """About page renders updated V2 academic positioning without emojis."""
+        res = self.client.get(reverse("academics:about"))
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "À propos d'ArchivEx")
+        self.assertContains(res, "Une solution centralisée aux défis académiques")
+
+    def test_search_partial_matching(self):
+        """Search 'mat' matches 'Mathématiques approfondies'."""
+        res = self.client.get(reverse("academics:global_search") + "?q=mat")
+        subjects = [item["object"] for item in res.context["subjects_results"]]
+        self.assertIn(self.subject_math, subjects)
+
+    def test_search_word_containment(self):
+        """Search 'droit' matches 'Introduction au droit'."""
+        res = self.client.get(reverse("academics:global_search") + "?q=droit")
+        subjects = [item["object"] for item in res.context["subjects_results"]]
+        self.assertIn(self.subject_droit, subjects)
+
+    def test_search_multiple_words(self):
+        """Search 'analyse math' matches exam 'Analyse mathématique L1'."""
+        res = self.client.get(reverse("academics:global_search") + "?q=analyse+math")
+        exams = [item["object"] for item in res.context["exams_results"]]
+        self.assertIn(self.exam_published, exams)
+
+    def test_search_case_insensitivity_and_accent_normalization(self):
+        """Search 'MATHEMATIQUE' (no accents, uppercase) matches 'Mathématiques approfondies'."""
+        res_math = self.client.get(reverse("academics:global_search") + "?q=MATHEMATIQUE")
+        subjects_math = [item["object"] for item in res_math.context["subjects_results"]]
+        self.assertIn(self.subject_math, subjects_math)
+
+        res_eco = self.client.get(reverse("academics:global_search") + "?q=economie")
+        subjects_eco = [item["object"] for item in res_eco.context["subjects_results"]]
+        self.assertIn(self.subject_eco, subjects_eco)
+
+    def test_search_relevance_ordering(self):
+        """Exact match 'Droit' is ranked ahead of 'Introduction au droit'."""
+        res = self.client.get(reverse("academics:global_search") + "?q=droit")
+        subjects_results = res.context["subjects_results"]
+        matched_subjects = [item["object"] for item in subjects_results]
+        self.assertIn(self.subject_droit_exact, matched_subjects)
+        self.assertIn(self.subject_droit, matched_subjects)
+        # Exact match 'Droit' should appear before 'Introduction au droit'
+        idx_exact = matched_subjects.index(self.subject_droit_exact)
+        idx_contains = matched_subjects.index(self.subject_droit)
+        self.assertLess(idx_exact, idx_contains)
+
+    def test_search_exclusion_of_draft_content(self):
+        """Draft exam is never returned in search results."""
+        res = self.client.get(reverse("academics:global_search") + "?q=brouillon")
+        exams = [item["object"] for item in res.context["exams_results"]]
+        self.assertNotIn(self.exam_draft, exams)
+        self.assertEqual(res.context["total_results_count"], 0)
+
+    def test_zero_emoji_policy_in_phase10_pages(self):
+        """Verify zero emojis exist across home, about, and search templates."""
+        emojis = ["📚", "📄", "🎯", "💡", "🔒", "⚡", "✓", "⭐", "🚀", "👋", "❤️", "🔔"]
+        for endpoint in ["academics:home", "academics:about", "academics:global_search"]:
+            res = self.client.get(reverse(endpoint))
+            content = res.content.decode("utf-8")
+            for emoji in emojis:
+                self.assertNotIn(emoji, content, f"Emoji {emoji} found in response for {endpoint}")
+
+

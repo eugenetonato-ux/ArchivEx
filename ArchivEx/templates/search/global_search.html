@@ -10,10 +10,10 @@
     <nav class="hidden sm:flex items-center text-xs font-medium text-slate-500 space-x-2 mb-6" aria-label="Fil d'ariane">
         <a href="{% url 'academics:home' %}" class="hover:text-[#2563EB]">Accueil</a>
         <span>/</span>
-        <span class="text-[#071A49] font-bold">Recherche globale</span>
+        <span class="text-[#071A49] font-bold">Recherche globale intelligente</span>
     </nav>
 
-    <!-- SEARCH HEADER & SEARCH BAR -->
+    <!-- SEARCH HEADER & SEARCH FORM -->
     <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 mb-8 shadow-sm">
         <h1 class="text-2xl sm:text-3xl font-black text-[#071A49] mb-2 tracking-tight">
             Rechercher dans ArchivEx
@@ -25,11 +25,11 @@
         <!-- GLOBAL SEARCH FORM -->
         <form method="get" action="{% url 'academics:global_search' %}" class="flex flex-col sm:flex-row gap-3">
             <div class="relative flex-grow">
-                <input type="text" name="q" value="{{ q }}" placeholder="Rechercher une matière, une épreuve ou un résumé..." class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm font-semibold text-[#071A49] focus:bg-white focus:ring-2 focus:ring-[#2563EB] focus:border-transparent outline-none transition-all">
-                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input type="text" name="q" value="{{ q }}" placeholder="Rechercher une matière, une épreuve (ex: math, droit, analyse)..." class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm font-semibold text-[#071A49] focus:bg-white focus:ring-2 focus:ring-[#2563EB] focus:border-transparent outline-none transition-all">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm" aria-hidden="true"></i>
             </div>
-            <button type="submit" class="btn-primary text-xs sm:text-sm px-6 py-3 font-extrabold rounded-2xl flex items-center justify-center space-x-2 shadow-sm">
-                <i class="fa-solid fa-magnifying-glass"></i>
+            <button type="submit" class="btn-primary text-xs sm:text-sm px-6 py-3 font-extrabold rounded-2xl flex items-center justify-center space-x-2 shadow-sm shrink-0">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                 <span>Rechercher</span>
             </button>
         </form>
@@ -41,23 +41,23 @@
                     Toutes les ressources
                 </a>
                 <a href="?q={{ q }}&category=subjects" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors flex items-center space-x-1.5 {% if selected_category == 'subjects' %}bg-[#2563EB] text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
-                    <i class="fa-solid fa-book-open text-xs"></i>
+                    <i class="fa-solid fa-book-open text-xs" aria-hidden="true"></i>
                     <span>Matières</span>
                 </a>
                 <a href="?q={{ q }}&category=exams" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors flex items-center space-x-1.5 {% if selected_category == 'exams' %}bg-[#2563EB] text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
-                    <i class="fa-solid fa-file-lines text-xs"></i>
+                    <i class="fa-solid fa-file-lines text-xs" aria-hidden="true"></i>
                     <span>Épreuves</span>
                 </a>
                 <a href="?q={{ q }}&category=summaries" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors flex items-center space-x-1.5 {% if selected_category == 'summaries' %}bg-[#2563EB] text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
-                    <i class="fa-solid fa-book text-xs"></i>
+                    <i class="fa-solid fa-book text-xs" aria-hidden="true"></i>
                     <span>Résumés</span>
                 </a>
                 <a href="?q={{ q }}&category=guides" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors flex items-center space-x-1.5 {% if selected_category == 'guides' %}bg-[#2563EB] text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
-                    <i class="fa-solid fa-compass text-xs"></i>
+                    <i class="fa-solid fa-compass text-xs" aria-hidden="true"></i>
                     <span>Guides</span>
                 </a>
                 <a href="?q={{ q }}&category=articles" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors flex items-center space-x-1.5 {% if selected_category == 'articles' %}bg-[#2563EB] text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
-                    <i class="fa-solid fa-lightbulb text-xs"></i>
+                    <i class="fa-solid fa-lightbulb text-xs" aria-hidden="true"></i>
                     <span>Conseils</span>
                 </a>
             </div>
@@ -66,11 +66,19 @@
 
     <!-- SEARCH RESULTS SECTION -->
     {% if q %}
-        <div class="mb-6 flex items-center justify-between">
-            <h2 class="text-lg font-black text-[#071A49]">
-                Résultats pour « <span class="text-[#2563EB]">{{ q }}</span> »
-            </h2>
-            <span class="text-xs font-bold text-slate-500 bg-white border border-slate-200 px-3 py-1 rounded-full">
+        <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+                <h2 class="text-lg font-black text-[#071A49]">
+                    Résultats pour « <span class="text-[#2563EB]">{{ q }}</span> »
+                </h2>
+                {% if used_expanded_search %}
+                    <p class="text-[11px] font-semibold text-slate-500 mt-0.5 flex items-center space-x-1">
+                        <i class="fa-solid fa-wand-magic-sparkles text-[#2563EB]" aria-hidden="true"></i>
+                        <span>Recherche étendue appliquées</span>
+                    </p>
+                {% endif %}
+            </div>
+            <span class="text-xs font-bold text-slate-500 bg-white border border-slate-200 px-3.5 py-1.5 rounded-full shrink-0 self-start sm:self-auto shadow-sm">
                 {{ total_results_count }} résultat{{ total_results_count|pluralize }}
             </span>
         </div>
@@ -82,8 +90,8 @@
                 {% if subjects_results %}
                     <section>
                         <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-3 flex items-center space-x-2">
-                            <i class="fa-solid fa-book-open text-blue-600"></i>
-                            <span>Matières / UE ({{ subjects_results|length }})</span>
+                            <i class="fa-solid fa-book-open text-blue-600" aria-hidden="true"></i>
+                            <span>Matières / Unités d'Enseignement ({{ subjects_results|length }})</span>
                         </h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {% for item in subjects_results %}
@@ -104,7 +112,7 @@
                                     </div>
                                     <div class="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs font-extrabold text-[#2563EB]">
                                         <span>Voir les épreuves</span>
-                                        <i class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+                                        <i class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform" aria-hidden="true"></i>
                                     </div>
                                 </a>
                             {% endfor %}
@@ -116,7 +124,7 @@
                 {% if exams_results %}
                     <section>
                         <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-3 flex items-center space-x-2">
-                            <i class="fa-solid fa-file-lines text-blue-600"></i>
+                            <i class="fa-solid fa-file-lines text-blue-600" aria-hidden="true"></i>
                             <span>Épreuves d'examens ({{ exams_results|length }})</span>
                         </h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -129,12 +137,12 @@
                                             </span>
                                             {% if item.has_access %}
                                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 flex items-center space-x-1">
-                                                    <i class="fa-solid fa-check text-[9px]"></i>
+                                                    <i class="fa-solid fa-check text-[9px]" aria-hidden="true"></i>
                                                     <span>Gratuit</span>
                                                 </span>
                                             {% else %}
                                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-800 flex items-center space-x-1">
-                                                    <i class="fa-solid fa-lock text-[9px]"></i>
+                                                    <i class="fa-solid fa-lock text-[9px]" aria-hidden="true"></i>
                                                     <span>Pass Semestre</span>
                                                 </span>
                                             {% endif %}
@@ -149,7 +157,7 @@
                                             </a>
                                         {% else %}
                                             <a href="{% url 'exams:detail' item.object.pk %}" class="btn-gold text-xs px-3.5 py-1.5 font-black rounded-xl w-full text-center flex items-center justify-center space-x-1.5">
-                                                <i class="fa-solid fa-lock text-xs"></i>
+                                                <i class="fa-solid fa-lock text-xs" aria-hidden="true"></i>
                                                 <span>Découvrir le Pass</span>
                                             </a>
                                         {% endif %}
@@ -164,7 +172,7 @@
                 {% if summaries_results %}
                     <section>
                         <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-3 flex items-center space-x-2">
-                            <i class="fa-solid fa-book text-amber-600"></i>
+                            <i class="fa-solid fa-book text-amber-600" aria-hidden="true"></i>
                             <span>Résumés de cours ({{ summaries_results|length }})</span>
                         </h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -179,7 +187,7 @@
                                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">Débloqué</span>
                                             {% else %}
                                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-800 flex items-center space-x-1">
-                                                    <i class="fa-solid fa-lock text-[9px]"></i>
+                                                    <i class="fa-solid fa-lock text-[9px]" aria-hidden="true"></i>
                                                     <span>Premium</span>
                                                 </span>
                                             {% endif %}
@@ -190,7 +198,7 @@
                                     <div class="pt-3 border-t border-slate-100">
                                         <a href="{% url 'content:summary_detail' item.object.pk %}" class="btn-primary text-xs px-3.5 py-1.5 font-extrabold rounded-xl flex items-center justify-center space-x-1.5">
                                             <span>Consulter le résumé</span>
-                                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                                            <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
                                         </a>
                                     </div>
                                 </div>
@@ -203,7 +211,7 @@
                 {% if guides_results %}
                     <section>
                         <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-3 flex items-center space-x-2">
-                            <i class="fa-solid fa-compass text-emerald-600"></i>
+                            <i class="fa-solid fa-compass text-emerald-600" aria-hidden="true"></i>
                             <span>Guides de matières ({{ guides_results|length }})</span>
                         </h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -219,10 +227,9 @@
                                     <div class="pt-3 border-t border-slate-100">
                                         <a href="{% url 'content:guide_detail' item.object.pk %}" class="btn-secondary text-xs px-3.5 py-1.5 font-bold rounded-xl flex items-center justify-center space-x-1.5 border border-slate-200">
                                             <span>Lire le guide</span>
-                                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                                            <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
                                         </a>
                                     </div>
-
                                 </div>
                             {% endfor %}
                         </div>
@@ -233,7 +240,7 @@
                 {% if articles_results %}
                     <section>
                         <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-3 flex items-center space-x-2">
-                            <i class="fa-solid fa-lightbulb text-indigo-600"></i>
+                            <i class="fa-solid fa-lightbulb text-indigo-600" aria-hidden="true"></i>
                             <span>Conseils d'études ({{ articles_results|length }})</span>
                         </h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -249,7 +256,7 @@
                                     <div class="pt-3 border-t border-slate-100">
                                         <a href="{% url 'content:article_detail' item.object.pk %}" class="text-xs font-extrabold text-[#2563EB] hover:underline flex items-center justify-between">
                                             <span>Lire l'article</span>
-                                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                                            <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
                                         </a>
                                     </div>
                                 </div>
@@ -263,21 +270,24 @@
             <!-- NO RESULTS EMPTY STATE -->
             <div class="bg-white border border-slate-200 rounded-3xl p-10 text-center shadow-sm max-w-2xl mx-auto my-8">
                 <div class="w-14 h-14 rounded-2xl bg-blue-50 text-[#2563EB] flex items-center justify-center mx-auto mb-4 text-xl">
-                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                 </div>
                 <h3 class="text-lg font-black text-[#071A49] mb-2">Aucun résultat trouvé</h3>
                 <p class="text-xs text-slate-500 font-medium mb-6 leading-relaxed">
                     Nous n'avons trouvé aucune ressource correspondant à votre recherche « <strong>{{ q }}</strong> ».
                 </p>
-                <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-left text-xs space-y-2 mb-6">
-                    <p class="font-black text-[#071A49]">Conseils pour améliorer votre recherche :</p>
-                    <ul class="list-disc list-inside text-slate-600 space-y-1 font-medium">
-                        <li>Vérifiez l'orthographe des mots saisies.</li>
-                        <li>Essayez des termes plus généraux (ex: « Mathématiques » au lieu d'un sujet précis).</li>
-                        <li>Recherchez directement le nom de la matière ou de l'UE.</li>
+                <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 text-left text-xs space-y-2 mb-6">
+                    <p class="font-black text-[#071A49] flex items-center space-x-2">
+                        <i class="fa-solid fa-lightbulb text-amber-500" aria-hidden="true"></i>
+                        <span>Conseils pour améliorer votre recherche :</span>
+                    </p>
+                    <ul class="list-disc list-inside text-slate-600 space-y-1 font-medium pl-1">
+                        <li>Essayez des termes abrégés ou généraux</li>
+                        <li>Vérifiez que la matière recherchée fait partie de votre programme d'études.</li>
+                        <li>Recherchez directement par nom de matière ou d'Unité d'Enseignement.</li>
                     </ul>
                 </div>
-                <a href="{% url 'academics:filieres' %}" class="btn-primary text-xs px-5 py-2.5 font-extrabold rounded-xl inline-block">
+                <a href="{% url 'academics:filieres' %}" class="btn-primary text-xs px-5 py-2.5 font-extrabold rounded-xl inline-block shadow-sm">
                     Explorer les matières disponibles
                 </a>
             </div>
@@ -286,11 +296,11 @@
         <!-- INITIAL EMPTY SEARCH PROMPT -->
         <div class="bg-white border border-slate-200 rounded-3xl p-10 text-center shadow-sm max-w-2xl mx-auto my-8">
             <div class="w-14 h-14 rounded-2xl bg-blue-50 text-[#2563EB] flex items-center justify-center mx-auto mb-4 text-xl">
-                <i class="fa-solid fa-magnifying-glass"></i>
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
             </div>
             <h3 class="text-lg font-black text-[#071A49] mb-2">Recherchez à travers toutes les ressources</h3>
             <p class="text-xs text-slate-500 font-medium leading-relaxed">
-                Entrez le nom d'une matière, d'un chapitre ou d'un sujet d'examen ci-dessus pour lancer la recherche unifiée.
+                Saisissez un mot-clé (nom de matière, épreuve, chapitre ou domaine) ci-dessus pour bénéficier de la recherche unifiée et intelligente.
             </p>
         </div>
     {% endif %}

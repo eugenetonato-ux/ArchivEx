@@ -1,0 +1,94 @@
+{% extends "contributors/admin_base.html" %}
+
+{% block title %}Gestion des Conseils & Articles — Administration ArchivEx{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">Gestion des Conseils & Articles</h1>
+            <p class="text-xs text-slate-500 font-medium">Rédigez et publiez des conseils méthodologiques pour les étudiants.</p>
+        </div>
+        <a href="{% url 'contributors:article_create' %}" class="btn-primary text-xs px-5 py-2.5 font-extrabold rounded-xl shadow-sm flex items-center justify-center space-x-2 shrink-0">
+            <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i>
+            <span>Rédiger un conseil</span>
+        </a>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+        <form method="get" action="{% url 'contributors:article_list' %}" class="flex flex-col sm:flex-row gap-3">
+            <div class="relative flex-grow">
+                <input type="text" name="q" value="{{ q }}" placeholder="Rechercher par titre de conseil..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#071A49] focus:ring-2 focus:ring-[#2563EB] outline-none">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs" aria-hidden="true"></i>
+            </div>
+            <button type="submit" class="btn-primary text-xs px-5 py-2.5 font-bold rounded-xl shrink-0">
+                Rechercher
+            </button>
+        </form>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="border-b border-slate-200 text-slate-400 font-bold uppercase text-[10px]">
+                        <th class="py-3 px-3">Titre du conseil</th>
+                        <th class="py-3 px-3">Catégorie</th>
+                        <th class="py-3 px-3">Statut</th>
+                        <th class="py-3 px-3 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium">
+                    {% for art in articles %}
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="py-3.5 px-3">
+                                <p class="font-extrabold text-[#071A49] text-xs mb-0.5">{{ art.title }}</p>
+                                <span class="text-[10px] text-slate-400 font-semibold">{{ art.created_at|date:"d M Y" }}</span>
+                            </td>
+                            <td class="py-3.5 px-3">
+                                <span class="px-2.5 py-0.5 rounded bg-indigo-50 text-indigo-800 font-bold text-[10px]">
+                                    {{ art.get_category_display }}
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-3">
+                                {% if art.publication_status == 'PUBLISHED' %}
+                                    <span class="px-2.5 py-1 rounded-full bg-blue-50 text-[#2563EB] font-extrabold text-[10px]">Publié</span>
+                                {% else %}
+                                    <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-extrabold text-[10px]">Brouillon</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3.5 px-3 text-right">
+                                <div class="flex items-center justify-end space-x-2">
+                                    <form method="post" action="{% url 'contributors:article_toggle_status' art.pk %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-[11px] font-bold px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors">
+                                            {% if art.publication_status == 'PUBLISHED' %}Dépublier{% else %}Publier{% endif %}
+                                        </button>
+                                    </form>
+                                    <a href="{% url 'contributors:article_edit' art.pk %}" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-[#2563EB] hover:bg-blue-100 transition-colors">
+                                        Modifier
+                                    </a>
+                                    <form method="post" action="{% url 'contributors:article_delete' art.pk %}" onsubmit="return confirm('Supprimer ce conseil ?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-[11px] font-bold px-2 py-1 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors">
+                                            <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="py-8 text-center text-slate-400 font-medium">
+                                Aucun conseil trouvé.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

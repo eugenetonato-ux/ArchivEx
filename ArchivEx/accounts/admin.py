@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import User, StudentProfile, Favorite
+from contributors.models import ContributorProfile
 
 
 class StudentProfileInline(admin.StackedInline):
@@ -9,10 +10,19 @@ class StudentProfileInline(admin.StackedInline):
     verbose_name_plural = "Profil Étudiant"
 
 
+class ContributorProfileInline(admin.StackedInline):
+    model = ContributorProfile
+    can_delete = True
+    verbose_name_plural = "Profil Administrateur / Staff"
+    filter_horizontal = ("assigned_schools",)
+    extra = 0
+
+
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
-    inlines = (StudentProfileInline,)
-    list_display = ("username", "email", "first_name", "last_name", "is_staff", "date_joined")
+    inlines = (StudentProfileInline, ContributorProfileInline)
+    list_display = ("username", "email", "first_name", "last_name", "is_staff", "is_superuser", "date_joined")
+    list_filter = ("is_staff", "is_superuser", "is_active")
     search_fields = ("username", "email", "first_name", "last_name")
 
 

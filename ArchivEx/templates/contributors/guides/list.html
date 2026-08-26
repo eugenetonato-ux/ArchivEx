@@ -1,0 +1,98 @@
+{% extends "contributors/admin_base.html" %}
+
+{% block title %}Gestion des Guides — Administration ArchivEx{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">Gestion des Guides Méthodologiques</h1>
+            <p class="text-xs text-slate-500 font-medium">Consultez et éditez les guides méthodologiques de matières.</p>
+        </div>
+        <a href="{% url 'contributors:guide_create' %}" class="btn-primary text-xs px-5 py-2.5 font-extrabold rounded-xl shadow-sm flex items-center justify-center space-x-2 shrink-0">
+            <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i>
+            <span>Ajouter un guide</span>
+        </a>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+        <form method="get" action="{% url 'contributors:guide_list' %}" class="flex flex-col sm:flex-row gap-3">
+            <div class="relative flex-grow">
+                <input type="text" name="q" value="{{ q }}" placeholder="Rechercher par titre de guide ou matière..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#071A49] focus:ring-2 focus:ring-[#2563EB] outline-none">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs" aria-hidden="true"></i>
+            </div>
+            <button type="submit" class="btn-primary text-xs px-5 py-2.5 font-bold rounded-xl shrink-0">
+                Rechercher
+            </button>
+        </form>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="border-b border-slate-200 text-slate-400 font-bold uppercase text-[10px]">
+                        <th class="py-3 px-3">Titre du guide</th>
+                        <th class="py-3 px-3">Matière / UE</th>
+                        <th class="py-3 px-3">Accès</th>
+                        <th class="py-3 px-3">Statut</th>
+                        <th class="py-3 px-3 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium">
+                    {% for gd in guides %}
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="py-3.5 px-3">
+                                <p class="font-extrabold text-[#071A49] text-xs mb-0.5">{{ gd.title }}</p>
+                                <span class="text-[10px] text-slate-400 font-semibold">{{ gd.created_at|date:"d M Y" }}</span>
+                            </td>
+                            <td class="py-3.5 px-3 font-semibold text-[#2563EB]">{{ gd.subject.name }}</td>
+                            <td class="py-3.5 px-3">
+                                {% if gd.access_type == 'FREE' %}
+                                    <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-extrabold text-[10px]">Gratuit</span>
+                                {% else %}
+                                    <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 font-extrabold text-[10px]">Pass Semestre</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3.5 px-3">
+                                {% if gd.publication_status == 'PUBLISHED' %}
+                                    <span class="px-2.5 py-1 rounded-full bg-blue-50 text-[#2563EB] font-extrabold text-[10px]">Publié</span>
+                                {% else %}
+                                    <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-extrabold text-[10px]">Brouillon</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3.5 px-3 text-right">
+                                <div class="flex items-center justify-end space-x-2">
+                                    <form method="post" action="{% url 'contributors:guide_toggle_status' gd.pk %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-[11px] font-bold px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors">
+                                            {% if gd.publication_status == 'PUBLISHED' %}Dépublier{% else %}Publier{% endif %}
+                                        </button>
+                                    </form>
+                                    <a href="{% url 'contributors:guide_edit' gd.pk %}" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-[#2563EB] hover:bg-blue-100 transition-colors">
+                                        Modifier
+                                    </a>
+                                    <form method="post" action="{% url 'contributors:guide_delete' gd.pk %}" onsubmit="return confirm('Supprimer ce guide ?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-[11px] font-bold px-2 py-1 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors">
+                                            <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="py-8 text-center text-slate-400 font-medium">
+                                Aucun guide méthodologique trouvé.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

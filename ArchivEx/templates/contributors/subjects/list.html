@@ -1,0 +1,73 @@
+{% extends "contributors/admin_base.html" %}
+
+{% block title %}Matières / Unités d'Enseignement — Administration ArchivEx{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">Matières & Unités d'Enseignement (UE)</h1>
+            <p class="text-xs text-slate-500 font-medium">Consultez et ajoutez les matières enseignées dans les filières.</p>
+        </div>
+        <a href="{% url 'contributors:subject_create' %}" class="btn-primary text-xs px-5 py-2.5 font-extrabold rounded-xl shadow-sm flex items-center justify-center space-x-2 shrink-0">
+            <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i>
+            <span>Ajouter une matière</span>
+        </a>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+        <form method="get" action="{% url 'contributors:subject_list' %}" class="flex flex-col sm:flex-row gap-3">
+            <div class="relative flex-grow">
+                <input type="text" name="q" value="{{ q }}" placeholder="Rechercher une matière..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#071A49] focus:ring-2 focus:ring-[#2563EB] outline-none">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs" aria-hidden="true"></i>
+            </div>
+            <button type="submit" class="btn-primary text-xs px-5 py-2.5 font-bold rounded-xl shrink-0">
+                Rechercher
+            </button>
+        </form>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="border-b border-slate-200 text-slate-400 font-bold uppercase text-[10px]">
+                        <th class="py-3 px-3">Nom de la matière / UE</th>
+                        <th class="py-3 px-3">Filière</th>
+                        <th class="py-3 px-3">Semestre</th>
+                        <th class="py-3 px-3">Épreuves associées</th>
+                        <th class="py-3 px-3 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium">
+                    {% for sb in subjects %}
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="py-3.5 px-3 font-extrabold text-[#071A49]">{{ sb.name }}</td>
+                            <td class="py-3.5 px-3 text-slate-600 font-semibold">{{ sb.semester.filiere.name }}</td>
+                            <td class="py-3.5 px-3 text-slate-500 font-semibold">{{ sb.semester.label }}</td>
+                            <td class="py-3.5 px-3">
+                                <span class="px-2.5 py-0.5 rounded bg-blue-50 text-[#2563EB] font-bold text-[10px]">
+                                    {{ sb.exams_count }} épreuve{{ sb.exams_count|pluralize }}
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-3 text-right">
+                                <a href="{% url 'contributors:subject_edit' sb.pk %}" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-[#2563EB] hover:bg-blue-100 transition-colors">
+                                    Modifier
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="py-8 text-center text-slate-400 font-medium">
+                                Aucune matière / UE trouvée.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

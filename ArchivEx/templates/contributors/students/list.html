@@ -1,0 +1,66 @@
+{% extends "contributors/admin_base.html" %}
+
+{% block title %}Étudiants Inscrits — Administration ArchivEx{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">Annuaire des Étudiants Inscrits</h1>
+        <p class="text-xs text-slate-500 font-medium">Consultez les profils académiques et le statut des comptes étudiants.</p>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+        <form method="get" action="{% url 'contributors:student_list' %}" class="flex flex-col sm:flex-row gap-3">
+            <div class="relative flex-grow">
+                <input type="text" name="q" value="{{ q }}" placeholder="Rechercher un étudiant par nom, prénom, nom d'utilisateur ou email..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#071A49] focus:ring-2 focus:ring-[#2563EB] outline-none">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs" aria-hidden="true"></i>
+            </div>
+            <button type="submit" class="btn-primary text-xs px-5 py-2.5 font-bold rounded-xl shrink-0">
+                Rechercher
+            </button>
+        </form>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="border-b border-slate-200 text-slate-400 font-bold uppercase text-[10px]">
+                        <th class="py-3 px-3">Étudiant / Compte</th>
+                        <th class="py-3 px-3">Email</th>
+                        <th class="py-3 px-3">Université</th>
+                        <th class="py-3 px-3">Filière / Niveau</th>
+                        <th class="py-3 px-3">Date d'inscription</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium">
+                    {% for st in students %}
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="py-3.5 px-3">
+                                <p class="font-extrabold text-[#071A49] text-xs mb-0.5">{{ st.user.get_full_name|default:st.user.username }}</p>
+                                <span class="text-[10px] text-slate-400 font-semibold">@{{ st.user.username }}</span>
+                            </td>
+                            <td class="py-3.5 px-3 text-slate-600 font-semibold">{{ st.user.email }}</td>
+                            <td class="py-3.5 px-3 font-semibold text-[#2563EB]">{{ st.school.name|default:"Non renseignée" }}</td>
+                            <td class="py-3.5 px-3 text-slate-600">
+                                {% if st.filiere %}{{ st.filiere.name }} ({{ st.level.name }}){% else %}-{% endif %}
+                            </td>
+                            <td class="py-3.5 px-3 text-slate-400 font-semibold">
+                                {{ st.user.date_joined|date:"d M Y" }}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="py-8 text-center text-slate-400 font-medium">
+                                Aucun étudiant trouvé dans ce contexte.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

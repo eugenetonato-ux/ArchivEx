@@ -1,0 +1,121 @@
+{% extends "contributors/admin_base.html" %}
+
+{% block title %}{% if is_create %}Ajouter une épreuve{% else %}Modifier l'épreuve{% endif %} — Administration ArchivEx{% endblock %}
+
+{% block admin_content %}
+<div class="max-w-3xl mx-auto space-y-6">
+
+    <!-- BREADCRUMB & HEADER -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div class="flex items-center space-x-2 text-xs font-semibold text-slate-400 mb-2">
+            <a href="{% url 'contributors:exam_list' %}" class="hover:text-[#2563EB]">Épreuves</a>
+            <span>/</span>
+            <span class="text-[#071A49] font-bold">{% if is_create %}Création{% else %}Édition{% endif %}</span>
+        </div>
+        <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">
+            {% if is_create %}Ajouter une nouvelle épreuve d'examen{% else %}Modifier l'épreuve : {{ exam.title }}{% endif %}
+        </h1>
+        <p class="text-xs text-slate-500 font-medium mt-1">
+            Complétez le formulaire ci-dessous. Le contexte universitaire est automatiquement hérité.
+        </p>
+    </div>
+
+    <!-- PRE-PUBLICATION CONFIRMATION CONTEXT BANNER -->
+    {% if active_school and active_filiere %}
+    <div class="bg-blue-50/70 border border-blue-200/80 rounded-2xl p-5 text-xs text-[#071A49] space-y-2">
+        <p class="font-extrabold flex items-center space-x-2 text-blue-900">
+            <i class="fa-solid fa-circle-info text-blue-600" aria-hidden="true"></i>
+            <span>Contexte académique de publication :</span>
+        </p>
+        <div class="flex flex-wrap items-center gap-2 font-bold text-slate-700 pt-1">
+            <span class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-[#071A49]">{{ active_school.name }}</span>
+            <i class="fa-solid fa-chevron-right text-[10px] text-slate-400" aria-hidden="true"></i>
+            <span class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-[#071A49]">{{ active_filiere.level.name }}</span>
+            <i class="fa-solid fa-chevron-right text-[10px] text-slate-400" aria-hidden="true"></i>
+            <span class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-[#2563EB]">{{ active_filiere.name }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- FORM CARD -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+        <form method="post" enctype="multipart/form-data" class="space-y-5">
+            {% csrf_token %}
+
+            <div>
+                <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.title.label }}</label>
+                {{ form.title }}
+                {% if form.title.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.title.errors.0 }}</p>{% endif %}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.semester.label }}</label>
+                    {{ form.semester }}
+                    {% if form.semester.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.semester.errors.0 }}</p>{% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.subject.label }}</label>
+                    {{ form.subject }}
+                    {% if form.subject.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.subject.errors.0 }}</p>{% endif %}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.year.label }}</label>
+                    {{ form.year }}
+                    {% if form.year.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.year.errors.0 }}</p>{% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.exam_type.label }}</label>
+                    {{ form.exam_type }}
+                    {% if form.exam_type.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.exam_type.errors.0 }}</p>{% endif %}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.is_free.label }}</label>
+                    {{ form.is_free }}
+                    {% if form.is_free.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.is_free.errors.0 }}</p>{% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.is_published.label }}</label>
+                    {{ form.is_published }}
+                    {% if form.is_published.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.is_published.errors.0 }}</p>{% endif %}
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.file.label }}</label>
+                {{ form.file }}
+                {% if form.instance.file %}
+                    <p class="text-[11px] text-slate-500 mt-1 font-medium">Document actuel : <a href="{{ form.instance.file.url }}" target="_blank" class="text-[#2563EB] underline font-bold">Consulter le PDF</a></p>
+                {% endif %}
+                {% if form.file.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.file.errors.0 }}</p>{% endif %}
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.description.label }}</label>
+                {{ form.description }}
+                {% if form.description.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.description.errors.0 }}</p>{% endif %}
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+                <a href="{% url 'contributors:exam_list' %}" class="text-xs font-bold text-slate-500 hover:text-slate-800">
+                    Annuler
+                </a>
+                <button type="submit" class="btn-primary text-xs px-6 py-3 font-extrabold rounded-xl shadow-sm flex items-center space-x-2">
+                    <i class="fa-solid fa-paper-plane text-xs" aria-hidden="true"></i>
+                    <span>{% if is_create %}Publier l'épreuve{% else %}Enregistrer les modifications{% endif %}</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "contributors/admin_base.html" %}
+
+{% block title %}Pass & Paiements — Administration ArchivEx{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">Suivi des Pass Semestre & Accès</h1>
+        <p class="text-xs text-slate-500 font-medium">Aperçu des accès Pass Semestre activés par les étudiants.</p>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="border-b border-slate-200 text-slate-400 font-bold uppercase text-[10px]">
+                        <th class="py-3 px-3">Étudiant</th>
+                        <th class="py-3 px-3">Filière / Semestre</th>
+                        <th class="py-3 px-3">Date d'activation</th>
+                        <th class="py-3 px-3">Statut Pass</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium">
+                    {% for acc in access_records %}
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="py-3.5 px-3">
+                                <p class="font-extrabold text-[#071A49] text-xs mb-0.5">{{ acc.user.get_full_name|default:acc.user.username }}</p>
+                                <span class="text-[10px] text-slate-400 font-semibold">{{ acc.user.email }}</span>
+                            </td>
+                            <td class="py-3.5 px-3 text-slate-700 font-semibold">
+                                {{ acc.filiere.name }} <span class="text-slate-400">({{ acc.semester.label }})</span>
+                            </td>
+                            <td class="py-3.5 px-3 text-slate-500 font-semibold">
+                                {{ acc.activated_at|date:"d M Y à H:i"|default:"Non activé" }}
+                            </td>
+                            <td class="py-3.5 px-3">
+                                {% if acc.activated_at %}
+                                    <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-extrabold text-[10px] flex items-center space-x-1 w-max">
+                                        <i class="fa-solid fa-check text-[9px]" aria-hidden="true"></i>
+                                        <span>Pass Actif</span>
+                                    </span>
+                                {% else %}
+                                    <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 font-extrabold text-[10px]">En attente</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="py-8 text-center text-slate-400 font-medium">
+                                Aucun accès enregistrés dans le système.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

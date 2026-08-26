@@ -1,0 +1,203 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Administration ArchivEx{% endblock %}</title>
+    
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', '"Inter"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Font Awesome 6 Icon System -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Master Stylesheet -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="min-h-screen bg-slate-100 text-[#111827] flex flex-col font-sans">
+
+    <!-- TOP CONTEXT BAR & NAVIGATION HEADER -->
+    <header class="bg-[#071A49] border-b border-blue-900/60 sticky top-0 z-40 text-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            
+            <!-- BRAND & SIDEBAR TOGGLE -->
+            <div class="flex items-center space-x-3">
+                <button type="button" onclick="toggleAdminSidebar()" aria-label="Menu administration" class="md:hidden p-2 text-slate-200 hover:text-white rounded-lg hover:bg-white/10">
+                    <i class="fa-solid fa-bars text-lg" aria-hidden="true"></i>
+                </button>
+                
+                <a href="{% url 'contributors:admin_dashboard' %}" class="flex items-center space-x-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-white p-0.5 flex items-center justify-center shadow-sm">
+                        <img src="{% static 'images/logo.jpg' %}" alt="ArchivEx" class="w-full h-full object-contain">
+                    </div>
+                    <span class="text-lg font-black tracking-tight text-white">Archiv<span class="text-[#3B82F6]">Ex</span> <span class="text-xs font-semibold px-2 py-0.5 rounded bg-blue-500/30 text-blue-200 ml-1">Espace Staff</span></span>
+                </a>
+            </div>
+
+            <!-- ACTIVE ACADEMIC CONTEXT BADGE & DUAL SWITCHER (ÉCOLE & FILIÈRE) -->
+            <div class="hidden sm:flex items-center space-x-3 bg-white/10 px-3.5 py-1.5 rounded-xl border border-white/20 text-xs font-bold">
+                <form id="admin-context-form" method="get" action="{% url 'contributors:set_context' %}" class="flex items-center space-x-2">
+                    <!-- SÉLECTEUR ÉCOLE -->
+                    <div class="flex items-center space-x-1.5">
+                        <i class="fa-solid fa-building-columns text-[#FBBF24]" aria-hidden="true" title="Université active"></i>
+                        <select name="school_id" id="admin-school-select" onchange="handleSchoolSelectChange(this)" class="bg-[#071A49] text-white text-[11px] font-bold border border-white/30 rounded-lg px-2.5 py-1 focus:outline-none focus:border-amber-400">
+                            <option value="all" {% if not active_school %}selected{% endif %}>--- Toutes les Écoles ---</option>
+                            {% for sch in available_schools %}
+                                <option value="{{ sch.id }}" {% if active_school and active_school.id == sch.id %}selected{% endif %}>{{ sch.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- SÉLECTEUR FILIÈRE -->
+                    <div class="flex items-center space-x-1.5">
+                        <i class="fa-solid fa-graduation-cap text-blue-400" aria-hidden="true" title="Filière d'études active"></i>
+                        <select name="filiere_id" id="admin-filiere-select" onchange="this.form.submit()" class="bg-[#071A49] text-white text-[11px] font-bold border border-white/30 rounded-lg px-2.5 py-1 focus:outline-none focus:border-blue-400">
+                            <option value="all" {% if not active_filiere %}selected{% endif %}>--- Toutes les Filières ---</option>
+                            {% for fil in available_filieres %}
+                                <option value="{{ fil.id }}" {% if active_filiere and active_filiere.id == fil.id %}selected{% endif %}>{{ fil.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+            </div>
+
+            <!-- USER INFO, LOGOUT & EXIT TO SITE -->
+            <div class="flex items-center space-x-3 text-xs">
+                <div class="hidden lg:flex items-center space-x-2 text-slate-300 bg-white/5 px-2.5 py-1 rounded-lg border border-white/10">
+                    <i class="fa-solid fa-user-shield text-amber-400 text-sm" aria-hidden="true"></i>
+                    <span class="font-bold text-white">{{ user.first_name|default:user.username }}</span>
+                </div>
+                <a href="{% url 'academics:home' %}" class="btn-secondary text-xs px-3 py-1.5 font-bold rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-colors" title="Accéder au site étudiant">
+                    <i class="fa-solid fa-globe mr-1" aria-hidden="true"></i>
+                    <span class="hidden sm:inline">Site Étudiant</span>
+                </a>
+                <a href="{% url 'contributors:admin_logout' %}" class="btn-secondary text-xs px-3 py-1.5 font-bold rounded-lg bg-rose-600/80 hover:bg-rose-600 text-white border border-rose-500/50 transition-colors" title="Déconnexion de l'espace staff">
+                    <i class="fa-solid fa-power-off mr-1" aria-hidden="true"></i>
+                    <span>Déconnexion</span>
+                </a>
+            </div>
+
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow flex flex-col md:flex-row gap-6 w-full">
+        
+        <!-- SIDEBAR NAVIGATION -->
+        <aside id="admin-sidebar" class="hidden md:block w-full md:w-64 shrink-0 space-y-6">
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-1">
+                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 px-3 pb-2 border-b border-slate-100">Gestion Principale</p>
+                
+                <a href="{% url 'contributors:admin_dashboard' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                    <i class="fa-solid fa-gauge w-4 text-center" aria-hidden="true"></i>
+                    <span>Tableau de bord</span>
+                </a>
+
+                <a href="{% url 'contributors:exam_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'epreuves' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                    <i class="fa-solid fa-file-lines w-4 text-center text-blue-600" aria-hidden="true"></i>
+                    <span>Épreuves</span>
+                </a>
+
+                <a href="{% url 'contributors:summary_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'resumes' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                    <i class="fa-solid fa-book-open w-4 text-center text-emerald-600" aria-hidden="true"></i>
+                    <span>Résumés de cours</span>
+                </a>
+
+                <a href="{% url 'contributors:guide_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'guides' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                    <i class="fa-solid fa-compass w-4 text-center text-purple-600" aria-hidden="true"></i>
+                    <span>Guides méthodologiques</span>
+                </a>
+
+                <a href="{% url 'contributors:article_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'articles' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                    <i class="fa-solid fa-lightbulb w-4 text-center text-amber-600" aria-hidden="true"></i>
+                    <span>Conseils & Articles</span>
+                </a>
+
+                <a href="{% url 'contributors:subject_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'matieres' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                    <i class="fa-solid fa-book w-4 text-center text-indigo-600" aria-hidden="true"></i>
+                    <span>Matières / UE</span>
+                </a>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-1">
+                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 px-3 pb-2 border-b border-slate-100">Structure & Suivi</p>
+
+                <a href="{% url 'contributors:structure_overview' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'structure' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                    <i class="fa-solid fa-sitemap w-4 text-center text-slate-500" aria-hidden="true"></i>
+                    <span>Structure académique</span>
+                </a>
+
+                <a href="{% url 'contributors:student_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'etudiants' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                    <i class="fa-solid fa-user-graduate w-4 text-center text-slate-500" aria-hidden="true"></i>
+                    <span>Étudiants inscrits</span>
+                </a>
+
+                <a href="{% url 'contributors:payment_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'paiements' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                    <i class="fa-solid fa-credit-card w-4 text-center text-slate-500" aria-hidden="true"></i>
+                    <span>Pass & Paiements</span>
+                </a>
+
+                <a href="{% url 'contributors:notification_create' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'notifications' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                    <i class="fa-solid fa-paper-plane w-4 text-center text-slate-500" aria-hidden="true"></i>
+                    <span>Diffuser notification</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT CONTAINER -->
+        <main class="flex-grow min-w-0">
+            {% if messages %}
+                <div class="mb-4 space-y-2">
+                    {% for message in messages %}
+                        <div class="p-3.5 rounded-xl text-xs font-bold flex items-center space-x-2 border shadow-sm {% if message.tags == 'error' %}bg-rose-50 border-rose-200 text-rose-700{% elif message.tags == 'success' %}bg-emerald-50 border-emerald-200 text-emerald-700{% else %}bg-blue-50 border-blue-200 text-blue-700{% endif %}">
+                            <i class="fa-solid fa-info-circle text-sm" aria-hidden="true"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% block admin_content %}{% endblock %}
+        </main>
+
+    </div>
+
+    <!-- SCRIPT FOR RESPONSIVE SIDEBAR TOGGLE & DYNAMIC CONTEXT SWITCH -->
+    <script>
+        function toggleAdminSidebar() {
+            const sidebar = document.getElementById('admin-sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('hidden');
+            }
+        }
+
+        function handleSchoolSelectChange(selectElem) {
+            const form = selectElem.form;
+            const filiereSelect = document.getElementById('admin-filiere-select');
+            if (filiereSelect) {
+                // Réinitialiser la filière lors du changement d'université
+                filiereSelect.value = 'all';
+            }
+            if (form) {
+                form.submit();
+            }
+        }
+    </script>
+</body>
+</html>

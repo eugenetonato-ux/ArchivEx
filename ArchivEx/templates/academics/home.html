@@ -1,13 +1,37 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% block title %}ArchivEx — Toutes tes épreuves. Un seul endroit.{% endblock %}
+{% block title %}ArchivEx — Votre espace de ressources pour mieux préparer vos études{% endblock %}
 
 {% block content %}
-<!-- 1. DARK NAVY HERO SECTION WITH 10 FAST SINUSOIDAL WAVES -->
-<section class="relative overflow-hidden pt-10 pb-16 md:pt-16 md:pb-24 bg-[#071A49] text-white">
-    <!-- 10 SINUSOIDAL WAVES BACKGROUND CONTAINER -->
-    <div class="tech-wave-bg">
+<!-- 1. AUTHENTICATED STUDENT DASHBOARD QUICK-ACCESS BANNER -->
+{% if user.is_authenticated %}
+<section class="bg-blue-900/30 border-b border-blue-800/40 py-3.5 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+        <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">
+                <i class="fa-solid fa-user" aria-hidden="true"></i>
+            </div>
+            <div>
+                <p class="text-xs sm:text-sm font-extrabold text-[#071A49]">
+                    Bienvenue, {{ user.first_name|default:user.username }} !
+                </p>
+                <p class="text-[11px] text-slate-500 font-medium">
+                    Consultez votre progression, vos matières prioritaires et votre Pass Semestre.
+                </p>
+            </div>
+        </div>
+        <a href="{% url 'accounts:dashboard' %}" class="btn-primary text-xs px-4 py-2 font-bold rounded-xl flex items-center space-x-2 shadow-sm shrink-0">
+            <i class="fa-solid fa-gauge text-xs" aria-hidden="true"></i>
+            <span>Accéder à mon tableau de bord</span>
+        </a>
+    </div>
+</section>
+{% endif %}
+
+<!-- 2. HERO SECTION WITH ACADEMIC POSITIONING -->
+<section class="relative overflow-hidden pt-12 pb-16 md:pt-20 md:pb-24 bg-[#071A49] text-white">
+    <div class="tech-wave-bg" aria-hidden="true">
         <svg class="tech-wave-svg" viewBox="0 0 1600 600" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <filter id="neonGlowFilter" x="-20%" y="-20%" width="140%" height="140%">
@@ -18,76 +42,68 @@
                     </feMerge>
                 </filter>
             </defs>
-
-            <!-- 10 FASTER SINUSOIDAL WAVES -->
             <path class="wave-layer-1" filter="url(#neonGlowFilter)" stroke-width="2.5" d="M-200 280 Q 200 120, 600 280 T 1400 280 T 2200 280" />
             <path class="wave-layer-2" filter="url(#neonGlowFilter)" stroke-width="3.0" d="M-200 320 Q 250 480, 700 320 T 1500 320 T 2300 320" />
             <path class="wave-layer-3" filter="url(#neonGlowFilter)" stroke-width="1.8" d="M-200 240 Q 300 100, 800 240 T 1600 240 T 2400 240" />
-            <path class="wave-layer-4" filter="url(#neonGlowFilter)" stroke-width="2.0" d="M-200 360 Q 150 460, 550 360 T 1350 360 T 2150 360" />
-            <path class="wave-layer-5" filter="url(#neonGlowFilter)" stroke-width="3.5" d="M-200 200 Q 350 380, 900 200 T 1700 200 T 2500 200" />
-            <path class="wave-layer-6" filter="url(#neonGlowFilter)" stroke-width="1.5" d="M-200 380 Q 400 220, 950 380 T 1750 380 T 2550 380" />
-            <path class="wave-layer-7" filter="url(#neonGlowFilter)" stroke-width="2.2" d="M-200 220 Q 180 340, 620 220 T 1420 220 T 2220 220" />
-            <path class="wave-layer-8" filter="url(#neonGlowFilter)" stroke-width="1.2" d="M-200 400 Q 280 260, 760 400 T 1560 400 T 2360 400" />
-            <path class="wave-layer-9" filter="url(#neonGlowFilter)" stroke-width="2.8" d="M-200 180 Q 220 300, 680 180 T 1480 180 T 2280 180" />
-            <path class="wave-layer-10" filter="url(#neonGlowFilter)" stroke-width="1.6" d="M-200 420 Q 320 240, 840 420 T 1640 420 T 2440 420" />
         </svg>
     </div>
 
-    <!-- HERO CONTENT GRID -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
         
-        <!-- LEFT COLUMN: HEADLINE & CTA -->
+        <!-- LEFT COLUMN: EDITORIAL CONTENT -->
         <div class="lg:col-span-7 text-center lg:text-left">
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-bold text-blue-200 mb-4">
+                <i class="fa-solid fa-graduation-cap text-[#FBBF24]" aria-hidden="true"></i>
+                <span>Plateforme Académique Universitaire</span>
+            </div>
+
             <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-5 leading-tight">
-                Toutes tes épreuves<br>
-                <span class="text-[#FBBF24]">Un seul endroit.</span>
+                Votre espace de ressources pour<br>
+                <span class="text-[#FBBF24]">mieux préparer vos études.</span>
             </h1>
 
             <p class="max-w-xl mx-auto lg:mx-0 text-sm sm:text-base text-slate-300 mb-8 leading-relaxed font-medium">
-                Retrouve facilement les anciennes épreuves de ta filière, matière par matière et semestre par semestre.
+                Accédez aux épreuves des années précédentes, résumés de cours, guides méthodologiques et conseils pratiques structurés par filière et semestre.
             </p>
 
-            <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                <a href="{% url 'academics:filieres' %}" class="btn-primary w-full sm:w-auto text-sm sm:text-base px-8 py-3.5 rounded-xl shadow-lg shadow-blue-600/40 font-extrabold flex items-center justify-center">
-                    <span>Explorer mes épreuves</span>
-                    <span class="ml-2 text-lg"></span>
-                </a>
+            <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'academics:filieres' %}" class="btn-primary w-full sm:w-auto text-sm px-7 py-3.5 rounded-xl shadow-lg shadow-blue-600/40 font-extrabold flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-book-open text-sm" aria-hidden="true"></i>
+                        <span>Explorer mes épreuves</span>
+                    </a>
+                    <a href="{% url 'accounts:dashboard' %}" class="w-full sm:w-auto text-sm px-6 py-3.5 rounded-xl border border-white/30 text-white font-bold hover:bg-white/10 transition-colors flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-gauge text-sm text-blue-300" aria-hidden="true"></i>
+                        <span>Mon tableau de bord</span>
+                    </a>
+                {% else %}
+                    <a href="{% url 'accounts:register' %}" class="btn-primary w-full sm:w-auto text-sm px-7 py-3.5 rounded-xl shadow-lg shadow-blue-600/40 font-extrabold flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-user-plus text-sm" aria-hidden="true"></i>
+                        <span>Créer un compte</span>
+                    </a>
+                    <a href="{% url 'accounts:login' %}" class="w-full sm:w-auto text-sm px-6 py-3.5 rounded-xl border border-white/30 text-white font-bold hover:bg-white/10 transition-colors flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-right-to-bracket text-sm text-blue-300" aria-hidden="true"></i>
+                        <span>Se connecter</span>
+                    </a>
+                {% endif %}
             </div>
         </div>
 
-        <!-- RIGHT COLUMN: ACADEMIC ILLUSTRATION GRAPHIC -->
+        <!-- RIGHT COLUMN: ACADEMIC INFOGRAPHIC -->
         <div class="lg:col-span-5 flex justify-center">
             <div class="relative w-full max-w-sm sm:max-w-md p-4">
-                <svg class="w-full h-auto drop-shadow-2xl" viewBox="0 0 400 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg class="w-full h-auto drop-shadow-2xl" viewBox="0 0 400 320" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <circle cx="200" cy="160" r="130" fill="#2563EB" fill-opacity="0.15" />
-                    
                     <rect x="70" y="80" width="170" height="200" rx="14" fill="#0B1B47" stroke="#1D4ED8" stroke-width="2"/>
                     <rect x="90" y="60" width="170" height="200" rx="14" fill="#0E2461" stroke="#3B82F6" stroke-width="2"/>
-                    
                     <rect x="110" y="40" width="170" height="210" rx="16" fill="#FFFFFF"/>
                     <rect x="130" y="65" width="130" height="12" rx="4" fill="#071A49"/>
                     <rect x="130" y="90" width="90" height="8" rx="4" fill="#94A3B8"/>
                     <rect x="130" y="108" width="110" height="8" rx="4" fill="#CBD5E1"/>
                     <rect x="130" y="126" width="75" height="8" rx="4" fill="#CBD5E1"/>
-                    
                     <circle cx="155" cy="180" r="22" fill="#071A49"/>
                     <text x="145" y="187" fill="#3B82F6" font-family="Plus Jakarta Sans, sans-serif" font-weight="900" font-size="20">A</text>
                     <text x="160" y="187" fill="#FFFFFF" font-family="Plus Jakarta Sans, sans-serif" font-weight="900" font-size="16">x</text>
-
-                    <g transform="translate(230, 195)">
-                        <rect width="64" height="28" rx="8" fill="#EA580C"/>
-                        <text x="14" y="19" fill="#FFFFFF" font-family="Plus Jakarta Sans, sans-serif" font-weight="800" font-size="12">PDF</text>
-                    </g>
-                    
-                    <g transform="translate(190, 10)">
-                        <path d="M70 20 L130 50 L70 80 L10 50 Z" fill="#071A49" stroke="#3B82F6" stroke-width="2.5"/>
-                        <path d="M30 62 V85 C30 98 110 98 110 85 V62" stroke="#2563EB" stroke-width="3" fill="#0E2461"/>
-                        <path d="M125 50 V90" stroke="#FBBF24" stroke-width="2.5" stroke-linecap="round"/>
-                        <circle cx="125" cy="93" r="4" fill="#FBBF24"/>
-                    </g>
-
-                    <path d="M60 40 L63 47 L70 50 L63 53 L60 60 L57 53 L50 50 L57 47 Z" fill="#FBBF24"/>
-                    <path d="M330 140 L332 145 L337 147 L332 149 L330 154 L328 149 L323 147 L328 145 Z" fill="#3B82F6"/>
                 </svg>
             </div>
         </div>
@@ -95,7 +111,7 @@
     </div>
 </section>
 
-<!-- 2. INFINITE MARQUEE TICKER (BANDE PASSANTE DÉFILANTE ILLIMITÉE - SANS EMOJI) -->
+<!-- 3. MARQUEE TICKER -->
 <section class="marquee-ticker-container">
     <div class="marquee-wrapper">
         <div class="marquee-content">
@@ -103,176 +119,266 @@
                 <span class="text-white font-extrabold text-sm">+1 500</span>
                 <span class="text-slate-300 text-xs font-semibold">Épreuves disponibles</span>
             </div>
-
             <div class="stat-ticker-pill">
                 <span class="text-white font-extrabold text-sm">12</span>
-                <span class="text-slate-300 text-xs font-semibold">Matières</span>
+                <span class="text-slate-300 text-xs font-semibold">Matières clés</span>
             </div>
-
-            <div class="stat-ticker-pill">
-                <span class="text-white font-extrabold text-sm">5</span>
-                <span class="text-slate-300 text-xs font-semibold">Filières L1</span>
-            </div>
-
             <div class="stat-ticker-pill">
                 <span class="text-white font-extrabold text-sm">500+</span>
                 <span class="text-slate-300 text-xs font-semibold">Étudiants inscrits</span>
             </div>
-
             <div class="stat-ticker-pill">
-                <span class="text-amber-300 font-extrabold text-xs uppercase tracking-wider">100% Conforme L1</span>
+                <span class="text-amber-300 font-extrabold text-xs uppercase tracking-wider">Pass Semestre</span>
             </div>
-
             <div class="stat-ticker-pill">
-                <span class="text-emerald-300 font-extrabold text-xs uppercase tracking-wider">Paiement Sécurisé</span>
+                <span class="text-emerald-300 font-extrabold text-xs uppercase tracking-wider">100% Conforme L1</span>
             </div>
         </div>
 
-        <!-- DUPLICATED SET FOR SEAMLESS INFINITE LOOP -->
         <div class="marquee-content" aria-hidden="true">
             <div class="stat-ticker-pill">
                 <span class="text-white font-extrabold text-sm">+1 500</span>
                 <span class="text-slate-300 text-xs font-semibold">Épreuves disponibles</span>
             </div>
-
             <div class="stat-ticker-pill">
                 <span class="text-white font-extrabold text-sm">12</span>
-                <span class="text-slate-300 text-xs font-semibold">Matières</span>
+                <span class="text-slate-300 text-xs font-semibold">Matières clés</span>
             </div>
-
-            <div class="stat-ticker-pill">
-                <span class="text-white font-extrabold text-sm">5</span>
-                <span class="text-slate-300 text-xs font-semibold">Filières L1</span>
-            </div>
-
             <div class="stat-ticker-pill">
                 <span class="text-white font-extrabold text-sm">500+</span>
                 <span class="text-slate-300 text-xs font-semibold">Étudiants inscrits</span>
             </div>
-
             <div class="stat-ticker-pill">
-                <span class="text-amber-300 font-extrabold text-xs uppercase tracking-wider">100% Conforme L1</span>
+                <span class="text-amber-300 font-extrabold text-xs uppercase tracking-wider">Pass Semestre</span>
             </div>
-
             <div class="stat-ticker-pill">
-                <span class="text-emerald-300 font-extrabold text-xs uppercase tracking-wider">Paiement Sécurisé</span>
+                <span class="text-emerald-300 font-extrabold text-xs uppercase tracking-wider">100% Conforme L1</span>
             </div>
         </div>
     </div>
 </section>
 
-<!-- 3. SECTION : COMMENT ÇA MARCHE ? (SANS CARTES — MINIMALISTE ET ÉLÉGANT) -->
-<section class="py-14 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="mb-10 text-left">
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-[#071A49] tracking-tight">Comment ça marche ?</h2>
+<!-- 4. RESOURCE OVERVIEW -->
+<section class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mb-12 text-center max-w-3xl mx-auto">
+        <h2 class="text-2xl sm:text-4xl font-extrabold text-[#071A49] tracking-tight mb-3">
+            Toutes vos ressources académiques en un seul endroit
+        </h2>
+        <p class="text-slate-600 text-xs sm:text-sm leading-relaxed">
+            ArchivEx rassemble et organise l'ensemble des contenus indispensables pour accompagner la réussite de votre semestre universitaire.
+        </p>
     </div>
 
-    <!-- BORDERLESS 4-STEP HORIZONTAL TIMELINE FLOW (NO CARDS) -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 relative">
-        
-        <!-- Step 1 -->
-        <div class="relative flex flex-col items-start pr-2">
-            <div class="flex items-center space-x-3 mb-4">
-                <div class="w-9 h-9 rounded-full bg-[#2563EB] text-white font-black text-xs flex items-center justify-center shadow-md shadow-blue-500/20">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Épreuves -->
+        <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-[#2563EB] transition-all flex flex-col justify-between">
+            <div>
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-[#2563EB] flex items-center justify-center text-xl mb-4 shrink-0">
+                    <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+                </div>
+                <h3 class="text-base font-extrabold text-[#071A49] mb-2">Épreuves & Annales</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    Consultez les sujets d'examens des sessions précédentes classés par filière, semestre et matière.
+                </p>
+            </div>
+            <div class="pt-4 mt-4 border-t border-slate-100">
+                <a href="{% url 'exams:liste' %}" class="text-xs font-bold text-[#2563EB] hover:underline flex items-center space-x-1">
+                    <span>Voir les épreuves</span>
+                    <i class="fa-solid fa-arrow-right text-[10px]" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Résumés -->
+        <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-emerald-500 transition-all flex flex-col justify-between">
+            <div>
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-4 shrink-0">
+                    <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+                </div>
+                <h3 class="text-base font-extrabold text-[#071A49] mb-2">Résumés de Cours</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    Révisez l'essentiel des chapitres grâce à des fiches de synthèse structurées et concises.
+                </p>
+            </div>
+            <div class="pt-4 mt-4 border-t border-slate-100">
+                <a href="{% url 'content:summary_list' %}" class="text-xs font-bold text-emerald-600 hover:underline flex items-center space-x-1">
+                    <span>Parcourir les résumés</span>
+                    <i class="fa-solid fa-arrow-right text-[10px]" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Guides -->
+        <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-purple-500 transition-all flex flex-col justify-between">
+            <div>
+                <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl mb-4 shrink-0">
+                    <i class="fa-solid fa-compass" aria-hidden="true"></i>
+                </div>
+                <h3 class="text-base font-extrabold text-[#071A49] mb-2">Guides de Matières</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    Comprenez les attentes des enseignants, les exigences méthodologiques et les stratégies de traitement d'épreuve.
+                </p>
+            </div>
+            <div class="pt-4 mt-4 border-t border-slate-100">
+                <a href="{% url 'content:guide_list' %}" class="text-xs font-bold text-purple-600 hover:underline flex items-center space-x-1">
+                    <span>Découvrir les guides</span>
+                    <i class="fa-solid fa-arrow-right text-[10px]" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Conseils -->
+        <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-amber-500 transition-all flex flex-col justify-between">
+            <div>
+                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl mb-4 shrink-0">
+                    <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
+                </div>
+                <h3 class="text-base font-extrabold text-[#071A49] mb-2">Conseils Méthodologiques</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    Adoptez les meilleures méthodes de révision, de gestion du temps et de préparation physique et mentale.
+                </p>
+            </div>
+            <div class="pt-4 mt-4 border-t border-slate-100">
+                <a href="{% url 'content:article_list' %}" class="text-xs font-bold text-amber-600 hover:underline flex items-center space-x-1">
+                    <span>Lire les conseils</span>
+                    <i class="fa-solid fa-arrow-right text-[10px]" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 5. HOW ARCHIVEX WORKS -->
+<section class="py-16 bg-slate-100/60 border-y border-slate-200/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="mb-12 text-left">
+            <span class="text-xs font-bold uppercase tracking-wider text-[#2563EB] mb-1 block">Parcours étudiant</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-[#071A49] tracking-tight">Comment fonctionne ArchivEx ?</h2>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-start">
+                <div class="w-8 h-8 rounded-full bg-[#2563EB] text-white font-black text-xs flex items-center justify-center mb-3">
                     01
                 </div>
-                <div class="w-10 h-10 rounded-2xl bg-blue-50 text-[#2563EB] flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 01-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path></svg>
-                </div>
+                <h3 class="text-sm font-extrabold text-[#071A49] mb-1">Inscrivez-vous</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">Créez votre compte étudiant rapidement et en toute sécurité.</p>
             </div>
-            <h3 class="text-base font-extrabold text-[#071A49] mb-1.5">Choisis ta filière</h3>
-            <p class="text-xs text-slate-500 leading-relaxed">Sélectionne ta spécialité de Licence 1 pour afficher ton programme.</p>
-        </div>
 
-        <!-- Step 2 -->
-        <div class="relative flex flex-col items-start pr-2">
-            <div class="flex items-center space-x-3 mb-4">
-                <div class="w-9 h-9 rounded-full bg-[#2563EB] text-white font-black text-xs flex items-center justify-center shadow-md shadow-blue-500/20">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-start">
+                <div class="w-8 h-8 rounded-full bg-[#2563EB] text-white font-black text-xs flex items-center justify-center mb-3">
                     02
                 </div>
-                <div class="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                </div>
+                <h3 class="text-sm font-extrabold text-[#071A49] mb-1">Configurez votre profil</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">Indiquez votre établissement et votre filière d'études.</p>
             </div>
-            <h3 class="text-base font-extrabold text-[#071A49] mb-1.5">Choisis ton semestre</h3>
-            <p class="text-xs text-slate-500 leading-relaxed">Accède aux matières du Semestre 1 ou du Semestre 2.</p>
-        </div>
 
-        <!-- Step 3 -->
-        <div class="relative flex flex-col items-start pr-2">
-            <div class="flex items-center space-x-3 mb-4">
-                <div class="w-9 h-9 rounded-full bg-[#2563EB] text-white font-black text-xs flex items-center justify-center shadow-md shadow-blue-500/20">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-start">
+                <div class="w-8 h-8 rounded-full bg-[#2563EB] text-white font-black text-xs flex items-center justify-center mb-3">
                     03
                 </div>
-                <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                </div>
+                <h3 class="text-sm font-extrabold text-[#071A49] mb-1">Explorez vos matières</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">Accédez à votre programme organisé par semestre et Unité d'Enseignement.</p>
             </div>
-            <h3 class="text-base font-extrabold text-[#071A49] mb-1.5">Choisis ta matière</h3>
-            <p class="text-xs text-slate-500 leading-relaxed">Parcours les matières et découvre les épreuves disponibles.</p>
-        </div>
 
-        <!-- Step 4 -->
-        <div class="relative flex flex-col items-start">
-            <div class="flex items-center space-x-3 mb-4">
-                <div class="w-9 h-9 rounded-full bg-[#2563EB] text-white font-black text-xs flex items-center justify-center shadow-md shadow-blue-500/20">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-start">
+                <div class="w-8 h-8 rounded-full bg-[#2563EB] text-white font-black text-xs flex items-center justify-center mb-3">
                     04
                 </div>
-                <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                </div>
+                <h3 class="text-sm font-extrabold text-[#071A49] mb-1">Consultez les ressources</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">Téléchargez les sujets d'examens, résumés et fiches de travail.</p>
             </div>
-            <h3 class="text-base font-extrabold text-[#071A49] mb-1.5">Accède à tes épreuves</h3>
-            <p class="text-xs text-slate-500 leading-relaxed">Consulte gratuitement certaines épreuves ou débloque le Pass pour toutes les consulter.</p>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-start">
+                <div class="w-8 h-8 rounded-full bg-[#2563EB] text-white font-black text-xs flex items-center justify-center mb-3">
+                    05
+                </div>
+                <h3 class="text-sm font-extrabold text-[#071A49] mb-1">Révisez efficacement</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">Préparez vos sessions d'examens sereinement avec des bases solides.</p>
+            </div>
         </div>
     </div>
 </section>
 
-<!-- 4. SECTION : TOUT CE DONT TU AS BESOIN (DESIGNS MINIMALISTES SANS CARTES LOURDES) -->
-<section class="py-14 bg-slate-100/50 border-t border-slate-200/60">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="mb-10 text-left">
-            <h2 class="text-2xl sm:text-3xl font-extrabold text-[#071A49] mb-1">Tout ce dont tu as besoin pour réussir tes examens</h2>
-            <p class="text-slate-500 text-xs sm:text-sm">Une plateforme pensée spécialement pour l'organisation de tes révisions en L1.</p>
+<!-- 6. ARCHIVEX PASS SECTION -->
+<section class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white border border-slate-200 rounded-3xl p-8 sm:p-12 shadow-sm grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <div class="lg:col-span-8 space-y-4">
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-xs font-bold text-amber-800">
+                <i class="fa-solid fa-id-card text-amber-600" aria-hidden="true"></i>
+                <span>Accès complet par semestre</span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-[#071A49] tracking-tight">
+                Le Pass Semestre ArchivEx
+            </h2>
+            <p class="text-slate-600 text-xs sm:text-sm leading-relaxed">
+                Le Pass Semestre permet de débloquer l'intégralité des épreuves Premium et des corrigés détaillés d'un semestre spécifique. Il permet de financer directement le travail de numérisation, de tri et d'indexation académique des sujets.
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs font-semibold text-[#071A49]">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-check text-emerald-600" aria-hidden="true"></i>
+                    <span>Accès illimité aux épreuves du semestre</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-check text-emerald-600" aria-hidden="true"></i>
+                    <span>Activation simple et instantanée</span>
+                </div>
+            </div>
         </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <!-- Feature 1 -->
-            <div class="flex flex-col items-start">
-                <div class="w-11 h-11 rounded-2xl bg-blue-50 text-[#2563EB] flex items-center justify-center mb-3">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                </div>
-                <h3 class="text-sm font-extrabold text-[#071A49] mb-1">Épreuves</h3>
-                <p class="text-xs text-slate-500 leading-relaxed">Anciennes épreuves classées et organisées.</p>
-            </div>
-
-            <!-- Feature 2 -->
-            <div class="flex flex-col items-start">
-                <div class="w-11 h-11 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mb-3">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </div>
-                <h3 class="text-sm font-extrabold text-[#071A49] mb-1">Recherche</h3>
-                <p class="text-xs text-slate-500 leading-relaxed">Trouve rapidement l'épreuve qu'il te faut.</p>
-            </div>
-
-            <!-- Feature 3 -->
-            <div class="flex flex-col items-start">
-                <div class="w-11 h-11 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mb-3">
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
-                </div>
-                <h3 class="text-sm font-extrabold text-[#071A49] mb-1">Favoris</h3>
-                <p class="text-xs text-slate-500 leading-relaxed">Enregistre tes épreuves importantes.</p>
-            </div>
-
-            <!-- Feature 4 -->
-            <div class="flex flex-col items-start">
-                <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                </div>
-                <h3 class="text-sm font-extrabold text-[#071A49] mb-1">Pass Semestre</h3>
-                <p class="text-xs text-slate-500 leading-relaxed">Accède à toutes les épreuves Premium de ton semestre.</p>
-            </div>
+        <div class="lg:col-span-4 flex flex-col items-center justify-center p-6 bg-slate-50 rounded-2xl border border-slate-200/80 text-center">
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Formule unique</p>
+            <p class="text-2xl sm:text-3xl font-black text-[#071A49] mb-2">Pass Semestre</p>
+            <p class="text-xs text-slate-500 mb-6">Valable pour toute la durée du semestre en cours.</p>
+            {% if user.is_authenticated %}
+                <a href="{% url 'accounts:dashboard' %}" class="btn-primary text-xs px-6 py-3 font-extrabold rounded-xl w-full text-center">
+                    Consulter mon Pass
+                </a>
+            {% else %}
+                <a href="{% url 'accounts:register' %}" class="btn-primary text-xs px-6 py-3 font-extrabold rounded-xl w-full text-center">
+                    Créer un compte pour activer
+                </a>
+            {% endif %}
         </div>
     </div>
+</section>
+
+<!-- 7. STUDENT GUIDANCE / KNOWLEDGE CENTER -->
+<section class="py-16 bg-[#071A49] text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+        <div class="md:col-span-8 space-y-4">
+            <span class="text-xs font-bold uppercase tracking-widest text-[#3B82F6] block">Guide Étudiant & Méthodologie</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                Accompagner les étudiants au-delà des simples documents
+            </h2>
+            <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
+                Avoir accès aux épreuves ne suffit pas : encore faut-il savoir comment les travailler efficacement. Notre Guide Étudiant propose des conseils pratiques sur la prise de notes, l'organisation du temps de travail et la gestion du stress lors des examens.
+            </p>
+        </div>
+        <div class="md:col-span-4 flex justify-start md:justify-end">
+            <a href="{% url 'content:student_guide' %}" class="btn-secondary text-xs sm:text-sm px-6 py-3.5 font-extrabold rounded-xl flex items-center space-x-2 bg-white text-[#071A49] hover:bg-slate-100 transition-colors">
+                <i class="fa-solid fa-graduation-cap text-blue-600" aria-hidden="true"></i>
+                <span>Consulter le Guide Étudiant</span>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- 8. FINAL CTA -->
+<section class="py-16 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <h2 class="text-2xl sm:text-3xl font-extrabold text-[#071A49] mb-4">
+        Prêt à mieux préparer votre semestre ?
+    </h2>
+    <p class="text-slate-600 text-xs sm:text-sm leading-relaxed mb-8 max-w-xl mx-auto">
+        Rejoignez les étudiants qui utilisent ArchivEx pour organiser leurs révisions et aborder leurs examens en toute confiance.
+    </p>
+    {% if not user.is_authenticated %}
+        <a href="{% url 'accounts:register' %}" class="btn-primary text-xs sm:text-sm px-8 py-3.5 font-extrabold rounded-xl inline-block shadow-md">
+            Créer un compte gratuitement
+        </a>
+    {% else %}
+        <a href="{% url 'academics:filieres' %}" class="btn-primary text-xs sm:text-sm px-8 py-3.5 font-extrabold rounded-xl inline-block shadow-md">
+            Accéder à mes matières
+        </a>
+    {% endif %}
 </section>
 {% endblock %}

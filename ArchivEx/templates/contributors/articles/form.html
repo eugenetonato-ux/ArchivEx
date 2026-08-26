@@ -1,0 +1,64 @@
+{% extends "contributors/admin_base.html" %}
+
+{% block title %}{% if is_create %}Rédiger un conseil{% else %}Modifier le conseil{% endif %} — Administration ArchivEx{% endblock %}
+
+{% block admin_content %}
+<div class="max-w-3xl mx-auto space-y-6">
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div class="flex items-center space-x-2 text-xs font-semibold text-slate-400 mb-2">
+            <a href="{% url 'contributors:article_list' %}" class="hover:text-[#2563EB]">Conseils</a>
+            <span>/</span>
+            <span class="text-[#071A49] font-bold">{% if is_create %}Rédaction{% else %}Édition{% endif %}</span>
+        </div>
+        <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">
+            {% if is_create %}Rédiger un nouveau conseil d'étude{% else %}Modifier le conseil : {{ article_obj.title }}{% endif %}
+        </h1>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+        <form method="post" class="space-y-5">
+            {% csrf_token %}
+
+            <div>
+                <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.title.label }}</label>
+                {{ form.title }}
+                {% if form.title.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.title.errors.0 }}</p>{% endif %}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.category.label }}</label>
+                    {{ form.category }}
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.publication_status.label }}</label>
+                    {{ form.publication_status }}
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.summary.label }}</label>
+                {{ form.summary }}
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.content.label }}</label>
+                {{ form.content }}
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+                <a href="{% url 'contributors:article_list' %}" class="text-xs font-bold text-slate-500 hover:text-slate-800">
+                    Annuler
+                </a>
+                <button type="submit" class="btn-primary text-xs px-6 py-3 font-extrabold rounded-xl shadow-sm flex items-center space-x-2">
+                    <i class="fa-solid fa-paper-plane text-xs" aria-hidden="true"></i>
+                    <span>Enregistrer l'article</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

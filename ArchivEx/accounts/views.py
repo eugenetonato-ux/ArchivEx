@@ -2,12 +2,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db.models import Q, Count
+from django.http import JsonResponse
+
 from exams.models import Exam
 from .forms import StudentRegistrationForm, StudentLoginForm, StudentProfileForm
 from .models import StudentProfile, Favorite
 from payments.models import SemesterAccess
-from django.db.models import Q, Count
-
 
 def register_view(request):
     if request.user.is_authenticated:
@@ -26,7 +27,6 @@ def register_view(request):
         form = StudentRegistrationForm()
 
     return render(request, "accounts/register.html", {"form": form})
-
 
 def login_view(request):
     if request.user.is_authenticated:
@@ -47,16 +47,26 @@ def login_view(request):
 
     return render(request, "accounts/login.html", {"form": form})
 
-
 def logout_view(request):
     logout(request)
     messages.info(request, "Tu es à présent déconnecté.")
     return redirect("academics:home")
 
-
 @login_required
 def dashboard_view(request):
     profile = getattr(request.user, "profile", None)
+
+    # Initialiser toutes les variables pour éviter UnboundLocalError
+    active_semester = None
+    user_ues = []
+    semester_subjects_count = 0
+    semester_exams_count = 0
+    semester_summaries_count = 0
+    semester_guides_count = 0
+    recent_exams = []
+    recent_summaries = []
+    recent_guides = []
+    recent_articles = []
 
     # Active accesses (Legacy & V2)
     active_accesses = SemesterAccess.objects.filter(
@@ -77,11 +87,6 @@ def dashboard_view(request):
     ).order_by("-created_at")[:6]
 
     # Personalized UEs & Content matching student's academic context
-    semester_subjects_count = 0
-    semester_exams_count = 0
-    semester_summaries_count = 0
-    semester_guides_count = 0
-
     if profile and profile.filiere:
         from academics.models import Semester, Subject
         active_semester = Semester.objects.filter(filiere=profile.filiere).first()
@@ -137,9 +142,6 @@ def dashboard_view(request):
     }
     return render(request, "dashboard/dashboard.html", context)
 
-
-
-
 @login_required
 def favorites_list_view(request):
     user_accesses = set(
@@ -155,7 +157,6 @@ def favorites_list_view(request):
         fav.exam.user_has_access = fav.exam.is_free or (fav.exam.semester_id in user_accesses)
 
     return render(request, "dashboard/favoris.html", {"favorites": favorites})
-
 
 @login_required
 def profile_view(request):
@@ -194,7 +195,7 @@ def profile_view(request):
         })
 
     active_accesses = SemesterAccess.objects.filter(
-        Q(user=request.user) & (Q(activated_at__isnull=False) |Q (payments__status="reussi"))
+        Q(user=request.user) & (Q(activated_at__isnull=False) | Q(payments__status="reussi"))
     ).select_related("semester", "filiere", "level", "school").distinct()
 
     context = {
@@ -204,8 +205,6 @@ def profile_view(request):
     }
     return render(request, "dashboard/profil.html", context)
 
-
-from django.http import JsonResponse
 from academics.models import Level, Filiere
 
 def api_levels_view(request):
@@ -216,7 +215,6 @@ def api_levels_view(request):
         levels = levels.filter(Q(school_id=school_id) | Q(school__isnull=True))
     data = [{"id": l.id, "name": l.name, "code": l.code} for l in levels]
     return JsonResponse({"levels": data})
-
 
 def api_filieres_view(request):
     """API JSON retournant les filières filtrées par école et niveau."""
@@ -229,5 +227,3 @@ def api_filieres_view(request):
         filieres = filieres.filter(level_id=level_id)
     data = [{"id": f.id, "name": f.name} for f in filieres]
     return JsonResponse({"filieres": data})
-
-
