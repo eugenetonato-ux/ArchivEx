@@ -1,0 +1,336 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ArchivEx — Bibliothèque Numérique d'Épreuves{% endblock %}</title>
+    
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', '"Inter"', 'sans-serif'],
+                    },
+                    colors: {
+                        navy: {
+                            DEFAULT: '#071A49',
+                            dark: '#030C26',
+                            light: '#0E2461',
+                        },
+                        brandBlue: {
+                            DEFAULT: '#2563EB',
+                            electric: '#3B82F6',
+                            hover: '#1D4ED8',
+                        },
+                        brandGold: {
+                            DEFAULT: '#FBBF24',
+                            orange: '#F59E0B',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Master ArchivEx Stylesheet -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="min-h-screen flex flex-col justify-between pb-20 md:pb-0 bg-[#F7F9FC] text-[#111827]">
+
+    <!-- DEEP NAVY TOP HEADER / NAVIGATION -->
+    <header class="sticky top-0 z-50 bg-[#071A49] border-b border-blue-900/40 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative">
+            
+            <!-- BRAND LOGO WITH VISIBLE WHITE BACKGROUND EMBLEM -->
+            <a href="{% url 'academics:home' %}" class="flex items-center space-x-3 group">
+                <div class="w-10 h-10 rounded-xl overflow-hidden border border-white/20 flex items-center justify-center bg-white shadow-md p-1 group-hover:scale-105 transition-transform">
+                    <img src="{% static 'images/logo.jpg' %}" alt="ArchivEx Logo" class="w-full h-full object-contain">
+                </div>
+                <div class="flex items-center">
+                    <span class="text-xl sm:text-2xl font-extrabold tracking-tight text-white">Archiv<span class="text-[#3B82F6]">Ex</span></span>
+                </div>
+            </a>
+
+            <!-- DESKTOP NAV LINKS -->
+            <nav class="hidden md:flex items-center space-x-8 text-sm font-semibold text-slate-200">
+                <a href="{% url 'academics:home' %}" class="nav-link-navy {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Accueil</a>
+                <a href="{% url 'exams:liste' %}" class="nav-link-navy {% if request.resolver_match.url_name == 'liste' %}active{% endif %}">Épreuves</a>
+                <a href="{% url 'academics:filieres' %}" class="nav-link-navy {% if request.resolver_match.url_name == 'filieres' or request.resolver_match.url_name == 'matieres' %}active{% endif %}">UE</a>
+                <a href="{% url 'academics:about' %}" class="nav-link-navy {% if request.resolver_match.url_name == 'about' %}active{% endif %}">À propos</a>
+            </nav>
+
+            <!-- RIGHT ACTION BUTTONS / FUNCTIONAL NOTIFICATION BELL / USER PROFILE -->
+            <div class="flex items-center space-x-3">
+                
+                <!-- NOTIFICATION BELL APP BUTTON & POPUP CONTAINER -->
+                <div class="relative">
+                    <button type="button" id="notification-bell-btn" onclick="toggleNotifications()" aria-label="Notifications" class="p-2 rounded-xl text-slate-200 hover:text-white hover:bg-white/10 transition-all relative">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                        </svg>
+                        <!-- RED/GOLD UNREAD DOT BADGE -->
+                        <span id="notification-badge" class="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-[#FBBF24] ring-2 ring-[#071A49]"></span>
+                    </button>
+
+                    <!-- FUNCTIONAL NOTIFICATION DROPDOWN POPOVER -->
+                    <div id="notification-dropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 py-3 z-50 text-left text-slate-800 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div class="px-4 py-2 border-b border-slate-100 flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <h3 class="text-sm font-extrabold text-[#071A49]">Notifications</h3>
+                                <span id="notification-unread-count" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-[#2563EB]">3 nouvelles</span>
+                            </div>
+                            <button onclick="markAllNotificationsAsRead()" class="text-[11px] font-semibold text-[#2563EB] hover:underline">
+                                Tout marquer comme lu
+                            </button>
+                        </div>
+
+                        <!-- NOTIFICATION ITEMS -->
+                        <div class="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+                            <!-- ITEM 1 -->
+                            <div class="notification-item p-3.5 hover:bg-slate-50 transition-colors flex items-start space-x-3 cursor-pointer bg-blue-50/40">
+                                <div class="w-8 h-8 rounded-xl bg-blue-100 text-[#2563EB] flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path></svg>
+                                </div>
+                                <div class="flex-grow">
+                                    <p class="text-xs font-bold text-[#071A49] mb-0.5">Bienvenue sur ArchivEx !</p>
+                                    <p class="text-[11px] text-slate-600 leading-tight">Accède facilement à la banque complète des anciennes épreuves</p>
+                                    <span class="text-[10px] text-slate-400 font-medium mt-1 block">Il y a 5 minutes</span>
+                                </div>
+                            </div>
+
+                            <!-- ITEM 2 -->
+                            <div class="notification-item p-3.5 hover:bg-slate-50 transition-colors flex items-start space-x-3 cursor-pointer bg-blue-50/40">
+                                <div class="w-8 h-8 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                </div>
+                                <div class="flex-grow">
+                                    <p class="text-xs font-bold text-[#071A49] mb-0.5">Nouvelle épreuve disponible</p>
+                                    <p class="text-[11px] text-slate-600 leading-tight">L'épreuve d'Analyse Mathématique 2024 (Session Normale) vient d'être ajoutée.</p>
+                                    <span class="text-[10px] text-slate-400 font-medium mt-1 block">Il y a 2 heures</span>
+                                </div>
+                            </div>
+
+                            <!-- ITEM 3 -->
+                            <div class="notification-item p-3.5 hover:bg-slate-50 transition-colors flex items-start space-x-3 cursor-pointer bg-blue-50/40">
+                                <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                </div>
+                                <div class="flex-grow">
+                                    <p class="text-xs font-bold text-[#071A49] mb-0.5">Espace Annales ArchivEx</p>
+                                    <p class="text-[11px] text-slate-600 leading-tight">Accède à l'ensemble des épreuves et sujets de ton semestre.</p>
+                                    <span class="text-[10px] text-slate-400 font-medium mt-1 block">Hier</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- DROPDOWN FOOTER -->
+                        <div class="px-4 pt-2.5 pb-1 border-t border-slate-100 text-center">
+                            <a href="{% url 'exams:liste' %}" class="text-xs font-bold text-[#2563EB] hover:underline">
+                                Explorer toutes les épreuves 
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                {% if user.is_authenticated %}
+                    <a href="{% url 'accounts:dashboard' %}" class="hidden sm:inline-flex items-center px-3.5 py-1.5 text-xs font-bold rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all">
+                        Tableau de bord
+                    </a>
+                    <a href="{% url 'accounts:profile' %}" class="flex items-center space-x-2 p-1 rounded-full bg-white/10 border border-white/20 hover:border-[#3B82F6] transition-all">
+                        {% if user.profile and user.profile.avatar %}
+                            <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}" class="w-8 h-8 rounded-full object-cover">
+                        {% else %}
+                            <div class="w-8 h-8 rounded-full bg-[#2563EB] flex items-center justify-center text-xs font-bold text-white shadow-inner">
+                                {{ user.first_name|default:user.username|slice:":1"|upper }}
+                            </div>
+                        {% endif %}
+                    </a>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="text-xs sm:text-sm font-semibold text-slate-200 hover:text-white px-3 py-1.5 transition-colors">Se connecter</a>
+                    <a href="{% url 'accounts:register' %}" class="btn-primary text-xs sm:text-sm px-4 py-2">
+                        Créer un compte
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- NOTIFICATION MESSAGES -->
+    {% if messages %}
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+            {% for message in messages %}
+                <div class="mb-3 p-4 rounded-xl flex items-center justify-between border {% if message.tags == 'error' %}bg-rose-50 border-rose-200 text-rose-700{% elif message.tags == 'success' %}bg-emerald-50 border-emerald-200 text-emerald-700{% else %}bg-blue-50 border-blue-200 text-blue-700{% endif %} shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        {% if message.tags == 'error' %}
+                            <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        {% elif message.tags == 'success' %}
+                            <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        {% else %}
+                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        {% endif %}
+                        <p class="text-sm font-medium">{{ message }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- FOOTER DESKTOP & TABLET -->
+    {% block footer %}
+    <footer class="border-t border-slate-800 bg-[#071A49] text-slate-400 text-sm mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+                
+                <!-- BRAND INFO -->
+                <div class="lg:col-span-2 space-y-4">
+                    <a href="{% url 'academics:home' %}" class="flex items-center space-x-3">
+                        <div class="w-9 h-9 rounded-xl overflow-hidden border border-white/20 bg-white flex items-center justify-center p-1">
+                            <img src="{% static 'images/logo.jpg' %}" alt="ArchivEx Logo" class="w-full h-full object-contain">
+                        </div>
+                        <div>
+                            <span class="text-xl font-extrabold text-white">Archiv<span class="text-[#3B82F6]">Ex</span></span>
+                        </div>
+                    </a>
+                    <p class="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-sm">
+                        La plateforme académique de référence conçue pour les étudiants afin de rechercher et consulter les épreuves des années précédentes.
+                    </p>
+                </div>
+
+                <!-- LINK COLUMNS -->
+                <div>
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-4 border-b border-slate-700/60 pb-2">Plateforme</h3>
+                    <ul class="space-y-2.5 text-xs font-medium">
+                        <li><a href="{% url 'academics:about' %}" class="hover:text-blue-400 transition-colors">À propos</a></li>
+                        <li><a href="{% url 'academics:filieres' %}" class="hover:text-blue-400 transition-colors">Mes UE</a></li>
+                        <li><a href="{% url 'exams:liste' %}" class="hover:text-blue-400 transition-colors">Banque d'épreuves</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-4 border-b border-slate-700/60 pb-2">Espace Étudiant</h3>
+                    <ul class="space-y-2.5 text-xs font-medium">
+                        {% if user.is_authenticated %}
+                            <li><a href="{% url 'accounts:dashboard' %}" class="hover:text-blue-400 transition-colors">Mon tableau de bord</a></li>
+                            <li><a href="{% url 'accounts:favoris' %}" class="hover:text-blue-400 transition-colors">Mes favoris</a></li>
+                            <li><a href="{% url 'accounts:profile' %}" class="hover:text-blue-400 transition-colors">Mon profil</a></li>
+                        {% else %}
+                            <li><a href="{% url 'accounts:login' %}" class="hover:text-blue-400 transition-colors">Se connecter</a></li>
+                            <li><a href="{% url 'accounts:register' %}" class="hover:text-blue-400 transition-colors">Créer un compte</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-4 border-b border-slate-700/60 pb-2">ArchivEx Pass</h3>
+                    <ul class="space-y-2.5 text-xs font-medium">
+                        <li><span class="text-slate-300">Accès épreuves Premium</span></li>
+                        <li><span class="text-slate-300">Paiement sécurisé</span></li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- SUB FOOTER -->
+            <div class="mt-10 pt-6 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 text-xs text-slate-400">
+                <p>© {% now "Y" %} ArchivEx. Tous droits réservés.</p>
+                
+            </div>
+        </div>
+    </footer>
+    {% endblock %}
+
+    <!-- MOBILE BOTTOM NAVIGATION DOCK -->
+    <nav class="md:hidden mobile-bottom-dock">
+        <!-- ACCUEIL -->
+        <a href="{% url 'academics:home' %}" class="dock-item {% if request.resolver_match.url_name == 'home' %}dock-item-active{% endif %}">
+            <svg class="w-5 h-5 mb-1" fill="{% if request.resolver_match.url_name == 'home' %}currentColor{% else %}none{% endif %}" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+            </svg>
+            <span>Accueil</span>
+        </a>
+
+        <!-- UE (EX-MATIÈRES) -->
+        <a href="{% url 'academics:filieres' %}" class="dock-item {% if request.resolver_match.url_name == 'filieres' or request.resolver_match.url_name == 'matieres' %}dock-item-active{% endif %}">
+            <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+            </svg>
+            <span>UE</span>
+        </a>
+
+        <!-- RECHERCHE / ÉPREUVES -->
+        <a href="{% url 'exams:liste' %}" class="dock-item {% if request.resolver_match.url_name == 'liste' %}dock-item-active{% endif %}">
+            <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <span>Recherche</span>
+        </a>
+
+        <!-- FAVORIS -->
+        <a href="{% url 'accounts:favoris' %}" class="dock-item {% if request.resolver_match.url_name == 'favoris' %}dock-item-active{% endif %}">
+            <svg class="w-5 h-5 mb-1" fill="{% if request.resolver_match.url_name == 'favoris' %}currentColor{% else %}none{% endif %}" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+            </svg>
+            <span>Favoris</span>
+        </a>
+
+        <!-- PROFIL -->
+        <a href="{% if user.is_authenticated %}{% url 'accounts:profile' %}{% else %}{% url 'accounts:login' %}{% endif %}" class="dock-item {% if request.resolver_match.url_name == 'profile' or request.resolver_match.url_name == 'login' %}dock-item-active{% endif %}">
+            <svg class="w-5 h-5 mb-1" fill="{% if request.resolver_match.url_name == 'profile' %}currentColor{% else %}none{% endif %}" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+            <span>Profil</span>
+        </a>
+    </nav>
+
+    <!-- JAVASCRIPT FOR FUNCTIONAL NOTIFICATION BELL DROPDOWN APP -->
+    <script>
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notification-dropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        function markAllNotificationsAsRead() {
+            const badge = document.getElementById('notification-badge');
+            const unreadCount = document.getElementById('notification-unread-count');
+            const items = document.querySelectorAll('.notification-item');
+            
+            if (badge) badge.classList.add('hidden');
+            if (unreadCount) {
+                unreadCount.textContent = '0 nouvelle';
+                unreadCount.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500';
+            }
+            items.forEach(item => {
+                item.classList.remove('bg-blue-50/40');
+            });
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const bellBtn = document.getElementById('notification-bell-btn');
+            const dropdown = document.getElementById('notification-dropdown');
+            if (dropdown && !dropdown.classList.contains('hidden')) {
+                if (bellBtn && !bellBtn.contains(event.target) && !dropdown.contains(event.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}{{ exam.title }} — UE · {{ exam.subject.name }} | ArchivEx{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center text-xs font-medium text-slate-500 space-x-2 mb-6">
+        <a href="{% url 'academics:home' %}" class="hover:text-[#2563EB]">Accueil</a>
+        <span>/</span>
+        <a href="{% url 'academics:filieres' %}" class="hover:text-[#2563EB]">Mes UE</a>
+        <span>/</span>
+        <a href="{% url 'exams:liste' %}?subject={{ exam.subject.id }}" class="hover:text-[#2563EB]">{{ exam.subject.name }}</a>
+        <span>/</span>
+        <span class="text-[#071A49] font-bold">{{ exam.title|truncatechars:30 }}</span>
+    </nav>
+
+    <!-- HEADER CARD -->
+    <div class="card-academic bg-white border border-slate-200 p-6 sm:p-8 mb-8 shadow-sm rounded-3xl">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6">
+            <div>
+                <div class="flex items-center space-x-2 mb-3 flex-wrap gap-1">
+                    <span class="badge-l1">{{ exam.filiere.level.name|default:"LICENCE 1" }}</span>
+                    {% if has_access %}
+                        <span class="badge-free text-[10px]">Gratuit</span>
+                    {% else %}
+                        <span class="badge-premium text-[10px]">🔒 Incluse dans le Pass</span>
+                    {% endif %}
+                    <span class="text-xs font-bold text-slate-500">{{ exam.year }} · {{ exam.get_exam_type_display|default:"Session Normale" }}</span>
+                </div>
+
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-[#071A49] mb-2">📄 {{ exam.title }}</h1>
+                <p class="text-xs sm:text-sm font-bold text-[#2563EB]">UE — {{ exam.subject.name }} · {{ exam.filiere.school.name|default:"ENEAM" }} · {{ exam.filiere.name }} ({{ exam.semester.label }})</p>
+            </div>
+
+            <div class="flex items-center space-x-3 w-full md:w-auto">
+                <a href="{% url 'exams:toggle_favorite' pk=exam.id %}" class="btn-secondary text-xs px-4 py-2.5 flex items-center justify-center space-x-2 w-full md:w-auto font-bold">
+                    <svg class="w-4 h-4 {% if is_favorited %}text-rose-500 fill-current{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                    <span>{% if is_favorited %}Retirer des favoris{% else %}Ajouter aux favoris{% endif %}</span>
+                </a>
+            </div>
+        </div>
+
+        {% if exam.description %}
+            <p class="text-xs text-slate-500 pt-4 border-t border-slate-100">{{ exam.description }}</p>
+        {% endif %}
+    </div>
+
+    <!-- DOCUMENT VIEW / ACCÈS VERROUILLÉ -->
+    {% if has_access %}
+        <div class="card-academic p-6 sm:p-8 bg-white mb-8 rounded-3xl">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-100">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg">
+                        ✓
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-[#071A49]">Épreuve débloquée</h2>
+                        <p class="text-xs text-emerald-600 font-semibold">Accès complet au document PDF d'examen.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-3 w-full sm:w-auto">
+                    <a href="{% url 'exams:stream_pdf' pk=exam.id %}" target="_blank" class="btn-primary text-xs px-6 py-2.5 font-bold">
+                        Consulter
+                    </a>
+                    <a href="{% url 'exams:stream_pdf' pk=exam.id %}?download=1" class="btn-secondary text-xs px-6 py-2.5 font-bold">
+                        Télécharger
+                    </a>
+                </div>
+            </div>
+
+            <!-- PDF PREVIEW -->
+            <div class="w-full h-[600px] rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 flex items-center justify-center">
+                <iframe src="{% url 'exams:stream_pdf' pk=exam.id %}" class="w-full h-full border-0"></iframe>
+            </div>
+        </div>
+    {% else %}
+        <!-- LOCKED PREMIUM ACCESS (SEMESTER UNLOCK, NOT PER-PAPER) -->
+        <div class="card-academic bg-[#071A49] text-center py-14 px-6 relative rounded-3xl border border-blue-900/40 text-white shadow-xl">
+            <div class="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-amber-400 font-bold flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            </div>
+
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-white mb-2">🔒 Cette épreuve est verrouillée</h2>
+            
+            <p class="text-slate-300 max-w-md mx-auto text-xs sm:text-sm mb-2 leading-relaxed">
+                Elle est accessible avec ton <span class="text-amber-400 font-extrabold">ArchivEx Pass — {{ exam.semester.label|default:"Semestre 1" }}</span>.
+            </p>
+
+            <p class="text-amber-400 text-lg font-black mb-8">
+                2 000 FCFA <span class="text-slate-400 text-xs font-normal">/ tout le semestre</span>
+            </p>
+
+            <div class="flex justify-center">
+                <a href="{% url 'payments:pass_semestre' semester_id=exam.semester.id %}" class="btn-gold text-sm px-8 py-3.5 font-black shadow-xl hover:scale-105 transition-transform">
+                    🔓 Débloquer mon semestre
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

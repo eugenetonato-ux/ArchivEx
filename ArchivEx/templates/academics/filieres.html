@@ -1,0 +1,76 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Toutes les Filières & Parcours Académiques — ArchivEx{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center text-xs font-medium text-slate-500 space-x-2 mb-6">
+        <a href="{% url 'academics:home' %}" class="hover:text-[#2563EB]">Accueil</a>
+        <span>/</span>
+        <span class="text-[#071A49] font-bold">Filières & Parcours</span>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="mb-8 text-left flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <div class="inline-flex items-center space-x-2 mb-2">
+                <span class="badge-l1">LICENCE 1</span>
+                <span class="text-xs font-bold text-slate-500">PARCOURS UNIVERSTAIRES</span>
+            </div>
+            <h1 class="text-2xl sm:text-4xl font-extrabold text-[#071A49] tracking-tight mb-2">Explorer toutes les filières</h1>
+            <p class="text-slate-600 text-xs sm:text-sm max-w-2xl">Accède aux UE et épreuves de l'ensemble des parcours universitaires.</p>
+        </div>
+
+        {% if profile and profile.filiere %}
+            <a href="{% url 'academics:filieres' %}" class="btn-primary text-xs px-4 py-2.5 font-bold">
+                ← Retourner à mon parcours ({{ profile.filiere.name }})
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Filières Grid Responsive -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4.5">
+        {% for filiere in filieres %}
+            <a href="{% url 'academics:semestres' filiere_id=filiere.id %}" class="card-medium-floating card-tint-blue flex flex-col justify-between group">
+                <div>
+                    <!-- Icon & Level Tag -->
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="w-9 h-9 rounded-xl bg-blue-50 text-[#2563EB] group-hover:bg-[#2563EB] group-hover:text-white transition-all flex items-center justify-center font-bold">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                            </svg>
+                        </div>
+                        <span class="badge-l1">{{ filiere.level.name|default:"L1" }}</span>
+                    </div>
+
+                    <!-- Filiere Name & Description -->
+                    <h2 class="text-sm font-bold text-[#071A49] group-hover:text-[#2563EB] transition-colors mb-1 line-clamp-1">
+                        {{ filiere.name }}
+                    </h2>
+                    <p class="text-[11px] text-slate-500 line-clamp-1 mb-3">
+                        {{ filiere.school.name|default:"Université" }} — {{ filiere.description|default:"Parcours académique." }}
+                    </p>
+                </div>
+
+                <!-- Footer Stats -->
+                <div class="pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-[11px] font-semibold text-slate-500">
+                    <div class="flex items-center space-x-2">
+                        <span>{{ filiere.subjects_num|default:"12" }} UE</span>
+                        <span>•</span>
+                        <span class="text-[#2563EB] font-bold">{{ filiere.exams_num|default:"48" }} épreuves</span>
+                    </div>
+                    <div class="w-6 h-6 rounded-lg bg-white/80 group-hover:bg-blue-50 text-slate-400 group-hover:text-[#2563EB] flex items-center justify-center transition-all group-hover:translate-x-0.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                </div>
+            </a>
+        {% empty %}
+            <div class="col-span-full bg-white border border-slate-200 rounded-2xl p-8 text-center">
+                <p class="text-sm font-bold text-[#071A49] mb-1">Aucune filière disponible pour le moment.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

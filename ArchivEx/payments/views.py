@@ -1,0 +1,122 @@
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
+from django.contrib import messages
+from django.views.decorators.http import require_POST
+
+from academics.models import Semester
+from .models import SemesterAccess, Payment
+
+
+@login_required
+def pass_semestre(request, semester_id):
+    """Page de présentation du Pass Semestre avec tarif serveur."""
+    semester = get_object_or_404(
+        Semester.objects.select_related("filiere", "filiere__school", "filiere__level", "academic_year"),
+        pk=semester_id
+    )
+    price = settings.PASS_SEMESTRE_PRIX_DEFAUT
+
+    already_active = SemesterAccess.objects.filter(
+        user=request.user, semester=semester, activated_at__isnull=False
+    ).exists()
+
+    context = {
+        "semester": semester,
+        "price": price,
+        "already_active": already_active,
+    }
+    return render(request, "payments/pass_semestre.html", context)
+
+
+@login_required
+@require_POST
+def initier_paiement(request, semester_id):
+    """Crée ou récupère l'accès en attente et enregistre la transaction avec montant serveur.
+
+    Protégé par @require_POST : cette action crée un enregistrement en base
+    (SemesterAccess + Payment) et ne doit pas pouvoir être déclenchée par un
+    simple GET (lien direct, prefetch de navigateur, etc.).
+    """
+    semester = get_object_or_404(
+        Semester.objects.select_related("filiere", "filiere__school", "filiere__level", "academic_year"),
+        pk=semester_id
+    )
+    price = settings.PASS_SEMESTRE_PRIX_DEFAUT
+
+    already_active = SemesterAccess.objects.filter(
+        user=request.user, semester=semester, activated_at__isnull=False
+    ).exists()
+
+    if already_active:
+        messages.info(request, "Tu disposais déjà d'un Pass actif pour ce semestre.")
+        return redirect("academics:matieres", semester_id=semester.id)
+
+    access, _ = SemesterAccess.objects.get_or_create(
+        user=request.user,
+        semester=semester,
+        defaults={
+            "school": semester.filiere.school,
+            "level": semester.filiere.level,
+            "filiere": semester.filiere,
+            "academic_year": semester.academic_year,
+        },
+    )
+
+    # Récupérer un paiement en attente ou en créer un nouveau
+    payment = Payment.objects.filter(
+        user=request.user, semester_access=access, status="en_attente"
+    ).last()
+
+    if not payment:
+        payment = Payment.objects.create(
+            user=request.user,
+            semester_access=access,
+            amount=price,  # Montant déterminé EXCLUSIVEMENT côté serveur
+            status="en_attente",
+        )
+
+    context = {
+        "semester": semester,
+        "payment": payment,
+        "price": price,
+    }
+    return render(request, "payments/paiement.html", context)
+
+
+@login_required
+@require_POST
+def confirmer_paiement(request, payment_id):
+    """
+    Simule la confirmation serveur d'un paiement (callback / webhook).
+    Active le SemesterAccess une fois le paiement valide.
+
+    Protégé par @require_POST : confirme un paiement et active un accès —
+    une requête GET (lien direct, prefetch) ne doit jamais déclencher cette
+    transition d'état.
+    """
+    payment = get_object_or_404(Payment, pk=payment_id, user=request.user)
+
+    if payment.status == "en_attente":
+        now = timezone.now()
+        payment.status = "reussi"
+        payment.paid_at = now
+        payment.save()
+
+        access = payment.semester_access
+        if not access.activated_at:
+            access.activated_at = now
+            access.save()
+
+        messages.success(
+            request,
+            f"🎉 Félicitations ! Ton Pass pour le {access.semester.label} est désormais débloqué !"
+        )
+
+    context = {
+        "payment": payment,
+        "confirmed": True,
+        "semester": payment.semester_access.semester,
+    }
+    return render(request, "payments/paiement.html", context)

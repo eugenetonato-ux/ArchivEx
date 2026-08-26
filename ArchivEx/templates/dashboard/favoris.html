@@ -1,0 +1,74 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Mes Épreuves Favorites — ArchivEx{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center text-xs font-medium text-slate-500 space-x-2 mb-6">
+        <a href="{% url 'academics:home' %}" class="hover:text-[#2563EB]">Accueil</a>
+        <span>/</span>
+        <a href="{% url 'accounts:dashboard' %}" class="hover:text-[#2563EB]">Dashboard</a>
+        <span>/</span>
+        <span class="text-[#071A49] font-bold">Favoris</span>
+    </nav>
+
+    <div class="mb-8">
+        <div class="inline-flex items-center space-x-2 mb-2">
+            <span class="badge-l1">LICENCE 1</span>
+            <span class="text-xs font-bold text-slate-500">BIBLIOTHÈQUE PERSONNELLE</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#071A49]">Mes Épreuves Favorites</h1>
+        <p class="text-xs sm:text-sm text-slate-600 mt-1">Accès rapide aux sujets enregistrés pour tes révisions</p>
+    </div>
+
+    <!-- FAVORITES LIST OR EMPTY STATE -->
+    {% if favorites %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4.5">
+            {% for fav in favorites %}
+                <div class="card-medium-floating {% if fav.exam.user_has_access %}card-tint-blue{% else %}card-tint-gold{% endif %} flex flex-col justify-between group">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-[11px] font-bold text-slate-500">{{ fav.exam.year }} · {{ fav.exam.get_exam_type_display }}</span>
+                            {% if fav.exam.user_has_access %}
+                                <span class="badge-free">GRATUIT</span>
+                            {% else %}
+                                <span class="badge-premium">PREMIUM</span>
+                            {% endif %}
+                        </div>
+
+                        <h2 class="text-sm font-bold text-[#071A49] group-hover:text-[#2563EB] transition-colors mb-1 line-clamp-1">
+                            {{ fav.exam.title }}
+                        </h2>
+                        <p class="text-[11px] font-bold text-[#2563EB] mb-3 line-clamp-1">{{ fav.exam.subject.name }}</p>
+                    </div>
+
+                    <div class="pt-2.5 border-t border-slate-200/60 flex items-center justify-between">
+                        <a href="{% url 'exams:toggle_favorite' pk=fav.exam.id %}" class="text-[11px] font-semibold text-rose-500 hover:underline">
+                            Retirer
+                        </a>
+                        <a href="{% url 'exams:detail' pk=fav.exam.id %}" class="btn-primary text-[11px] px-3.5 py-1.5">
+                            Consulter
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- EMPTY STATE -->
+        <div class="empty-state-card max-w-xl mx-auto my-8">
+            <div class="w-16 h-16 rounded-2xl bg-amber-50 text-amber-500 border border-amber-200 flex items-center justify-center mx-auto mb-4 text-2xl">
+                ⭐
+            </div>
+            <h2 class="text-xl font-extrabold text-[#071A49] mb-2">Tu n'as encore aucune épreuve favorite.</h2>
+            <p class="text-xs text-slate-500 max-w-sm mx-auto mb-6 leading-relaxed">
+                Ajoute des épreuves en favoris pour les retrouver facilement ici lors de tes révisions.
+            </p>
+            <a href="{% url 'exams:liste' %}" class="btn-primary text-xs px-6 py-3">
+                Explorer la banque d'épreuves 
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

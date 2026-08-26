@@ -1,0 +1,1759 @@
+🚀 PROMPT MAÎTRE — SAAS « BANQUE D’ÉPREUVES ÉTUDIANTES »
+
+Tu es un développeur Full-Stack senior spécialisé en :
+
+- Python
+- Django
+- MySQL
+- HTML/CSS/JavaScript
+- Tailwind CSS
+- UI/UX moderne
+- architecture SaaS
+- sécurité web
+- conception d'applications éducatives
+
+Je veux construire un MVP réel et fonctionnel d'une plateforme web éducative destinée aux étudiants.
+
+Le projet est une banque d'épreuves universitaires organisée par école, niveau, filière, semestre et matière.
+
+L'objectif n'est PAS de construire immédiatement une énorme plateforme avec IA, gamification et dizaines de fonctionnalités.
+
+Je veux d'abord construire un produit simple, propre et réellement utilisable afin de le tester auprès de vrais étudiants.
+
+---
+
+1. 🎯 CONCEPT DU PRODUIT
+
+Le problème que la plateforme doit résoudre est simple :
+
+Les étudiants ont souvent besoin d'anciennes épreuves pour réviser, mais ces documents sont dispersés entre :
+
+- anciens étudiants ;
+- groupes WhatsApp ;
+- Telegram ;
+- téléphones personnels ;
+- Google Drive ;
+- ordinateurs ;
+- conversations privées.
+
+La plateforme doit centraliser ces épreuves.
+
+L'étudiant doit pouvoir faire :
+
+École → Niveau → Filière → Semestre → Matière → Épreuve → PDF
+
+L'expérience doit être extrêmement simple.
+
+---
+
+2. 🧪 STRATÉGIE MVP
+
+Le premier lancement doit rester limité.
+
+Commencer avec :
+
+- une seule école/université ;
+- principalement le niveau L1 ;
+- plusieurs filières ;
+- plusieurs semestres ;
+- plusieurs matières ;
+- anciennes épreuves PDF.
+
+L'architecture doit néanmoins être suffisamment propre pour permettre plus tard :
+
+- L2 ;
+- L3 ;
+- Master ;
+- autres écoles ;
+- autres universités ;
+- autres pays.
+
+NE PAS construire ces extensions maintenant.
+
+---
+
+3. 🛠️ STACK TECHNIQUE
+
+Backend
+
+Python + Django.
+
+Utiliser Django de manière professionnelle.
+
+Base de données
+
+MySQL.
+
+La base doit être correctement normalisée.
+
+Utiliser :
+
+- ForeignKey ;
+- OneToOneField lorsque nécessaire ;
+- ManyToManyField lorsque nécessaire ;
+- indexes ;
+- contraintes d'unicité ;
+- validations.
+
+Frontend
+
+Utiliser :
+
+- HTML5
+- CSS3
+- JavaScript
+- Tailwind CSS
+
+L'application doit être mobile-first.
+
+La majorité des utilisateurs utiliseront probablement leur smartphone.
+
+Fichiers
+
+Les PDF doivent être stockés dans le système de fichiers/media en développement.
+
+Prévoir une architecture permettant plus tard d'utiliser un stockage cloud.
+
+NE PAS stocker les fichiers PDF directement dans MySQL.
+
+---
+
+4. 🗄️ STRUCTURE ACADÉMIQUE
+
+La structure principale doit être :
+
+School
+   ↓
+Level
+   ↓
+Filiere
+   ↓
+AcademicYear
+   ↓
+Semester
+   ↓
+Subject
+   ↓
+Exam
+
+Exemple :
+
+ENEAM
+└── L1
+    └── PLAN
+        └── 2026-2027
+            ├── Semestre 1
+            │   ├── Analyse mathématique
+            │   ├── Microéconomie
+            │   ├── Comptabilité
+            │   └── ...
+            │
+            └── Semestre 2
+                ├── Statistiques
+                ├── Probabilité
+                └── ...
+
+Cette structure est fondamentale.
+
+---
+
+5. 📚 MODÈLES PRINCIPAUX
+
+Commencer avec un nombre raisonnable de modèles.
+
+Prévoir au minimum :
+
+User
+
+Utiliser le système utilisateur Django ou un Custom User si cela est justifié.
+
+StudentProfile
+
+Informations supplémentaires :
+
+- utilisateur ;
+- école ;
+- niveau ;
+- filière ;
+- avatar éventuellement ;
+- date de création.
+
+School
+
+Champs principaux :
+
+- name
+- slug
+- description
+- logo éventuellement
+- is_active
+
+Level
+
+Exemples :
+
+- L1
+- L2
+- L3
+- M1
+- M2
+
+Filiere
+
+Exemples :
+
+- PGP
+- autre filière
+
+Relations :
+
+- School
+- Level
+
+AcademicYear
+
+Exemple :
+
+2026-2027
+
+Semester
+
+Exemples :
+
+- Semestre 1
+- Semestre 2
+
+Relation avec AcademicYear et éventuellement le niveau/filière selon l'architecture retenue.
+
+Subject
+
+Une matière appartient à une structure académique appropriée.
+
+Exam
+
+Une épreuve doit contenir au minimum :
+
+- title
+- subject
+- semester
+- filiere
+- level
+- academic_year
+- exam_type
+- year
+- description
+- file
+- is_free
+- is_published
+- created_at
+- updated_at
+
+Types d'épreuves :
+
+- Examen
+- Rattrapage
+- Devoir
+- TD
+- TP
+- Concours
+- Autre
+
+---
+
+6. 🔐 SYSTÈME D'ACCÈS GRATUIT + PAYANT
+
+C'est une partie centrale du MVP.
+
+Je veux un système où l'étudiant peut découvrir gratuitement la plateforme.
+
+Accès gratuit
+
+Certaines matières sont accessibles gratuitement.
+
+Pour le MVP, prévoir la possibilité de définir des matières gratuites.
+
+Exemple :
+
+Semestre 1
+
+✓ Analyse mathématique       GRATUIT
+✓ Microéconomie              GRATUIT
+✓ Comptabilité               GRATUIT
+✓ Sociologie                 GRATUIT
+✓ Entrepreneuriat            GRATUIT
+
+🔒 Autres matières            PREMIUM
+
+L'objectif est que l'étudiant puisse tester le service avant de payer.
+
+---
+
+7. 💰 PASS SEMESTRE
+
+Le système de monétisation principal est basé sur le semestre.
+
+NE PAS créer un abonnement mensuel dans cette première version.
+
+Créer un système de Pass Semestre.
+
+Exemple :
+
+«PASS L1 — PGP — SEMESTRE 1
+
+2 000 FCFA»
+
+Le Pass donne accès aux contenus protégés du semestre.
+
+Le paiement est lié à :
+
+- utilisateur ;
+- école ;
+- niveau ;
+- filière ;
+- année académique ;
+- semestre ;
+- montant ;
+- statut ;
+- date de paiement ;
+- date d'activation.
+
+---
+
+8. 💳 MODÈLE DE PAIEMENT
+
+Créer une architecture suffisamment propre pour intégrer plus tard un véritable fournisseur de paiement.
+
+Ne pas inventer de passerelle de paiement.
+
+Si aucun fournisseur de paiement n'est spécifié pour le moment, créer une architecture abstraite/service permettant d'ajouter ultérieurement :
+
+- Mobile Money ;
+- autre passerelle locale ;
+- carte bancaire éventuellement.
+
+Pour le MVP de développement, prévoir éventuellement un mode de paiement simulé/test.
+
+IMPORTANT :
+
+Le paiement doit être considéré comme confirmé uniquement côté serveur.
+
+Ne jamais débloquer un semestre uniquement parce que le frontend indique que le paiement a réussi.
+
+---
+
+9. 🔓 LOGIQUE DE DÉBLOCAGE
+
+Lorsqu'un étudiant essaie d'accéder à une épreuve protégée :
+
+Utilisateur
+      ↓
+A-t-il un Pass Semestre actif ?
+      ↓
+   ┌──┴──┐
+   │     │
+  NON   OUI
+   │     │
+   ↓     ↓
+ 🔒     🔓
+   │     │
+   ↓     ↓
+Paiement Accès
+
+Le contrôle doit être effectué côté serveur avec Django.
+
+Ne jamais se contenter de cacher les contenus avec JavaScript.
+
+Un utilisateur ne doit pas pouvoir contourner la restriction en modifiant le frontend ou l'URL.
+
+---
+
+10. 📄 GESTION DES PDF
+
+Pour chaque épreuve :
+
+- afficher les informations ;
+- permettre l'aperçu si possible ;
+- permettre le téléchargement si autorisé.
+
+Les fichiers protégés ne doivent pas être exposés via une URL publique prévisible.
+
+Utiliser une vue Django ou un mécanisme sécurisé pour vérifier les permissions avant de servir un fichier protégé.
+
+---
+
+11. 🔎 RECHERCHE
+
+Créer une recherche simple mais efficace.
+
+L'étudiant doit pouvoir rechercher :
+
+- nom d'épreuve ;
+- matière ;
+- année ;
+- type d'épreuve.
+
+Prévoir également des filtres :
+
+- filière ;
+- semestre ;
+- matière ;
+- année ;
+- type.
+
+Ajouter pagination si nécessaire.
+
+---
+
+12. ❤️ FAVORIS
+
+L'étudiant connecté peut ajouter une épreuve à ses favoris.
+
+Créer :
+
+«❤️ Mes favoris»
+
+Chaque utilisateur ne doit pouvoir avoir qu'un seul favori pour une même épreuve.
+
+---
+
+13. 🏠 PAGE D'ACCUEIL
+
+Créer une landing page moderne.
+
+Hero
+
+Titre :
+
+«Toutes tes anciennes épreuves. Au même endroit.»
+
+Sous-titre :
+
+«Retrouve facilement les épreuves de ta filière, matière par matière et semestre par semestre.»
+
+Boutons :
+
+«Trouver une épreuve»
+
+«Créer un compte»
+
+Afficher éventuellement une illustration moderne liée aux études et aux documents.
+
+Sections
+
+Ajouter :
+
+Comment ça marche
+
+1. Choisis ta filière
+2. Choisis ton semestre
+3. Trouve ta matière
+4. Consulte ton épreuve
+
+Statistiques
+
+Afficher dynamiquement :
+
+- nombre d'épreuves ;
+- nombre de filières ;
+- nombre de matières ;
+- nombre d'étudiants.
+
+Ne pas inventer les statistiques.
+
+---
+
+14. 🔐 PAGE CONNEXION
+
+Créer une page moderne et minimaliste.
+
+Champs :
+
+- email ;
+- mot de passe.
+
+Actions :
+
+- connexion ;
+- mot de passe oublié ;
+- inscription.
+
+Prévoir éventuellement Google plus tard, mais ce n'est pas obligatoire pour le MVP.
+
+Design :
+
+- carte centrale ;
+- beaucoup d'espace ;
+- logo ;
+- illustration légère ;
+- responsive.
+
+---
+
+15. 📝 PAGE INSCRIPTION
+
+Ne pas demander trop d'informations.
+
+Étape initiale :
+
+- prénom ;
+- nom ;
+- email ;
+- mot de passe.
+
+Puis permettre de sélectionner :
+
+- école ;
+- niveau ;
+- filière.
+
+L'inscription doit être rapide.
+
+---
+
+16. 🎓 PAGE FILIÈRES
+
+Afficher les filières sous forme de cartes.
+
+Exemple :
+
+┌────────────────────────────┐
+│ 📊                          │
+│ PGP                        │
+│ Planification et gestion   │
+│ des projets                │
+│                            │
+│ Explorer →                 │
+└────────────────────────────┘
+
+Chaque carte doit afficher :
+
+- nom ;
+- courte description ;
+- nombre de matières ;
+- nombre d'épreuves si disponible.
+
+---
+
+17. 📘 PAGE SEMESTRES
+
+Après sélection de la filière :
+
+Afficher :
+
+«PGP · L1»
+
+Puis les semestres.
+
+Exemple :
+
+┌─────────────────────────────┐
+│ 📘 SEMESTRE 1               │
+│                             │
+│ 8 matières                  │
+│ 94 épreuves                 │
+│                             │
+│ 🔓 Accès partiel gratuit    │
+│                             │
+│ Explorer →                  │
+└─────────────────────────────┘
+
+Si l'utilisateur possède le Pass :
+
+«🔓 Accès complet»
+
+Sinon :
+
+«🔒 Accès partiel»
+
+---
+
+18. 📚 PAGE MATIÈRES
+
+Après sélection d'un semestre :
+
+Afficher toutes les matières.
+
+Exemple :
+
+Analyse mathématique
+12 épreuves
+✓ Gratuit
+
+Microéconomie
+18 épreuves
+✓ Gratuit
+
+Comptabilité
+15 épreuves
+🔒 Premium
+
+Les matières doivent être visuellement faciles à distinguer.
+
+---
+
+19. 📄 PAGE ÉPREUVES
+
+C'est une page centrale.
+
+En haut :
+
+«Analyse mathématique»
+
+Puis :
+
+🔍 Rechercher une épreuve...
+
+[ Année ▼ ]
+[ Type ▼ ]
+[ Trier ▼ ]
+
+Afficher les épreuves sous forme de cartes.
+
+Chaque carte :
+
+- icône PDF ;
+- titre ;
+- année ;
+- type ;
+- matière ;
+- filière ;
+- statut ;
+- bouton Voir.
+
+Exemple :
+
+┌────────────────────────────────────┐
+│ 📄 Analyse mathématique            │
+│ Examen · 2025                      │
+│                                    │
+│ PGP · L1 · S1                      │
+│                                    │
+│                    [Voir →]        │
+└────────────────────────────────────┘
+
+Pour une épreuve protégée :
+
+🔒 Épreuve réservée
+
+Débloquez le semestre pour accéder
+à toutes les épreuves.
+
+[Débloquer — 2 000 FCFA]
+
+---
+
+20. 📑 PAGE DÉTAIL D'UNE ÉPREUVE
+
+Afficher :
+
+Titre
+
+Analyse mathématique — Examen 2025
+
+Informations
+
+- filière ;
+- niveau ;
+- semestre ;
+- année ;
+- type ;
+- date d'ajout.
+
+Actions
+
+- Voir le PDF ;
+- Télécharger ;
+- Ajouter aux favoris.
+
+Si l'utilisateur n'a pas l'accès :
+
+Afficher une interface de verrouillage élégante.
+
+---
+
+21. 💳 PAGE PASS SEMESTRE
+
+Créer une page de conversion simple et rassurante.
+
+Titre :
+
+«🔓 Débloque ton semestre»
+
+Sous-titre :
+
+«Accède à toutes les épreuves disponibles pour ton semestre.»
+
+Carte :
+
+PASS L1 — PGP
+SEMESTRE 1
+
+2 000 FCFA
+
+✓ Toutes les matières
+✓ Toutes les épreuves
+✓ Téléchargements autorisés
+✓ Accès aux nouvelles épreuves
+
+Bouton :
+
+«🔓 Débloquer maintenant»
+
+Afficher clairement les conditions.
+
+Ne pas utiliser de dark patterns.
+
+---
+
+22. 💰 PAGE PAIEMENT
+
+Afficher un résumé :
+
+«PASS PGP L1 — S1»
+
+Prix :
+
+«2 000 FCFA»
+
+Puis afficher les moyens de paiement réellement disponibles.
+
+Pour le moment, prévoir une architecture permettant d'ajouter le fournisseur plus tard.
+
+Après paiement confirmé :
+
+«🎉 Ton semestre est maintenant débloqué !»
+
+Bouton :
+
+«Explorer les épreuves»
+
+---
+
+23. 👤 DASHBOARD ÉTUDIANT
+
+Le dashboard doit être simple.
+
+Afficher :
+
+«Bonjour, [Prénom] 👋»
+
+Puis :
+
+Ma filière
+
+PGP · L1
+
+Mon semestre
+
+Semestre 1
+
+Dernières épreuves
+
+Liste des dernières épreuves.
+
+Mes favoris
+
+Liste rapide.
+
+Mon accès
+
+Exemple :
+
+«🔓 Pass S1 actif»
+
+ou :
+
+«🔒 Pass S1 non activé»
+
+Bouton :
+
+«Débloquer le semestre»
+
+---
+
+24. ❤️ PAGE FAVORIS
+
+Titre :
+
+«Mes épreuves favorites»
+
+Afficher les épreuves sauvegardées.
+
+Chaque carte permet :
+
+- consulter ;
+- télécharger si autorisé ;
+- retirer des favoris.
+
+Prévoir un Empty State :
+
+«Tu n'as encore aucune épreuve favorite.»
+
+Bouton :
+
+«Explorer les épreuves»
+
+---
+
+25. 👤 PAGE PROFIL
+
+Afficher :
+
+- nom ;
+- prénom ;
+- email ;
+- école ;
+- niveau ;
+- filière.
+
+Section :
+
+«Mes accès»
+
+Afficher les Pass actifs.
+
+Permettre de modifier les informations non sensibles.
+
+---
+
+26. 🛠️ ADMINISTRATION
+
+Utiliser Django Admin au départ si cela permet de gagner du temps.
+
+L'administrateur doit pouvoir gérer :
+
+- utilisateurs ;
+- écoles ;
+- niveaux ;
+- filières ;
+- années académiques ;
+- semestres ;
+- matières ;
+- épreuves ;
+- PDF ;
+- accès/pass ;
+- paiements.
+
+L'administration doit pouvoir publier ou dépublier une épreuve.
+
+---
+
+27. 📊 DASHBOARD ADMIN
+
+Créer un dashboard administratif simple.
+
+Afficher :
+
+- nombre d'étudiants ;
+- nombre de filières ;
+- nombre de matières ;
+- nombre d'épreuves ;
+- nombre de Pass actifs ;
+- paiements récents.
+
+Ne pas construire de statistiques complexes dans le MVP.
+
+---
+
+28. 🎨 DIRECTION UI/UX
+
+Le produit doit avoir une identité visuelle forte.
+
+Style recherché :
+
+Modern EdTech + SaaS premium + étudiant
+
+Couleurs
+
+Utiliser une palette cohérente.
+
+Exemple :
+
+- Indigo/violet comme couleur principale ;
+- bleu/turquoise comme couleur secondaire ;
+- fond très clair ;
+- cartes blanches ;
+- texte bleu nuit ;
+- couleurs spécifiques pour succès, avertissement et verrouillage.
+
+Ne pas utiliser trop de couleurs.
+
+Typographie
+
+Privilégier :
+
+- Inter
+  ou
+- Plus Jakarta Sans
+
+Composants
+
+Utiliser :
+
+- cartes ;
+- badges ;
+- boutons arrondis ;
+- inputs modernes ;
+- modales ;
+- dropdowns ;
+- breadcrumbs ;
+- progress indicators si nécessaires ;
+- skeleton loaders ;
+- empty states ;
+- toast notifications.
+
+Style
+
+- border-radius généreux ;
+- ombres légères ;
+- beaucoup d'espace blanc ;
+- hiérarchie visuelle claire ;
+- animations discrètes.
+
+Éviter :
+
+- gradients excessifs ;
+- effets flashy ;
+- interfaces surchargées ;
+- animations inutiles.
+
+---
+
+29. 📱 MOBILE FIRST
+
+La plateforme doit être excellente sur smartphone.
+
+Tester particulièrement :
+
+- accueil ;
+- connexion ;
+- inscription ;
+- sélection filière ;
+- sélection semestre ;
+- matières ;
+- épreuves ;
+- détail épreuve ;
+- paiement ;
+- favoris ;
+- profil.
+
+Sur mobile, prévoir une navigation adaptée.
+
+Une bottom navigation peut être utilisée :
+
+Accueil | Recherche | Favoris | Profil
+
+---
+
+30. 🧭 PARCOURS UTILISATEUR PRINCIPAL
+
+Le parcours doit être extrêmement fluide :
+
+Accueil
+   ↓
+Filière
+   ↓
+Semestre
+   ↓
+Matière
+   ↓
+Épreuves
+   ↓
+Épreuve
+   ↓
+PDF
+
+Si l'épreuve est protégée :
+
+Épreuve
+   ↓
+🔒
+   ↓
+Pass Semestre
+   ↓
+Paiement
+   ↓
+Confirmation
+   ↓
+🔓 Épreuve accessible
+
+---
+
+31. 🔒 SÉCURITÉ
+
+Appliquer les bonnes pratiques Django.
+
+Protéger contre :
+
+- CSRF ;
+- XSS ;
+- SQL injection ;
+- manipulation des permissions ;
+- accès direct aux fichiers ;
+- upload de fichiers dangereux ;
+- contournement des restrictions Premium ;
+- modification des prix côté client.
+
+IMPORTANT :
+
+Le prix du Pass doit être défini côté serveur.
+
+Le frontend ne doit jamais pouvoir envoyer :
+
+«amount = 1 FCFA»
+
+pour obtenir un Pass à 2 000 FCFA.
+
+Le serveur doit déterminer le produit et son prix.
+
+Toutes les vérifications d'accès doivent être effectuées côté serveur.
+
+---
+
+32. 🗄️ BASE MYSQL
+
+Avant de commencer le développement, expliquer clairement le schéma MySQL.
+
+Présenter les tables et relations.
+
+Exemple conceptuel :
+
+users
+  │
+  ├──────────────┐
+  │              │
+  ↓              ↓
+profiles      favorites
+                  │
+                  ↓
+                exams
+                  │
+                  ↓
+               subjects
+                  │
+                  ↓
+              semesters
+                  │
+                  ↓
+               filieres
+                  │
+                  ↓
+                levels
+                  │
+                  ↓
+                schools
+
+Et :
+
+users
+  ↓
+semester_access
+  ↓
+semesters
+
+Puis :
+
+users
+  ↓
+payments
+  ↓
+semester_access
+
+Optimiser le schéma si nécessaire.
+
+---
+
+33. 📁 ARCHITECTURE DJANGO
+
+Proposer une structure simple.
+
+Exemple :
+
+project/
+│
+├── config/
+│
+├── accounts/
+│
+├── academics/
+│
+├── exams/
+│
+├── payments/
+│
+├── templates/
+│
+├── static/
+│
+├── media/
+│
+├── manage.py
+└── requirements.txt
+
+Ne pas multiplier les applications Django inutilement.
+
+---
+
+34. 🧪 TESTS
+
+Créer des tests pour les parties importantes :
+
+- inscription ;
+- connexion ;
+- permissions ;
+- accès aux épreuves gratuites ;
+- refus d'accès aux épreuves Premium ;
+- accès après activation du Pass ;
+- favoris ;
+- upload ;
+- recherche.
+
+Le système de paiement devra avoir des tests simulés avant intégration avec un fournisseur réel.
+
+---
+
+35. 🚫 FONCTIONNALITÉS À NE PAS FAIRE MAINTENANT
+
+Ne PAS développer dans le MVP :
+
+- IA ;
+- chatbot ;
+- XP ;
+- badges ;
+- classement ;
+- streak ;
+- réseau social ;
+- commentaires ;
+- abonnement mensuel ;
+- abonnement annuel ;
+- marketplace ;
+- application mobile native ;
+- recommandations IA ;
+- système complexe de notifications.
+
+Ces fonctionnalités pourront être étudiées après le test du MVP.
+
+---
+
+36. 📈 FUTURES VERSIONS
+
+Si le MVP fonctionne, les prochaines versions pourront ajouter :
+
+V2
+
+- quiz ;
+- corrigés ;
+- statistiques ;
+- contributions étudiantes.
+
+V3
+
+- XP ;
+- badges ;
+- classement ;
+- streak.
+
+V4
+
+- IA ;
+- génération de quiz ;
+- explications personnalisées ;
+- mode préparation aux examens.
+
+V5
+
+- autres écoles ;
+- autres niveaux ;
+- application mobile ;
+- offres établissements.
+
+---
+
+37. 🧠 PHILOSOPHIE DU PROJET
+
+NE PAS essayer de construire un produit énorme dès le départ.
+
+Le but du MVP est de répondre à une question :
+
+«Les étudiants veulent-ils réellement une plateforme centralisant les anciennes épreuves de leur école ?»
+
+Je veux donc :
+
+- simplicité ;
+- rapidité ;
+- excellente UX ;
+- contenu utile ;
+- architecture propre ;
+- sécurité ;
+- possibilité d'évolution.
+
+---
+
+38. 🛠️ MÉTHODE DE DÉVELOPPEMENT
+
+IMPORTANT :
+
+Ne génère PAS tout le projet en une seule réponse.
+
+Travaille étape par étape.
+
+Étape 1
+
+Analyser le projet.
+
+Puis présenter :
+
+- architecture ;
+- applications Django ;
+- modèles ;
+- relations MySQL ;
+- parcours utilisateur ;
+- structure des pages.
+
+NE PAS encore générer tout le code.
+
+Étape 2
+
+Configurer :
+
+- environnement Python ;
+- Django ;
+- MySQL ;
+- variables d'environnement ;
+- requirements.
+
+Étape 3
+
+Créer les modèles Django.
+
+Étape 4
+
+Créer les migrations.
+
+Étape 5
+
+Configurer Django Admin.
+
+Étape 6
+
+Créer l'authentification.
+
+Étape 7
+
+Créer les pages académiques.
+
+Étape 8
+
+Créer les pages d'épreuves et la gestion des PDF.
+
+Étape 9
+
+Créer les favoris.
+
+Étape 10
+
+Créer le système de Pass Semestre.
+
+Étape 11
+
+Créer le paiement en mode test.
+
+Étape 12
+
+Créer le dashboard.
+
+Étape 13
+
+Finaliser le responsive et l'UI/UX.
+
+Étape 14
+
+Tester la sécurité.
+
+Étape 15
+
+Tester l'ensemble du parcours.
+
+Étape 16
+
+Préparer le déploiement.
+
+---
+
+39. ⚠️ RÈGLE DE COLLABORATION AVEC MOI
+
+Je suis en train d'apprendre Django et le développement web.
+
+Donc ne te contente pas de générer du code.
+
+À chaque étape :
+
+1. Explique simplement ce que nous faisons.
+2. Explique pourquoi nous le faisons.
+3. Donne les fichiers à créer/modifier.
+4. Donne le code.
+5. Explique où placer le code.
+6. Donne les commandes à exécuter.
+7. Explique le résultat attendu.
+8. Attends ma confirmation avant de passer à l'étape suivante.
+
+Si une décision technique importante doit être prise, explique-moi les options avant de choisir.
+
+Ne remplace pas une partie du projet sans m'expliquer pourquoi.
+
+---
+
+🎯 OBJECTIF FINAL DU MVP
+
+Je veux obtenir une plateforme web réellement fonctionnelle où un étudiant peut :
+
+1. créer son compte ;
+2. sélectionner son école ;
+3. sélectionner son niveau ;
+4. sélectionner sa filière ;
+5. sélectionner son semestre ;
+6. consulter les matières disponibles ;
+7. consulter les épreuves gratuites ;
+8. rechercher des épreuves ;
+9. filtrer les épreuves ;
+10. ajouter des épreuves à ses favoris ;
+11. consulter les informations détaillées d'une épreuve ;
+12. accéder au PDF lorsqu'il possède les droits nécessaires ;
+13. rencontrer une page de verrouillage lorsqu'une épreuve est Premium ;
+14. consulter les détails du Pass Semestre ;
+15. acheter un Pass Semestre de 2 000 FCFA ;
+16. voir son paiement confirmé ;
+17. voir son accès au semestre débloqué ;
+18. consulter et télécharger les épreuves auxquelles il a désormais accès ;
+19. consulter son profil et son statut d'accès.
+
+---
+
+👨‍💼 FONCTIONNALITÉS ADMINISTRATEUR
+
+L'administrateur doit pouvoir :
+
+Gestion académique
+
+- créer/modifier/supprimer une école ;
+- créer/modifier/supprimer un niveau ;
+- créer/modifier/supprimer une filière ;
+- créer/modifier/supprimer une année académique ;
+- créer/modifier/supprimer un semestre ;
+- créer/modifier/supprimer une matière.
+
+Gestion des épreuves
+
+- ajouter une épreuve ;
+- modifier une épreuve ;
+- supprimer une épreuve ;
+- uploader un PDF ;
+- remplacer un PDF ;
+- définir le type d'épreuve ;
+- définir l'année de l'épreuve ;
+- définir si l'épreuve est gratuite ou Premium ;
+- publier/dépublier une épreuve.
+
+Gestion des étudiants
+
+- consulter les utilisateurs ;
+- consulter leur filière ;
+- consulter leur niveau ;
+- consulter leurs accès ;
+- désactiver un compte si nécessaire.
+
+Gestion des Pass
+
+- consulter les Pass actifs ;
+- consulter les Pass expirés si une durée est utilisée ;
+- vérifier les accès ;
+- gérer les accès manuellement uniquement pour l'administration.
+
+Gestion des paiements
+
+- consulter les paiements ;
+- voir le montant ;
+- voir le statut ;
+- voir la date ;
+- voir l'utilisateur concerné ;
+- voir le Pass concerné.
+
+---
+
+🧪 TESTS DU MVP
+
+Avant de considérer le MVP comme terminé, vérifier au minimum :
+
+Authentification
+
+- inscription ;
+- connexion ;
+- déconnexion ;
+- mot de passe incorrect ;
+- accès aux pages protégées.
+
+Navigation
+
+- école → niveau → filière → semestre → matière → épreuve ;
+- navigation correcte sur mobile ;
+- aucun lien cassé.
+
+Épreuves
+
+- création ;
+- modification ;
+- suppression ;
+- upload PDF ;
+- affichage ;
+- téléchargement ;
+- épreuve gratuite ;
+- épreuve Premium.
+
+Permissions Premium
+
+Tester notamment :
+
+Utilisateur sans Pass
+
+→ accès aux épreuves gratuites ✅
+→ accès aux épreuves Premium ❌
+
+Utilisateur avec Pass
+
+→ accès aux épreuves gratuites ✅
+→ accès aux épreuves Premium ✅
+
+Tester également les tentatives de contournement par URL directe.
+
+Favoris
+
+- ajout ;
+- suppression ;
+- affichage ;
+- impossibilité de créer des doublons.
+
+Paiement
+
+En environnement de développement :
+
+- paiement simulé ;
+- paiement réussi ;
+- paiement échoué ;
+- paiement annulé ;
+- accès non débloqué si le paiement n'est pas confirmé ;
+- accès débloqué uniquement après confirmation serveur.
+
+---
+
+🔐 SÉCURITÉ FINALE
+
+Avant le lancement du MVP, vérifier :
+
+- protection CSRF ;
+- protection XSS ;
+- protection contre les injections SQL ;
+- permissions Django ;
+- protection des routes administrateur ;
+- protection des fichiers PDF ;
+- validation des uploads ;
+- limitation des fichiers ;
+- vérification serveur des paiements ;
+- protection contre la modification du prix côté client ;
+- protection contre l'accès direct aux ressources Premium ;
+- gestion sécurisée des secrets et variables d'environnement.
+
+Ne jamais mettre :
+
+- mots de passe ;
+- clés API ;
+- secrets Django ;
+- identifiants MySQL ;
+- clés de paiement
+
+directement dans le code source.
+
+Utiliser des variables d'environnement.
+
+---
+
+📱 TEST RESPONSIVE
+
+Tester au minimum :
+
+Smartphone
+
+- 360px ;
+- 390px ;
+- 430px.
+
+Tablette
+
+- environ 768px.
+
+Desktop
+
+- 1280px ;
+- 1440px.
+
+Vérifier :
+
+- menus ;
+- boutons ;
+- formulaires ;
+- cartes ;
+- tableaux ;
+- PDF ;
+- navigation ;
+- paiement.
+
+Aucune page importante ne doit être inutilisable sur mobile.
+
+---
+
+⚡ PERFORMANCE
+
+Le MVP doit rester rapide.
+
+Prévoir :
+
+- pagination ;
+- optimisation des requêtes Django ;
+- "select_related()" lorsque pertinent ;
+- "prefetch_related()" lorsque pertinent ;
+- indexes MySQL ;
+- chargement optimisé des images ;
+- fichiers statiques correctement gérés ;
+- éviter les requêtes inutiles.
+
+Ne pas ajouter prématurément une architecture complexe de cache si elle n'est pas nécessaire.
+
+---
+
+🧹 QUALITÉ DU CODE
+
+Le code doit être :
+
+- propre ;
+- lisible ;
+- modulaire ;
+- maintenable ;
+- documenté lorsque nécessaire ;
+- conforme aux bonnes pratiques Django.
+
+Éviter :
+
+- logique métier répétée ;
+- fonctions énormes ;
+- fichiers inutilement longs ;
+- variables mal nommées ;
+- code mort ;
+- duplication ;
+- dépendances inutiles.
+
+---
+
+📦 PRÉPARATION AU DÉPLOIEMENT
+
+Préparer le projet pour la production.
+
+Prévoir :
+
+- "requirements.txt" ;
+- variables d'environnement ;
+- configuration production ;
+- "DEBUG=False" ;
+- "ALLOWED_HOSTS" ;
+- gestion des fichiers statiques ;
+- gestion des médias ;
+- configuration MySQL ;
+- migrations ;
+- création du compte administrateur ;
+- sécurité Django ;
+- configuration HTTPS.
+
+Ne pas supposer un hébergeur précis tant que celui-ci n'a pas été choisi.
+
+---
+
+🚀 CRITÈRES DE VALIDATION DU MVP
+
+Le MVP sera considéré comme réussi lorsqu'un étudiant pourra réaliser ce parcours sans intervention de l'administrateur :
+
+Accueil
+   ↓
+Créer un compte
+   ↓
+Choisir son école
+   ↓
+Choisir son niveau
+   ↓
+Choisir sa filière
+   ↓
+Choisir son semestre
+   ↓
+Choisir une matière
+   ↓
+Voir les épreuves
+   ↓
+Ouvrir une épreuve gratuite
+   ↓
+Rechercher une autre épreuve
+   ↓
+Rencontrer une épreuve Premium
+   ↓
+Voir le Pass Semestre
+   ↓
+Effectuer un paiement test
+   ↓
+Paiement confirmé
+   ↓
+Accès débloqué
+   ↓
+Consulter / télécharger l'épreuve
+
+L'administrateur doit pouvoir parallèlement :
+
+Connexion Admin
+   ↓
+Dashboard
+   ↓
+Créer une filière
+   ↓
+Créer un semestre
+   ↓
+Créer une matière
+   ↓
+Ajouter une épreuve
+   ↓
+Uploader le PDF
+   ↓
+Définir Gratuit / Premium
+   ↓
+Publier
+   ↓
+L'épreuve apparaît sur la plateforme
+
+---
+
+📊 APRÈS LE LANCEMENT
+
+Une fois le MVP fonctionnel, ne pas ajouter immédiatement toutes les fonctionnalités prévues pour le futur.
+
+D'abord tester le produit avec de vrais étudiants.
+
+Observer :
+
+- nombre d'inscriptions ;
+- nombre d'utilisateurs actifs ;
+- filières les plus consultées ;
+- matières les plus recherchées ;
+- épreuves les plus consultées ;
+- nombre de téléchargements ;
+- nombre de favoris ;
+- nombre d'étudiants qui atteignent une épreuve Premium ;
+- taux de conversion vers le Pass Semestre ;
+- nombre de paiements ;
+- retours des étudiants ;
+- fonctionnalités demandées par les utilisateurs.
+
+Utiliser ces données pour décider de la V2.
+
+---
+
+🔮 ÉVOLUTION FUTURE
+
+Si le MVP est validé, envisager progressivement :
+
+V2 — Apprentissage
+
+- corrigés ;
+- quiz ;
+- statistiques personnelles ;
+- suivi de progression.
+
+V3 — Gamification
+
+- XP ;
+- badges ;
+- classement ;
+- streak ;
+- récompenses.
+
+V4 — Intelligence artificielle
+
+- explication des questions ;
+- génération d'exercices ;
+- génération de quiz ;
+- analyse des erreurs ;
+- préparation personnalisée aux examens.
+
+V5 — Expansion
+
+- L2 ;
+- L3 ;
+- Masters ;
+- autres écoles ;
+- autres universités.
+
+V6 — Application mobile
+
+Envisager une application Android/iOS uniquement si l'utilisation du produit le justifie.
+
+---
+
+🧠 PHILOSOPHIE DU PROJET
+
+Le projet doit rester fidèle à trois principes :
+
+1. Commencer petit
+
+Ne pas construire une usine à fonctionnalités avant d'avoir des utilisateurs.
+
+2. Tester avec de vrais étudiants
+
+Les décisions concernant les futures fonctionnalités doivent être guidées par les usages et les retours réels.
+
+3. Construire une base solide
+
+Même si le MVP est petit, le code et la base de données doivent être suffisamment propres pour permettre une évolution future.
+
+---
+
+🤝 RÈGLE DE COLLABORATION AVEC MOI
+
+Je suis en train d'apprendre Django et le développement web.
+
+Ne te contente donc pas de générer du code.
+
+À chaque étape :
+
+1. Explique simplement ce que nous faisons.
+2. Explique pourquoi nous le faisons.
+3. Indique les fichiers concernés.
+4. Donne le code nécessaire.
+5. Explique exactement où placer chaque fichier.
+6. Donne les commandes à exécuter.
+7. Explique le résultat attendu.
+8. Indique comment tester.
+9. Si une erreur apparaît, aide-moi à la diagnostiquer avant de continuer.
+10. Attends ma confirmation avant de passer à l'étape suivante.
+
+Si plusieurs solutions techniques sont possibles, présente brièvement les options et recommande celle qui est la plus adaptée au MVP.
+
+Ne transforme pas automatiquement le projet en architecture complexe.
+
+Priorité absolue :
+
+simplicité → fonctionnement → sécurité → expérience utilisateur → évolutivité.
+
+---
+
+🎯 INSTRUCTION FINALE
+
+Tu dois agir comme un développeur senior qui m'accompagne dans la construction du produit, et non comme un générateur de code qui produit tout le projet en une seule fois.
+
+Commence par l'ÉTAPE 1 : analyser le MVP, proposer l'architecture Django et présenter le schéma complet de la base MySQL avec les relations entre les tables.
+
+Ne génère pas encore tout le code.
+
+Attends ensuite ma validation avant de commencer l'implémentation.

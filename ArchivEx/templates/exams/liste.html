@@ -1,0 +1,174 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}{% if selected_subject %}Épreuves — {{ selected_subject.name }}{% else %}Recherche d'épreuves{% endif %} | ArchivEx{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+
+    {% if selected_subject %}
+        <!-- 1. UE DETAIL MODE ("UE -> SELECTED UE -> EXAM PAPERS") -->
+        <nav class="flex items-center text-xs font-medium text-slate-500 space-x-2 mb-6">
+            <a href="{% url 'academics:home' %}" class="hover:text-[#2563EB]">Accueil</a>
+            <span>/</span>
+            <a href="{% url 'academics:filieres' %}" class="hover:text-[#2563EB]">Mes UE</a>
+            <span>/</span>
+            <span class="text-[#071A49] font-bold">{{ selected_subject.name }}</span>
+        </nav>
+
+        <!-- UE TITLE & SUBTITLE -->
+        <div class="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-black text-[#071A49] tracking-tight mb-1">{{ selected_subject.name }}</h1>
+                <p class="text-xs sm:text-sm text-slate-500 font-medium">Épreuves disponibles</p>
+            </div>
+            <div>
+                <a href="{% url 'academics:filieres' %}" class="btn-secondary text-xs px-4 py-2 font-bold inline-flex items-center space-x-1">
+                    <span>← Retour à Mes UE</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- COMPACT ACADEMIC CONTEXT INDICATOR -->
+        <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-blue-50/80 border border-blue-100 text-xs font-extrabold text-[#071A49] mb-8">
+            <span>{{ selected_subject.semester.filiere.school.name|default:"ENEAM" }}</span>
+            <span class="text-slate-300">•</span>
+            <span>{{ selected_subject.semester.filiere.level.name|default:"L1" }}</span>
+            <span class="text-slate-300">•</span>
+            <span class="text-[#2563EB]">{{ selected_subject.semester.filiere.name|default:"PGP" }}</span>
+            <span class="text-slate-300">•</span>
+            <span class="text-slate-600">{{ selected_subject.semester.label|default:"Semestre 1" }}</span>
+        </div>
+
+    {% else %}
+        <!-- 2. GLOBAL SEARCH MODE -->
+        <nav class="flex items-center text-xs font-medium text-slate-500 space-x-2 mb-6">
+            <a href="{% url 'academics:home' %}" class="hover:text-[#2563EB]">Accueil</a>
+            <span>/</span>
+            <span class="text-[#071A49] font-bold">Recherche</span>
+        </nav>
+
+        <div class="mb-6">
+            <h1 class="text-2xl sm:text-3xl font-black text-[#071A49] tracking-tight mb-1">Recherche d'épreuves</h1>
+            <p class="text-xs sm:text-sm text-slate-500 font-medium">Recherche une épreuve par mot-clé, type d'examen ou année.</p>
+        </div>
+
+        <!-- SEARCH FORM BAR -->
+        <form method="get" action="{% url 'exams:liste' %}" class="card-academic p-4 bg-white border border-slate-200/90 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 rounded-2xl mb-8">
+            <div>
+                <input type="text" name="q" value="{{ q }}" placeholder="Rechercher une épreuve..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]">
+            </div>
+
+            <div>
+                <select name="type" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] focus:outline-none focus:ring-2 focus:ring-[#2563EB]">
+                    <option value="">Toutes les sessions</option>
+                    <option value="SN" {% if selected_type == 'SN' %}selected{% endif %}>Session Normale</option>
+                    <option value="SR" {% if selected_type == 'SR' %}selected{% endif %}>Session Rattrapage</option>
+                    <option value="CC" {% if selected_type == 'CC' %}selected{% endif %}>Contrôle Continu / TD</option>
+                </select>
+            </div>
+
+            <div>
+                <input type="number" name="year" value="{{ selected_year }}" placeholder="Année (ex: 2025)" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]">
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <button type="submit" class="btn-primary w-full text-xs py-2.5 font-bold">
+                    Rechercher
+                </button>
+                <a href="{% url 'exams:liste' %}" class="btn-secondary text-xs px-4 py-2.5 font-bold">
+                    Effacer
+                </a>
+            </div>
+        </form>
+    {% endif %}
+
+    <!-- EXAMS CARDS GRID -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
+        {% for exam in page_obj %}
+            <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border-l-4 border-[#2563EB] w-full px-5 py-3 flex flex-col justify-between group">
+                <div>
+                    <!-- TITLE + ACCESS BADGE -->
+                    <div class="flex items-start justify-between gap-2 mb-1">
+                        <h2 class="text-lg font-bold text-[#1E40AF] leading-snug line-clamp-1">
+                            {{ exam.title }}
+                        </h2>
+                        {% if exam.user_has_access %}
+                            <span class="badge-free text-[10px] flex-shrink-0">Gratuit</span>
+                        {% else %}
+                            <span class="badge-premium text-[10px] flex-shrink-0">🔒 Pass</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- SOUS-TEXTE (UE · Année · Type) -->
+                    <p class="text-sm text-[#6B7280]">
+                        {{ exam.subject.name }} · {{ exam.year }} · {{ exam.get_exam_type_display|default:"Session Normale" }} 
+                    </p>
+                </div>
+
+                <!-- ACTIONS FOOTER -->
+                <div class="pt-2 mt-2 border-t border-slate-100 flex items-center justify-between">
+                    <a href="{% url 'exams:toggle_favorite' pk=exam.id %}" class="p-1.5 rounded-lg bg-slate-50 hover:bg-rose-50 border border-slate-200 text-slate-400 hover:text-rose-500 transition-colors" title="Ajouter aux favoris">
+                        <svg class="w-4 h-4 {% if exam.is_favorited %}text-rose-500 fill-current{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                        </svg>
+                    </a>
+
+                    {% if exam.user_has_access %}
+                        <a href="{% url 'exams:detail' pk=exam.id %}" class="btn-primary text-xs px-3 py-1.5 font-bold inline-flex items-center space-x-1">
+                            <span>Consulter</span>
+                            <span></span>
+                        </a>
+                    {% else %}
+                        <a href="{% url 'exams:detail' pk=exam.id %}" class="btn-gold text-xs px-3 py-1.5 font-bold inline-flex items-center space-x-1">
+                            <span>Débloquer</span>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <!-- EMPTY STATE -->
+            <div class="col-span-full bg-white border border-slate-200 rounded-2xl p-10 text-center shadow-sm">
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-[#2563EB] flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                </div>
+                {% if selected_subject %}
+                    <h3 class="text-base font-extrabold text-[#071A49] mb-1">Aucune épreuve disponible pour cette UE.</h3>
+                    <p class="text-xs text-slate-500 max-w-sm mx-auto mb-4">Les épreuves de cette UE seront ajoutées prochainement.</p>
+                    <a href="{% url 'academics:filieres' %}" class="btn-secondary text-xs px-4 py-2 font-bold">
+                        ← Retour à Mes UE
+                    </a>
+                {% else %}
+                    <h3 class="text-base font-extrabold text-[#071A49] mb-1">Aucune épreuve trouvée</h3>
+                    <p class="text-xs text-slate-500 max-w-sm mx-auto mb-4">Ajuste tes critères de recherche ou efface les filtres.</p>
+                    <a href="{% url 'exams:liste' %}" class="btn-secondary text-xs px-4 py-2 font-bold">
+                        Réinitialiser la recherche
+                    </a>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- PAGINATION -->
+    {% if page_obj.has_other_pages %}
+        <div class="flex justify-center items-center space-x-3">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if selected_subject %}&subject={{ selected_subject.id }}{% endif %}{% if q %}&q={{ q }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}" class="btn-secondary text-xs px-4 py-2 font-bold">
+                    ← Précédent
+                </a>
+            {% endif %}
+
+            <span class="text-xs font-bold text-slate-500">
+                Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if selected_subject %}&subject={{ selected_subject.id }}{% endif %}{% if q %}&q={{ q }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}" class="btn-secondary text-xs px-4 py-2 font-bold">
+                    Suivant 
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,571 @@
+/* ==========================================================================
+   ARCHIVEX DESIGN SYSTEM & STYLESHEET
+   Identity: Modern Digital University Library (MVP Licence 1)
+   Palette:
+     - Primary Brand:  #071A49 (Deep Navy)
+     - Secondary Blue: #2563EB (Interactions / Primary Actions)
+     - Bright Blue:    #3B82F6 (Electric Accents / Glow)
+     - Gold Accent:    #FBBF24 (ArchivEx Pass / Premium / Highlights)
+     - Orange Gold:    #F59E0B (Accent Badges)
+     - Light Background: #F7F9FC (Clean Modern SaaS Light Background)
+     - Text Primary:   #111827 (Dark Neutral)
+     - Muted Text:     #6B7280 (Slate Neutral)
+     - Border:         #E5E7EB
+   Radius: 12px to 18px (rounded-xl / rounded-2xl)
+   ========================================================================== */
+
+:root {
+    --brand-navy: #071A49;
+    --brand-navy-light: #0E2461;
+    --brand-blue: #2563EB;
+    --brand-blue-hover: #1D4ED8;
+    --brand-electric: #3B82F6;
+    --brand-gold: #FBBF24;
+    --brand-gold-hover: #F59E0B;
+    --brand-bg: #F7F9FC;
+    --brand-card-bg: #FFFFFF;
+    --brand-text: #111827;
+    --brand-muted: #6B7280;
+    --brand-border: #E5E7EB;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+}
+
+/* --------------------------------------------------------------------------
+   1. GLOBAL BODY & BASE STYLES
+   -------------------------------------------------------------------------- */
+body {
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--brand-bg);
+    color: var(--brand-text);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Top Navigation Dark Navy Background */
+.header-navy {
+    background-color: var(--brand-navy);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* --------------------------------------------------------------------------
+   DYNAMIC 10 SINUSOIDAL WAVES HERO BACKGROUND (FASTER MOVEMENTS)
+   -------------------------------------------------------------------------- */
+.tech-wave-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 30%, #0E2461 0%, #071A49 75%, #030C26 100%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.tech-wave-svg {
+    position: absolute;
+    width: 220%;
+    height: 100%;
+    top: 0;
+    left: -60%;
+    filter: drop-shadow(0 0 16px rgba(37, 99, 235, 0.45));
+    will-change: transform;
+}
+
+/* 10 Distinct Sinusoidal Wave Layers with Fast Oscillations */
+.wave-layer-1  { opacity: 0.35; stroke: #3B82F6; animation: waveSine1 4.5s ease-in-out infinite alternate; }
+.wave-layer-2  { opacity: 0.40; stroke: #2563EB; animation: waveSine2 4.0s ease-in-out infinite alternate; }
+.wave-layer-3  { opacity: 0.30; stroke: #60A5FA; animation: waveSine3 5.2s ease-in-out infinite alternate; }
+.wave-layer-4  { opacity: 0.25; stroke: #FBBF24; animation: waveSine4 3.8s ease-in-out infinite alternate; }
+.wave-layer-5  { opacity: 0.50; stroke: #1D4ED8; animation: waveSine5 4.2s ease-in-out infinite alternate; }
+.wave-layer-6  { opacity: 0.30; stroke: #93C5FD; animation: waveSine6 5.5s ease-in-out infinite alternate; }
+.wave-layer-7  { opacity: 0.35; stroke: #3B82F6; animation: waveSine7 4.8s ease-in-out infinite alternate; }
+.wave-layer-8  { opacity: 0.20; stroke: #F59E0B; animation: waveSine8 3.5s ease-in-out infinite alternate; }
+.wave-layer-9  { opacity: 0.40; stroke: #2563EB; animation: waveSine9 4.6s ease-in-out infinite alternate; }
+.wave-layer-10 { opacity: 0.25; stroke: #3B82F6; animation: waveSine10 5.0s ease-in-out infinite alternate; }
+
+@keyframes waveSine1 {
+    0% { transform: translate3d(-6%, 0, 0) scaleY(1); }
+    100% { transform: translate3d(6%, -20px, 0) scaleY(1.15); }
+}
+@keyframes waveSine2 {
+    0% { transform: translate3d(8%, -15px, 0) scaleY(1.1); }
+    100% { transform: translate3d(-8%, 15px, 0) scaleY(0.9); }
+}
+@keyframes waveSine3 {
+    0% { transform: translate3d(-10%, 10px, 0) scaleY(0.95); }
+    100% { transform: translate3d(10%, -25px, 0) scaleY(1.2); }
+}
+@keyframes waveSine4 {
+    0% { transform: translate3d(5%, -20px, 0) scaleY(1.2); }
+    100% { transform: translate3d(-5%, 10px, 0) scaleY(0.85); }
+}
+@keyframes waveSine5 {
+    0% { transform: translate3d(-7%, 15px, 0) scaleY(0.9); }
+    100% { transform: translate3d(7%, -15px, 0) scaleY(1.1); }
+}
+@keyframes waveSine6 {
+    0% { transform: translate3d(9%, -10px, 0) scaleY(1.15); }
+    100% { transform: translate3d(-9%, 20px, 0) scaleY(0.95); }
+}
+@keyframes waveSine7 {
+    0% { transform: translate3d(-4%, -25px, 0) scaleY(1.05); }
+    100% { transform: translate3d(4%, 12px, 0) scaleY(0.9); }
+}
+@keyframes waveSine8 {
+    0% { transform: translate3d(6%, 18px, 0) scaleY(0.85); }
+    100% { transform: translate3d(-6%, -18px, 0) scaleY(1.25); }
+}
+@keyframes waveSine9 {
+    0% { transform: translate3d(-8%, -12px, 0) scaleY(1.1); }
+    100% { transform: translate3d(8%, 16px, 0) scaleY(0.95); }
+}
+@keyframes waveSine10 {
+    0% { transform: translate3d(7%, 22px, 0) scaleY(0.92); }
+    100% { transform: translate3d(-7%, -22px, 0) scaleY(1.18); }
+}
+
+/* --------------------------------------------------------------------------
+   2. BUTTONS & INTERACTION COMPONENTS
+   -------------------------------------------------------------------------- */
+.btn-primary {
+    background-color: var(--brand-blue);
+    color: #FFFFFF;
+    font-weight: 700;
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1.5rem;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-primary:hover {
+    background-color: var(--brand-blue-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+}
+
+.btn-gold {
+    background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+    color: #071A49;
+    font-weight: 800;
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1.5rem;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 16px rgba(251, 191, 36, 0.35);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-gold:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 24px rgba(251, 191, 36, 0.5);
+}
+
+.btn-secondary {
+    background-color: #FFFFFF;
+    color: var(--brand-navy);
+    font-weight: 600;
+    border: 1px solid var(--brand-border);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1.5rem;
+    transition: all 0.25s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #F8FAFC;
+    border-color: var(--brand-blue);
+    color: var(--brand-blue);
+    transform: translateY(-1px);
+}
+
+.btn-light-blue {
+    background-color: #EFF6FF;
+    color: var(--brand-blue);
+    font-weight: 700;
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1.5rem;
+    transition: all 0.2s ease;
+    border: 1px solid #DBEAFE;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-light-blue:hover {
+    background-color: #DBEAFE;
+    color: var(--brand-blue-hover);
+    transform: translateY(-1px);
+}
+
+/* --------------------------------------------------------------------------
+   3. BADGES & CHIPS
+   -------------------------------------------------------------------------- */
+.badge-l1 {
+    background-color: rgba(37, 99, 235, 0.12);
+    color: var(--brand-blue);
+    border: 1px solid rgba(37, 99, 235, 0.25);
+    font-weight: 800;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.badge-hero-pill {
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.85rem;
+    border-radius: 9999px;
+    letter-spacing: 0.04em;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.badge-free {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    font-weight: 700;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 9999px;
+}
+
+.badge-premium {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%);
+    color: #D97706;
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    font-weight: 800;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* --------------------------------------------------------------------------
+   4. PROFILE HERO & STUDENT IDENTITY CARDS
+   -------------------------------------------------------------------------- */
+.profile-hero {
+    background: linear-gradient(135deg, #071A49 0%, #1D4ED8 65%, #2563EB 100%);
+    border-bottom-left-radius: 28px;
+    border-bottom-right-radius: 28px;
+    padding: 2.5rem 1.5rem 4rem 1.5rem;
+    color: #FFFFFF;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(7, 26, 73, 0.25);
+}
+
+.profile-avatar-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 0.85rem;
+}
+
+.profile-avatar {
+    width: 7rem;
+    height: 7rem;
+    border-radius: 9999px;
+    border: 4px solid #FFFFFF;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+    object-fit: cover;
+    background-color: var(--brand-blue);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 800;
+}
+
+.profile-camera-badge {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 2.1rem;
+    height: 2.1rem;
+    background-color: #FFFFFF;
+    color: var(--brand-blue);
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.profile-camera-badge:hover {
+    transform: scale(1.1);
+    background-color: #EFF6FF;
+}
+
+/* Academic & Account White Cards */
+.card-profile-section {
+    background-color: #FFFFFF;
+    border: 1px solid var(--brand-border);
+    border-radius: var(--radius-xl);
+    padding: 1.75rem 1.5rem;
+    box-shadow: 0 4px 20px rgba(7, 26, 73, 0.05);
+    margin-bottom: 1.5rem;
+    transition: box-shadow 0.3s ease;
+}
+
+.card-profile-section:hover {
+    box-shadow: 0 8px 30px rgba(7, 26, 73, 0.08);
+}
+
+/* Key-value Information Rows */
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid #F1F5F9;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.info-label {
+    font-size: 0.85rem;
+    color: var(--brand-muted);
+    font-weight: 500;
+}
+
+.info-value {
+    font-size: 0.9rem;
+    color: var(--brand-text);
+    font-weight: 700;
+    text-align: right;
+}
+
+.info-value-accent {
+    color: var(--brand-blue);
+    font-weight: 800;
+}
+
+/* --------------------------------------------------------------------------
+   5. ACADEMIC CARDS & MEDIUM FLOATING TINTED CARDS
+   -------------------------------------------------------------------------- */
+.card-academic {
+    background-color: var(--brand-card-bg);
+    border: 1px solid var(--brand-border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px rgba(7, 26, 73, 0.04);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-academic:hover {
+    transform: translateY(-4px);
+    border-color: rgba(37, 99, 235, 0.35);
+    box-shadow: 0 14px 28px rgba(37, 99, 235, 0.12);
+}
+
+/* Medium Floating Tinted Cards */
+.card-medium-floating {
+    background: linear-gradient(145deg, #FFFFFF 0%, #F8FAFC 100%);
+    border: 1.5px solid #E2E8F0;
+    border-radius: 14px;
+    padding: 1.25rem 1.35rem;
+    box-shadow: 0 4px 14px rgba(7, 26, 73, 0.04);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+    will-change: transform;
+}
+
+.card-medium-floating:hover {
+    transform: translateY(-6px) scale(1.015);
+    border-color: rgba(37, 99, 235, 0.35);
+    box-shadow: 0 16px 32px -4px rgba(37, 99, 235, 0.15), 0 6px 16px -2px rgba(37, 99, 235, 0.08);
+}
+
+/* Subtle Color Tint Variants */
+.card-tint-blue {
+    background: linear-gradient(145deg, #FFFFFF 0%, #F0F5FF 100%);
+    border-color: #DBEAFE;
+}
+.card-tint-blue:hover {
+    background: linear-gradient(145deg, #FFFFFF 0%, #EFF6FF 100%);
+    border-color: #93C5FD;
+}
+
+.card-tint-gold {
+    background: linear-gradient(145deg, #FFFFFF 0%, #FFFBEB 100%);
+    border-color: #FEF3C7;
+}
+.card-tint-gold:hover {
+    background: linear-gradient(145deg, #FFFFFF 0%, #FEF3C7 100%);
+    border-color: #FDE68A;
+}
+
+.card-tint-emerald {
+    background: linear-gradient(145deg, #FFFFFF 0%, #ECFDF5 100%);
+    border-color: #D1FAE5;
+}
+.card-tint-emerald:hover {
+    background: linear-gradient(145deg, #FFFFFF 0%, #E6F4EA 100%);
+    border-color: #A7F3D0;
+}
+
+.card-tint-purple {
+    background: linear-gradient(145deg, #FFFFFF 0%, #F5F3FF 100%);
+    border-color: #DDD6FE;
+}
+.card-tint-purple:hover {
+    background: linear-gradient(145deg, #FFFFFF 0%, #EDE9FE 100%);
+    border-color: #C4B5FD;
+}
+
+/* --------------------------------------------------------------------------
+   6. NAVIGATION & DOCK STYLES
+   -------------------------------------------------------------------------- */
+.nav-link-navy {
+    position: relative;
+    color: #94A3B8;
+    font-weight: 600;
+    padding: 0.5rem 0.25rem;
+    transition: color 0.25s ease;
+}
+
+.nav-link-navy:hover, .nav-link-navy.active {
+    color: #FFFFFF;
+}
+
+.nav-link-navy::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 0%;
+    height: 2.5px;
+    background: var(--brand-electric);
+    border-radius: 9999px;
+    transition: width 0.25s ease, left 0.25s ease;
+}
+
+.nav-link-navy:hover::after, .nav-link-navy.active::after {
+    width: 100%;
+    left: 0;
+}
+
+/* Mobile Bottom Navigation Dock */
+.mobile-bottom-dock {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--brand-border);
+    box-shadow: 0 -8px 24px rgba(7, 26, 73, 0.08);
+    padding: 0.4rem 0.5rem;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.dock-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #64748B;
+    font-size: 0.68rem;
+    font-weight: 600;
+    transition: color 0.2s ease, transform 0.2s ease;
+    padding: 0.2rem 0.5rem;
+}
+
+.dock-item-active, .dock-item:hover {
+    color: var(--brand-blue);
+    transform: translateY(-1px);
+}
+
+/* --------------------------------------------------------------------------
+   7. INFINITE MARQUEE TICKER (BANDE PASSANTE STATISTIQUES)
+   -------------------------------------------------------------------------- */
+.marquee-ticker-container {
+    background-color: var(--brand-navy);
+    border-y: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 0.85rem 0;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.marquee-wrapper {
+    display: flex;
+    overflow: hidden;
+    user-select: none;
+    mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+}
+
+.marquee-content {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: space-around;
+    min-width: 100%;
+    gap: 1.5rem;
+    animation: marqueeScroll 22s linear infinite;
+    will-change: transform;
+}
+
+.marquee-wrapper:hover .marquee-content {
+    animation-play-state: paused;
+}
+
+@keyframes marqueeScroll {
+    from { transform: translate3d(0, 0, 0); }
+    to { transform: translate3d(-100%, 0, 0); }
+}
+
+.stat-ticker-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1.25rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 9999px;
+    white-space: nowrap;
+    backdrop-filter: blur(8px);
+    transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.stat-ticker-pill:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: var(--brand-electric);
+}
+
+/* --------------------------------------------------------------------------
+   8. SKELETON LOADERS & UTILITIES
+   -------------------------------------------------------------------------- */
+.skeleton-box {
+    background: linear-gradient(90deg, #E2E8F0 25%, #EDF2F7 50%, #E2E8F0 75%);
+    background-size: 200% 100%;
+    animation: skeletonLoading 1.5s infinite;
+    border-radius: 8px;
+}
+
+@keyframes skeletonLoading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}

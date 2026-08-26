@@ -1,0 +1,106 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Créer un compte — ArchivEx (Espace Étudiant L1){% endblock %}
+
+{% block content %}
+<div class="min-h-[85vh] flex items-center justify-center py-10 px-4 sm:px-6 lg:px-8 bg-[#F7F9FC]">
+    
+    <!-- CENTERED REGISTRATION CARD -->
+    <div class="bg-white border border-slate-200/90 rounded-3xl p-7 sm:p-10 shadow-xl shadow-slate-200/60 max-w-xl w-full relative transition-all">
+
+        <!-- CARD HEADER (NO EMOJIS) -->
+        <div class="text-center mb-7">
+            <div class="inline-flex items-center justify-center mb-3">
+                <span class="text-[10px] font-black uppercase tracking-widest text-[#2563EB] bg-blue-50 px-3.5 py-1 rounded-full border border-blue-100">
+                    INSCRIPTION ÉTUDIANT
+                </span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black text-[#071A49] tracking-tight mb-2">Créer ton compte gratuit</h1>
+            <p class="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">Rejoins ArchivEx et accède à toutes tes anciennes épreuves de L1</p>
+        </div>
+
+        <form method="post" action="{% url 'accounts:register' %}" class="space-y-4">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[11px] font-extrabold tracking-wider text-[#071A49] uppercase mb-1.5">Prénom</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                        <p class="text-xs text-rose-600 font-semibold mt-1">{{ form.first_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-extrabold tracking-wider text-[#071A49] uppercase mb-1.5">Nom</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}
+                        <p class="text-xs text-rose-600 font-semibold mt-1">{{ form.last_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-extrabold tracking-wider text-[#071A49] uppercase mb-1.5">Adresse Email</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <p class="text-xs text-rose-600 font-semibold mt-1">{{ form.email.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-extrabold tracking-wider text-[#071A49] uppercase mb-1.5">Mot de passe</label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                    <p class="text-xs text-rose-600 font-semibold mt-1">{{ form.password.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-[11px] font-extrabold tracking-wider text-[#071A49] uppercase mb-1.5">École / Université</label>
+                    {{ form.school }}
+                    {% if form.school.errors %}
+                        <p class="text-xs text-rose-600 font-semibold mt-1">{{ form.school.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-extrabold tracking-wider text-[#071A49] uppercase mb-1.5">Niveau</label>
+                    {{ form.level }}
+                    {% if form.level.errors %}
+                        <p class="text-xs text-rose-600 font-semibold mt-1">{{ form.level.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-extrabold tracking-wider text-[#071A49] uppercase mb-1.5">Filière</label>
+                    {{ form.filiere }}
+                    {% if form.filiere.errors %}
+                        <p class="text-xs text-rose-600 font-semibold mt-1">{{ form.filiere.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-semibold">
+                    {{ form.non_field_errors.0 }}
+                </div>
+            {% endif %}
+
+            <button type="submit" class="btn-primary w-full py-3.5 text-xs sm:text-sm font-extrabold rounded-xl shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all flex items-center justify-center space-x-1.5 mt-2">
+                <span>Créer mon compte gratuit</span>
+                <span class="text-base font-normal"></span>
+            </button>
+        </form>
+
+        <div class="mt-7 pt-5 border-t border-slate-100 text-center text-xs text-slate-500 font-medium">
+            <span>Déjà inscrit ?</span>
+            <a href="{% url 'accounts:login' %}" class="text-[#2563EB] font-extrabold hover:underline ml-1">Se connecter</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}{% endblock %}

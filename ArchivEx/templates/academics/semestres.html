@@ -1,0 +1,126 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}L1 — {{ filiere.name }} — Choisis ton semestre | ArchivEx{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center text-xs font-medium text-slate-500 space-x-2 mb-6">
+        <a href="{% url 'academics:home' %}" class="hover:text-[#2563EB]">Accueil</a>
+        <span>/</span>
+        <a href="{% url 'academics:filieres' %}" class="hover:text-[#2563EB]">Filières & UE</a>
+        <span>/</span>
+        <span class="text-[#071A49] font-bold">{{ filiere.name }}</span>
+    </nav>
+
+    <!-- Contextual Header -->
+    <div class="p-6 sm:p-8 rounded-2xl bg-[#071A49] text-white border border-blue-900/40 mb-8 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div>
+            <div class="inline-flex items-center space-x-2 mb-2">
+                <span class="badge-l1 bg-blue-500/20 text-blue-300 border-blue-400/30">{{ filiere.level.name|default:"LICENCE 1" }}</span>
+                <span class="text-xs text-slate-300 font-semibold">{{ filiere.school.name|default:"Université" }}</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-white mb-1.5">{{ filiere.level.name|default:"L1" }} — {{ filiere.name }}</h1>
+            <p class="text-xs sm:text-sm text-slate-300">Choisis ton semestre pour accéder aux UE et épreuves.</p>
+        </div>
+    </div>
+
+    <!-- Semesters Section -->
+    <div class="mb-6">
+        <h2 class="text-xl font-extrabold text-[#071A49] mb-4">Choisis ton semestre</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {% for item in semesters_data %}
+            <div class="card-medium-floating {% if item.has_access %}card-tint-emerald{% else %}card-tint-blue{% endif %} flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center font-extrabold text-base border border-blue-100">
+                            S{{ forloop.counter }}
+                        </div>
+                        
+                        <!-- Pass Status Badge -->
+                        {% if item.has_access %}
+                            <span class="badge-premium text-[10px]">
+                                ✓ Pass actif
+                            </span>
+                        {% else %}
+                            <span class="badge-premium text-[10px]">
+                                Pass non activé
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <h3 class="text-lg font-bold text-[#071A49] mb-1">{{ item.semester.label|default:"Semestre" }}</h3>
+                    <p class="text-[11px] text-slate-500 mb-4">Programme académique {{ filiere.level.name|default:"Licence 1" }}</p>
+
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div class="p-2.5 rounded-xl bg-white/80 border border-slate-200/80">
+                            <p class="text-base font-extrabold text-[#071A49]">{{ item.semester.subjects_num|default:"12" }}</p>
+                            <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">UE</p>
+                        </div>
+                        <div class="p-2.5 rounded-xl bg-blue-50/50 border border-blue-100">
+                            <p class="text-base font-extrabold text-[#2563EB]">{{ item.semester.exams_num|default:"48" }}</p>
+                            <p class="text-[10px] font-semibold text-[#2563EB] uppercase tracking-wider">Épreuves</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-200/60 flex items-center justify-between">
+                    {% if not item.has_access %}
+                        <a href="{% url 'payments:pass_semestre' semester_id=item.semester.id %}" class="text-[11px] font-extrabold text-amber-600 hover:text-amber-700 flex items-center">
+                            <span>Débloquer le Pass</span>
+                            <svg class="w-3.5 h-3.5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                        </a>
+                    {% else %}
+                        <span class="text-[11px] text-emerald-600 font-bold flex items-center">
+                            ✓ Accès complet
+                        </span>
+                    {% endif %}
+
+                    <a href="{% url 'academics:matieres' semester_id=item.semester.id %}" class="btn-primary text-xs px-4 py-2">
+                        Explorer les UE
+                    </a>
+                </div>
+            </div>
+        {% empty %}
+            <div class="card-medium-floating card-tint-blue flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center font-extrabold text-base border border-blue-100">
+                            S1
+                        </div>
+                        <span class="badge-premium text-[10px]">
+                            Pass non activé
+                        </span>
+                    </div>
+
+                    <h3 class="text-lg font-bold text-[#071A49] mb-1">Semestre 1</h3>
+                    <p class="text-[11px] text-slate-500 mb-4">Programme académique Licence 1</p>
+
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div class="p-2.5 rounded-xl bg-white/80 border border-slate-200/80">
+                            <p class="text-base font-extrabold text-[#071A49]">12</p>
+                            <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">UE</p>
+                        </div>
+                        <div class="p-2.5 rounded-xl bg-blue-50/50 border border-blue-100">
+                            <p class="text-base font-extrabold text-[#2563EB]">48</p>
+                            <p class="text-[10px] font-semibold text-[#2563EB] uppercase tracking-wider">Épreuves</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-200/60 flex items-center justify-between">
+                    <a href="{% url 'academics:filieres' %}" class="text-[11px] font-extrabold text-amber-600 hover:text-amber-700 flex items-center">
+                        <span>Débloquer le Pass</span>
+                    </a>
+                    <a href="{% url 'academics:filieres' %}" class="btn-primary text-xs px-4 py-2">
+                        Explorer les UE
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

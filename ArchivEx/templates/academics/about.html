@@ -1,0 +1,79 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}À propos d'<strong>ArchivEx</strong> — Toutes tes épreuves. Un seul endroit.{% endblock %}
+
+{% block content %}
+<!-- HEADER BANNER -->
+<section class="bg-[#071A49] text-white py-14 sm:py-20 border-b border-blue-900/40 relative overflow-hidden">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+        <span class="text-xs font-bold uppercase tracking-widest text-[#3B82F6] mb-3 block">Présentation de la plateforme</span>
+        <h1 class="text-3xl sm:text-5xl font-black text-white tracking-tight mb-4">À propos d'<strong>ArchivEx</strong></h1>
+        <p class="text-lg sm:text-xl font-bold text-[#FBBF24]">Toutes tes épreuves. Un seul endroit.</p>
+    </div>
+</section>
+
+<!-- MAIN EDITORIAL CONTENT -->
+<section class="py-14 sm:py-20 bg-[#F7F9FC]">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+
+        <!-- INTRO BLOCK -->
+        <div class="bg-white p-8 sm:p-12 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+            <h2 class="text-xl sm:text-2xl font-extrabold text-[#071A49] tracking-tight border-b border-slate-100 pb-4">
+                Une réponse simple à un besoin essentiel
+            </h2>
+            <p class="text-slate-700 text-sm sm:text-base leading-relaxed">
+                <strong><strong>ArchivEx</strong></strong> est une plateforme numérique conçue pour faciliter l'accès aux anciennes épreuves et aux ressources académiques.
+            </p>
+            <p class="text-slate-600 text-sm sm:text-base leading-relaxed">
+                Nous partons d'une idée simple : les épreuves universitaires sont souvent dispersées entre différents groupes, conversations, téléphones et fichiers. Retrouver un document précis peut alors devenir long et compliqué.
+            </p>
+            <p class="text-slate-700 text-sm sm:text-base font-medium leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+                <strong>ArchivEx</strong> rassemble ces ressources dans un espace unique, organisé et facile à utiliser.
+            </p>
+            <p class="text-slate-600 text-sm sm:text-base leading-relaxed">
+                La plateforme permet de retrouver les épreuves selon différents critères tels que l'établissement, la filière, le niveau, le semestre et la matière, afin de rendre la recherche plus rapide et plus intuitive.
+            </p>
+        </div>
+
+        <!-- SECTION 2: UNE BIBLIOTHÈQUE ACADÉMIQUE NUMÉRIQUE -->
+        <div class="bg-white p-8 sm:p-12 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+            <h2 class="text-xl sm:text-2xl font-extrabold text-[#071A49] tracking-tight border-b border-slate-100 pb-4">
+                Une bibliothèque académique numérique
+            </h2>
+            <p class="text-slate-700 text-sm sm:text-base leading-relaxed">
+                <strong>ArchivEx</strong> ne se limite pas à stocker des documents.
+            </p>
+            <p class="text-slate-600 text-sm sm:text-base leading-relaxed">
+                Notre ambition est de construire progressivement un véritable espace où les étudiants peuvent retrouver, consulter et organiser leurs ressources académiques, au même endroit.
+            </p>
+            <p class="text-slate-600 text-sm sm:text-base leading-relaxed">
+                Chaque épreuve est classée afin de permettre une navigation simple et une recherche efficace.
+            </p>
+        </div>
+
+        <!-- SECTION 3: NOTRE OBJECTIF -->
+        <div class="bg-white p-8 sm:p-12 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+            <h2 class="text-xl sm:text-2xl font-extrabold text-[#071A49] tracking-tight border-b border-slate-100 pb-4">
+                Notre objectif
+            </h2>
+            <p class="text-slate-700 text-sm sm:text-base font-semibold leading-relaxed">
+                Rendre les ressources académiques plus accessibles, mieux organisées et plus faciles à retrouver.
+            </p>
+            <p class="text-slate-600 text-sm sm:text-base leading-relaxed">
+                <strong>ArchivEx</strong> évoluera progressivement avec de nouvelles ressources et de nouveaux outils destinés à accompagner les étudiants dans leur parcours.
+            </p>
+
+            <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <a href="{% url 'exams:liste' %}" class="btn-primary w-full sm:w-auto text-xs sm:text-sm px-6 py-3 font-bold">
+                    Explorer la banque d'épreuves
+                </a>
+                <a href="{% url 'academics:filieres' %}" class="btn-secondary w-full sm:w-auto text-xs sm:text-sm px-6 py-3 font-bold">
+                    Consulter les matières
+                </a>
+            </div>
+        </div>
+
+    </div>
+</section>
+{% endblock %}
