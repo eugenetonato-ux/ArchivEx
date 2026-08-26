@@ -1,0 +1,241 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Guide étudiant ArchivEx — Méthodologie & Réussite Académique{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+
+    <!-- DESKTOP BREADCRUMB -->
+    <nav class="hidden sm:flex items-center text-xs font-medium text-slate-500 space-x-2 mb-6" aria-label="Fil d'ariane">
+        <a href="{% url 'academics:home' %}" class="hover:text-[#2563EB]">Accueil</a>
+        <span>/</span>
+        <span class="text-[#071A49] font-bold">Guide étudiant</span>
+    </nav>
+
+    <!-- HEADER BANNER -->
+    <div class="p-6 sm:p-10 rounded-3xl bg-[#071A49] text-white border border-blue-900/40 mb-10 shadow-xl relative overflow-hidden">
+        <div class="relative z-10 max-w-3xl">
+            <span class="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-black uppercase tracking-wider inline-block mb-3">
+                Centre de Connaissances Académiques
+            </span>
+            <h1 class="text-3xl sm:text-4xl font-black text-white tracking-tight mb-3">
+                Guide étudiant ArchivEx
+            </h1>
+            <p class="text-sm sm:text-base text-slate-300 font-medium leading-relaxed">
+                Tout ce qu'il faut savoir pour organiser vos révisions, exploiter efficacement vos épreuves et réussir vos examens universitaires.
+            </p>
+        </div>
+    </div>
+
+    <!-- CATEGORY NAVIGATION GRID (5 CATEGORIES) -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-12">
+        <a href="#utilisation" class="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-[#2563EB] hover:shadow-md transition-all text-center group">
+            <i class="fa-solid fa-bookmark text-2xl text-[#2563EB] block mb-1"></i>
+            <h3 class="text-xs font-black text-[#071A49] group-hover:text-[#2563EB] transition-colors">Plateforme</h3>
+            <p class="text-[10px] text-slate-500 font-medium">Bien utiliser ArchivEx</p>
+        </a>
+
+        <a href="#methodologie" class="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-amber-400 hover:shadow-md transition-all text-center group">
+            <i class="fa-solid fa-compass text-2xl text-amber-600 block mb-1"></i>
+            <h3 class="text-xs font-black text-[#071A49] group-hover:text-amber-600 transition-colors">Méthodologie</h3>
+            <p class="text-[10px] text-slate-500 font-medium">Travailler une matière</p>
+        </a>
+
+        <a href="#epreuves" class="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-blue-500 hover:shadow-md transition-all text-center group">
+            <i class="fa-solid fa-file-lines text-2xl text-[#2563EB] block mb-1"></i>
+            <h3 class="text-xs font-black text-[#071A49] group-hover:text-[#2563EB] transition-colors">Épreuves</h3>
+            <p class="text-[10px] text-slate-500 font-medium">Exploiter les sujets</p>
+        </a>
+
+        <a href="#examens" class="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-emerald-500 hover:shadow-md transition-all text-center group">
+            <i class="fa-solid fa-bolt text-2xl text-emerald-600 block mb-1"></i>
+            <h3 class="text-xs font-black text-[#071A49] group-hover:text-emerald-600 transition-colors">Examens</h3>
+            <p class="text-[10px] text-slate-500 font-medium">Réussir ses révisions</p>
+        </a>
+
+        <a href="#pass" class="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-purple-500 hover:shadow-md transition-all text-center group col-span-2 md:col-span-1">
+            <i class="fa-solid fa-key text-2xl text-purple-600 block mb-1"></i>
+            <h3 class="text-xs font-black text-[#071A49] group-hover:text-purple-600 transition-colors">Pass Semestre</h3>
+            <p class="text-[10px] text-slate-500 font-medium">Accès & Avantages</p>
+        </a>
+    </div>
+
+    <!-- FEATURE ARTICLE SECTION: COMMENT EXPLOITER EFFICACEMENT UNE ANCIENNE ÉPREUVE -->
+    <section id="epreuves" class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 mb-12 shadow-sm">
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-50 text-[#2563EB] border border-blue-100 text-xs font-black mb-4">
+            <span>Guide Méthodologique Officiel</span>
+        </div>
+
+        <h2 class="text-2xl sm:text-3xl font-black text-[#071A49] mb-4">
+            Comment exploiter efficacement une ancienne épreuve ?
+        </h2>
+
+        <p class="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed mb-8 max-w-3xl">
+            L'erreur la plus fréquente chez les étudiants consiste à lire une correction d'examen sans effectuer le travail d'analyse préalable. Voici la méthode en 8 étapes pour transformer vos épreuves en leviers de réussite.
+        </p>
+
+        <!-- 8-STEP METHODOLOGY -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start space-x-3.5">
+                <span class="w-7 h-7 rounded-xl bg-[#071A49] text-white font-black text-xs flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
+                <div>
+                    <h4 class="text-xs font-black text-[#071A49] mb-1">Comprendre le cours avant de traiter le sujet</h4>
+                    <p class="text-[11px] text-slate-500 font-medium leading-relaxed">Ne commencez jamais un examen sans maîtriser au préalable les définitions et théorèmes fondamentaux de la matière.</p>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start space-x-3.5">
+                <span class="w-7 h-7 rounded-xl bg-[#071A49] text-white font-black text-xs flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+                <div>
+                    <h4 class="text-xs font-black text-[#071A49] mb-1">Traiter l'épreuve sans regarder le corrigé</h4>
+                    <p class="text-[11px] text-slate-500 font-medium leading-relaxed">Mettez-vous en situation réelle : répondez aux questions par vous-même avant de consulter toute correction.</p>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start space-x-3.5">
+                <span class="w-7 h-7 rounded-xl bg-[#071A49] text-white font-black text-xs flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+                <div>
+                    <h4 class="text-xs font-black text-[#071A49] mb-1">Identifier précisément vos blocages</h4>
+                    <p class="text-[11px] text-slate-500 font-medium leading-relaxed">Notez chaque question non résolue ou hésitante pour cibler vos lacunes réelles.</p>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start space-x-3.5">
+                <span class="w-7 h-7 rounded-xl bg-[#071A49] text-white font-black text-xs flex items-center justify-center flex-shrink-0 mt-0.5">4</span>
+                <div>
+                    <h4 class="text-xs font-black text-[#071A49] mb-1">Revenir aux notions théoriques concernées</h4>
+                    <p class="text-[11px] text-slate-500 font-medium leading-relaxed">Relisez la fiche de résumé ou le chapitre de cours sur le point où vous avez trébuché.</p>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start space-x-3.5">
+                <span class="w-7 h-7 rounded-xl bg-[#071A49] text-white font-black text-xs flex items-center justify-center flex-shrink-0 mt-0.5">5</span>
+                <div>
+                    <h4 class="text-xs font-black text-[#071A49] mb-1">Refaire intégralement l'exercice</h4>
+                    <p class="text-[11px] text-slate-500 font-medium leading-relaxed">Reprenez l'exercice du début pour valider la compréhension complète du raisonnement.</p>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start space-x-3.5">
+                <span class="w-7 h-7 rounded-xl bg-[#071A49] text-white font-black text-xs flex items-center justify-center flex-shrink-0 mt-0.5">6</span>
+                <div>
+                    <h4 class="text-xs font-black text-[#071A49] mb-1">Comparer les épreuves sur plusieurs années</h4>
+                    <p class="text-[11px] text-slate-500 font-medium leading-relaxed">Observez la structure récurrente des sujets de votre enseignant ou de votre faculté.</p>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start space-x-3.5">
+                <span class="w-7 h-7 rounded-xl bg-[#071A49] text-white font-black text-xs flex items-center justify-center flex-shrink-0 mt-0.5">7</span>
+                <div>
+                    <h4 class="text-xs font-black text-[#071A49] mb-1">Construire une fiche de notions récurrentes</h4>
+                    <p class="text-[11px] text-slate-500 font-medium leading-relaxed">Rassemblez les types de questions et formules qui reviennent à chaque session.</p>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start space-x-3.5">
+                <span class="w-7 h-7 rounded-xl bg-[#071A49] text-white font-black text-xs flex items-center justify-center flex-shrink-0 mt-0.5">8</span>
+                <div>
+                    <h4 class="text-xs font-black text-[#071A49] mb-1">Faire une simulation chronométrée</h4>
+                    <p class="text-[11px] text-slate-500 font-medium leading-relaxed">Traitez un sujet inédit dans le temps imparti (2h ou 3h) sans aucun document.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- WARNING BOX "À ÉVITER" -->
+        <div class="p-5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900">
+            <h4 class="text-xs font-black uppercase tracking-wider text-rose-800 mb-2 flex items-center space-x-1.5">
+                <i class="fa-solid fa-triangle-exclamation text-rose-600 text-sm"></i>
+                <span>Les pièges classiques à éviter</span>
+            </h4>
+            <ul class="text-xs font-medium space-y-1.5 list-disc list-inside text-rose-800/90">
+                <td><strong>Apprendre mécaniquement la correction :</strong> Un changement d'énoncé ou de valeurs rend cette méthode inefficace.</td>
+                <td><strong>Commencer par les épreuves sans lire le cours :</strong> Sans socle théorique, l'entraînement crée des confusions.</td>
+                <td><strong>Négliger les consignes et barèmes :</strong> Analysez toujours le poids relatif de chaque partie du sujet.</td>
+            </ul>
+        </div>
+    </section>
+
+    <!-- SECTION METHODOLOGY & SUMMARIES -->
+    <section id="methodologie" class="mb-12">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="text-xl font-black text-[#071A49]">Travailler une matière avec les fiches de cours</h2>
+                <p class="text-xs text-slate-500 font-medium">Exploiter les résumés et guides méthodologiques</p>
+            </div>
+            <a href="{% url 'content:summary_list' %}" class="text-xs font-extrabold text-[#2563EB] hover:underline flex items-center space-x-1">
+                <span>Voir les résumés</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-800 font-bold flex items-center justify-center mb-3">
+                    <i class="fa-solid fa-book text-amber-600"></i>
+                </div>
+                <h3 class="text-sm font-black text-[#071A49] mb-1">Rôle d'un résumé de cours</h3>
+                <p class="text-xs text-slate-500 font-medium leading-relaxed">
+                    Un résumé synthétise l'essentiel. Il sert de guide de révision rapide après la lecture intégrale de votre cours magistral.
+                </p>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-800 font-bold flex items-center justify-center mb-3">
+                    <i class="fa-solid fa-compass text-emerald-600"></i>
+                </div>
+                <h3 class="text-sm font-black text-[#071A49] mb-1">Guide de matière</h3>
+                <p class="text-xs text-slate-500 font-medium leading-relaxed">
+                    Chaque matière possède sa logique propre. Nos guides détaillent les attentes spécifiques des correcteurs universitaires.
+                </p>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                <div class="w-10 h-10 rounded-2xl bg-blue-50 text-[#2563EB] font-bold flex items-center justify-center mb-3">
+                    <i class="fa-solid fa-lightbulb text-[#2563EB]"></i>
+                </div>
+                <h3 class="text-sm font-black text-[#071A49] mb-1">Conseils d'orientation</h3>
+                <p class="text-xs text-slate-500 font-medium leading-relaxed">
+                    Retrouvez les recommandations des enseignants et anciens étudiants diplômés pour réussir votre cursus.
+                </p>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- SECTION ARCHIVEX PASS -->
+    <section id="pass" class="bg-gradient-to-br from-[#071A49] via-[#0E2461] to-[#1D4ED8] rounded-3xl p-6 sm:p-10 text-white shadow-xl">
+        <div class="max-w-3xl">
+            <span class="px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[10px] font-black uppercase tracking-wider inline-block mb-3">
+                Fonctionnement d'ArchivEx Pass
+            </span>
+            <h2 class="text-2xl sm:text-3xl font-black text-white mb-3">
+                Comment débloquer les épreuves & résumés de votre semestre ?
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed mb-6">
+                Le Pass Semestre vous donne un accès illimité et instantané à toutes les épreuves corrigées et résumés de votre filière pour 2 000 FCFA.
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div class="p-3.5 rounded-2xl bg-white/10 border border-white/15">
+                    <span class="text-xs font-bold text-amber-300 block mb-0.5">Accès Instantané</span>
+                    <span class="text-[11px] text-slate-300">Validation automatique par Mobile Money (MTN MoMo, Moov Money, Wave).</span>
+                </div>
+                <div class="p-3.5 rounded-2xl bg-white/10 border border-white/15">
+                    <span class="text-xs font-bold text-amber-300 block mb-0.5">Tout votre Semestre</span>
+                    <span class="text-[11px] text-slate-300">Toutes les épreuves et sujets de l'ensemble de vos matières.</span>
+                </div>
+                <div class="p-3.5 rounded-2xl bg-white/10 border border-white/15">
+                    <span class="text-xs font-bold text-amber-300 block mb-0.5">Téléchargements PDF</span>
+                    <span class="text-[11px] text-slate-300">Possibilité d'imprimer ou réviser hors-ligne sur votre téléphone.</span>
+                </div>
+            </div>
+
+            <a href="{% url 'academics:filieres' %}" class="btn-gold text-xs px-6 py-3 font-black rounded-xl inline-block shadow-md">
+                Accéder à mes matières et activer mon Pass
+            </a>
+        </div>
+    </section>
+
+</div>
+{% endblock %}

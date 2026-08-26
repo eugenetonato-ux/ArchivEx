@@ -7,7 +7,13 @@
     <div class="mb-8">
         <h1 class="text-3xl font-black text-[#071A49]">Guides Méthodologiques par Matière</h1>
         <p class="text-sm text-slate-500 font-medium mt-1">Découvrez comment aborder vos UE, réussir vos examens et éviter les pièges classiques</p>
-    </div>
+    {% if selected_subject %}
+        <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-blue-50 text-[#2563EB] border border-blue-200 text-xs font-extrabold mb-6">
+            <span>Filtre actif : {{ selected_subject.name }}</span>
+            <a href="{% url 'content:guide_list' %}" class="text-slate-400 hover:text-rose-500 font-black ml-1 text-sm">×</a>
+        </div>
+    {% endif %}
+
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for guide in guides %}
@@ -27,10 +33,19 @@
                 </div>
             </div>
         {% empty %}
-            <div class="col-span-full text-center py-12 bg-white rounded-2xl border border-slate-200">
-                <p class="text-sm text-slate-500 font-medium">Aucun guide de matière disponible pour le moment.</p>
+            <div class="col-span-full bg-white border border-slate-200 rounded-3xl p-10 text-center shadow-sm">
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-[#2563EB] border border-blue-100 flex items-center justify-center mx-auto mb-3 shadow-sm">
+                    <i class="fa-solid fa-compass text-xl"></i>
+                </div>
+                <h3 class="text-base font-extrabold text-[#071A49] mb-1">Aucun guide de matière disponible</h3>
+                <p class="text-xs text-slate-500 font-medium max-w-sm mx-auto mb-4">Les guides méthodologiques pour cette sélection seront publiés prochainement.</p>
+                <a href="{% url 'content:guide_list' %}" class="btn-secondary text-xs px-4 py-2 font-bold inline-flex items-center space-x-1.5">
+                    <i class="fa-solid fa-rotate-right text-xs"></i>
+                    <span>Réinitialiser les filtres</span>
+                </a>
             </div>
         {% endfor %}
+
     </div>
 </div>
 {% endblock %}

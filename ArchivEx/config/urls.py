@@ -13,7 +13,10 @@ urlpatterns = [
     path("notifications/", include("notifications.urls")),
 ]
 
-
+handler403 = "academics.views.custom_403_view"
+handler404 = "academics.views.custom_404_view"
+handler500 = "academics.views.custom_500_view"
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

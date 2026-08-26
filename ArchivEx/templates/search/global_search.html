@@ -1,0 +1,299 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}{% if q %}Résultats pour « {{ q }} »{% else %}Recherche Globale{% endif %} — ArchivEx{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+
+    <!-- DESKTOP BREADCRUMB -->
+    <nav class="hidden sm:flex items-center text-xs font-medium text-slate-500 space-x-2 mb-6" aria-label="Fil d'ariane">
+        <a href="{% url 'academics:home' %}" class="hover:text-[#2563EB]">Accueil</a>
+        <span>/</span>
+        <span class="text-[#071A49] font-bold">Recherche globale</span>
+    </nav>
+
+    <!-- SEARCH HEADER & SEARCH BAR -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 mb-8 shadow-sm">
+        <h1 class="text-2xl sm:text-3xl font-black text-[#071A49] mb-2 tracking-tight">
+            Rechercher dans ArchivEx
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-500 font-medium mb-6">
+            Trouvez une matière, une épreuve, un résumé de cours, un guide ou un conseil d'étude.
+        </p>
+
+        <!-- GLOBAL SEARCH FORM -->
+        <form method="get" action="{% url 'academics:global_search' %}" class="flex flex-col sm:flex-row gap-3">
+            <div class="relative flex-grow">
+                <input type="text" name="q" value="{{ q }}" placeholder="Rechercher une matière, une épreuve ou un résumé..." class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm font-semibold text-[#071A49] focus:bg-white focus:ring-2 focus:ring-[#2563EB] focus:border-transparent outline-none transition-all">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            </div>
+            <button type="submit" class="btn-primary text-xs sm:text-sm px-6 py-3 font-extrabold rounded-2xl flex items-center justify-center space-x-2 shadow-sm">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <span>Rechercher</span>
+            </button>
+        </form>
+
+        <!-- CATEGORY FILTERS PILLS BAR -->
+        {% if q %}
+            <div class="flex items-center space-x-2 overflow-x-auto pt-6 scrollbar-none text-xs font-bold border-t border-slate-100 mt-6">
+                <a href="?q={{ q }}&category=all" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors {% if selected_category == 'all' or not selected_category %}bg-[#071A49] text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+                    Toutes les ressources
+                </a>
+                <a href="?q={{ q }}&category=subjects" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors flex items-center space-x-1.5 {% if selected_category == 'subjects' %}bg-[#2563EB] text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+                    <i class="fa-solid fa-book-open text-xs"></i>
+                    <span>Matières</span>
+                </a>
+                <a href="?q={{ q }}&category=exams" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors flex items-center space-x-1.5 {% if selected_category == 'exams' %}bg-[#2563EB] text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+                    <i class="fa-solid fa-file-lines text-xs"></i>
+                    <span>Épreuves</span>
+                </a>
+                <a href="?q={{ q }}&category=summaries" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors flex items-center space-x-1.5 {% if selected_category == 'summaries' %}bg-[#2563EB] text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+                    <i class="fa-solid fa-book text-xs"></i>
+                    <span>Résumés</span>
+                </a>
+                <a href="?q={{ q }}&category=guides" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors flex items-center space-x-1.5 {% if selected_category == 'guides' %}bg-[#2563EB] text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+                    <i class="fa-solid fa-compass text-xs"></i>
+                    <span>Guides</span>
+                </a>
+                <a href="?q={{ q }}&category=articles" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors flex items-center space-x-1.5 {% if selected_category == 'articles' %}bg-[#2563EB] text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+                    <i class="fa-solid fa-lightbulb text-xs"></i>
+                    <span>Conseils</span>
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- SEARCH RESULTS SECTION -->
+    {% if q %}
+        <div class="mb-6 flex items-center justify-between">
+            <h2 class="text-lg font-black text-[#071A49]">
+                Résultats pour « <span class="text-[#2563EB]">{{ q }}</span> »
+            </h2>
+            <span class="text-xs font-bold text-slate-500 bg-white border border-slate-200 px-3 py-1 rounded-full">
+                {{ total_results_count }} résultat{{ total_results_count|pluralize }}
+            </span>
+        </div>
+
+        {% if total_results_count > 0 %}
+            <div class="space-y-8">
+                
+                <!-- 1. SUBJECTS RESULTS -->
+                {% if subjects_results %}
+                    <section>
+                        <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-3 flex items-center space-x-2">
+                            <i class="fa-solid fa-book-open text-blue-600"></i>
+                            <span>Matières / UE ({{ subjects_results|length }})</span>
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {% for item in subjects_results %}
+                                <a href="{% url 'exams:liste' %}?subject={{ item.object.id }}" class="p-4 rounded-2xl bg-white border border-slate-200 hover:border-[#2563EB] hover:shadow-md transition-all group flex flex-col justify-between">
+                                    <div>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-[#2563EB]">UE</span>
+                                            {% if item.is_priority %}
+                                                <span class="text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">Mon parcours</span>
+                                            {% endif %}
+                                        </div>
+                                        <h4 class="text-sm font-black text-[#071A49] group-hover:text-[#2563EB] transition-colors mb-1 line-clamp-1">
+                                            {{ item.object.name }}
+                                        </h4>
+                                        <p class="text-[11px] text-slate-500 font-medium">
+                                            {{ item.object.semester.filiere.school.name }} · {{ item.object.semester.filiere.name }} ({{ item.object.semester.label }})
+                                        </p>
+                                    </div>
+                                    <div class="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs font-extrabold text-[#2563EB]">
+                                        <span>Voir les épreuves</span>
+                                        <i class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endif %}
+
+                <!-- 2. EXAMS RESULTS -->
+                {% if exams_results %}
+                    <section>
+                        <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-3 flex items-center space-x-2">
+                            <i class="fa-solid fa-file-lines text-blue-600"></i>
+                            <span>Épreuves d'examens ({{ exams_results|length }})</span>
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {% for item in exams_results %}
+                                <div class="p-4 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between shadow-sm">
+                                    <div>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-[10px] font-bold text-slate-400 uppercase">
+                                                {{ item.object.year }} · {{ item.object.get_exam_type_display|default:"EXAM" }}
+                                            </span>
+                                            {% if item.has_access %}
+                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 flex items-center space-x-1">
+                                                    <i class="fa-solid fa-check text-[9px]"></i>
+                                                    <span>Gratuit</span>
+                                                </span>
+                                            {% else %}
+                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-800 flex items-center space-x-1">
+                                                    <i class="fa-solid fa-lock text-[9px]"></i>
+                                                    <span>Pass Semestre</span>
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        <h4 class="text-sm font-black text-[#071A49] mb-1 line-clamp-1">{{ item.object.title }}</h4>
+                                        <p class="text-[11px] font-semibold text-[#2563EB] mb-3 line-clamp-1">UE — {{ item.object.subject.name }}</p>
+                                    </div>
+                                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                                        {% if item.has_access %}
+                                            <a href="{% url 'exams:detail' item.object.pk %}" class="btn-primary text-xs px-3.5 py-1.5 font-extrabold rounded-xl w-full text-center">
+                                                Consulter l'épreuve
+                                            </a>
+                                        {% else %}
+                                            <a href="{% url 'exams:detail' item.object.pk %}" class="btn-gold text-xs px-3.5 py-1.5 font-black rounded-xl w-full text-center flex items-center justify-center space-x-1.5">
+                                                <i class="fa-solid fa-lock text-xs"></i>
+                                                <span>Découvrir le Pass</span>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endif %}
+
+                <!-- 3. SUMMARIES RESULTS -->
+                {% if summaries_results %}
+                    <section>
+                        <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-3 flex items-center space-x-2">
+                            <i class="fa-solid fa-book text-amber-600"></i>
+                            <span>Résumés de cours ({{ summaries_results|length }})</span>
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {% for item in summaries_results %}
+                                <div class="p-4 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between shadow-sm">
+                                    <div>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-amber-50 text-amber-800">
+                                                {{ item.object.subject.name }}
+                                            </span>
+                                            {% if item.has_access %}
+                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">Débloqué</span>
+                                            {% else %}
+                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-800 flex items-center space-x-1">
+                                                    <i class="fa-solid fa-lock text-[9px]"></i>
+                                                    <span>Premium</span>
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        <h4 class="text-sm font-black text-[#071A49] mb-1 line-clamp-1">{{ item.object.title }}</h4>
+                                        <p class="text-[11px] text-slate-500 line-clamp-2 mb-3">{{ item.object.introduction|striptags|default:item.object.content|striptags }}</p>
+                                    </div>
+                                    <div class="pt-3 border-t border-slate-100">
+                                        <a href="{% url 'content:summary_detail' item.object.pk %}" class="btn-primary text-xs px-3.5 py-1.5 font-extrabold rounded-xl flex items-center justify-center space-x-1.5">
+                                            <span>Consulter le résumé</span>
+                                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endif %}
+
+                <!-- 4. GUIDES RESULTS -->
+                {% if guides_results %}
+                    <section>
+                        <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-3 flex items-center space-x-2">
+                            <i class="fa-solid fa-compass text-emerald-600"></i>
+                            <span>Guides de matières ({{ guides_results|length }})</span>
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {% for item in guides_results %}
+                                <div class="p-4 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between shadow-sm">
+                                    <div>
+                                        <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 mb-2 inline-block">
+                                            {{ item.object.subject.name }}
+                                        </span>
+                                        <h4 class="text-sm font-black text-[#071A49] mb-1 line-clamp-1">{{ item.object.title }}</h4>
+                                        <p class="text-[11px] text-slate-500 line-clamp-2 mb-3">{{ item.object.introduction|default:"Guide de préparation à la matière." }}</p>
+                                    </div>
+                                    <div class="pt-3 border-t border-slate-100">
+                                        <a href="{% url 'content:guide_detail' item.object.pk %}" class="btn-secondary text-xs px-3.5 py-1.5 font-bold rounded-xl flex items-center justify-center space-x-1.5 border border-slate-200">
+                                            <span>Lire le guide</span>
+                                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                                        </a>
+                                    </div>
+
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endif %}
+
+                <!-- 5. ARTICLES RESULTS -->
+                {% if articles_results %}
+                    <section>
+                        <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-3 flex items-center space-x-2">
+                            <i class="fa-solid fa-lightbulb text-indigo-600"></i>
+                            <span>Conseils d'études ({{ articles_results|length }})</span>
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {% for item in articles_results %}
+                                <div class="p-4 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between shadow-sm">
+                                    <div>
+                                        <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-50 text-indigo-800 mb-2 inline-block">
+                                            {{ item.object.get_category_display }}
+                                        </span>
+                                        <h4 class="text-sm font-black text-[#071A49] mb-1 line-clamp-1">{{ item.object.title }}</h4>
+                                        <p class="text-[11px] text-slate-500 line-clamp-2 mb-3">{{ item.object.summary|default:item.object.content|striptags }}</p>
+                                    </div>
+                                    <div class="pt-3 border-t border-slate-100">
+                                        <a href="{% url 'content:article_detail' item.object.pk %}" class="text-xs font-extrabold text-[#2563EB] hover:underline flex items-center justify-between">
+                                            <span>Lire l'article</span>
+                                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endif %}
+
+            </div>
+        {% else %}
+            <!-- NO RESULTS EMPTY STATE -->
+            <div class="bg-white border border-slate-200 rounded-3xl p-10 text-center shadow-sm max-w-2xl mx-auto my-8">
+                <div class="w-14 h-14 rounded-2xl bg-blue-50 text-[#2563EB] flex items-center justify-center mx-auto mb-4 text-xl">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+                <h3 class="text-lg font-black text-[#071A49] mb-2">Aucun résultat trouvé</h3>
+                <p class="text-xs text-slate-500 font-medium mb-6 leading-relaxed">
+                    Nous n'avons trouvé aucune ressource correspondant à votre recherche « <strong>{{ q }}</strong> ».
+                </p>
+                <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-left text-xs space-y-2 mb-6">
+                    <p class="font-black text-[#071A49]">Conseils pour améliorer votre recherche :</p>
+                    <ul class="list-disc list-inside text-slate-600 space-y-1 font-medium">
+                        <li>Vérifiez l'orthographe des mots saisies.</li>
+                        <li>Essayez des termes plus généraux (ex: « Mathématiques » au lieu d'un sujet précis).</li>
+                        <li>Recherchez directement le nom de la matière ou de l'UE.</li>
+                    </ul>
+                </div>
+                <a href="{% url 'academics:filieres' %}" class="btn-primary text-xs px-5 py-2.5 font-extrabold rounded-xl inline-block">
+                    Explorer les matières disponibles
+                </a>
+            </div>
+        {% endif %}
+    {% else %}
+        <!-- INITIAL EMPTY SEARCH PROMPT -->
+        <div class="bg-white border border-slate-200 rounded-3xl p-10 text-center shadow-sm max-w-2xl mx-auto my-8">
+            <div class="w-14 h-14 rounded-2xl bg-blue-50 text-[#2563EB] flex items-center justify-center mx-auto mb-4 text-xl">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+            <h3 class="text-lg font-black text-[#071A49] mb-2">Recherchez à travers toutes les ressources</h3>
+            <p class="text-xs text-slate-500 font-medium leading-relaxed">
+                Entrez le nom d'une matière, d'un chapitre ou d'un sujet d'examen ci-dessus pour lancer la recherche unifiée.
+            </p>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

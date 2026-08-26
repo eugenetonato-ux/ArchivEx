@@ -13,10 +13,9 @@
                 {{ user.first_name|default:user.username|slice:":1"|upper }}
             </div>
             <div>
-                <div class="inline-flex items-center space-x-2 mb-1.5">
-                    <span class="text-xs font-bold text-slate-500">ESPACE ÉTUDIANT</span>
                 </div>
-                <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0B122B]">Bonjour, {{ user.first_name|default:user.username }} 👋</h1>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0B122B]">Bonjour, {{ user.first_name|default:user.username }}</h1>
+
                 <p class="text-xs sm:text-sm text-slate-500">
                     {% if profile and profile.filiere %}
                         {{ profile.school.name|default:"Université" }} · {{ profile.filiere.name }} (L1)
@@ -42,7 +41,9 @@
         <div class="card-medium-floating card-tint-blue">
             <div class="flex justify-between items-center mb-2">
                 <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Épreuves consultées</span>
-                <span class="w-7 h-7 rounded-lg bg-blue-100 text-[#2563EB] flex items-center justify-center text-xs">📖</span>
+                <span class="w-7 h-7 rounded-lg bg-blue-100 text-[#2563EB] flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-book-open"></i>
+                </span>
             </div>
             <p class="text-2xl font-extrabold text-[#2563EB]">14</p>
             <p class="text-[10px] text-slate-400 mt-0.5">Sujets L1 révisés</p>
@@ -51,7 +52,9 @@
         <div class="card-medium-floating card-tint-gold">
             <div class="flex justify-between items-center mb-2">
                 <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Favoris</span>
-                <span class="w-7 h-7 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-xs">⭐</span>
+                <span class="w-7 h-7 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-star"></i>
+                </span>
             </div>
             <p class="text-2xl font-extrabold text-amber-600">{{ favorites|length|default:"6" }}</p>
             <p class="text-[10px] text-slate-400 mt-0.5">Enregistrés pour révisions</p>
@@ -60,7 +63,9 @@
         <div class="card-medium-floating card-tint-emerald">
             <div class="flex justify-between items-center mb-2">
                 <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Téléchargements</span>
-                <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs">📥</span>
+                <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-download"></i>
+                </span>
             </div>
             <p class="text-2xl font-extrabold text-emerald-600">8</p>
             <p class="text-[10px] text-slate-400 mt-0.5">Documents PDF enregistrés</p>
@@ -69,10 +74,15 @@
         <div class="card-medium-floating card-tint-purple">
             <div class="flex justify-between items-center mb-2">
                 <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">ArchivEx Pass</span>
-                <span class="w-7 h-7 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-xs">⚡</span>
+                <span class="w-7 h-7 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-bolt"></i>
+                </span>
             </div>
             {% if active_accesses %}
-                <p class="text-sm font-extrabold text-emerald-600 mt-1">✓ PASS ACTIF</p>
+                <p class="text-sm font-extrabold text-emerald-600 mt-1 flex items-center space-x-1">
+                    <i class="fa-solid fa-circle-check text-xs"></i>
+                    <span>PASS ACTIF</span>
+                </p>
                 <p class="text-[10px] text-slate-400 mt-0.5">Accès illimité L1</p>
             {% else %}
                 <p class="text-sm font-extrabold text-amber-600 mt-1">NON ACTIVÉ</p>
@@ -90,7 +100,7 @@
             <!-- PASS STATUS WIDGET -->
             <div class="card-academic bg-white border border-slate-200 p-5">
                 <h2 class="text-base font-bold text-[#0B122B] mb-3 flex items-center space-x-2">
-                    <span class="text-amber-500"></span>
+                    <i class="fa-solid fa-bolt text-amber-500"></i>
                     <span>Mon ArchivEx Pass Semestre</span>
                 </h2>
 
@@ -127,8 +137,10 @@
             <div class="card-academic bg-white border border-slate-200 p-5">
                 <div class="flex justify-between items-center mb-3">
                     <h2 class="text-base font-bold text-[#0B122B] flex items-center space-x-1.5">
-                        <span class="text-rose-500">❤</span>
+                        <i class="fa-solid fa-heart text-rose-500"></i>
                         <span>Mes Favoris</span>
+                    </h2>
+s Favoris</span>
                     </h2>
                     <a href="{% url 'accounts:favoris' %}" class="text-xs font-bold text-[#2563EB] hover:underline">Tout voir </a>
                 </div>

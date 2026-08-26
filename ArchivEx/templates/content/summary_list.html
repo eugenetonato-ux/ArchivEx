@@ -13,7 +13,13 @@
             <input type="text" name="q" value="{{ q }}" placeholder="Rechercher un résumé..." class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#2563EB] outline-none">
             <button type="submit" class="px-4 py-2.5 bg-[#2563EB] text-white text-xs font-bold rounded-xl hover:bg-blue-700">Chercher</button>
         </form>
-    </div>
+    {% if selected_subject %}
+        <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-blue-50 text-[#2563EB] border border-blue-200 text-xs font-extrabold mb-6">
+            <span>Filtre actif : {{ selected_subject.name }}</span>
+            <a href="{% url 'content:summary_list' %}" class="text-slate-400 hover:text-rose-500 font-black ml-1 text-sm">×</a>
+        </div>
+    {% endif %}
+
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for summary in summaries %}
@@ -40,10 +46,19 @@
                 </div>
             </div>
         {% empty %}
-            <div class="col-span-full text-center py-12 bg-white rounded-2xl border border-slate-200">
-                <p class="text-sm text-slate-500 font-medium">Aucun résumé de cours disponible pour le moment.</p>
+            <div class="col-span-full bg-white border border-slate-200 rounded-3xl p-10 text-center shadow-sm">
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-[#2563EB] border border-blue-100 flex items-center justify-center mx-auto mb-3 shadow-sm">
+                    <i class="fa-solid fa-book-open text-xl"></i>
+                </div>
+                <h3 class="text-base font-extrabold text-[#071A49] mb-1">Aucun résumé disponible</h3>
+                <p class="text-xs text-slate-500 font-medium max-w-sm mx-auto mb-4">Les fiches de révision pour cette sélection seront publiées prochainement.</p>
+                <a href="{% url 'content:summary_list' %}" class="btn-secondary text-xs px-4 py-2 font-bold inline-flex items-center space-x-1.5">
+                    <i class="fa-solid fa-rotate-right text-xs"></i>
+                    <span>Réinitialiser la recherche</span>
+                </a>
             </div>
         {% endfor %}
+
     </div>
 </div>
 {% endblock %}

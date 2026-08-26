@@ -4,6 +4,7 @@ from . import views
 app_name = "content"
 
 urlpatterns = [
+    path("guide-etudiant/", views.student_guide_view, name="student_guide"),
     path("resumes/", views.summary_list, name="summary_list"),
     path("resumes/<int:pk>/", views.summary_detail, name="summary_detail"),
     path("guides/", views.guide_list, name="guide_list"),
@@ -11,3 +12,4 @@ urlpatterns = [
     path("conseils/", views.article_list, name="article_list"),
     path("conseils/<int:pk>/", views.article_detail, name="article_detail"),
 ]
+

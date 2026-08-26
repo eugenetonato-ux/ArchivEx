@@ -42,6 +42,9 @@
         }
     </script>
     
+    <!-- Font Awesome 6 Icon System -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
     <!-- Master ArchivEx Stylesheet -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     
@@ -70,17 +73,24 @@
                 <a href="{% url 'academics:filieres' %}" class="nav-link-navy {% if request.resolver_match.url_name == 'filieres' or request.resolver_match.url_name == 'matieres' %}active{% endif %}">UE</a>
                 <a href="{% url 'content:summary_list' %}" class="nav-link-navy {% if 'resumes' in request.path %}active{% endif %}">Résumés</a>
                 <a href="{% url 'content:guide_list' %}" class="nav-link-navy {% if 'guides' in request.path %}active{% endif %}">Guides</a>
+                <a href="{% url 'content:student_guide' %}" class="nav-link-navy {% if 'guide-etudiant' in request.path %}active{% endif %}">Guide Étudiant</a>
                 <a href="{% url 'content:article_list' %}" class="nav-link-navy {% if 'conseils' in request.path %}active{% endif %}">Conseils</a>
-                <a href="{% url 'academics:about' %}" class="nav-link-navy {% if request.resolver_match.url_name == 'about' %}active{% endif %}">À propos</a>
             </nav>
+
+            <!-- GLOBAL NAVBAR SEARCH INPUT -->
+            <form action="{% url 'academics:global_search' %}" method="get" class="hidden lg:flex items-center relative">
+                <input type="text" name="q" placeholder="Rechercher une matière..." class="w-56 px-3.5 py-1.5 pl-8 rounded-xl bg-white/10 text-white placeholder-slate-300 text-xs border border-white/20 focus:outline-none focus:bg-white/20 focus:border-blue-400 transition-all font-medium">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 text-slate-300 text-xs"></i>
+            </form>
 
             <!-- RIGHT ACTION BUTTONS / FUNCTIONAL NOTIFICATION BELL / USER PROFILE -->
             <div class="flex items-center space-x-3">
+
                 
                 <!-- NOTIFICATION BELL APP BUTTON & POPUP CONTAINER -->
                 <div class="relative">
-                    <button type="button" id="notification-bell-btn" onclick="toggleNotifications()" aria-label="Notifications" class="p-2 rounded-xl text-slate-200 hover:text-white hover:bg-white/10 transition-all relative">
-                        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button type="button" id="notification-bell-btn" onclick="toggleNotifications()" aria-label="Notifications" aria-expanded="false" aria-haspopup="true" class="p-2 rounded-xl text-slate-200 hover:text-white hover:bg-white/10 transition-all relative">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                         </svg>
                         {% if unread_notifications_count > 0 %}
@@ -89,7 +99,7 @@
                     </button>
 
                     <!-- FUNCTIONAL NOTIFICATION DROPDOWN POPOVER -->
-                    <div id="notification-dropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 py-3 z-50 text-left text-slate-800 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div id="notification-dropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 py-3 z-50 text-left text-slate-800 animate-in fade-in slide-in-from-top-2 duration-200" role="region" aria-label="Menu des notifications">
                         <div class="px-4 py-2 border-b border-slate-100 flex items-center justify-between">
                             <div class="flex items-center space-x-2">
                                 <h3 class="text-sm font-extrabold text-[#071A49]">Notifications</h3>
@@ -107,7 +117,7 @@
                             {% for notif in recent_notifications %}
                                 <a href="{% url 'notifications:mark_read' notif.pk %}" class="notification-item p-3.5 hover:bg-slate-50 transition-colors flex items-start space-x-3 cursor-pointer {% if not notif.is_read %}bg-blue-50/40{% endif %}">
                                     <div class="w-8 h-8 rounded-xl bg-blue-100 text-[#2563EB] flex items-center justify-center flex-shrink-0 font-bold text-xs">
-                                        🔔
+                                        <i class="fa-solid fa-bell text-[#2563EB]" aria-hidden="true"></i>
                                     </div>
                                     <div class="flex-grow">
                                         <p class="text-xs font-bold text-[#071A49] mb-0.5">{{ notif.title }}</p>
@@ -121,6 +131,7 @@
                                 </div>
                             {% endfor %}
                         </div>
+
                         </div>
 
                         <!-- DROPDOWN FOOTER -->
@@ -290,8 +301,14 @@
     <!-- JAVASCRIPT FOR FUNCTIONAL NOTIFICATION BELL DROPDOWN APP -->
     <script>
         function toggleNotifications() {
+            const bellBtn = document.getElementById('notification-bell-btn');
             const dropdown = document.getElementById('notification-dropdown');
-            dropdown.classList.toggle('hidden');
+            if (dropdown) {
+                const isHidden = dropdown.classList.toggle('hidden');
+                if (bellBtn) {
+                    bellBtn.setAttribute('aria-expanded', !isHidden);
+                }
+            }
         }
 
         function markAllNotificationsAsRead() {
@@ -316,9 +333,11 @@
             if (dropdown && !dropdown.classList.contains('hidden')) {
                 if (bellBtn && !bellBtn.contains(event.target) && !dropdown.contains(event.target)) {
                     dropdown.classList.add('hidden');
+                    if (bellBtn) bellBtn.setAttribute('aria-expanded', 'false');
                 }
             }
         });
     </script>
+
 </body>
 </html>

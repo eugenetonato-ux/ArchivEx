@@ -188,9 +188,11 @@
                                 <p class="text-[11px] text-slate-600">{{ access.school.name }} — {{ access.filiere.name }}</p>
                                 <p class="text-[10px] text-slate-400 mt-0.5">Activé le : {{ access.activated_at|date:"d/m/Y" }}</p>
                             </div>
-                            <span class="badge-premium text-[10px] px-2.5 py-1">
-                                ✓ Actif
+                            <span class="badge-premium text-[10px] px-2.5 py-1 flex items-center space-x-1">
+                                <i class="fa-solid fa-check text-[9px]"></i>
+                                <span>Actif</span>
                             </span>
+
                         </div>
                     {% endfor %}
                 </div>

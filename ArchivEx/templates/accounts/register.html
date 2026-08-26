@@ -84,14 +84,15 @@
             </div>
 
             {% if form.non_field_errors %}
-                <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-semibold">
-                    {{ form.non_field_errors.0 }}
+                <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-exclamation text-rose-600 text-sm flex-shrink-0"></i>
+                    <span>{{ form.non_field_errors.0 }}</span>
                 </div>
             {% endif %}
 
-            <button type="submit" class="btn-primary w-full py-3.5 text-xs sm:text-sm font-extrabold rounded-xl shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all flex items-center justify-center space-x-1.5 mt-2">
+            <button type="submit" class="btn-primary w-full py-3.5 text-xs sm:text-sm font-extrabold rounded-xl shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all flex items-center justify-center space-x-2 mt-2">
                 <span>Créer mon compte gratuit</span>
-                <span class="text-base font-normal"></span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
             </button>
         </form>
 
@@ -115,6 +116,9 @@ document.addEventListener("DOMContentLoaded", function() {
         const levelId = levelSelect.value;
         if (!schoolId) return;
 
+        filiereSelect.disabled = true;
+        filiereSelect.innerHTML = '<option value="">Chargement en cours...</option>';
+
         fetch("{% url 'accounts:api_filieres' %}?school_id=" + schoolId + "&level_id=" + (levelId || ''))
             .then(res => res.json())
             .then(data => {
@@ -127,6 +131,11 @@ document.addEventListener("DOMContentLoaded", function() {
                     if (item.id == currentVal) opt.selected = true;
                     filiereSelect.appendChild(opt);
                 });
+                filiereSelect.disabled = false;
+            })
+            .catch(() => {
+                filiereSelect.innerHTML = '<option value="">-- Choisir la filière --</option>';
+                filiereSelect.disabled = false;
             });
     }
 

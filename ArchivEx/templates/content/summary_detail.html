@@ -39,17 +39,82 @@
                 </div>
             {% endif %}
         {% else %}
-            <!-- PAYWALL ENFORCEMENT -->
-            <div class="p-8 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 text-center my-6">
-                <h3 class="text-lg font-bold text-amber-900 mb-2">🔒 Contenu Réservé aux Abonnés Premium</h3>
-                <p class="text-xs text-amber-800 mb-6 max-w-md mx-auto leading-relaxed">
-                    Ce résumé de cours est réservé aux étudiants disposant du Pass Semestre ou d'un abonnement actif pour {{ summary.subject.semester.filiere.name }}.
+            <!-- TEASER PREVIEW WITH FADE OUT -->
+            <div class="relative overflow-hidden pt-4 border-t border-slate-100 mb-6">
+                <div class="prose prose-slate max-w-none text-slate-600 text-sm leading-relaxed line-clamp-3 opacity-80 select-none">
+                    {{ summary.content|truncatewords:40|linebreaks }}
+                </div>
+                <div class="absolute inset-0 bg-gradient-to-b from-transparent via-white/70 to-white"></div>
+            </div>
+
+            <!-- VALUE-DRIVEN PREMIUM TEASER CARD -->
+            <div class="bg-gradient-to-br from-[#071A49] via-[#0E2461] to-[#1D4ED8] rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-blue-900/40">
+                <div class="flex items-center space-x-2 text-amber-300 text-xs font-extrabold uppercase tracking-wider mb-2">
+                    <i class="fa-solid fa-bolt text-amber-400"></i>
+                    <span>ARCHIVEX PASS</span>
+                    <span>·</span>
+                    <span>{{ summary.subject.semester.filiere.name }}</span>
+                </div>
+
+                <h3 class="text-xl sm:text-2xl font-black text-white mb-2 leading-snug">
+                    Débloque ce résumé complet et tout ton semestre
+                </h3>
+
+                <p class="text-xs sm:text-sm text-blue-100 mb-6 leading-relaxed">
+                    Accède immédiatement au contenu rédigé de <strong class="text-white">{{ summary.title }}</strong> ainsi qu'à l'ensemble des ressources de ton semestre.
                 </p>
-                <a href="{% url 'payments:pass_semestre' summary.subject.semester.id %}" class="btn-primary py-3 px-8 text-xs font-black uppercase tracking-wider rounded-xl inline-block shadow-lg shadow-blue-600/25">
-                    Débloquer l'accès maintenant (Pass Semestre)
-                </a>
+
+                <!-- DYNAMIC BENEFITS LIST -->
+                <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 mb-6 border border-white/15 space-y-2 text-xs font-semibold text-slate-100">
+                    {% if exams_count > 0 %}
+                    <div class="flex items-center space-x-2.5">
+                        <span class="w-4 h-4 rounded-full bg-amber-400 text-[#071A49] flex items-center justify-center font-black text-[10px]">
+                            <i class="fa-solid fa-check text-[9px]"></i>
+                        </span>
+                        <span><strong>{{ exams_count }} épreuves d'examens</strong> et devoirs corrigés</span>
+                    </div>
+                    {% endif %}
+
+                    {% if summaries_count > 0 %}
+                    <div class="flex items-center space-x-2.5">
+                        <span class="w-4 h-4 rounded-full bg-amber-400 text-[#071A49] flex items-center justify-center font-black text-[10px]">
+                            <i class="fa-solid fa-check text-[9px]"></i>
+                        </span>
+                        <span><strong>{{ summaries_count }} résumés de cours</strong> rédigés pour tes UE</span>
+                    </div>
+                    {% endif %}
+
+                    {% if guides_count > 0 %}
+                    <div class="flex items-center space-x-2.5">
+                        <span class="w-4 h-4 rounded-full bg-amber-400 text-[#071A49] flex items-center justify-center font-black text-[10px]">
+                            <i class="fa-solid fa-check text-[9px]"></i>
+                        </span>
+                        <span><strong>{{ guides_count }} guides méthodologiques</strong> et conseils de révision</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+                    <div>
+                        <span class="text-[10px] uppercase font-bold tracking-wider text-blue-200 block">Tarif unique semestre</span>
+                        <span class="text-2xl sm:text-3xl font-black text-amber-400">2 000 FCFA</span>
+                    </div>
+
+                    <a href="{% url 'payments:pass_semestre' summary.subject.semester.id %}" class="btn-gold w-full sm:w-auto py-3.5 px-6 text-xs sm:text-sm font-black rounded-2xl text-center shadow-lg shadow-amber-500/30 flex items-center justify-center space-x-1.5">
+                        <i class="fa-solid fa-lock text-xs"></i>
+                        <span>Débloquer mon Pass Semestre</span>
+                    </a>
+                </div>
+
+
+                <div class="mt-4 text-center">
+                    <a href="{% url 'payments:pass_semestre' summary.subject.semester.id %}" class="text-xs text-blue-200 hover:text-white underline font-medium">
+                        En savoir plus sur les avantages du Pass
+                    </a>
+                </div>
             </div>
         {% endif %}
+
     </div>
 </div>
 {% endblock %}

@@ -9,13 +9,18 @@ from subscriptions.services import can_user_access
 @login_required
 def summary_list(request):
     """Liste des résumés de cours publiés."""
+    from academics.models import Subject
+
     summaries = Summary.objects.filter(publication_status="PUBLISHED").select_related(
         "subject", "subject__semester", "subject__semester__filiere", "author"
     )
 
     subject_id = request.GET.get("subject")
+    selected_subject = None
     if subject_id:
-        summaries = summaries.filter(subject_id=subject_id)
+        selected_subject = Subject.objects.filter(pk=subject_id).first()
+        if selected_subject:
+            summaries = summaries.filter(subject=selected_subject)
 
     q = request.GET.get("q")
     if q:
@@ -26,6 +31,7 @@ def summary_list(request):
 
     context = {
         "summaries": summaries,
+        "selected_subject": selected_subject,
         "q": q or "",
     }
     return render(request, "content/summary_list.html", context)
@@ -44,9 +50,22 @@ def summary_detail(request, pk):
 
     has_access = can_user_access(request.user, summary)
 
+    exams_count = 0
+    summaries_count = 0
+    guides_count = 0
+    if not has_access and summary.subject and summary.subject.semester:
+        from exams.models import Exam
+        sem = summary.subject.semester
+        exams_count = Exam.objects.filter(semester=sem, is_published=True).count()
+        summaries_count = Summary.objects.filter(subject__semester=sem, publication_status="PUBLISHED").count()
+        guides_count = Guide.objects.filter(subject__semester=sem, publication_status="PUBLISHED").count()
+
     context = {
         "summary": summary,
         "has_access": has_access,
+        "exams_count": exams_count,
+        "summaries_count": summaries_count,
+        "guides_count": guides_count,
     }
     return render(request, "content/summary_detail.html", context)
 
@@ -54,21 +73,28 @@ def summary_detail(request, pk):
 @login_required
 def guide_list(request):
     """Liste des guides de matières."""
+    from academics.models import Subject
+
     guides = Guide.objects.filter(publication_status="PUBLISHED").select_related(
         "subject", "subject__semester", "subject__semester__filiere", "author"
     )
 
     subject_id = request.GET.get("subject")
+    selected_subject = None
     if subject_id:
-        guides = guides.filter(subject_id=subject_id)
+        selected_subject = Subject.objects.filter(pk=subject_id).first()
+        if selected_subject:
+            guides = guides.filter(subject=selected_subject)
 
     for guide in guides:
         guide.user_has_access = can_user_access(request.user, guide)
 
     context = {
         "guides": guides,
+        "selected_subject": selected_subject,
     }
     return render(request, "content/guide_list.html", context)
+
 
 
 @login_required
@@ -84,11 +110,25 @@ def guide_detail(request, pk):
 
     has_access = can_user_access(request.user, guide)
 
+    exams_count = 0
+    summaries_count = 0
+    guides_count = 0
+    if not has_access and guide.subject and guide.subject.semester:
+        from exams.models import Exam
+        sem = guide.subject.semester
+        exams_count = Exam.objects.filter(semester=sem, is_published=True).count()
+        summaries_count = Summary.objects.filter(subject__semester=sem, publication_status="PUBLISHED").count()
+        guides_count = Guide.objects.filter(subject__semester=sem, publication_status="PUBLISHED").count()
+
     context = {
         "guide": guide,
         "has_access": has_access,
+        "exams_count": exams_count,
+        "summaries_count": summaries_count,
+        "guides_count": guides_count,
     }
     return render(request, "content/guide_detail.html", context)
+
 
 
 def article_list(request):
@@ -109,8 +149,42 @@ def article_list(request):
     return render(request, "content/article_list.html", context)
 
 
+def student_guide_view(request):
+    """
+    Landing Page du Guide Étudiant & Centre de Connaissances ArchivEx.
+    Organise la méthodologie universitaire, les conseils de révision,
+    l'exploitation des épreuves et le fonctionnement du Pass.
+    """
+    articles = Article.objects.filter(publication_status="PUBLISHED").select_related(
+        "target_school", "target_filiere", "author"
+    )
+
+    profile = getattr(request.user, "profile", None) if request.user.is_authenticated else None
+    if profile and profile.school:
+        targeted_articles = articles.filter(
+            Q(target_school=profile.school) | Q(target_school__isnull=True)
+        )
+    else:
+        targeted_articles = articles
+
+    methodology_articles = targeted_articles.filter(category="METHODOLOGY")
+    exam_prep_articles = targeted_articles.filter(category="EXAM_PREP")
+    general_articles = targeted_articles.filter(category="GENERAL")
+    orientation_articles = targeted_articles.filter(category="ORIENTATION")
+
+    context = {
+        "articles": targeted_articles,
+        "methodology_articles": methodology_articles,
+        "exam_prep_articles": exam_prep_articles,
+        "general_articles": general_articles,
+        "orientation_articles": orientation_articles,
+        "profile": profile,
+    }
+    return render(request, "content/student_guide.html", context)
+
+
 def article_detail(request, pk):
-    """Lecture d'un conseil ou article pédagogique."""
+    """Lecture complète d'un article ou conseil pédagogique."""
     article = get_object_or_404(
         Article.objects.select_related("target_school", "target_filiere", "author"),
         pk=pk,

@@ -23,7 +23,7 @@
 
             <!-- SUCCESS ICON -->
             <div class="w-20 h-20 rounded-3xl bg-emerald-500 text-white font-black text-4xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/30">
-                ✓
+                <i class="fa-solid fa-check"></i>
             </div>
             
             <span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-extrabold uppercase tracking-wider mb-3 inline-block">
@@ -52,8 +52,9 @@
             </div>
 
             <div class="flex flex-col sm:flex-row justify-center gap-3">
-                <a href="{% url 'academics:filieres' %}" class="btn-primary text-xs sm:text-sm px-8 py-3.5 font-bold w-full sm:w-auto text-center shadow-lg">
-                    📚 Accéder à mes UE 
+                <a href="{% url 'academics:filieres' %}" class="btn-primary text-xs sm:text-sm px-8 py-3.5 font-bold w-full sm:w-auto text-center shadow-lg flex items-center justify-center space-x-1.5">
+                    <i class="fa-solid fa-book"></i>
+                    <span>Accéder à mes UE</span>
                 </a>
             </div>
         </div>
@@ -125,10 +126,12 @@
             <!-- PAYMENT FORM ACTION (REQUIRES POST TO PREVENT ACCIDENTAL TRIGGERING) -->
             <form method="post" action="{% url 'payments:confirmer_paiement' payment_id=payment.id %}">
                 {% csrf_token %}
-                <button type="submit" class="btn-gold w-full text-xs sm:text-sm py-4 font-black shadow-lg hover:scale-[1.02] transition-transform">
-                    🔐 Valider le paiement de 2 000 FCFA
+                <button type="submit" class="btn-gold w-full text-xs sm:text-sm py-4 font-black shadow-lg hover:scale-[1.02] transition-transform flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-shield-halved text-xs"></i>
+                    <span>Valider le paiement de 2 000 FCFA</span>
                 </button>
             </form>
+
             
             <p class="text-[11px] text-center text-slate-400 mt-4">
                 Paiement 100% sécurisé SSL · Activation automatique après validation.

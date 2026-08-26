@@ -1,4 +1,4 @@
-﻿amqp==5.3.1
+amqp==5.3.1
 asgiref==3.12.1
 billiard==4.2.4
 black==26.5.1
@@ -50,3 +50,5 @@ tzlocal==5.4.4
 urllib3==2.7.0
 vine==5.1.0
 wcwidth==0.8.2
+whitenoise>=6.7.0
+

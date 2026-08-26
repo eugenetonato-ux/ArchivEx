@@ -57,18 +57,20 @@
         </div>
     {% else %}
         <!-- EMPTY STATE -->
-        <div class="empty-state-card max-w-xl mx-auto my-8">
-            <div class="w-16 h-16 rounded-2xl bg-amber-50 text-amber-500 border border-amber-200 flex items-center justify-center mx-auto mb-4 text-2xl">
-                ⭐
+        <div class="empty-state-card max-w-xl mx-auto my-8 text-center p-8 bg-white border border-slate-200 rounded-3xl shadow-sm">
+            <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-500 border border-amber-200 flex items-center justify-center mx-auto mb-4 text-xl">
+                <i class="fa-solid fa-star"></i>
             </div>
-            <h2 class="text-xl font-extrabold text-[#071A49] mb-2">Tu n'as encore aucune épreuve favorite.</h2>
+            <h2 class="text-xl font-extrabold text-[#071A49] mb-2">Aucune épreuve en favoris</h2>
             <p class="text-xs text-slate-500 max-w-sm mx-auto mb-6 leading-relaxed">
                 Ajoute des épreuves en favoris pour les retrouver facilement ici lors de tes révisions.
             </p>
-            <a href="{% url 'exams:liste' %}" class="btn-primary text-xs px-6 py-3">
-                Explorer la banque d'épreuves 
+            <a href="{% url 'exams:liste' %}" class="btn-primary text-xs px-6 py-3 font-bold inline-flex items-center space-x-2">
+                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                <span>Explorer la banque d'épreuves</span>
             </a>
         </div>
+
     {% endif %}
 </div>
 {% endblock %}

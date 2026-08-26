@@ -1,13 +1,13 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% block title %}ArchivEx Pass — Débloquer mon semestre | ArchivEx{% endblock %}
+{% block title %}ArchivEx Pass — {{ semester.label }} | {{ semester.filiere.name }}{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
 
     <!-- BREADCRUMB -->
-    <nav class="flex items-center text-xs font-medium text-slate-500 space-x-2 mb-6">
+    <nav class="flex items-center text-xs font-medium text-slate-500 space-x-2 mb-6" aria-label="Fil d'ariane">
         <a href="{% url 'academics:home' %}" class="hover:text-[#2563EB]">Accueil</a>
         <span>/</span>
         <a href="{% url 'academics:filieres' %}" class="hover:text-[#2563EB]">Mes UE</a>
@@ -15,176 +15,287 @@
         <span class="text-[#071A49] font-bold">Pass Semestre</span>
     </nav>
 
-    <!-- HEADER TITLE & SUBTITLE -->
-    <div class="text-center mb-8 sm:mb-10">
-        <span class="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-black uppercase tracking-wider mb-3">
-            <span>⚡ ARCHIVEX PASS</span>
-        </span>
-        <h1 class="text-3xl sm:text-4xl font-black text-[#071A49] tracking-tight mb-2">Débloque l'intégralité de ton semestre</h1>
-        <p class="text-slate-500 max-w-lg mx-auto text-xs sm:text-sm font-medium leading-relaxed">
-            Un seul règlement de 2 000 FCFA débloque toutes les épreuves Premium de l'ensemble des UE pour ton semestre.
-        </p>
+    <!-- HERO PRODUCT BANNER -->
+    <div class="bg-gradient-to-br from-[#071A49] via-[#0E2461] to-[#1D4ED8] rounded-3xl p-6 sm:p-10 text-white shadow-2xl border border-blue-900/40 relative overflow-hidden mb-10">
+        <!-- Radial ambient glow -->
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="relative z-10 max-w-3xl">
+            <!-- BADGES -->
+            <div class="flex flex-wrap items-center gap-2 mb-4">
+                <span class="px-3.5 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-xs font-black uppercase tracking-wider flex items-center space-x-1.5">
+                    <i class="fa-solid fa-bolt text-amber-400"></i>
+                    <span>ARCHIVEX PASS {{ semester.label }}</span>
+                </span>
+                <span class="px-3.5 py-1 rounded-full bg-white/10 text-slate-200 border border-white/20 text-xs font-bold flex items-center space-x-1.5">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <span>{{ semester.filiere.school.name }} · {{ semester.filiere.level.name|default:"L1" }}</span>
+                </span>
+            </div>
+
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight mb-4 leading-tight">
+                Tout ton semestre réuni au même endroit.
+            </h1>
+
+            <p class="text-sm sm:text-base text-blue-100 font-medium leading-relaxed mb-6 max-w-2xl">
+                Accède immédiatement à l'ensemble des épreuves, résumés de cours et guides pratiques de <strong class="text-white font-extrabold">{{ semester.filiere.name }}</strong>.
+            </p>
+
+            <div class="flex items-center space-x-2 text-xs font-bold text-amber-300 bg-amber-400/10 border border-amber-400/20 px-4 py-2.5 rounded-2xl w-fit">
+                <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                <span>100% conforme au programme officiel de ton université</span>
+            </div>
+        </div>
     </div>
 
-    <!-- MAIN CHECKOUT CONTAINER GRID -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <!-- MAIN PRODUCT CONTENT GRID -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-12">
 
-        <!-- LEFT COLUMN: PASS CARD & INCLUDED BENEFITS (7 COLS) -->
-        <div class="lg:col-span-7 space-y-6">
+        <!-- LEFT COLUMN: DYNAMIC RESOURCE PACKAGE (7 COLS) -->
+        <div class="lg:col-span-7 space-y-8">
             
-            <!-- PASS BANNER CARD -->
-            <div class="bg-gradient-to-br from-[#071A49] via-[#0E2461] to-[#1D4ED8] rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-blue-900/40 relative overflow-hidden">
-                <!-- Background radial accent glow -->
-                <div class="absolute -top-20 -right-20 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
-
-                <!-- TOP BADGES -->
-                <div class="flex items-center justify-between mb-4">
-                    <span class="px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[11px] font-black uppercase tracking-wider">
-                        PASS {{ semester.label|default:"SEMESTRE 1" }}
-                    </span>
-                    <span class="text-xs font-bold text-slate-300">
-                        {{ semester.filiere.school.name|default:"ENEAM" }}
-                    </span>
-                </div>
-
-                <!-- TITLE & PARCOURS -->
-                <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight mb-1">
-                    ArchivEx Pass
+            <!-- DYNAMIC RESOURCE STATS CARD -->
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
+                <h2 class="text-lg font-black text-[#071A49] mb-1">
+                    Ton Pass Semestre comprend actuellement :
                 </h2>
-                <p class="text-xs sm:text-sm font-semibold text-blue-200 mb-6">
-                    Parcours : {{ semester.filiere.name }} ({{ semester.filiere.level.name|default:"L1" }})
+                <p class="text-xs text-slate-500 font-medium mb-6">
+                    Ressources pédagogiques disponibles pour {{ semester.label }} ({{ semester.filiere.name }})
                 </p>
 
-                <!-- PRICE DISPLAY -->
-                <div class="pt-6 border-t border-white/10 flex items-baseline justify-between">
-                    <div>
-                        <p class="text-[10px] uppercase font-bold tracking-wider text-slate-300 mb-0.5">Tarif unique</p>
-                        <div class="flex items-baseline space-x-1">
-                            <span class="text-4xl sm:text-5xl font-black text-amber-400">2 000</span>
-                            <span class="text-base font-bold text-amber-300">FCFA</span>
+                <!-- DYNAMIC GRID COUNTS -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {% if exams_count > 0 %}
+                    <div class="p-4 rounded-2xl bg-blue-50/70 border border-blue-100 flex items-start space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-[#2563EB] text-white flex items-center justify-center font-black text-lg flex-shrink-0">
+                            <i class="fa-solid fa-file-lines text-sm"></i>
+                        </div>
+                        <div>
+                            <span class="text-2xl font-black text-[#071A49] block leading-none mb-1">{{ exams_count }}</span>
+                            <span class="text-xs font-extrabold text-[#2563EB] block">Épreuves d'examens</span>
+                            <span class="text-[11px] text-slate-500 font-medium">Sujets récents avec corrigés</span>
                         </div>
                     </div>
-                    <span class="text-[11px] font-semibold text-slate-300 bg-white/10 px-3 py-1.5 rounded-xl border border-white/10">
-                        Accès complet au semestre
+                    {% endif %}
+
+                    {% if summaries_count > 0 %}
+                    <div class="p-4 rounded-2xl bg-amber-50/70 border border-amber-100 flex items-start space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-[#F59E0B] text-white flex items-center justify-center font-black text-lg flex-shrink-0">
+                            <i class="fa-solid fa-book text-sm"></i>
+                        </div>
+                        <div>
+                            <span class="text-2xl font-black text-[#071A49] block leading-none mb-1">{{ summaries_count }}</span>
+                            <span class="text-xs font-extrabold text-amber-800 block">Résumés de cours</span>
+                            <span class="text-[11px] text-slate-500 font-medium">Fiches essentielles directement lisibles</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if guides_count > 0 %}
+                    <div class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-100 flex items-start space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-lg flex-shrink-0">
+                            <i class="fa-solid fa-compass text-sm"></i>
+                        </div>
+                        <div>
+                            <span class="text-2xl font-black text-[#071A49] block leading-none mb-1">{{ guides_count }}</span>
+                            <span class="text-xs font-extrabold text-emerald-800 block">Guides de matières</span>
+                            <span class="text-[11px] text-slate-500 font-medium">Méthodologie & pièges d'examens</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if articles_count > 0 %}
+                    <div class="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-100 flex items-start space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-lg flex-shrink-0">
+                            <i class="fa-solid fa-lightbulb text-sm"></i>
+                        </div>
+                        <div>
+                            <span class="text-2xl font-black text-[#071A49] block leading-none mb-1">{{ articles_count }}</span>
+                            <span class="text-xs font-extrabold text-indigo-800 block">Conseils pédagogiques</span>
+                            <span class="text-[11px] text-slate-500 font-medium">Méthode de révision & orientation</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- INCLUDED SUBJECTS PREVIEW -->
+            {% if sample_subjects %}
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                <h3 class="text-sm font-extrabold text-[#071A49] uppercase tracking-wider mb-3">
+                    Matières (UE) incluses dans ton Pass :
+                </h3>
+                <div class="flex flex-wrap gap-2">
+                    {% for subj in sample_subjects %}
+                    <span class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-800 text-xs font-bold border border-slate-200">
+                        {{ subj.name }}
                     </span>
+                    {% endfor %}
                 </div>
             </div>
+            {% endif %}
 
-            <!-- INCLUDED BENEFITS CHECKLIST -->
-            <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-sm space-y-4">
-                <h3 class="text-sm font-extrabold text-[#071A49] uppercase tracking-wider">Ce qui est inclus dans ton Pass :</h3>
-
-                <div class="space-y-3 text-xs font-semibold text-slate-700">
-                    <div class="flex items-center space-x-3 p-3 rounded-2xl bg-blue-50/60 border border-blue-100">
-                        <div class="w-6 h-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
-                            ✓
+            <!-- FEATURED EXAMS SAMPLE PREVIEW -->
+            {% if sample_exams %}
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                <h3 class="text-sm font-extrabold text-[#071A49] uppercase tracking-wider mb-4">
+                    Exemples d'épreuves accessibles :
+                </h3>
+                <div class="space-y-2.5">
+                    {% for ex in sample_exams %}
+                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-7 h-7 rounded-lg bg-blue-100 text-[#2563EB] font-bold text-xs flex items-center justify-center">
+                                PDF
+                            </span>
+                            <div>
+                                <h4 class="text-xs font-bold text-[#071A49]">{{ ex.title }}</h4>
+                                <p class="text-[10px] text-slate-500 font-medium">{{ ex.subject.name }} · {{ ex.year }}</p>
+                            </div>
                         </div>
-                        <span>Accès illimité à toutes les épreuves Premium du semestre</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 flex items-center space-x-1">
+                            <i class="fa-solid fa-lock text-[9px]"></i>
+                            <span>Débloqué avec le Pass</span>
+                        </span>
                     </div>
-
-                    <div class="flex items-center space-x-3 p-3 rounded-2xl bg-blue-50/60 border border-blue-100">
-                        <div class="w-6 h-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
-                            ✓
-                        </div>
-                        <span>Accès à l'ensemble des UE (Mathématiques, Statistiques, Comptabilité...)</span>
-                    </div>
-
-                    <div class="flex items-center space-x-3 p-3 rounded-2xl bg-blue-50/60 border border-blue-100">
-                        <div class="w-6 h-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
-                            ✓
-                        </div>
-                        <span>Consultation et téléchargement PDF instantanés</span>
-                    </div>
-
-                    <div class="flex items-center space-x-3 p-3 rounded-2xl bg-emerald-50/60 border border-emerald-100 text-emerald-900">
-                        <div class="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
-                            ✓
-                        </div>
-                        <span>Paiement unique sans aucun frais supplémentaire</span>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
+            {% endif %}
 
         </div>
 
-        <!-- RIGHT COLUMN: ORDER ACTION & MOBILE MONEY PAYMENT METHODS (5 COLS) -->
-        <div class="lg:col-span-5 space-y-6">
+        <!-- RIGHT COLUMN: PRICE & ACTION CARD (5 COLS) -->
+        <div class="lg:col-span-5 space-y-6 sticky top-20">
             
-            <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-md space-y-6">
+            <div class="bg-white border-2 border-[#2563EB]/20 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
                 
-                <h3 class="text-base font-extrabold text-[#071A49] pb-3 border-b border-slate-100">
-                    Récapitulatif de commande
-                </h3>
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+                    <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Pass Semestriel</span>
+                    <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">
+                        Accès immédiat 24/7
+                    </span>
+                </div>
 
-                <!-- ORDER DETAILS ROW -->
-                <div class="space-y-3 text-xs">
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-500 font-medium">Produit</span>
-                        <span class="font-bold text-[#071A49]">ArchivEx Pass</span>
+                <!-- PRICE -->
+                <div class="mb-6">
+                    <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block mb-1">Tarif unique du semestre</span>
+                    <div class="flex items-baseline space-x-2">
+                        <span class="text-4xl sm:text-5xl font-black text-[#071A49] tracking-tight">2 000</span>
+                        <span class="text-lg font-black text-[#2563EB]">FCFA</span>
                     </div>
+                    <p class="text-[11px] text-slate-400 font-medium mt-1">Paiement unique sans abonnement ni renouvellement automatique.</p>
+                </div>
 
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-500 font-medium">Semestre</span>
-                        <span class="font-bold text-slate-800">{{ semester.label }}</span>
+                <!-- VALUE BULLETS -->
+                <div class="space-y-3 mb-8 text-xs font-bold text-slate-700">
+                    <div class="flex items-center space-x-2.5">
+                        <span class="w-5 h-5 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-xs font-black">
+                            <i class="fa-solid fa-check text-[10px]"></i>
+                        </span>
+                        <span>Accès illimité à toutes les épreuves du semestre</span>
                     </div>
-
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-500 font-medium">Filière & Niveau</span>
-                        <span class="font-bold text-[#2563EB]">{{ semester.filiere.name }} ({{ semester.filiere.level.name|default:"L1" }})</span>
+                    <div class="flex items-center space-x-2.5">
+                        <span class="w-5 h-5 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-xs font-black">
+                            <i class="fa-solid fa-check text-[10px]"></i>
+                        </span>
+                        <span>Consultation directe web + téléchargement PDF</span>
                     </div>
-
-                    <div class="pt-3 border-t border-slate-100 flex justify-between items-center">
-                        <span class="text-sm font-extrabold text-[#071A49]">Total à régler</span>
-                        <span class="text-2xl font-black text-amber-600">2 000 FCFA</span>
+                    <div class="flex items-center space-x-2.5">
+                        <span class="w-5 h-5 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-xs font-black">
+                            <i class="fa-solid fa-check text-[10px]"></i>
+                        </span>
+                        <span>Résumés de cours & guides de révision inclus</span>
+                    </div>
+                    <div class="flex items-center space-x-2.5">
+                        <span class="w-5 h-5 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-xs font-black">
+                            <i class="fa-solid fa-check text-[10px]"></i>
+                        </span>
+                        <span>Optimal pour smartphone, tablette et PC</span>
                     </div>
                 </div>
 
-                <!-- PAYMENT CHANNELS PREVIEW BADGES (MTN MOMO, MOOV MONEY, WAVE, VISA) -->
-                <div>
-                    <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2.5">Moyens de paiement acceptés :</p>
-                    <div class="grid grid-cols-3 gap-2">
-                        <div class="p-2 rounded-xl bg-amber-50 border border-amber-200 text-center font-bold text-[11px] text-amber-800">
-                            MTN MoMo
-                        </div>
-                        <div class="p-2 rounded-xl bg-blue-50 border border-blue-200 text-center font-bold text-[11px] text-blue-800">
-                            Moov Money
-                        </div>
-                        <div class="p-2 rounded-xl bg-cyan-50 border border-cyan-200 text-center font-bold text-[11px] text-cyan-800">
-                            Wave / Carte
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ACTION SUBMIT FORM -->
+                <!-- ACTION BUTTON / ALREADY ACTIVE STATE -->
                 {% if already_active %}
                     <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
-                        <p class="text-xs font-extrabold text-emerald-900 mb-1">🎉 Pass déjà actif !</p>
-                        <p class="text-[11px] text-emerald-700 mb-3">Tu as déjà accès à toutes les épreuves de ce semestre.</p>
-                        <a href="{% url 'academics:filieres' %}" class="btn-primary w-full text-xs py-3 font-bold block">
-                            Accéder à mes UE
+                        <p class="text-xs font-extrabold text-emerald-900 mb-1 flex items-center justify-center space-x-1.5">
+                            <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                            <span>Ton Pass Semestre est actif !</span>
+                        </p>
+                        <p class="text-[11px] text-emerald-700 mb-3">Tu as déjà accès à l'intégralité des ressources de ce semestre.</p>
+                        <a href="{% url 'academics:filieres' %}" class="btn-primary w-full text-xs py-3.5 font-extrabold block text-center">
+                            Accéder à mes cours et épreuves
                         </a>
                     </div>
                 {% else %}
                     <form method="post" action="{% url 'payments:initier_paiement' semester_id=semester.id %}">
                         {% csrf_token %}
-                        <button type="submit" class="btn-gold w-full text-xs sm:text-sm py-4 font-black shadow-md hover:scale-[1.02] transition-transform">
-                            🔓 Payer 2 000 FCFA & Débloquer mon semestre
+                        <button type="submit" class="btn-gold w-full text-sm py-4 font-black shadow-lg shadow-amber-500/30 hover:scale-[1.02] transition-all rounded-2xl block text-center cursor-pointer flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-lock text-xs"></i>
+                            <span>Débloquer mon Pass Semestre (2 000 FCFA)</span>
                         </button>
                     </form>
                 {% endif %}
 
-                <!-- SECURITY GUARANTEE FOOTER -->
-                <div class="pt-2 flex items-center justify-center space-x-2 text-[11px] text-slate-400 font-medium">
-                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                    </svg>
-                    <span>Paiement 100% sécurisé · Déblocage immédiat</span>
+                <!-- PAYMENT CHANNELS & SECURITY -->
+                <div class="mt-6 pt-4 border-t border-slate-100 text-center space-y-3">
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Moyens de paiement acceptés</p>
+                    <div class="flex items-center justify-center space-x-2 text-[10px] font-extrabold text-slate-600">
+                        <span class="px-2 py-1 bg-amber-50 border border-amber-200 rounded-lg text-amber-800">MTN MoMo</span>
+                        <span class="px-2 py-1 bg-blue-50 border border-blue-200 rounded-lg text-blue-800">Moov Money</span>
+                        <span class="px-2 py-1 bg-cyan-50 border border-cyan-200 rounded-lg text-cyan-800">Wave</span>
+                    </div>
+                    <div class="flex items-center justify-center space-x-1.5 text-[11px] text-slate-400 font-medium">
+                        <i class="fa-solid fa-shield-halved text-emerald-500 text-xs"></i>
+                        <span>Paiement sécurisé · Activation immédiate</span>
+                    </div>
                 </div>
 
             </div>
 
         </div>
 
+    </div>
+
+    <!-- STUDENT REASSURANCE / FAQ ACCORDION SECTION -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-sm">
+        <h3 class="text-xl font-black text-[#071A49] mb-6 text-center">
+            Questions fréquentes des étudiants
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs leading-relaxed">
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <h4 class="font-bold text-[#071A49] mb-1 flex items-center space-x-1.5">
+                    <i class="fa-solid fa-clock text-[#2563EB]"></i>
+                    <span>Combien de temps dure l'accès ?</span>
+                </h4>
+                <p class="text-slate-600 font-medium">Ton Pass Semestre reste actif pendant toute la durée de ton semestre académique (180 jours).</p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <h4 class="font-bold text-[#071A49] mb-1 flex items-center space-x-1.5">
+                    <i class="fa-solid fa-mobile-screen-button text-[#2563EB]"></i>
+                    <span>Est-ce lisible sur mon téléphone ?</span>
+                </h4>
+                <p class="text-slate-600 font-medium">Oui ! ArchivEx est optimisé pour les smartphones. Tu peux lire les résumés et télécharger les PDF sans problème.</p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <h4 class="font-bold text-[#071A49] mb-1 flex items-center space-x-1.5">
+                    <i class="fa-solid fa-credit-card text-[#2563EB]"></i>
+                    <span>Comment effectuer le paiement ?</span>
+                </h4>
+                <p class="text-slate-600 font-medium">Le règlement s'effectue simplement via MTN Mobile Money, Moov Money ou Wave directement sur ton téléphone.</p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <h4 class="font-bold text-[#071A49] mb-1 flex items-center space-x-1.5">
+                    <i class="fa-solid fa-bolt text-amber-500"></i>
+                    <span>L'accès est-il vraiment instantané ?</span>
+                </h4>
+                <p class="text-slate-600 font-medium">Dès la confirmation de la transaction, l'ensemble des épreuves et contenus du semestre est immédiatement débloqué.</p>
+            </div>
+        </div>
     </div>
 
 </div>

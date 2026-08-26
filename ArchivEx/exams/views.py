@@ -100,12 +100,26 @@ def exam_detail(request, pk):
     has_access = can_user_access(request.user, exam)
     is_favorited = Favorite.objects.filter(user=request.user, exam=exam).exists()
 
+    exams_count = 0
+    summaries_count = 0
+    guides_count = 0
+    if not has_access and exam.semester:
+        from content.models import Summary, Guide
+        sem = exam.semester
+        exams_count = Exam.objects.filter(semester=sem, is_published=True).count()
+        summaries_count = Summary.objects.filter(subject__semester=sem, publication_status="PUBLISHED").count()
+        guides_count = Guide.objects.filter(subject__semester=sem, publication_status="PUBLISHED").count()
+
     context = {
         "exam": exam,
         "has_access": has_access,
         "is_favorited": is_favorited,
+        "exams_count": exams_count,
+        "summaries_count": summaries_count,
+        "guides_count": guides_count,
     }
     return render(request, "exams/detail.html", context)
+
 
 
 @login_required

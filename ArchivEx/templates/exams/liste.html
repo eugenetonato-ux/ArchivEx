@@ -23,14 +23,15 @@
                 <p class="text-xs sm:text-sm text-slate-500 font-medium">Épreuves disponibles</p>
             </div>
             <div>
-                <a href="{% url 'academics:filieres' %}" class="btn-secondary text-xs px-4 py-2 font-bold inline-flex items-center space-x-1">
-                    <span>← Retour à Mes UE</span>
+                <a href="{% url 'academics:filieres' %}" class="btn-secondary text-xs px-4 py-2 font-bold inline-flex items-center space-x-1.5">
+                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                    <span>Retour à Mes UE</span>
                 </a>
             </div>
         </div>
 
-        <!-- COMPACT ACADEMIC CONTEXT INDICATOR -->
-        <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-blue-50/80 border border-blue-100 text-xs font-extrabold text-[#071A49] mb-8">
+
+        <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-blue-50/80 border border-blue-100 text-xs font-extrabold text-[#071A49] mb-4">
             <span>{{ selected_subject.semester.filiere.school.name|default:"ENEAM" }}</span>
             <span class="text-slate-300">•</span>
             <span>{{ selected_subject.semester.filiere.level.name|default:"L1" }}</span>
@@ -39,6 +40,19 @@
             <span class="text-slate-300">•</span>
             <span class="text-slate-600">{{ selected_subject.semester.label|default:"Semestre 1" }}</span>
         </div>
+
+        <!-- CONTEXTUAL HELP LINK TO STUDENT GUIDE -->
+        <div class="p-3.5 sm:p-4 rounded-2xl bg-blue-50/70 border border-blue-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-8">
+            <div class="flex items-center space-x-2.5">
+                <i class="fa-solid fa-lightbulb text-amber-500 text-sm"></i>
+                <p class="text-xs font-bold text-[#071A49]">Besoin d'aide pour exploiter efficacement cette épreuve ?</p>
+            </div>
+            <a href="{% url 'content:student_guide' %}#epreuves" class="text-xs font-extrabold text-[#2563EB] hover:underline flex-shrink-0 flex items-center space-x-1">
+                <span>Consulter le guide méthodologique</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </a>
+        </div>
+
 
     {% else %}
         <!-- 2. GLOBAL SEARCH MODE -->
@@ -96,9 +110,13 @@
                         {% if exam.user_has_access %}
                             <span class="badge-free text-[10px] flex-shrink-0">Gratuit</span>
                         {% else %}
-                            <span class="badge-premium text-[10px] flex-shrink-0">🔒 Pass</span>
+                            <span class="badge-premium text-[10px] flex-shrink-0 flex items-center space-x-1">
+                                <i class="fa-solid fa-lock text-[9px]"></i>
+                                <span>Pass</span>
+                            </span>
                         {% endif %}
                     </div>
+
 
                     <!-- SOUS-TEXTE (UE · Année · Type) -->
                     <p class="text-sm text-[#6B7280]">
@@ -135,14 +153,16 @@
                 {% if selected_subject %}
                     <h3 class="text-base font-extrabold text-[#071A49] mb-1">Aucune épreuve disponible pour cette UE.</h3>
                     <p class="text-xs text-slate-500 max-w-sm mx-auto mb-4">Les épreuves de cette UE seront ajoutées prochainement.</p>
-                    <a href="{% url 'academics:filieres' %}" class="btn-secondary text-xs px-4 py-2 font-bold">
-                        ← Retour à Mes UE
+                    <a href="{% url 'academics:filieres' %}" class="btn-secondary text-xs px-4 py-2 font-bold inline-flex items-center space-x-1.5">
+                        <i class="fa-solid fa-arrow-left text-xs"></i>
+                        <span>Retour à Mes UE</span>
                     </a>
                 {% else %}
                     <h3 class="text-base font-extrabold text-[#071A49] mb-1">Aucune épreuve trouvée</h3>
                     <p class="text-xs text-slate-500 max-w-sm mx-auto mb-4">Ajuste tes critères de recherche ou efface les filtres.</p>
-                    <a href="{% url 'exams:liste' %}" class="btn-secondary text-xs px-4 py-2 font-bold">
-                        Réinitialiser la recherche
+                    <a href="{% url 'exams:liste' %}" class="btn-secondary text-xs px-4 py-2 font-bold inline-flex items-center space-x-1.5">
+                        <i class="fa-solid fa-rotate-right text-xs"></i>
+                        <span>Réinitialiser la recherche</span>
                     </a>
                 {% endif %}
             </div>
@@ -153,8 +173,9 @@
     {% if page_obj.has_other_pages %}
         <div class="flex justify-center items-center space-x-3">
             {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}{% if selected_subject %}&subject={{ selected_subject.id }}{% endif %}{% if q %}&q={{ q }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}" class="btn-secondary text-xs px-4 py-2 font-bold">
-                    ← Précédent
+                <a href="?page={{ page_obj.previous_page_number }}{% if selected_subject %}&subject={{ selected_subject.id }}{% endif %}{% if q %}&q={{ q }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}" class="btn-secondary text-xs px-4 py-2 font-bold inline-flex items-center space-x-1.5">
+                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                    <span>Précédent</span>
                 </a>
             {% endif %}
 
@@ -163,12 +184,14 @@
             </span>
 
             {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}{% if selected_subject %}&subject={{ selected_subject.id }}{% endif %}{% if q %}&q={{ q }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}" class="btn-secondary text-xs px-4 py-2 font-bold">
-                    Suivant 
+                <a href="?page={{ page_obj.next_page_number }}{% if selected_subject %}&subject={{ selected_subject.id }}{% endif %}{% if q %}&q={{ q }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}" class="btn-secondary text-xs px-4 py-2 font-bold inline-flex items-center space-x-1.5">
+                    <span>Suivant</span>
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
                 </a>
             {% endif %}
         </div>
     {% endif %}
+
 
 </div>
 {% endblock %}

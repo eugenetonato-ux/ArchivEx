@@ -25,12 +25,18 @@
                     {% if has_access %}
                         <span class="badge-free text-[10px]">Gratuit</span>
                     {% else %}
-                        <span class="badge-premium text-[10px]">🔒 Incluse dans le Pass</span>
+                        <span class="badge-premium text-[10px] flex items-center space-x-1">
+                            <i class="fa-solid fa-lock text-[9px]"></i>
+                            <span>Incluse dans le Pass</span>
+                        </span>
                     {% endif %}
                     <span class="text-xs font-bold text-slate-500">{{ exam.year }} · {{ exam.get_exam_type_display|default:"Session Normale" }}</span>
                 </div>
 
-                <h1 class="text-2xl sm:text-3xl font-extrabold text-[#071A49] mb-2">📄 {{ exam.title }}</h1>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-[#071A49] mb-2 flex items-center space-x-2">
+                    <i class="fa-solid fa-file-lines text-[#2563EB]"></i>
+                    <span>{{ exam.title }}</span>
+                </h1>
                 <p class="text-xs sm:text-sm font-bold text-[#2563EB]">UE — {{ exam.subject.name }} · {{ exam.filiere.school.name|default:"ENEAM" }} · {{ exam.filiere.name }} ({{ exam.semester.label }})</p>
             </div>
 
@@ -53,7 +59,7 @@
             <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-100">
                 <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg">
-                        ✓
+                        <i class="fa-solid fa-circle-check"></i>
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-[#071A49]">Épreuve débloquée</h2>
@@ -77,28 +83,75 @@
             </div>
         </div>
     {% else %}
-        <!-- LOCKED PREMIUM ACCESS (SEMESTER UNLOCK, NOT PER-PAPER) -->
-        <div class="card-academic bg-[#071A49] text-center py-14 px-6 relative rounded-3xl border border-blue-900/40 text-white shadow-xl">
-            <div class="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-amber-400 font-bold flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+        <!-- LOCKED PREMIUM ACCESS CARD WITH VALUE SHOWCASE -->
+        <div class="bg-gradient-to-br from-[#071A49] via-[#0E2461] to-[#1D4ED8] rounded-3xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden border border-blue-900/40">
+            <div class="flex items-center justify-center space-x-2 text-amber-300 text-xs font-extrabold uppercase tracking-wider mb-3">
+                <i class="fa-solid fa-bolt text-amber-400"></i>
+                <span>ARCHIVEX PASS</span>
+                <span>·</span>
+                <span>{{ exam.semester.label }}</span>
             </div>
 
-            <h2 class="text-2xl sm:text-3xl font-extrabold text-white mb-2">🔒 Cette épreuve est verrouillée</h2>
-            
-            <p class="text-slate-300 max-w-md mx-auto text-xs sm:text-sm mb-2 leading-relaxed">
-                Elle est accessible avec ton <span class="text-amber-400 font-extrabold">ArchivEx Pass — {{ exam.semester.label|default:"Semestre 1" }}</span>.
+            <h2 class="text-2xl sm:text-3xl font-black text-white text-center mb-3">
+                Débloque cette épreuve et tout ton semestre
+            </h2>
+
+            <p class="text-xs sm:text-sm text-blue-100 text-center max-w-lg mx-auto mb-8 leading-relaxed">
+                Un règlement unique de <strong class="text-amber-400 font-extrabold">2 000 FCFA</strong> débloque l'intégralité des épreuves et contenus pédagogiques de <strong class="text-white font-extrabold">{{ exam.filiere.name }}</strong>.
             </p>
 
-            <p class="text-amber-400 text-lg font-black mb-8">
-                2 000 FCFA <span class="text-slate-400 text-xs font-normal">/ tout le semestre</span>
-            </p>
+            <!-- DYNAMIC BENEFITS SHOWCASE -->
+            <div class="max-w-md mx-auto bg-white/10 backdrop-blur-md rounded-2xl p-5 mb-8 border border-white/15 space-y-3 text-xs font-semibold text-slate-100">
+                {% if exams_count > 0 %}
+                <div class="flex items-center space-x-3">
+                    <span class="w-5 h-5 rounded-full bg-amber-400 text-[#071A49] flex items-center justify-center font-black text-xs">
+                        <i class="fa-solid fa-check text-[10px]"></i>
+                    </span>
+                    <span><strong>{{ exams_count }} épreuves d'examens</strong> et devoirs avec corrigés</span>
+                </div>
+                {% endif %}
 
-            <div class="flex justify-center">
-                <a href="{% url 'payments:pass_semestre' semester_id=exam.semester.id %}" class="btn-gold text-sm px-8 py-3.5 font-black shadow-xl hover:scale-105 transition-transform">
-                    🔓 Débloquer mon semestre
+                {% if summaries_count > 0 %}
+                <div class="flex items-center space-x-3">
+                    <span class="w-5 h-5 rounded-full bg-amber-400 text-[#071A49] flex items-center justify-center font-black text-xs">
+                        <i class="fa-solid fa-check text-[10px]"></i>
+                    </span>
+                    <span><strong>{{ summaries_count }} résumés de cours</strong> essentiels rédigés</span>
+                </div>
+                {% endif %}
+
+                {% if guides_count > 0 %}
+                <div class="flex items-center space-x-3">
+                    <span class="w-5 h-5 rounded-full bg-amber-400 text-[#071A49] flex items-center justify-center font-black text-xs">
+                        <i class="fa-solid fa-check text-[10px]"></i>
+                    </span>
+                    <span><strong>{{ guides_count }} guides méthodologiques</strong> et conseils</span>
+                </div>
+                {% endif %}
+
+                <div class="flex items-center space-x-3 text-emerald-300">
+                    <span class="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-xs">
+                        <i class="fa-solid fa-check text-[10px]"></i>
+                    </span>
+                    <span>Téléchargement PDF + lecture web 24/7 sur mobile</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="{% url 'payments:pass_semestre' semester_id=exam.semester.id %}" class="btn-gold text-sm py-4 px-8 font-black rounded-2xl shadow-xl shadow-amber-500/30 hover:scale-105 transition-all text-center w-full sm:w-auto flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-lock text-xs"></i>
+                    <span>Débloquer mon Pass Semestre (2 000 FCFA)</span>
+                </a>
+            </div>
+
+
+            <div class="mt-4 text-center">
+                <a href="{% url 'payments:pass_semestre' semester_id=exam.semester.id %}" class="text-xs text-blue-200 hover:text-white underline font-medium">
+                    En savoir plus sur les avantages inclus
                 </a>
             </div>
         </div>
+
     {% endif %}
 </div>
 {% endblock %}

@@ -1,87 +1,136 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% block title %}Mes UE — ArchivEx{% endblock %}
+{% block title %}{% if semester %}{{ semester.label }} — {{ filiere.name }}{% else %}Mes UE{% endif %} | ArchivEx{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
 
-    <!-- BREADCRUMB -->
-    <nav class="flex items-center text-xs font-medium text-slate-500 space-x-2 mb-6">
+    <!-- DESKTOP BREADCRUMB -->
+    <nav class="hidden sm:flex items-center text-xs font-medium text-slate-500 space-x-2 mb-6" aria-label="Fil d'ariane">
         <a href="{% url 'academics:home' %}" class="hover:text-[#2563EB]">Accueil</a>
         <span>/</span>
-        <span class="text-[#071A49] font-bold">Mes UE</span>
+        <span class="text-slate-400">{% if profile and profile.school %}{{ profile.school.name }}{% else %}{{ filiere.school.name|default:"Université" }}{% endif %}</span>
+        <span>/</span>
+        <span class="text-slate-400">{% if profile and profile.level %}{{ profile.level.name }}{% else %}{{ filiere.level.name|default:"Licence 1" }}{% endif %}</span>
+        <span>/</span>
+        <a href="{% url 'academics:semestres' filiere_id=filiere.id %}" class="hover:text-[#2563EB]">{% if profile and profile.filiere %}{{ profile.filiere.name }}{% else %}{{ filiere.name }}{% endif %}</a>
+        <span>/</span>
+        <span class="text-[#071A49] font-bold">{% if semester %}{{ semester.label }}{% else %}Matières (UE){% endif %}</span>
     </nav>
 
-    <!-- PAGE TITLE & SUBTITLE -->
-    <div class="mb-4">
-        <h1 class="text-2xl sm:text-3xl font-black text-[#071A49] tracking-tight mb-1">Mes UE</h1>
-        <p class="text-xs sm:text-sm text-slate-500 font-medium">Retrouve les unités d'enseignement de ton parcours.</p>
+    <!-- MOBILE BREADCRUMB -->
+    <div class="sm:hidden mb-4">
+        {% if filiere %}
+        <a href="{% url 'academics:semestres' filiere_id=filiere.id %}" class="inline-flex items-center text-xs font-bold text-[#2563EB] space-x-1.5">
+            <i class="fa-solid fa-arrow-left text-xs"></i>
+            <span>Retour aux semestres</span>
+        </a>
+        {% endif %}
     </div>
 
-    <!-- COMPACT ACADEMIC CONTEXT INDICATOR -->
-    <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-blue-50/80 border border-blue-100 text-xs font-extrabold text-[#071A49] mb-6">
-        <span>{% if profile and profile.school %}{{ profile.school.name }}{% else %}{{ filiere.school.name|default:"ENEAM" }}{% endif %}</span>
-        <span class="text-slate-300">•</span>
-        <span>{% if profile and profile.level %}{{ profile.level.name }}{% else %}{{ filiere.level.name|default:"L1" }}{% endif %}</span>
-        <span class="text-slate-300">•</span>
-        <span class="text-[#2563EB]">{% if profile and profile.filiere %}{{ profile.filiere.name }}{% else %}{{ filiere.name|default:"PGP" }}{% endif %}</span>
-        <span class="text-slate-300">•</span>
-        <span class="text-slate-600">{% if semester %}{{ semester.label }}{% else %}Semestre 1{% endif %}</span>
-    </div>
 
-    <!-- PASS SEMESTRE PROMINENT BANNER (DISPLAYED ONLY IF NOT UNLOCKED) -->
-    {% if not has_semester_access %}
-        <div class="card-academic bg-gradient-to-r from-[#071A49] via-[#0E2461] to-[#1D4ED8] p-6 sm:p-7 rounded-3xl text-white shadow-xl mb-8 border border-blue-800/40 relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div class="relative z-10">
-                <div class="flex items-center space-x-2 mb-2 flex-wrap gap-1">
-                    <span class="px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[10px] font-black uppercase tracking-wider">ArchivEx Pass Semestre</span>
-                    <span class="text-xs font-extrabold text-amber-400">2 000 FCFA</span>
-                    {% if total_exams_count %}
-                        <span class="text-[11px] font-medium text-slate-300 ml-2">{{ total_exams_count }} épreuves disponibles</span>
-                    {% endif %}
-                    {% if premium_exams_count %}
-                        <span class="text-[11px] font-bold text-amber-300">• 🔒 {{ premium_exams_count }} épreuves Premium</span>
-                    {% endif %}
+    <!-- CONTEXTUAL ACADEMIC HEADER -->
+    <div class="p-6 sm:p-8 rounded-3xl bg-[#071A49] text-white border border-blue-900/40 mb-8 shadow-xl">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+            <div>
+                <div class="flex flex-wrap items-center gap-2 mb-2">
+                    <span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-black uppercase tracking-wider">
+                        {% if profile and profile.school %}{{ profile.school.name }}{% else %}{{ filiere.school.name|default:"UNIVERSITÉ" }}{% endif %}
+                    </span>
+                    <span class="px-2.5 py-0.5 rounded-full bg-white/10 text-slate-200 text-[10px] font-bold">
+                        {% if profile and profile.level %}{{ profile.level.name }}{% else %}{{ filiere.level.name|default:"LICENCE 1" }}{% endif %}
+                    </span>
+                    <span class="px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[10px] font-black uppercase tracking-wider">
+                        {% if semester %}{{ semester.label }}{% else %}Semestre 1{% endif %}
+                    </span>
                 </div>
-                <h2 class="text-xl sm:text-2xl font-black text-white mb-1">Accède à toutes les épreuves Premium de ton semestre</h2>
-                <p class="text-xs text-slate-300 font-medium max-w-xl">
-                    Un seul paiement de 2 000 FCFA débloque l'intégralité des épreuves Premium de toutes tes UE pour le {% if semester %}{{ semester.label }}{% else %}Semestre 1{% endif %}.
+
+                <h1 class="text-2xl sm:text-3xl font-black text-white">
+                    Matières (UE) — {% if profile and profile.filiere %}{{ profile.filiere.name }}{% else %}{{ filiere.name }}{% endif %}
+                </h1>
+                <p class="text-xs sm:text-sm text-slate-300 font-medium mt-1">
+                    Sélectionne une matière pour accéder aux épreuves, résumés et guides associés.
                 </p>
             </div>
 
-            {% if semester %}
-                <a href="{% url 'payments:pass_semestre' semester_id=semester.id %}" class="btn-gold text-xs sm:text-sm px-6 py-3.5 font-black shadow-lg hover:scale-105 transition-transform flex-shrink-0 relative z-10 w-full sm:w-auto text-center">
-                    🔓 Débloquer mon semestre (2 000 FCFA)
+            {% if semester and not has_semester_access %}
+                <a href="{% url 'payments:pass_semestre' semester_id=semester.id %}" class="btn-gold text-xs px-5 py-3 font-black rounded-xl shadow-lg shadow-amber-500/30 flex-shrink-0 flex items-center space-x-1.5">
+                    <i class="fa-solid fa-lock text-xs"></i>
+                    <span>Débloquer le Pass (2 000 FCFA)</span>
                 </a>
             {% endif %}
         </div>
-    {% endif %}
+    </div>
 
-    <!-- UE CARDS GRID -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {% for subject in subjects %}
-            <a href="{% url 'exams:liste' %}?subject={{ subject.id }}"
-               class="block bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border-l-4 border-[#2563EB] w-full px-5 py-3">
-                <h2 class="text-lg font-bold text-[#1E40AF] mb-1 leading-snug">
-                    {{ subject.name }}
-                </h2>
-                <p class="text-sm text-[#6B7280]">
-                    {{ subject.exams_num|default:"0" }} épreuves disponibles 
-                </p>
-            </a>
+    <!-- SUBJECTS CARDS GRID WITH RESOURCE SHORTCUT TABS -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for item in subjects_data %}
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+                <div>
+                    <!-- SUBJECT BADGE & NAME -->
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-10 h-10 rounded-2xl bg-blue-50 text-[#2563EB] font-black text-xs flex items-center justify-center flex-shrink-0 border border-blue-100">
+                            UE
+                        </div>
+                        <h2 class="text-base font-black text-[#071A49] group-hover:text-[#2563EB] transition-colors leading-snug">
+                            {{ item.subject.name }}
+                        </h2>
+                    </div>
+
+                    <p class="text-xs text-slate-500 font-medium mb-6">
+                        Ressources académiques disponibles pour révision :
+                    </p>
+
+                    <!-- RESOURCE BUTTONS / TABS GRID -->
+                    <div class="grid grid-cols-3 gap-2 mb-6">
+                        <!-- EXAMS -->
+                        <a href="{% url 'exams:liste' %}?subject={{ item.subject.id }}" class="p-2.5 rounded-2xl bg-blue-50/70 hover:bg-blue-100/70 border border-blue-100 text-center transition-colors">
+                            <i class="fa-solid fa-file-lines text-[#2563EB] text-sm block mb-1"></i>
+                            <span class="text-xs font-black text-[#2563EB] block leading-none mb-0.5">{{ item.exams_count }}</span>
+                            <span class="text-[9px] font-bold text-slate-600 uppercase tracking-wider block">Épreuves</span>
+                        </a>
+
+                        <!-- SUMMARIES -->
+                        <a href="{% url 'content:summary_list' %}?subject={{ item.subject.id }}" class="p-2.5 rounded-2xl bg-amber-50/70 hover:bg-amber-100/70 border border-amber-100 text-center transition-colors">
+                            <i class="fa-solid fa-book text-amber-600 text-sm block mb-1"></i>
+                            <span class="text-xs font-black text-amber-800 block leading-none mb-0.5">{{ item.summaries_count }}</span>
+                            <span class="text-[9px] font-bold text-slate-600 uppercase tracking-wider block">Résumés</span>
+                        </a>
+
+                        <!-- GUIDES -->
+                        <a href="{% url 'content:guide_list' %}?subject={{ item.subject.id }}" class="p-2.5 rounded-2xl bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-100 text-center transition-colors">
+                            <i class="fa-solid fa-compass text-emerald-600 text-sm block mb-1"></i>
+                            <span class="text-xs font-black text-emerald-800 block leading-none mb-0.5">{{ item.guides_count }}</span>
+                            <span class="text-[9px] font-bold text-slate-600 uppercase tracking-wider block">Guides</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+                    <span class="text-[11px] font-bold text-slate-400">UE Académique</span>
+                    <a href="{% url 'exams:liste' %}?subject={{ item.subject.id }}" class="text-xs font-extrabold text-[#2563EB] hover:underline flex items-center space-x-1">
+                        <span>Explorer les épreuves</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
+            </div>
         {% empty %}
             <!-- EMPTY STATE -->
-            <div class="col-span-full bg-white border border-slate-200 rounded-2xl p-10 text-center shadow-sm">
-                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-[#2563EB] flex items-center justify-center mx-auto mb-3">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                    </svg>
+            <div class="col-span-full bg-white border border-slate-200 rounded-3xl p-10 text-center">
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-[#2563EB] flex items-center justify-center mx-auto mb-3 text-xl">
+                    <i class="fa-solid fa-book-open"></i>
                 </div>
-                <h3 class="text-base font-extrabold text-[#071A49] mb-1">Aucune UE disponible</h3>
-                <p class="text-xs text-slate-500">Les UE de ton parcours apparaîtront ici dès qu'elles seront disponibles.</p>
+                <h3 class="text-base font-black text-[#071A49] mb-1">Les ressources de ce semestre seront bientôt disponibles.</h3>
+                <p class="text-xs text-slate-500 mb-6">Les UE et épreuves de ton parcours sont en cours de mise en ligne.</p>
+                {% if semester %}
+                <a href="{% url 'academics:semestres' filiere_id=semester.filiere.id %}" class="btn-primary text-xs px-5 py-2.5 font-bold rounded-xl inline-block">
+                    Retour aux semestres
+                </a>
+                {% endif %}
             </div>
         {% endfor %}
     </div>
+
 </div>
 {% endblock %}

@@ -11,7 +11,12 @@ from .models import SemesterAccess, Payment
 
 @login_required
 def pass_semestre(request, semester_id):
-    """Page de présentation du Pass Semestre avec tarif serveur."""
+    """Page de présentation du Pass Semestre avec tarif serveur et package dynamique."""
+    from exams.models import Exam
+    from content.models import Summary, Guide, Article
+    from academics.models import Subject
+    from django.db.models import Q
+
     semester = get_object_or_404(
         Semester.objects.select_related("filiere", "filiere__school", "filiere__level", "academic_year"),
         pk=semester_id
@@ -22,12 +27,30 @@ def pass_semestre(request, semester_id):
         user=request.user, semester=semester, activated_at__isnull=False
     ).exists()
 
+    # Dynamic resource package counts for this semester
+    exams_count = Exam.objects.filter(semester=semester, is_published=True).count()
+    summaries_count = Summary.objects.filter(subject__semester=semester, publication_status="PUBLISHED").count()
+    guides_count = Guide.objects.filter(subject__semester=semester, publication_status="PUBLISHED").count()
+    articles_count = Article.objects.filter(publication_status="PUBLISHED").filter(
+        Q(target_filiere=semester.filiere) | Q(target_school=semester.filiere.school) | Q(target_filiere__isnull=True, target_school__isnull=True)
+    ).count()
+
+    sample_subjects = Subject.objects.filter(semester=semester)[:6]
+    sample_exams = Exam.objects.filter(semester=semester, is_published=True).select_related("subject")[:4]
+
     context = {
         "semester": semester,
         "price": price,
         "already_active": already_active,
+        "exams_count": exams_count,
+        "summaries_count": summaries_count,
+        "guides_count": guides_count,
+        "articles_count": articles_count,
+        "sample_subjects": sample_subjects,
+        "sample_exams": sample_exams,
     }
     return render(request, "payments/pass_semestre.html", context)
+
 
 
 @login_required

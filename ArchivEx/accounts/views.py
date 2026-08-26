@@ -77,12 +77,20 @@ def dashboard_view(request):
     ).order_by("-created_at")[:6]
 
     # Personalized UEs & Content matching student's academic context
-    user_ues = []
-    active_semester = None
+    semester_subjects_count = 0
+    semester_exams_count = 0
+    semester_summaries_count = 0
+    semester_guides_count = 0
+
     if profile and profile.filiere:
         from academics.models import Semester, Subject
         active_semester = Semester.objects.filter(filiere=profile.filiere).first()
         if active_semester:
+            semester_subjects_count = Subject.objects.filter(semester=active_semester).count()
+            semester_exams_count = Exam.objects.filter(semester=active_semester, is_published=True).count()
+            semester_summaries_count = Summary.objects.filter(subject__semester=active_semester, publication_status="PUBLISHED").count()
+            semester_guides_count = Guide.objects.filter(subject__semester=active_semester, publication_status="PUBLISHED").count()
+
             user_ues = Subject.objects.filter(semester=active_semester).annotate(
                 exams_num=Count("exams")
             )[:6]
@@ -108,11 +116,18 @@ def dashboard_view(request):
 
     recent_articles = Article.objects.filter(publication_status="PUBLISHED")[:3]
 
+    active_pass = active_accesses.exists() or user_subscriptions.filter(is_active=True).exists()
+
     context = {
         "profile": profile,
         "active_accesses": active_accesses,
         "user_subscriptions": user_subscriptions,
+        "active_pass": active_pass,
         "active_semester": active_semester,
+        "semester_subjects_count": semester_subjects_count,
+        "semester_exams_count": semester_exams_count,
+        "semester_summaries_count": semester_summaries_count,
+        "semester_guides_count": semester_guides_count,
         "user_ues": user_ues,
         "favorites": favorites,
         "recent_exams": recent_exams,
@@ -121,6 +136,7 @@ def dashboard_view(request):
         "recent_articles": recent_articles,
     }
     return render(request, "dashboard/dashboard.html", context)
+
 
 
 

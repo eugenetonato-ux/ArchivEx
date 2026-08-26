@@ -4,269 +4,324 @@
 {% block title %}Mon Espace Académique — ArchivEx{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
 
-    <!-- 1. PERSONALIZED WELCOME & ACADEMIC CONTEXT BANNER -->
-    <div class="card-academic bg-white border border-slate-200/90 p-6 sm:p-8 mb-8 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+    <!-- 1. ACADEMIC IDENTITY & HEADER -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 mb-8 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div class="flex items-center space-x-4">
-            <div class="w-14 h-14 rounded-2xl bg-[#2563EB] text-white flex items-center justify-center font-extrabold text-2xl shadow-md overflow-hidden flex-shrink-0">
+            <!-- AVATAR OR INITIALS BADGE -->
+            <div class="w-14 h-14 rounded-2xl bg-[#071A49] text-white flex items-center justify-center font-extrabold text-xl shadow-md overflow-hidden flex-shrink-0 border border-blue-900/30">
                 {% if profile and profile.avatar %}
-                    <img src="{{ profile.avatar.url }}" alt="{{ user.username }}" class="w-full h-full object-cover">
+                    <img src="{{ profile.avatar.url }}" alt="{{ user.first_name }}" class="w-full h-full object-cover">
                 {% else %}
                     {{ user.first_name|default:user.username|slice:":1"|upper }}
                 {% endif %}
             </div>
+
             <div>
-                <!-- ACADEMIC CONTEXT BADGE LAYER -->
-                <div class="inline-flex items-center space-x-2 mb-1.5 flex-wrap gap-1">
+                <!-- ACADEMIC CONTEXT BADGES -->
+                <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
                     <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-[#2563EB] border border-blue-100">
-                        {% if profile and profile.school %}{{ profile.school.name }}{% else %}ENEAM{% endif %}
+                        {% if profile and profile.school %}{{ profile.school.name }}{% else %}Établissement{% endif %}
                     </span>
                     <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                        {% if profile and profile.level %}{{ profile.level.name }}{% else %}L1{% endif %}
+                        {% if profile and profile.level %}{{ profile.level.name }}{% else %}Niveau L1{% endif %}
                     </span>
                     <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                        {% if profile and profile.filiere %}{{ profile.filiere.name }}{% else %}PGP{% endif %}
-                    </span>
-                    <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                        {% if active_semester %}{{ active_semester.label }}{% else %}Semestre 1{% endif %}
+                        {% if profile and profile.filiere %}{{ profile.filiere.name }}{% else %}Filière{% endif %}
                     </span>
                 </div>
-                
-                <!-- GREETING & SUBTITLE -->
+
                 <h1 class="text-2xl sm:text-3xl font-black text-[#071A49]">
-                    Bonjour, {{ user.first_name|default:user.username }} 👋
+                    Bonjour, {{ user.first_name|default:user.username }}
                 </h1>
-                <p class="text-xs sm:text-sm text-slate-500 font-medium">
-                    Ton espace académique
+                <p class="text-xs text-slate-500 font-medium">
+                    Centre de contrôle académique étudiant
                 </p>
             </div>
         </div>
 
         <div class="flex items-center space-x-3 w-full md:w-auto">
-            <a href="{% url 'academics:filieres' %}" class="btn-primary text-xs px-4 py-2.5 w-full md:w-auto text-center font-bold">
-                Accéder à mes UE 
+            <a href="{% url 'academics:filieres' %}" class="btn-primary text-xs px-5 py-3 w-full md:w-auto text-center font-extrabold rounded-xl shadow-sm">
+                Voir mes matières
             </a>
-            <a href="{% url 'accounts:profile' %}" class="btn-secondary text-xs px-4 py-2.5 w-full md:w-auto text-center font-bold">
+            <a href="{% url 'accounts:profile' %}" class="btn-secondary text-xs px-4 py-3 w-full md:w-auto text-center font-bold rounded-xl border border-slate-200">
                 Mon Profil
             </a>
         </div>
     </div>
 
-    <!-- 2. QUICK STATS METRICS (4 COMPACT CARDS) -->
+    <!-- 2. RESOURCE SHORTCUT NAVIGATION CARDS (4 COMPACT CARDS) -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="card-medium-floating card-tint-blue">
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Mes UE (Semestre)</span>
-                <div class="w-7 h-7 rounded-lg bg-blue-100 text-[#2563EB] flex items-center justify-center text-xs">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                </div>
+        <a href="{% url 'exams:liste' %}" class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:border-[#2563EB] hover:shadow-md transition-all group">
+            <div class="flex items-center justify-between mb-2">
+                <i class="fa-solid fa-file-lines text-lg text-[#2563EB]"></i>
+                <span class="text-[10px] font-extrabold text-[#2563EB] bg-blue-50 px-2 py-0.5 rounded-full">Consulter</span>
             </div>
-            <p class="text-2xl font-extrabold text-[#2563EB]">{{ user_ues|length|default:"6" }}</p>
-            <p class="text-[10px] text-slate-400 mt-0.5">Matières / UE dans ton parcours</p>
-        </div>
+            <h3 class="text-xs font-black text-[#071A49] group-hover:text-[#2563EB] transition-colors">Épreuves</h3>
+            <p class="text-[11px] text-slate-500 font-medium">Examens & devoirs corrigés</p>
+        </a>
 
-        <div class="card-medium-floating card-tint-gold">
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Favoris</span>
-                <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-xs">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
-                </div>
+        <a href="{% url 'content:summary_list' %}" class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:border-amber-400 hover:shadow-md transition-all group">
+            <div class="flex items-center justify-between mb-2">
+                <i class="fa-solid fa-book text-lg text-amber-600"></i>
+                <span class="text-[10px] font-extrabold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full">Lire en ligne</span>
             </div>
-            <p class="text-2xl font-extrabold text-amber-600">{{ favorites|length|default:"0" }}</p>
-            <p class="text-[10px] text-slate-400 mt-0.5">Enregistrés pour révisions</p>
-        </div>
+            <h3 class="text-xs font-black text-[#071A49] group-hover:text-amber-600 transition-colors">Résumés de cours</h3>
+            <p class="text-[11px] text-slate-500 font-medium">Fiches de synthèse rédigées</p>
+        </a>
 
-        <div class="card-medium-floating card-tint-emerald">
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Filière</span>
-                <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-bold">
-                    🎓
-                </div>
+        <a href="{% url 'content:guide_list' %}" class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:border-emerald-500 hover:shadow-md transition-all group">
+            <div class="flex items-center justify-between mb-2">
+                <i class="fa-solid fa-compass text-lg text-emerald-600"></i>
+                <span class="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full">Méthodologie</span>
             </div>
-            <p class="text-sm font-extrabold text-emerald-600 truncate mt-1">{% if profile and profile.filiere %}{{ profile.filiere.name }}{% else %}PGP{% endif %}</p>
-            <p class="text-[10px] text-slate-400 mt-0.5">Programme d'études actif</p>
-        </div>
+            <h3 class="text-xs font-black text-[#071A49] group-hover:text-emerald-600 transition-colors">Guides de matières</h3>
+            <p class="text-[11px] text-slate-500 font-medium">Conseils & pièges à éviter</p>
+        </a>
 
-        <div class="card-medium-floating card-tint-purple">
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">ArchivEx Pass</span>
-                <div class="w-7 h-7 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-xs">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                </div>
+        <a href="{% url 'content:article_list' %}" class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:border-indigo-500 hover:shadow-md transition-all group">
+            <div class="flex items-center justify-between mb-2">
+                <i class="fa-solid fa-lightbulb text-lg text-indigo-600"></i>
+                <span class="text-[10px] font-extrabold text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded-full">Conseils</span>
             </div>
-            {% if active_accesses %}
-                <p class="text-xs font-extrabold text-emerald-600 mt-1">✓ PASS ACTIF</p>
-                <p class="text-[10px] text-slate-400 mt-0.5">Accès illimité débloqué</p>
-            {% else %}
-                <p class="text-xs font-extrabold text-amber-600 mt-1">ACCÈS GRATUIT</p>
-                <p class="text-[10px] text-slate-400 mt-0.5">Pass disponible pour toutes les épreuves</p>
-            {% endif %}
-        </div>
+            <h3 class="text-xs font-black text-[#071A49] group-hover:text-indigo-600 transition-colors">Conseils d'études</h3>
+            <p class="text-[11px] text-slate-500 font-medium">Orientation & réussite</p>
+        </a>
     </div>
 
-    <!-- 3. SECTION MES UE (DE TON PARCOURS ACADÉMIQUE) -->
-    <div class="mb-10">
-        <div class="flex justify-between items-center mb-4">
-            <div>
-                <h2 class="text-xl font-extrabold text-[#071A49]">Mes UE (Unités d'Enseignement)</h2>
-                <p class="text-xs text-slate-500">Matières de ton parcours académique</p>
-            </div>
-            <a href="{% url 'academics:filieres' %}" class="text-xs font-bold text-[#2563EB] hover:underline flex items-center">
-                <span>Voir toutes mes UE</span>
-                <span class="ml-1"></span>
-            </a>
-        </div>
+    <!-- 3. MAIN DASHBOARD 2-COLUMN STRUCTURE -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-        {% if user_ues %}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {% for ue in user_ues %}
-                    <div class="card-academic bg-white border border-slate-200 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
-                        <div>
-                            <div class="w-10 h-10 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center font-bold mb-3">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                            </div>
-                            <h3 class="text-sm font-extrabold text-[#071A49] group-hover:text-[#2563EB] transition-colors mb-1 line-clamp-1">
-                                UE — {{ ue.name }}
-                            </h3>
-                            <p class="text-xs text-slate-500 font-medium mb-3">
-                                {{ ue.exams_num|default:"0" }} épreuves disponibles
-                            </p>
-                        </div>
-                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
-                            <span class="badge-free text-[10px]">Disponible</span>
-                            <a href="{% url 'exams:liste' %}?subject={{ ue.id }}" class="text-xs font-bold text-[#2563EB] group-hover:underline flex items-center">
-                                <span>Voir les épreuves</span>
-                                <span class="ml-1"></span>
-                            </a>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="bg-white border border-slate-200 rounded-2xl p-8 text-center">
-                <p class="text-sm font-bold text-[#071A49] mb-1">Aucune UE disponible pour le moment.</p>
-                <p class="text-xs text-slate-500">Les ressources de ton parcours seront affichées ici dès qu'elles seront disponibles.</p>
-            </div>
-        {% endif %}
-    </div>
-
-    <!-- 4. MAIN DASHBOARD CONTENT GRID (ÉPREUVES RÉCENTES & FAVORIS) -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        <!-- LEFT COLUMN: ACCESS STATUS & FAVORITES -->
-        <div class="lg:col-span-1 space-y-6">
+        <!-- MAIN COLUMN (8 COLS ON DESKTOP) -->
+        <div class="lg:col-span-8 space-y-8">
             
-            <!-- PASS STATUS WIDGET -->
-            <div class="card-academic bg-white border border-slate-200 p-5 rounded-2xl">
-                <h2 class="text-base font-extrabold text-[#071A49] mb-3 flex items-center space-x-2">
-                    <span class="text-amber-500">⚡</span>
-                    <span>Mon Pass Semestre</span>
-                </h2>
+            <!-- MON PARCOURS & CURRENT SEMESTER CARD -->
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-[#2563EB] bg-blue-50 px-2.5 py-0.5 rounded-full">
+                            Mon Parcours Académique
+                        </span>
+                        <h2 class="text-xl font-black text-[#071A49] mt-2">
+                            {% if profile and profile.filiere %}{{ profile.filiere.name }}{% else %}Filière universitaire{% endif %}
+                        </h2>
+                    </div>
 
-                {% if active_accesses %}
-                    <div class="space-y-2.5 mb-4">
-                        {% for access in active_accesses %}
-                            <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex justify-between items-center">
-                                <div>
-                                    <p class="text-xs font-bold text-emerald-900">{{ access.semester.label }}</p>
-                                    <p class="text-[10px] text-emerald-700">{{ access.school.name }} — {{ access.filiere.name }}</p>
+                    <a href="{% url 'academics:filieres' %}" class="text-xs font-extrabold text-[#2563EB] hover:underline flex items-center">
+                        <span>Voir tout mon semestre</span>
+                        <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+
+                <!-- SEMESTER METRICS ROW -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-center">
+                        <span class="text-xs font-bold text-slate-500 block mb-0.5">Semestre</span>
+                        <span class="text-sm font-black text-[#071A49]">{% if active_semester %}{{ active_semester.label }}{% else %}Semestre 1{% endif %}</span>
+                    </div>
+
+                    <div class="p-3 rounded-2xl bg-blue-50/60 border border-blue-100 text-center">
+                        <span class="text-xs font-bold text-blue-800 block mb-0.5">Matières (UE)</span>
+                        <span class="text-sm font-black text-[#2563EB]">{{ semester_subjects_count|default:user_ues|length }}</span>
+                    </div>
+
+                    <div class="p-3 rounded-2xl bg-amber-50/60 border border-amber-100 text-center">
+                        <span class="text-xs font-bold text-amber-800 block mb-0.5">Épreuves</span>
+                        <span class="text-sm font-black text-amber-600">{{ semester_exams_count|default:"0" }}</span>
+                    </div>
+
+                    <div class="p-3 rounded-2xl bg-emerald-50/60 border border-emerald-100 text-center">
+                        <span class="text-xs font-bold text-emerald-800 block mb-0.5">Résumés</span>
+                        <span class="text-sm font-black text-emerald-600">{{ semester_summaries_count|default:"0" }}</span>
+                    </div>
+                </div>
+
+                <!-- QUICK SUBJECTS GRID -->
+                {% if user_ues %}
+                    <h3 class="text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-3">Matières de ton semestre :</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {% for ue in user_ues %}
+                            <a href="{% url 'exams:liste' %}?subject={{ ue.id }}" class="p-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50/50 border border-slate-200/90 flex items-center justify-between transition-colors group">
+                                <div class="flex items-center space-x-3">
+                                    <span class="w-8 h-8 rounded-xl bg-blue-100 text-[#2563EB] font-bold text-xs flex items-center justify-center flex-shrink-0">
+                                        UE
+                                    </span>
+                                    <div>
+                                        <h4 class="text-xs font-bold text-[#071A49] group-hover:text-[#2563EB] transition-colors line-clamp-1">{{ ue.name }}</h4>
+                                        <p class="text-[10px] text-slate-400 font-medium">{{ ue.exams_num|default:"0" }} épreuves</p>
+                                    </div>
                                 </div>
-                                <span class="badge-premium text-[10px]">Actif</span>
+                                <i class="fa-solid fa-arrow-right text-xs text-[#2563EB] group-hover:translate-x-0.5 transition-transform"></i>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- RECENT ACTIVITY TIMELINE -->
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-lg font-black text-[#071A49]">Activité récente</h2>
+                        <p class="text-xs text-slate-500 font-medium">Nouveaux contenus ajoutés dans ton univers académique</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    {% for exam in recent_exams|slice:":3" %}
+                        <a href="{% url 'exams:detail' pk=exam.id %}" class="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200 flex items-center justify-between transition-colors group">
+                            <div class="flex items-center space-x-3.5">
+                                <span class="w-9 h-9 rounded-xl bg-blue-100 text-[#2563EB] font-bold text-xs flex items-center justify-center flex-shrink-0">
+                                    <i class="fa-solid fa-file-lines"></i>
+                                </span>
+                                <div>
+                                    <h4 class="text-xs font-bold text-[#071A49] group-hover:text-[#2563EB] transition-colors">{{ exam.title }}</h4>
+                                    <p class="text-[11px] text-slate-500 font-medium">{{ exam.subject.name }} · {{ exam.year }}</p>
+                                </div>
                             </div>
+                            <span class="text-[10px] font-bold text-slate-400">Épreuve</span>
+                        </a>
+                    {% endfor %}
+
+                    {% for summary in recent_summaries|slice:":2" %}
+                        <a href="{% url 'content:summary_detail' pk=summary.id %}" class="p-4 rounded-2xl bg-amber-50/50 hover:bg-amber-50 border border-amber-200/70 flex items-center justify-between transition-colors group">
+                            <div class="flex items-center space-x-3.5">
+                                <span class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 font-bold text-xs flex items-center justify-center flex-shrink-0">
+                                    <i class="fa-solid fa-book"></i>
+                                </span>
+                                <div>
+                                    <h4 class="text-xs font-bold text-[#071A49] group-hover:text-amber-800 transition-colors">{{ summary.title }}</h4>
+                                    <p class="text-[11px] text-slate-500 font-medium">Résumé · {{ summary.subject.name }}</p>
+                                </div>
+                            </div>
+                            <span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded">Résumé</span>
+                        </a>
+                    {% endfor %}
+
+                    {% for guide in recent_guides|slice:":1" %}
+                        <a href="{% url 'content:guide_detail' pk=guide.id %}" class="p-4 rounded-2xl bg-emerald-50/50 hover:bg-emerald-50 border border-emerald-200/70 flex items-center justify-between transition-colors group">
+                            <div class="flex items-center space-x-3.5">
+                                <span class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-center flex-shrink-0">
+                                    <i class="fa-solid fa-compass"></i>
+                                </span>
+                                <div>
+                                    <h4 class="text-xs font-bold text-[#071A49] group-hover:text-emerald-800 transition-colors">{{ guide.title }}</h4>
+                                    <p class="text-[11px] text-slate-500 font-medium">Guide · {{ guide.subject.name }}</p>
+                                </div>
+                            </div>
+                            <span class="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">Guide</span>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- SECONDARY SIDEBAR COLUMN (4 COLS ON DESKTOP) -->
+        <div class="lg:col-span-4 space-y-6 sticky top-20">
+            
+            <!-- COMPACT PREMIUM STATUS CARD -->
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-100">
+                    <h3 class="text-xs font-extrabold text-[#071A49] uppercase tracking-wider flex items-center space-x-1.5">
+                        <i class="fa-solid fa-bolt text-amber-500"></i>
+                        <span>ArchivEx Pass</span>
+                    </h3>
+                    {% if active_pass %}
+                        <span class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center space-x-1">
+                            <i class="fa-solid fa-check text-[9px]"></i>
+                            <span>Actif</span>
+                        </span>
+                    {% else %}
+                        <span class="text-[10px] font-extrabold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">Gratuit</span>
+                    {% endif %}
+                </div>
+
+                {% if active_pass %}
+                    <div class="space-y-2 mb-4 text-xs">
+                        <p class="font-extrabold text-emerald-900 flex items-center space-x-1">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Pass Semestre Actif</span>
+                        </p>
+                        <p class="text-slate-500 text-[11px]">Accès illimité débloqué pour l'ensemble de tes épreuves et cours rédigés.</p>
+                    </div>
+                    <a href="{% url 'academics:filieres' %}" class="btn-primary w-full text-xs py-2.5 font-bold block text-center rounded-xl">
+                        Accéder à mes cours
+                    </a>
+                {% else %}
+                    <p class="text-xs text-slate-600 mb-4 leading-relaxed font-medium">
+                        Accède à toutes les épreuves et résumés de ton semestre.
+                    </p>
+                    {% if active_semester %}
+                        <a href="{% url 'payments:pass_semestre' active_semester.id %}" class="btn-gold w-full text-xs py-3 font-black block text-center rounded-xl shadow-md flex items-center justify-center space-x-1.5">
+                            <i class="fa-solid fa-lock text-xs"></i>
+                            <span>Découvrir le Pass Semestre</span>
+                        </a>
+                    {% else %}
+                        <a href="{% url 'academics:filieres' %}" class="btn-gold w-full text-xs py-3 font-black block text-center rounded-xl shadow-md flex items-center justify-center space-x-1.5">
+                            <i class="fa-solid fa-lock text-xs"></i>
+                            <span>Découvrir le Pass Semestre</span>
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <!-- COMPACT NOTIFICATIONS CARD -->
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                    <h3 class="text-xs font-extrabold text-[#071A49] uppercase tracking-wider flex items-center space-x-1.5">
+                        <i class="fa-solid fa-bell text-[#2563EB]"></i>
+                        <span>Notifications</span>
+                    </h3>
+                    <a href="{% url 'notifications:list' %}" class="text-[11px] font-bold text-[#2563EB] hover:underline">
+                        Tout voir
+                    </a>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="p-3 rounded-2xl bg-blue-50/60 border border-blue-100 text-xs">
+                        <p class="font-bold text-[#071A49] mb-0.5">Nouveau contenu publié</p>
+                        <p class="text-[11px] text-slate-500">De nouvelles épreuves sont disponibles pour ton semestre.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COMPACT FAVORITES CARD -->
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                    <h3 class="text-xs font-extrabold text-[#071A49] uppercase tracking-wider flex items-center space-x-1.5">
+                        <i class="fa-solid fa-heart text-rose-500"></i>
+                        <span>Mes Favoris</span>
+                    </h3>
+                    <a href="{% url 'accounts:favoris' %}" class="text-[11px] font-bold text-[#2563EB] hover:underline">
+                        Gérer
+                    </a>
+                </div>
+
+                {% if favorites %}
+                    <div class="space-y-2">
+                        {% for fav in favorites|slice:":3" %}
+                            <a href="{% url 'exams:detail' pk=fav.exam.id %}" class="p-2.5 rounded-xl bg-slate-50 hover:bg-blue-50/50 border border-slate-200 flex justify-between items-center transition-colors group">
+                                <span class="text-xs font-bold text-[#071A49] group-hover:text-[#2563EB] truncate">{{ fav.exam.title }}</span>
+                                <span class="text-[10px] font-bold text-[#2563EB] bg-blue-50 px-2 py-0.5 rounded">PDF</span>
+                            </a>
                         {% endfor %}
                     </div>
                 {% else %}
-                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center mb-4">
-                        <p class="text-xs font-bold text-[#071A49] mb-1">Pass Semestre non activé</p>
-                        <p class="text-[11px] text-slate-500 leading-relaxed mb-3">Débloque toutes les épreuves Premium de ton semestre.</p>
-                        <a href="{% url 'academics:filieres' %}" class="btn-gold w-full text-xs py-2 font-bold">
-                            Débloquer mon semestre
+                    <div class="text-center py-6 text-slate-500 text-xs">
+                        <p class="mb-3 font-medium">Vous n'avez encore aucun favori.</p>
+                        <a href="{% url 'exams:liste' %}" class="btn-secondary text-[11px] px-3.5 py-2 font-bold inline-block rounded-xl border border-slate-200">
+                            Explorer les épreuves
                         </a>
                     </div>
                 {% endif %}
             </div>
 
-            <!-- FAVORITES WIDGET -->
-            <div class="card-academic bg-white border border-slate-200 p-5 rounded-2xl">
-                <div class="flex justify-between items-center mb-3">
-                    <h2 class="text-base font-extrabold text-[#071A49] flex items-center space-x-1.5">
-                        <span class="text-rose-500">❤</span>
-                        <span>Mes Favoris</span>
-                    </h2>
-                    <a href="{% url 'accounts:favoris' %}" class="text-xs font-bold text-[#2563EB] hover:underline">Tout voir </a>
-                </div>
-
-                {% if favorites %}
-                    <div class="space-y-2">
-                        {% for fav in favorites %}
-                            <a href="{% url 'exams:detail' pk=fav.exam.id %}" class="p-2.5 rounded-xl bg-slate-50 hover:bg-blue-50/50 border border-slate-200 flex justify-between items-center transition-colors group">
-                                <span class="text-xs font-medium text-[#071A49] group-hover:text-[#2563EB] truncate max-w-[180px]">{{ fav.exam.title }}</span>
-                                <span class="text-[10px] font-bold text-[#2563EB] bg-blue-50 px-2 py-0.5 rounded">{{ fav.exam.get_exam_type_display|default:"EXAM" }}</span>
-                            </a>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="text-center py-6 text-slate-400">
-                        <p class="text-xs mb-2">Aucune épreuve en favoris.</p>
-                        <a href="{% url 'exams:liste' %}" class="text-xs font-bold text-[#2563EB] hover:underline">Ajouter des favoris </a>
-                    </div>
-                {% endif %}
-            </div>
-
-        </div>
-
-        <!-- RIGHT COLUMN: RECENT EXAMS OF USER'S CONTEXT -->
-        <div class="lg:col-span-2 space-y-6">
-            <div class="card-academic bg-white border border-slate-200 p-5 rounded-2xl">
-                <div class="flex justify-between items-center mb-5">
-                    <div>
-                        <h2 class="text-lg font-extrabold text-[#071A49]">Épreuves récentes de ton parcours</h2>
-                        <p class="text-xs text-slate-500">
-                            {% if profile and profile.filiere %}
-                                {{ profile.school.name|default:"Université" }} · {{ profile.filiere.name }}
-                            {% else %}
-                                Sujets récents de ta filière
-                            {% endif %}
-                        </p>
-                    </div>
-                    <a href="{% url 'academics:filieres' %}" class="btn-secondary text-xs px-3.5 py-2 font-bold">
-                        Voir mes UE 
-                    </a>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {% for exam in recent_exams %}
-                        <div class="card-medium-floating {% if exam.user_has_access %}card-tint-blue{% else %}card-tint-gold{% endif %} flex flex-col justify-between group">
-                            <div>
-                                <div class="flex justify-between items-center mb-2.5">
-                                    <span class="text-[10px] font-bold text-slate-500 uppercase">
-                                        {{ exam.year }} · {{ exam.get_exam_type_display|default:"Session" }}
-                                    </span>
-                                    {% if exam.user_has_access %}
-                                        <span class="badge-free text-[10px]">GRATUIT</span>
-                                    {% else %}
-                                        <span class="badge-premium text-[10px]">PREMIUM</span>
-                                    {% endif %}
-                                </div>
-                                <h3 class="text-xs font-bold text-[#071A49] group-hover:text-[#2563EB] transition-colors mb-1 line-clamp-1">{{ exam.title }}</h3>
-                                <p class="text-[11px] font-semibold text-[#2563EB] mb-3 line-clamp-1">UE — {{ exam.subject.name }}</p>
-                            </div>
-                            <div class="pt-2 border-t border-slate-200/60">
-                                <a href="{% url 'exams:detail' pk=exam.id %}" class="btn-primary w-full text-xs py-1.5 font-bold">
-                                    Consulter l'épreuve
-                                </a>
-                            </div>
-                        </div>
-                    {% empty %}
-                        <div class="col-span-2 text-center py-8 text-slate-400 text-xs">
-                            Aucune épreuve disponible pour cette UE.
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
         </div>
 
     </div>
+
 </div>
 {% endblock %}
+
