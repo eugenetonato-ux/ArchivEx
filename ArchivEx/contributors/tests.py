@@ -125,16 +125,18 @@ class Phase11AdministrationTests(TestCase):
         self.assertContains(res_dash, "ENEAM")
 
     def test_exam_creation_workflow(self):
-        """Authorized contributor can create and publish an exam."""
+        """Authorized contributor can create and publish an exam using free-text subject input."""
         from django.core.files.uploadedfile import SimpleUploadedFile
         dummy_pdf = SimpleUploadedFile("test.pdf", b"%PDF-1.4 test content", content_type="application/pdf")
 
         self.client.login(username="admin_boss", password="Password123!")
 
+        # Set active context first
+        self.client.get(reverse("contributors:set_context") + f"?school_id={self.school_eneam.id}&filiere_id={self.filiere.id}&semester_id={self.semester.id}")
+
         exam_data = {
             "title": "Épreuve d'Algorithmique L1",
-            "semester": self.semester.id,
-            "subject": self.subject.id,
+            "subject_name": "Algorithmique Avancée",
             "year": "2026",
             "exam_type": "examen",
             "is_free": "False",
@@ -151,6 +153,39 @@ class Phase11AdministrationTests(TestCase):
         self.assertTrue(exam.is_published)
         self.assertFalse(exam.is_free)
         self.assertEqual(exam.filiere, self.filiere)
+        self.assertEqual(exam.subject.name, "Algorithmique Avancée")
+
+    def test_free_text_subject_creation_and_context_inheritance(self):
+        """Creating an exam with a new subject name automatically creates the Subject in the active semester context."""
+        self.client.login(username="admin_boss", password="Password123!")
+        self.client.get(reverse("contributors:set_context") + f"?school_id={self.school_eneam.id}&filiere_id={self.filiere.id}&semester_id={self.semester.id}")
+
+        exam_data = {
+            "title": "Épreuve de Physique 2026",
+            "subject_name": "Physique Quantique 2026",
+            "year": "2026",
+            "exam_type": "examen",
+            "is_free": "True",
+            "is_published": "True",
+        }
+        res = self.client.post(reverse("contributors:exam_create"), data=exam_data)
+        self.assertEqual(res.status_code, 302)
+
+        subject = Subject.objects.filter(name="Physique Quantique 2026", semester=self.semester).first()
+        self.assertIsNotNone(subject)
+
+        # Submit another exam with same subject name (case-insensitive) -> should reuse same Subject
+        exam_data_2 = {
+            "title": "Épreuve de Physique Rattrapage",
+            "subject_name": "physique quantique 2026",
+            "year": "2026",
+            "exam_type": "rattrapage",
+            "is_free": "True",
+            "is_published": "True",
+        }
+        res2 = self.client.post(reverse("contributors:exam_create"), data=exam_data_2)
+        self.assertEqual(res2.status_code, 302)
+        self.assertEqual(Subject.objects.filter(name__iexact="physique quantique 2026").count(), 1)
 
     def test_summary_creation_workflow(self):
         """Authorized contributor can create a summary of course."""

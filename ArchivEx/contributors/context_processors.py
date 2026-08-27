@@ -1,11 +1,11 @@
-from academics.models import School, Filiere
+from academics.models import School, Filiere, Semester
 from .decorators import get_active_academic_context
 
 
 def admin_academic_context(request):
     """
-    Context processor injectant le contexte académique actif (Université + Filière)
-    ainsi que les listes d'écoles et filières disponibles dans tous les templates d'administration.
+    Context processor injectant le contexte académique actif (Université + Filière + Semestre)
+    ainsi que les listes d'écoles, filières et semestres disponibles dans tous les templates d'administration.
     """
     if not request.path.startswith("/administration/"):
         return {}
@@ -14,7 +14,7 @@ def admin_academic_context(request):
     if not user or not user.is_authenticated:
         return {}
 
-    active_school, active_filiere = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
 
     # Déterminer les écoles accessibles pour cet utilisateur
     if user.is_superuser:
@@ -32,9 +32,17 @@ def admin_academic_context(request):
     else:
         available_filieres = Filiere.objects.none()
 
+    # Récupérer les semestres associés à la filière active
+    if active_filiere:
+        available_semesters = Semester.objects.filter(filiere=active_filiere)
+    else:
+        available_semesters = Semester.objects.none()
+
     return {
         "active_school": active_school,
         "active_filiere": active_filiere,
+        "active_semester": active_semester,
         "available_schools": available_schools,
         "available_filieres": available_filieres,
+        "available_semesters": available_semesters,
     }

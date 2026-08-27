@@ -3,7 +3,7 @@ from urllib.parse import urlencode
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect
 from django.urls import reverse
-from academics.models import School, Filiere
+from academics.models import School, Filiere, Semester
 
 
 def is_user_contributor(user):
@@ -39,16 +39,18 @@ def contributor_required(view_func):
 
 def get_active_academic_context(request):
     """
-    Récupère le contexte académique actif (Université + Filière) de la session du contributeur.
-    Si non initialisé, sélectionne automatiquement la première université disponible.
+    Récupère le contexte académique actif (Université + Filière + Semestre) de la session du contributeur.
+    Si non initialisé, sélectionne automatiquement la première université, filière et semestre disponibles.
     """
     user = getattr(request, "user", None)
 
     active_school = None
     active_filiere = None
+    active_semester = None
 
     school_id = request.session.get("admin_active_school_id")
     filiere_id = request.session.get("admin_active_filiere_id")
+    semester_id = request.session.get("admin_active_semester_id")
 
     # 1. Validation de l'école active
     if school_id:
@@ -79,4 +81,15 @@ def get_active_academic_context(request):
         if active_filiere:
             request.session["admin_active_filiere_id"] = active_filiere.id
 
-    return active_school, active_filiere
+    # 3. Validation du semestre actif
+    if semester_id:
+        active_semester = Semester.objects.filter(id=semester_id).first()
+        if active_semester and active_filiere and active_semester.filiere_id != active_filiere.id:
+            active_semester = None
+
+    if not active_semester and active_filiere:
+        active_semester = Semester.objects.filter(filiere=active_filiere).first()
+        if active_semester:
+            request.session["admin_active_semester_id"] = active_semester.id
+
+    return active_school, active_filiere, active_semester

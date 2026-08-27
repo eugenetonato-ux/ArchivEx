@@ -105,7 +105,7 @@ def get_filieres_by_school_api(request):
 @contributor_required
 def admin_dashboard_view(request):
     """Tableau de bord privé d'administration ArchivEx V2."""
-    active_school, active_filiere = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
 
     # Context-aware metrics
     if active_school:
@@ -134,12 +134,15 @@ def admin_dashboard_view(request):
             available_schools = profile.assigned_schools.filter(is_active=True)
 
     available_filieres = Filiere.objects.filter(school=active_school) if active_school else Filiere.objects.none()
+    available_semesters = Semester.objects.filter(filiere=active_filiere) if active_filiere else Semester.objects.none()
 
     context = {
         "active_school": active_school,
         "active_filiere": active_filiere,
+        "active_semester": active_semester,
         "available_schools": available_schools,
         "available_filieres": available_filieres,
+        "available_semesters": available_semesters,
         "students_count": students_count,
         "exams_count": exams_count,
         "published_exams": published_exams,
@@ -155,34 +158,43 @@ def admin_dashboard_view(request):
 
 @contributor_required
 def set_context_view(request):
-    """Change le contexte académique actif (Université + Filière) dans la session."""
+    """Change le contexte académique actif (Université + Filière + Semestre) dans la session."""
     school_id = request.GET.get("school_id") or request.POST.get("school_id")
     filiere_id = request.GET.get("filiere_id") or request.POST.get("filiere_id")
+    semester_id = request.GET.get("semester_id") or request.POST.get("semester_id")
 
     if school_id:
         if school_id == "all":
             request.session["admin_active_school_id"] = None
             request.session["admin_active_filiere_id"] = None
+            request.session["admin_active_semester_id"] = None
             messages.info(request, "Contexte réinitialisé : Toutes les universités")
         else:
             school = get_object_or_404(School, pk=school_id)
             if not check_school_permission(request.user, school):
                 raise PermissionDenied("Vous n'êtes pas autorisé à gérer le contenu de cette université.")
             
-            # Changement d'école
             old_school_id = request.session.get("admin_active_school_id")
             request.session["admin_active_school_id"] = school.id
 
             if filiere_id:
                 if filiere_id == "all":
                     request.session["admin_active_filiere_id"] = None
+                    request.session["admin_active_semester_id"] = None
                 else:
                     filiere = Filiere.objects.filter(pk=filiere_id, school=school).first()
                     request.session["admin_active_filiere_id"] = filiere.id if filiere else None
+                    if semester_id and semester_id != "all":
+                        sem = Semester.objects.filter(pk=semester_id, filiere=filiere).first()
+                        request.session["admin_active_semester_id"] = sem.id if sem else None
+                    else:
+                        first_sem = Semester.objects.filter(filiere=filiere).first() if filiere else None
+                        request.session["admin_active_semester_id"] = first_sem.id if first_sem else None
             elif old_school_id != school.id:
-                # Si l'école a changé sans filière explicite, sélectionner la 1ère filière ou None
                 first_filiere = Filiere.objects.filter(school=school).first()
                 request.session["admin_active_filiere_id"] = first_filiere.id if first_filiere else None
+                first_sem = Semester.objects.filter(filiere=first_filiere).first() if first_filiere else None
+                request.session["admin_active_semester_id"] = first_sem.id if first_sem else None
 
             filiere_name = ""
             if request.session.get("admin_active_filiere_id"):
@@ -195,19 +207,35 @@ def set_context_view(request):
     elif filiere_id:
         if filiere_id == "all":
             request.session["admin_active_filiere_id"] = None
+            request.session["admin_active_semester_id"] = None
             messages.info(request, "Filière réinitialisée : Toutes les filières")
         else:
-            active_school_id = request.session.get("admin_active_school_id")
             filiere = Filiere.objects.filter(pk=filiere_id).first()
             if filiere:
-                if not active_school_id or filiere.school_id == active_school_id:
-                    request.session["admin_active_school_id"] = filiere.school_id
-                    request.session["admin_active_filiere_id"] = filiere.id
-                    messages.success(request, f"Filière active : {filiere.name} ({filiere.school.name})")
+                request.session["admin_active_school_id"] = filiere.school_id
+                request.session["admin_active_filiere_id"] = filiere.id
+                if semester_id and semester_id != "all":
+                    sem = Semester.objects.filter(pk=semester_id, filiere=filiere).first()
+                    request.session["admin_active_semester_id"] = sem.id if sem else None
+                else:
+                    first_sem = Semester.objects.filter(filiere=filiere).first()
+                    request.session["admin_active_semester_id"] = first_sem.id if first_sem else None
+                messages.success(request, f"Filière active : {filiere.name} ({filiere.school.name})")
+
+    elif semester_id:
+        if semester_id == "all":
+            request.session["admin_active_semester_id"] = None
+            messages.info(request, "Semestre réinitialisé")
+        else:
+            sem = Semester.objects.filter(pk=semester_id).first()
+            if sem:
+                request.session["admin_active_school_id"] = sem.filiere.school_id
+                request.session["admin_active_filiere_id"] = sem.filiere_id
+                request.session["admin_active_semester_id"] = sem.id
+                messages.success(request, f"Semestre actif : {sem.label} ({sem.filiere.name})")
 
     next_url = request.META.get("HTTP_REFERER") or "/administration/"
     return redirect(next_url)
-
 
 
 # ==========================================
@@ -217,7 +245,7 @@ def set_context_view(request):
 @contributor_required
 def exam_list_view(request):
     """Liste et recherche des épreuves dans le contexte actif."""
-    active_school, active_filiere = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
     q = request.GET.get("q", "").strip()
 
     qs = Exam.objects.select_related("subject", "semester", "filiere", "filiere__school")
@@ -238,6 +266,7 @@ def exam_list_view(request):
     context = {
         "active_school": active_school,
         "active_filiere": active_filiere,
+        "active_semester": active_semester,
         "exams": exams,
         "q": q,
     }
@@ -246,25 +275,41 @@ def exam_list_view(request):
 
 @contributor_required
 def exam_create_view(request):
-    """Ajouter une épreuve d'examen avec héritage du contexte actif."""
-    active_school, active_filiere = get_active_academic_context(request)
+    """Ajouter une épreuve d'examen avec héritage du contexte actif et saisie libre de la matière."""
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
     if active_school and not check_school_permission(request.user, active_school):
         raise PermissionDenied("Vous n'êtes pas autorisé à ajouter une épreuve pour cette université.")
 
     if request.method == "POST":
-        form = ExamAdminForm(request.POST, request.FILES, active_filiere=active_filiere)
+        form = ExamAdminForm(request.POST, request.FILES, active_filiere=active_filiere, active_semester=active_semester)
         if form.is_valid():
             exam = form.save(commit=False)
-            if active_filiere:
-                exam.filiere = active_filiere
-                exam.level = active_filiere.level
-            elif form.cleaned_data.get("semester"):
-                exam.filiere = form.cleaned_data["semester"].filiere
-                exam.level = form.cleaned_data["semester"].filiere.level
+
+            # Déterminer le semestre hérité ou sélectionné
+            target_semester = form.cleaned_data.get("semester") or active_semester
+            if not target_semester and active_filiere:
+                target_semester = Semester.objects.filter(filiere=active_filiere).first()
+            if not target_semester and active_filiere:
+                target_semester = Semester.objects.create(filiere=active_filiere, label="Semestre 1", number=1)
+
+            exam.semester = target_semester
+            exam.filiere = target_semester.filiere
+            exam.level = target_semester.filiere.level
+
+            # Traitement de la matière (saisie libre)
+            subject_name = form.cleaned_data["subject_name"].strip()
+            subject = Subject.objects.filter(semester=target_semester, name__iexact=subject_name).first()
+            if not subject:
+                subject = Subject.objects.create(
+                    semester=target_semester,
+                    name=subject_name,
+                    is_active=True
+                )
+            exam.subject = subject
 
             if not getattr(exam, "academic_year_id", None):
-                if exam.semester and hasattr(exam.semester, "academic_year"):
-                    exam.academic_year = exam.semester.academic_year
+                if target_semester and getattr(target_semester, "academic_year", None):
+                    exam.academic_year = target_semester.academic_year
                 else:
                     exam.academic_year = AcademicYear.objects.first()
 
@@ -273,14 +318,18 @@ def exam_create_view(request):
             exam.save()
 
             status_str = "publiée" if exam.is_published else "enregistrée en brouillon"
-            messages.success(request, f"Épreuve « {exam.title} » {status_str} avec succès.")
+            messages.success(request, f"Épreuve « {exam.title} » {status_str} avec succès pour {exam.subject.name}.")
             return redirect("contributors:exam_list")
     else:
-        form = ExamAdminForm(active_filiere=active_filiere)
+        form = ExamAdminForm(active_filiere=active_filiere, active_semester=active_semester)
+
+    available_subjects = Subject.objects.filter(semester__filiere=active_filiere).select_related("semester") if active_filiere else Subject.objects.none()
 
     context = {
         "active_school": active_school,
         "active_filiere": active_filiere,
+        "active_semester": active_semester,
+        "available_subjects": available_subjects,
         "form": form,
         "is_create": True,
     }
@@ -290,16 +339,32 @@ def exam_create_view(request):
 @contributor_required
 def exam_edit_view(request, pk):
     """Modifier une épreuve existante."""
-    exam = get_object_or_404(Exam.objects.select_related("filiere", "filiere__school"), pk=pk)
+    exam = get_object_or_404(Exam.objects.select_related("filiere", "filiere__school", "subject", "semester"), pk=pk)
     if not check_school_permission(request.user, exam.filiere.school):
         raise PermissionDenied("Vous n'êtes pas autorisé à modifier cette épreuve.")
 
-    active_school, active_filiere = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
 
     if request.method == "POST":
-        form = ExamAdminForm(request.POST, request.FILES, instance=exam, active_filiere=exam.filiere)
+        form = ExamAdminForm(request.POST, request.FILES, instance=exam, active_filiere=exam.filiere, active_semester=exam.semester)
         if form.is_valid():
             exam = form.save(commit=False)
+
+            target_semester = form.cleaned_data.get("semester") or exam.semester or active_semester
+            exam.semester = target_semester
+            exam.filiere = target_semester.filiere
+            exam.level = target_semester.filiere.level
+
+            subject_name = form.cleaned_data["subject_name"].strip()
+            subject = Subject.objects.filter(semester=target_semester, name__iexact=subject_name).first()
+            if not subject:
+                subject = Subject.objects.create(
+                    semester=target_semester,
+                    name=subject_name,
+                    is_active=True
+                )
+            exam.subject = subject
+
             exam.is_free = form.cleaned_data["is_free"]
             exam.is_published = form.cleaned_data["is_published"]
             exam.save()
@@ -307,11 +372,15 @@ def exam_edit_view(request, pk):
             messages.success(request, f"Épreuve « {exam.title} » mise à jour avec succès.")
             return redirect("contributors:exam_list")
     else:
-        form = ExamAdminForm(instance=exam, active_filiere=exam.filiere)
+        form = ExamAdminForm(instance=exam, active_filiere=exam.filiere, active_semester=exam.semester)
+
+    available_subjects = Subject.objects.filter(semester__filiere=exam.filiere).select_related("semester")
 
     context = {
         "active_school": active_school,
         "active_filiere": active_filiere,
+        "active_semester": active_semester,
+        "available_subjects": available_subjects,
         "form": form,
         "exam": exam,
         "is_create": False,
@@ -356,7 +425,7 @@ def exam_delete_view(request, pk):
 @contributor_required
 def summary_list_view(request):
     """Liste et recherche des résumés de cours."""
-    active_school, active_filiere = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
     q = request.GET.get("q", "").strip()
 
     qs = Summary.objects.select_related("subject", "subject__semester", "subject__semester__filiere", "subject__semester__filiere__school")
@@ -382,7 +451,7 @@ def summary_list_view(request):
 @contributor_required
 def summary_create_view(request):
     """Créer un nouveau résumé de cours."""
-    active_school, active_filiere = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
 
     if request.method == "POST":
         form = SummaryAdminForm(request.POST, request.FILES, active_filiere=active_filiere)
@@ -411,7 +480,7 @@ def summary_edit_view(request, pk):
     if not check_school_permission(request.user, sm.subject.semester.filiere.school):
         raise PermissionDenied("Vous n'êtes pas autorisé à modifier ce résumé.")
 
-    active_school, active_filiere = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
 
     if request.method == "POST":
         form = SummaryAdminForm(request.POST, request.FILES, instance=sm, active_filiere=sm.subject.semester.filiere)
@@ -467,7 +536,7 @@ def summary_delete_view(request, pk):
 @contributor_required
 def guide_list_view(request):
     """Liste et recherche des guides de matières."""
-    active_school, active_filiere = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
     q = request.GET.get("q", "").strip()
 
     qs = Guide.objects.select_related("subject", "subject__semester__filiere")
@@ -493,7 +562,7 @@ def guide_list_view(request):
 @contributor_required
 def guide_create_view(request):
     """Créer un nouveau guide méthodologique."""
-    active_school, active_filiere = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
 
     if request.method == "POST":
         form = GuideAdminForm(request.POST, request.FILES, active_filiere=active_filiere)
@@ -522,7 +591,7 @@ def guide_edit_view(request, pk):
     if not check_school_permission(request.user, gd.subject.semester.filiere.school):
         raise PermissionDenied("Vous n'êtes pas autorisé à modifier ce guide.")
 
-    active_school, active_filiere = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
 
     if request.method == "POST":
         form = GuideAdminForm(request.POST, request.FILES, instance=gd, active_filiere=gd.subject.semester.filiere)
@@ -578,7 +647,7 @@ def guide_delete_view(request, pk):
 @contributor_required
 def article_list_view(request):
     """Liste et recherche des articles et conseils d'études."""
-    active_school, active_filiere = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
     q = request.GET.get("q", "").strip()
 
     qs = Article.objects.all()
@@ -599,7 +668,7 @@ def article_list_view(request):
 @contributor_required
 def article_create_view(request):
     """Rédiger un nouveau conseil d'étude / article."""
-    active_school, active_filiere = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
 
     if request.method == "POST":
         form = ArticleAdminForm(request.POST)
@@ -629,7 +698,7 @@ def article_create_view(request):
 def article_edit_view(request, pk):
     """Modifier un conseil d'étude existant."""
     art = get_object_or_404(Article, pk=pk)
-    active_school, active_filiere = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
 
     if request.method == "POST":
         form = ArticleAdminForm(request.POST, instance=art)
@@ -679,7 +748,7 @@ def article_delete_view(request, pk):
 @contributor_required
 def subject_list_view(request):
     """Liste et gestion des Unités d'Enseignement (Matières)."""
-    active_school, active_filiere = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
     q = request.GET.get("q", "").strip()
 
     qs = Subject.objects.select_related("semester", "semester__filiere", "semester__filiere__school").annotate(
@@ -707,7 +776,7 @@ def subject_list_view(request):
 @contributor_required
 def subject_create_view(request):
     """Créer une nouvelle matière / UE."""
-    active_school, active_filiere = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
 
     if request.method == "POST":
         form = SubjectAdminForm(request.POST, active_filiere=active_filiere)
@@ -734,7 +803,7 @@ def subject_edit_view(request, pk):
     if not check_school_permission(request.user, sb.semester.filiere.school):
         raise PermissionDenied("Vous n'êtes pas autorisé à modifier cette matière.")
 
-    active_school, active_filiere = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
 
     if request.method == "POST":
         form = SubjectAdminForm(request.POST, instance=sb, active_filiere=sb.semester.filiere)
@@ -758,7 +827,7 @@ def subject_edit_view(request, pk):
 @contributor_required
 def structure_overview_view(request):
     """Vue d'ensemble hiérarchique de la structure académique."""
-    active_school, active_filiere = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
 
     schools = School.objects.filter(is_active=True).prefetch_related("filieres", "filieres__semesters", "filieres__semesters__subjects")
     if active_school:
@@ -779,7 +848,7 @@ def structure_overview_view(request):
 @contributor_required
 def student_list_view(request):
     """Annuaire privé des étudiants inscrits."""
-    active_school, active_filiere = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
     q = request.GET.get("q", "").strip()
 
     qs = StudentProfile.objects.select_related("user", "school", "level", "filiere")
@@ -805,7 +874,7 @@ def student_list_view(request):
 @contributor_required
 def payment_list_view(request):
     """Aperçu des accès Pass Semestre et transactions."""
-    active_school, active_filiere = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
 
     access_records = SemesterAccess.objects.select_related("user", "filiere", "semester").order_by("-activated_at")
     if active_filiere:
@@ -822,7 +891,7 @@ def payment_list_view(request):
 @contributor_required
 def notification_create_view(request):
     """Créer et diffuser une notification ciblée aux étudiants."""
-    active_school, active_filiere = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
 
     if request.method == "POST":
         form = NotificationAdminForm(request.POST)
