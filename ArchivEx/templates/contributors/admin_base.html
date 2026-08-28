@@ -144,16 +144,6 @@
                     <span>Résumés de cours</span>
                 </a>
 
-                <a href="{% url 'contributors:guide_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'guides' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
-                    <i class="fa-solid fa-compass w-4 text-center text-purple-600" aria-hidden="true"></i>
-                    <span>Guides méthodologiques</span>
-                </a>
-
-                <a href="{% url 'contributors:article_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'articles' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
-                    <i class="fa-solid fa-lightbulb w-4 text-center text-amber-600" aria-hidden="true"></i>
-                    <span>Conseils & Articles</span>
-                </a>
-
                 <a href="{% url 'contributors:subject_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'matieres' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
                     <i class="fa-solid fa-book w-4 text-center text-indigo-600" aria-hidden="true"></i>
                     <span>Matières / UE</span>

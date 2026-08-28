@@ -90,32 +90,6 @@
                         </div>
                     </div>
                     {% endif %}
-
-                    {% if guides_count > 0 %}
-                    <div class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-100 flex items-start space-x-3">
-                        <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-lg flex-shrink-0">
-                            <i class="fa-solid fa-compass text-sm"></i>
-                        </div>
-                        <div>
-                            <span class="text-2xl font-black text-[#071A49] block leading-none mb-1">{{ guides_count }}</span>
-                            <span class="text-xs font-extrabold text-emerald-800 block">Guides de matières</span>
-                            <span class="text-[11px] text-slate-500 font-medium">Méthodologie & pièges d'examens</span>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    {% if articles_count > 0 %}
-                    <div class="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-100 flex items-start space-x-3">
-                        <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-lg flex-shrink-0">
-                            <i class="fa-solid fa-lightbulb text-sm"></i>
-                        </div>
-                        <div>
-                            <span class="text-2xl font-black text-[#071A49] block leading-none mb-1">{{ articles_count }}</span>
-                            <span class="text-xs font-extrabold text-indigo-800 block">Conseils pédagogiques</span>
-                            <span class="text-[11px] text-slate-500 font-medium">Méthode de révision & orientation</span>
-                        </div>
-                    </div>
-                    {% endif %}
                 </div>
             </div>
 
@@ -311,41 +285,75 @@
 
     <!-- STUDENT REASSURANCE / FAQ ACCORDION SECTION -->
     <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-sm">
-        <h3 class="text-xl font-black text-[#071A49] mb-6 text-center">
-            Questions fréquentes des étudiants
-        </h3>
+        <div class="text-center max-w-xl mx-auto mb-8">
+            <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100 text-[10px] font-black uppercase tracking-wider mb-2 inline-block">
+                Toutes tes questions
+            </span>
+            <h3 class="text-xl sm:text-2xl font-black text-[#071A49]">
+                Questions fréquentes des étudiants
+            </h3>
+            <p class="text-xs text-slate-500 font-medium mt-1">Des réponses claires pour t'accompagner dans la préparation de tes révisions.</p>
+        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs leading-relaxed">
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
-                <h4 class="font-bold text-[#071A49] mb-1 flex items-center space-x-1.5">
-                    <i class="fa-solid fa-clock text-[#2563EB]"></i>
-                    <span>Combien de temps dure l'accès ?</span>
-                </h4>
-                <p class="text-slate-600 font-medium">Ton Pass Semestre reste actif pendant toute la durée de ton semestre académique (180 jours).</p>
-            </div>
-
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
-                <h4 class="font-bold text-[#071A49] mb-1 flex items-center space-x-1.5">
-                    <i class="fa-solid fa-mobile-screen-button text-[#2563EB]"></i>
-                    <span>Est-ce lisible sur mon téléphone ?</span>
-                </h4>
-                <p class="text-slate-600 font-medium">Oui ! ArchivEx est optimisé pour les smartphones. Tu peux lire les résumés et télécharger les PDF sans problème.</p>
-            </div>
-
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
-                <h4 class="font-bold text-[#071A49] mb-1 flex items-center space-x-1.5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs leading-relaxed">
+            <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+                <h4 class="font-black text-[#071A49] flex items-center space-x-2 text-xs">
                     <i class="fa-solid fa-credit-card text-[#2563EB]"></i>
-                    <span>Comment effectuer le paiement ?</span>
+                    <span>Quels sont les moyens de paiement acceptés ?</span>
                 </h4>
-                <p class="text-slate-600 font-medium">Le règlement s'effectue simplement via MTN Mobile Money, Moov Money ou Wave directement sur ton téléphone.</p>
+                <p class="text-slate-600 font-medium leading-relaxed pt-1">
+                    Le règlement est 100% sécurisé et s'effectue directement via Mobile Money : <strong>MTN Mobile Money</strong>, <strong>Moov Money</strong> et <strong>Celtiis Cash</strong>.
+                </p>
             </div>
 
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
-                <h4 class="font-bold text-[#071A49] mb-1 flex items-center space-x-1.5">
+            <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+                <h4 class="font-black text-[#071A49] flex items-center space-x-2 text-xs">
                     <i class="fa-solid fa-bolt text-amber-500"></i>
-                    <span>L'accès est-il vraiment instantané ?</span>
+                    <span>L'accès au Pass est-il vraiment instantané ?</span>
                 </h4>
-                <p class="text-slate-600 font-medium">Dès la confirmation de la transaction, l'ensemble des épreuves et contenus du semestre est immédiatement débloqué.</p>
+                <p class="text-slate-600 font-medium leading-relaxed pt-1">
+                    Oui ! Dès la validation de ton transfert Mobile Money, ton Pass Semestre est déverrouillé automatiquement et tu as accès à toutes les épreuves, corrections et fiches de révision.
+                </p>
+            </div>
+
+            <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+                <h4 class="font-black text-[#071A49] flex items-center space-x-2 text-xs">
+                    <i class="fa-solid fa-clock text-[#2563EB]"></i>
+                    <span>Combien de temps dure l'accès à mon Pass ?</span>
+                </h4>
+                <p class="text-slate-600 font-medium leading-relaxed pt-1">
+                    Ton Pass Semestre reste valide et illimité pendant toute la durée de ton semestre académique (180 jours). Tu peux réviser sereinement jusqu'aux examens et rattrapages.
+                </p>
+            </div>
+
+            <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+                <h4 class="font-black text-[#071A49] flex items-center space-x-2 text-xs">
+                    <i class="fa-solid fa-mobile-screen-button text-[#2563EB]"></i>
+                    <span>Puis-je lire et réviser sur mon téléphone ?</span>
+                </h4>
+                <p class="text-slate-600 font-medium leading-relaxed pt-1">
+                    Absolument ! La plateforme est 100% responsive et optimisée pour smartphone. Tu peux lire les fiches et annales directement en ligne avec la visionneuse ou télécharger les PDF.
+                </p>
+            </div>
+
+            <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+                <h4 class="font-black text-[#071A49] flex items-center space-x-2 text-xs">
+                    <i class="fa-solid fa-layer-group text-purple-600"></i>
+                    <span>Que contient exactement l'Espace Premium ?</span>
+                </h4>
+                <p class="text-slate-600 font-medium leading-relaxed pt-1">
+                    Tu débloques l'intégralité des sujets d'examens et devoirs des années antérieures, leurs corrections méthodologiques rédigées pas à pas et les fiches synthétiques de ton semestre.
+                </p>
+            </div>
+
+            <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+                <h4 class="font-black text-[#071A49] flex items-center space-x-2 text-xs">
+                    <i class="fa-solid fa-headset text-emerald-600"></i>
+                    <span>Que faire en cas de souci lors du paiement ?</span>
+                </h4>
+                <p class="text-slate-600 font-medium leading-relaxed pt-1">
+                    Notre équipe d'assistance est joignable. Si une coupure réseau survient lors de ton transfert Mobile Money, ton paiement peut être vérifié et activé manuellement.
+                </p>
             </div>
         </div>
     </div>

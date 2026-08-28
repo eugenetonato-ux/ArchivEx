@@ -11,7 +11,7 @@ def has_user_valid_pass(user, resource):
     if not user or not user.is_authenticated:
         return False
 
-    if user.is_superuser or user.is_staff:
+    if user.is_superuser or user.is_staff or getattr(user, "contributor_profile", None):
         return True
 
     now = timezone.now()

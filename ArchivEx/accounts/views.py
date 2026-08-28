@@ -12,6 +12,8 @@ from payments.models import SemesterAccess
 
 def register_view(request):
     if request.user.is_authenticated:
+        if request.user.is_staff or request.user.is_superuser or getattr(request.user, "contributor_profile", None):
+            return redirect("contributors:admin_dashboard")
         return redirect("accounts:dashboard")
 
     if request.method == "POST":
@@ -30,6 +32,8 @@ def register_view(request):
 
 def login_view(request):
     if request.user.is_authenticated:
+        if request.user.is_staff or request.user.is_superuser or getattr(request.user, "contributor_profile", None):
+            return redirect("contributors:admin_dashboard")
         return redirect("accounts:dashboard")
 
     if request.method == "POST":

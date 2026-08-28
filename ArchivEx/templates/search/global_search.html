@@ -36,7 +36,7 @@
 
         <!-- CATEGORY FILTERS PILLS BAR -->
         {% if q %}
-            <div class="flex items-center space-x-2 overflow-x-auto pt-6 scrollbar-none text-xs font-bold border-t border-slate-100 mt-6">
+            <div class="flex items-center space-x-2 overflow-x-auto no-scrollbar py-1 text-xs font-bold border-t border-slate-100 mt-6">
                 <a href="?q={{ q }}&category=all" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors {% if selected_category == 'all' or not selected_category %}bg-[#071A49] text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
                     Toutes les ressources
                 </a>
@@ -50,15 +50,7 @@
                 </a>
                 <a href="?q={{ q }}&category=summaries" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors flex items-center space-x-1.5 {% if selected_category == 'summaries' %}bg-[#2563EB] text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
                     <i class="fa-solid fa-book text-xs" aria-hidden="true"></i>
-                    <span>Résumés</span>
-                </a>
-                <a href="?q={{ q }}&category=guides" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors flex items-center space-x-1.5 {% if selected_category == 'guides' %}bg-[#2563EB] text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
-                    <i class="fa-solid fa-compass text-xs" aria-hidden="true"></i>
-                    <span>Guides</span>
-                </a>
-                <a href="?q={{ q }}&category=articles" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors flex items-center space-x-1.5 {% if selected_category == 'articles' %}bg-[#2563EB] text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
-                    <i class="fa-solid fa-lightbulb text-xs" aria-hidden="true"></i>
-                    <span>Conseils</span>
+                    <span>Résumés de cours</span>
                 </a>
             </div>
         {% endif %}
@@ -198,64 +190,6 @@
                                     <div class="pt-3 border-t border-slate-100">
                                         <a href="{% url 'content:summary_detail' item.object.pk %}" class="btn-primary text-xs px-3.5 py-1.5 font-extrabold rounded-xl flex items-center justify-center space-x-1.5">
                                             <span>Consulter le résumé</span>
-                                            <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </section>
-                {% endif %}
-
-                <!-- 4. GUIDES RESULTS -->
-                {% if guides_results %}
-                    <section>
-                        <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-3 flex items-center space-x-2">
-                            <i class="fa-solid fa-compass text-emerald-600" aria-hidden="true"></i>
-                            <span>Guides de matières ({{ guides_results|length }})</span>
-                        </h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {% for item in guides_results %}
-                                <div class="p-4 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between shadow-sm">
-                                    <div>
-                                        <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 mb-2 inline-block">
-                                            {{ item.object.subject.name }}
-                                        </span>
-                                        <h4 class="text-sm font-black text-[#071A49] mb-1 line-clamp-1">{{ item.object.title }}</h4>
-                                        <p class="text-[11px] text-slate-500 line-clamp-2 mb-3">{{ item.object.introduction|default:"Guide de préparation à la matière." }}</p>
-                                    </div>
-                                    <div class="pt-3 border-t border-slate-100">
-                                        <a href="{% url 'content:guide_detail' item.object.pk %}" class="btn-secondary text-xs px-3.5 py-1.5 font-bold rounded-xl flex items-center justify-center space-x-1.5 border border-slate-200">
-                                            <span>Lire le guide</span>
-                                            <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </section>
-                {% endif %}
-
-                <!-- 5. ARTICLES RESULTS -->
-                {% if articles_results %}
-                    <section>
-                        <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-3 flex items-center space-x-2">
-                            <i class="fa-solid fa-lightbulb text-indigo-600" aria-hidden="true"></i>
-                            <span>Conseils d'études ({{ articles_results|length }})</span>
-                        </h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {% for item in articles_results %}
-                                <div class="p-4 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between shadow-sm">
-                                    <div>
-                                        <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-50 text-indigo-800 mb-2 inline-block">
-                                            {{ item.object.get_category_display }}
-                                        </span>
-                                        <h4 class="text-sm font-black text-[#071A49] mb-1 line-clamp-1">{{ item.object.title }}</h4>
-                                        <p class="text-[11px] text-slate-500 line-clamp-2 mb-3">{{ item.object.summary|default:item.object.content|striptags }}</p>
-                                    </div>
-                                    <div class="pt-3 border-t border-slate-100">
-                                        <a href="{% url 'content:article_detail' item.object.pk %}" class="text-xs font-extrabold text-[#2563EB] hover:underline flex items-center justify-between">
-                                            <span>Lire l'article</span>
                                             <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
                                         </a>
                                     </div>

@@ -113,7 +113,7 @@
 
                     <!-- RESSOURCES DROPDOWN -->
                     <div class="relative group" id="ressources-dropdown-wrapper">
-                        <button type="button" id="ressources-menu-btn" onclick="toggleDropdown('ressources-dropdown')" aria-expanded="false" aria-haspopup="true" aria-controls="ressources-dropdown" class="px-3 py-2 rounded-xl hover:bg-white/10 hover:text-white transition-colors flex items-center space-x-1.5 text-slate-200 focus:outline-none {% if 'epreuves' in request.path or 'resumes' in request.path or 'guides' in request.path or 'conseils' in request.path %}text-white font-bold bg-white/10{% endif %}">
+                        <button type="button" id="ressources-menu-btn" onclick="toggleDropdown('ressources-dropdown')" aria-expanded="false" aria-haspopup="true" aria-controls="ressources-dropdown" class="px-3 py-2 rounded-xl hover:bg-white/10 hover:text-white transition-colors flex items-center space-x-1.5 text-slate-200 focus:outline-none {% if 'epreuves' in request.path or 'resumes' in request.path %}text-white font-bold bg-white/10{% endif %}">
                             <span>Ressources</span>
                             <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-white transition-transform" aria-hidden="true"></i>
                         </button>
@@ -132,35 +132,12 @@
                                     <i class="fa-solid fa-book-open" aria-hidden="true"></i>
                                 </div>
                                 <div>
-                                    <span>Résumés</span>
-                                    <span class="block text-[10px] text-slate-400 font-normal">Fiches de cours</span>
-                                </div>
-                            </a>
-                            <a href="{% url 'content:guide_list' %}" class="px-4 py-2.5 hover:bg-slate-50 flex items-center space-x-3 text-xs font-bold text-[#071A49] transition-colors" role="menuitem">
-                                <div class="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-xs shrink-0">
-                                    <i class="fa-solid fa-compass" aria-hidden="true"></i>
-                                </div>
-                                <div>
-                                    <span>Guides</span>
-                                    <span class="block text-[10px] text-slate-400 font-normal">Méthodologie d'examen</span>
-                                </div>
-                            </a>
-                            <a href="{% url 'content:article_list' %}" class="px-4 py-2.5 hover:bg-slate-50 flex items-center space-x-3 text-xs font-bold text-[#071A49] transition-colors" role="menuitem">
-                                <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs shrink-0">
-                                    <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
-                                </div>
-                                <div>
-                                    <span>Conseils</span>
-                                    <span class="block text-[10px] text-slate-400 font-normal">Astuces & réussite</span>
+                                    <span>Résumés de cours</span>
+                                    <span class="block text-[10px] text-slate-400 font-normal">Fiches de synthèse</span>
                                 </div>
                             </a>
                         </div>
                     </div>
-
-                    <!-- GUIDE ÉTUDIANT -->
-                    <a href="{% url 'content:student_guide' %}" class="px-3 py-2 rounded-xl hover:bg-white/10 hover:text-white transition-colors text-slate-200 text-sm font-semibold {% if 'guide-etudiant' in request.path %}text-white font-bold bg-white/10{% endif %}">
-                        Guide étudiant
-                    </a>
                 </nav>
 
                 <!-- RIGHT ACTION BUTTONS / SEARCH / NOTIFICATIONS / PROFILE MENU (AUTHENTICATED ONLY) -->
@@ -229,6 +206,14 @@
                         </div>
                     </div>
 
+                    <!-- ADMIN QUICK BUTTON FOR STAFF / SUPERUSER / CONTRIBUTOR -->
+                    {% if user.is_staff or user.is_superuser or user.contributor_profile %}
+                        <a href="{% url 'contributors:admin_dashboard' %}" class="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 font-extrabold text-xs flex items-center space-x-1.5 transition-colors shrink-0">
+                            <i class="fa-solid fa-user-shield text-xs"></i>
+                            <span class="hidden sm:inline">Espace Admin</span>
+                        </a>
+                    {% endif %}
+
                     <!-- PROFILE MENU DROPDOWN -->
                     <div class="relative group" id="profile-dropdown-wrapper">
                         <button type="button" id="profile-menu-btn" onclick="toggleDropdown('profile-dropdown')" aria-expanded="false" aria-haspopup="true" aria-controls="profile-dropdown" aria-label="Menu profil" class="flex items-center space-x-2 p-1.5 rounded-xl bg-white/10 border border-white/20 hover:border-[#3B82F6] hover:bg-white/20 transition-all focus:outline-none">
@@ -249,6 +234,12 @@
                                 <p class="text-[10px] text-slate-500 truncate">{{ user.email }}</p>
                             </div>
                             <div class="py-1">
+                                {% if user.is_staff or user.is_superuser or user.contributor_profile %}
+                                    <a href="{% url 'contributors:admin_dashboard' %}" class="px-4 py-2 hover:bg-amber-50 flex items-center space-x-3 text-xs font-black text-amber-700 transition-colors" role="menuitem">
+                                        <i class="fa-solid fa-user-shield text-amber-500 w-4" aria-hidden="true"></i>
+                                        <span>Espace Administration</span>
+                                    </a>
+                                {% endif %}
                                 <a href="{% url 'accounts:profile' %}" class="px-4 py-2 hover:bg-slate-50 flex items-center space-x-3 text-xs font-bold text-[#071A49] transition-colors" role="menuitem">
                                     <i class="fa-solid fa-user text-slate-400 w-4" aria-hidden="true"></i>
                                     <span>Mon profil</span>
@@ -260,10 +251,6 @@
                                 <a href="{% url 'accounts:favoris' %}" class="px-4 py-2 hover:bg-slate-50 flex items-center space-x-3 text-xs font-bold text-[#071A49] transition-colors" role="menuitem">
                                     <i class="fa-solid fa-star text-amber-400 w-4" aria-hidden="true"></i>
                                     <span>Mes favoris</span>
-                                </a>
-                                <a href="{% url 'accounts:dashboard' %}" class="px-4 py-2 hover:bg-slate-50 flex items-center space-x-3 text-xs font-bold text-[#071A49] transition-colors" role="menuitem">
-                                    <i class="fa-solid fa-id-card text-[#2563EB] w-4" aria-hidden="true"></i>
-                                    <span>Mon Pass</span>
                                 </a>
                             </div>
                             <div class="pt-1 border-t border-slate-100">
@@ -436,7 +423,7 @@
                     <i class="fa-solid fa-xmark text-sm" aria-hidden="true"></i>
                 </button>
             </div>
-            <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="grid grid-cols-2 gap-3 mb-2">
                 <a href="{% url 'exams:liste' %}" class="flex items-center space-x-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-100 hover:border-[#2563EB]/40 hover:bg-blue-50/50 transition-all">
                     <div class="w-9 h-9 rounded-xl bg-blue-100 text-[#2563EB] flex items-center justify-center font-bold text-sm shrink-0">
                         <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
@@ -451,38 +438,11 @@
                         <i class="fa-solid fa-book-open" aria-hidden="true"></i>
                     </div>
                     <div>
-                        <p class="text-xs font-bold text-[#071A49]">Résumés</p>
-                        <p class="text-[10px] text-slate-500">Fiches de cours</p>
-                    </div>
-                </a>
-                <a href="{% url 'content:guide_list' %}" class="flex items-center space-x-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-100 hover:border-[#2563EB]/40 hover:bg-blue-50/50 transition-all">
-                    <div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-sm shrink-0">
-                        <i class="fa-solid fa-compass" aria-hidden="true"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold text-[#071A49]">Guides</p>
-                        <p class="text-[10px] text-slate-500">Méthodologie</p>
-                    </div>
-                </a>
-                <a href="{% url 'content:article_list' %}" class="flex items-center space-x-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-100 hover:border-[#2563EB]/40 hover:bg-blue-50/50 transition-all">
-                    <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-sm shrink-0">
-                        <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold text-[#071A49]">Conseils</p>
-                        <p class="text-[10px] text-slate-500">Astuces études</p>
+                        <p class="text-xs font-bold text-[#071A49]">Résumés de cours</p>
+                        <p class="text-[10px] text-slate-500">Fiches de synthèse</p>
                     </div>
                 </a>
             </div>
-            <a href="{% url 'content:student_guide' %}" class="flex items-center justify-between p-3.5 rounded-2xl bg-[#071A49] text-white transition-all">
-                <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-[#3B82F6]">
-                        <i class="fa-solid fa-graduation-cap text-xs" aria-hidden="true"></i>
-                    </div>
-                    <span class="text-xs font-bold">Guide étudiant ArchivEx</span>
-                </div>
-                <i class="fa-solid fa-arrow-right text-xs text-blue-300" aria-hidden="true"></i>
-            </a>
         </div>
     </div>
 

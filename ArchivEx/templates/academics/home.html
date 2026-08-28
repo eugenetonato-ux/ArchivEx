@@ -72,10 +72,17 @@
                         <i class="fa-solid fa-book-open text-sm" aria-hidden="true"></i>
                         <span>Explorer mes épreuves</span>
                     </a>
-                    <a href="{% url 'accounts:dashboard' %}" class="w-full sm:w-auto text-sm px-6 py-3.5 rounded-xl border border-white/30 text-white font-bold hover:bg-white/10 transition-colors flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-gauge text-sm text-blue-300" aria-hidden="true"></i>
-                        <span>Mon tableau de bord</span>
-                    </a>
+                    {% if user.is_staff or user.is_superuser or user.contributor_profile %}
+                        <a href="{% url 'contributors:admin_dashboard' %}" class="w-full sm:w-auto text-sm px-6 py-3.5 rounded-xl border border-amber-400/50 bg-amber-500/20 text-amber-300 font-extrabold hover:bg-amber-500/30 transition-colors flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-user-shield text-sm" aria-hidden="true"></i>
+                            <span>Espace Administration</span>
+                        </a>
+                    {% else %}
+                        <a href="{% url 'accounts:dashboard' %}" class="w-full sm:w-auto text-sm px-6 py-3.5 rounded-xl border border-white/30 text-white font-bold hover:bg-white/10 transition-colors flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-gauge text-sm text-blue-300" aria-hidden="true"></i>
+                            <span>Mon tableau de bord</span>
+                        </a>
+                    {% endif %}
                 {% else %}
                     <a href="{% url 'accounts:register' %}" class="btn-primary w-full sm:w-auto text-sm px-7 py-3.5 rounded-xl shadow-lg shadow-blue-600/40 font-extrabold flex items-center justify-center space-x-2">
                         <i class="fa-solid fa-user-plus text-sm" aria-hidden="true"></i>
@@ -169,78 +176,40 @@
         </p>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
         <!-- Épreuves -->
-        <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-[#2563EB] transition-all flex flex-col justify-between">
+        <div class="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-[#2563EB] transition-all flex flex-col justify-between">
             <div>
                 <div class="w-12 h-12 rounded-2xl bg-blue-50 text-[#2563EB] flex items-center justify-center text-xl mb-4 shrink-0">
                     <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
                 </div>
-                <h3 class="text-base font-extrabold text-[#071A49] mb-2">Épreuves & Annales</h3>
+                <h3 class="text-lg font-black text-[#071A49] mb-2">Épreuves & Annales</h3>
                 <p class="text-xs text-slate-500 leading-relaxed">
-                    Consultez les sujets d'examens des sessions précédentes classés par filière, semestre et matière.
+                    Consultez les sujets d'examens des sessions précédentes classés par filière, semestre et matière avec leurs corrections méthodologiques.
                 </p>
             </div>
-            <div class="pt-4 mt-4 border-t border-slate-100">
-                <a href="{% url 'exams:liste' %}" class="text-xs font-bold text-[#2563EB] hover:underline flex items-center space-x-1">
-                    <span>Voir les épreuves</span>
+            <div class="pt-4 mt-6 border-t border-slate-100">
+                <a href="{% url 'exams:liste' %}" class="text-xs font-extrabold text-[#2563EB] hover:underline flex items-center space-x-1.5">
+                    <span>Parcourir les épreuves</span>
                     <i class="fa-solid fa-arrow-right text-[10px]" aria-hidden="true"></i>
                 </a>
             </div>
         </div>
 
         <!-- Résumés -->
-        <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-emerald-500 transition-all flex flex-col justify-between">
+        <div class="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-emerald-500 transition-all flex flex-col justify-between">
             <div>
                 <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-4 shrink-0">
                     <i class="fa-solid fa-book-open" aria-hidden="true"></i>
                 </div>
-                <h3 class="text-base font-extrabold text-[#071A49] mb-2">Résumés de Cours</h3>
+                <h3 class="text-lg font-black text-[#071A49] mb-2">Résumés de Cours</h3>
                 <p class="text-xs text-slate-500 leading-relaxed">
-                    Révisez l'essentiel des chapitres grâce à des fiches de synthèse structurées et concises.
+                    Révisez l'essentiel des chapitres grâce à des fiches de synthèse structurées et concises rédigées pour chaque unité d'enseignement.
                 </p>
             </div>
-            <div class="pt-4 mt-4 border-t border-slate-100">
-                <a href="{% url 'content:summary_list' %}" class="text-xs font-bold text-emerald-600 hover:underline flex items-center space-x-1">
+            <div class="pt-4 mt-6 border-t border-slate-100">
+                <a href="{% url 'content:summary_list' %}" class="text-xs font-extrabold text-emerald-600 hover:underline flex items-center space-x-1.5">
                     <span>Parcourir les résumés</span>
-                    <i class="fa-solid fa-arrow-right text-[10px]" aria-hidden="true"></i>
-                </a>
-            </div>
-        </div>
-
-        <!-- Guides -->
-        <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-purple-500 transition-all flex flex-col justify-between">
-            <div>
-                <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl mb-4 shrink-0">
-                    <i class="fa-solid fa-compass" aria-hidden="true"></i>
-                </div>
-                <h3 class="text-base font-extrabold text-[#071A49] mb-2">Guides de Matières</h3>
-                <p class="text-xs text-slate-500 leading-relaxed">
-                    Comprenez les attentes des enseignants, les exigences méthodologiques et les stratégies de traitement d'épreuve.
-                </p>
-            </div>
-            <div class="pt-4 mt-4 border-t border-slate-100">
-                <a href="{% url 'content:guide_list' %}" class="text-xs font-bold text-purple-600 hover:underline flex items-center space-x-1">
-                    <span>Découvrir les guides</span>
-                    <i class="fa-solid fa-arrow-right text-[10px]" aria-hidden="true"></i>
-                </a>
-            </div>
-        </div>
-
-        <!-- Conseils -->
-        <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-amber-500 transition-all flex flex-col justify-between">
-            <div>
-                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl mb-4 shrink-0">
-                    <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
-                </div>
-                <h3 class="text-base font-extrabold text-[#071A49] mb-2">Conseils Méthodologiques</h3>
-                <p class="text-xs text-slate-500 leading-relaxed">
-                    Adoptez les meilleures méthodes de révision, de gestion du temps et de préparation physique et mentale.
-                </p>
-            </div>
-            <div class="pt-4 mt-4 border-t border-slate-100">
-                <a href="{% url 'content:article_list' %}" class="text-xs font-bold text-amber-600 hover:underline flex items-center space-x-1">
-                    <span>Lire les conseils</span>
                     <i class="fa-solid fa-arrow-right text-[10px]" aria-hidden="true"></i>
                 </a>
             </div>

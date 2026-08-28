@@ -51,42 +51,24 @@
         </div>
     </div>
 
-    <!-- 2. RESOURCE SHORTCUT NAVIGATION CARDS (4 COMPACT CARDS) -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <a href="{% url 'exams:liste' %}" class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:border-[#2563EB] hover:shadow-md transition-all group">
-            <div class="flex items-center justify-between mb-2">
-                <i class="fa-solid fa-file-lines text-lg text-[#2563EB]"></i>
-                <span class="text-[10px] font-extrabold text-[#2563EB] bg-blue-50 px-2 py-0.5 rounded-full">Consulter</span>
+    <!-- 2. QUICK ACCESS CATEGORY GRID (2 ESSENTIAL CATEGORIES: ÉPREUVES & RÉSUMÉS DE COURS) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+        <a href="{% url 'exams:liste' %}" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-[#2563EB] hover:shadow-md transition-all group">
+            <div class="flex items-center justify-between mb-3">
+                <i class="fa-solid fa-file-lines text-2xl text-[#2563EB]"></i>
+                <span class="text-[10px] font-extrabold text-[#2563EB] bg-blue-50 px-2.5 py-1 rounded-full">Explorer les sujets</span>
             </div>
-            <h3 class="text-xs font-black text-[#071A49] group-hover:text-[#2563EB] transition-colors">Épreuves</h3>
-            <p class="text-[11px] text-slate-500 font-medium">Examens & devoirs corrigés</p>
+            <h3 class="text-sm font-black text-[#071A49] group-hover:text-[#2563EB] transition-colors mb-0.5">Épreuves & Annales</h3>
+            <p class="text-xs text-slate-500 font-medium">Examens et devoirs corrigés de votre filière</p>
         </a>
 
-        <a href="{% url 'content:summary_list' %}" class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:border-amber-400 hover:shadow-md transition-all group">
-            <div class="flex items-center justify-between mb-2">
-                <i class="fa-solid fa-book text-lg text-amber-600"></i>
-                <span class="text-[10px] font-extrabold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full">Lire en ligne</span>
+        <a href="{% url 'content:summary_list' %}" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-emerald-500 hover:shadow-md transition-all group">
+            <div class="flex items-center justify-between mb-3">
+                <i class="fa-solid fa-book-open text-2xl text-emerald-600"></i>
+                <span class="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full">Syntheses de cours</span>
             </div>
-            <h3 class="text-xs font-black text-[#071A49] group-hover:text-amber-600 transition-colors">Résumés de cours</h3>
-            <p class="text-[11px] text-slate-500 font-medium">Fiches de synthèse rédigées</p>
-        </a>
-
-        <a href="{% url 'content:guide_list' %}" class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:border-emerald-500 hover:shadow-md transition-all group">
-            <div class="flex items-center justify-between mb-2">
-                <i class="fa-solid fa-compass text-lg text-emerald-600"></i>
-                <span class="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full">Méthodologie</span>
-            </div>
-            <h3 class="text-xs font-black text-[#071A49] group-hover:text-emerald-600 transition-colors">Guides de matières</h3>
-            <p class="text-[11px] text-slate-500 font-medium">Conseils & pièges à éviter</p>
-        </a>
-
-        <a href="{% url 'content:article_list' %}" class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:border-indigo-500 hover:shadow-md transition-all group">
-            <div class="flex items-center justify-between mb-2">
-                <i class="fa-solid fa-lightbulb text-lg text-indigo-600"></i>
-                <span class="text-[10px] font-extrabold text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded-full">Conseils</span>
-            </div>
-            <h3 class="text-xs font-black text-[#071A49] group-hover:text-indigo-600 transition-colors">Conseils d'études</h3>
-            <p class="text-[11px] text-slate-500 font-medium">Orientation & réussite</p>
+            <h3 class="text-sm font-black text-[#071A49] group-hover:text-emerald-600 transition-colors mb-0.5">Résumés de cours</h3>
+            <p class="text-xs text-slate-500 font-medium">Fiches pratiques de révision par matière</p>
         </a>
     </div>
 
