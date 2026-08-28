@@ -1,0 +1,89 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Paiement en attente | ArchivEx{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+
+    <!-- PENDING CARD -->
+    <div class="bg-white border border-slate-200/80 rounded-3xl p-8 sm:p-10 shadow-xl space-y-6 relative overflow-hidden">
+        <div class="w-16 h-16 mx-auto rounded-full bg-amber-50 text-amber-500 border border-amber-200 flex items-center justify-center text-2xl animate-pulse">
+            <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+        </div>
+
+        <div>
+            <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-extrabold uppercase tracking-wider">
+                Transaction en cours · {{ payment.get_operator_display }}
+            </span>
+            <h1 class="text-2xl font-black text-[#071A49] tracking-tight mt-3">
+                Paiement en attente
+            </h1>
+            <p class="text-xs text-slate-500 font-semibold mt-2 leading-relaxed">
+                Une demande de paiement a été envoyée sur votre téléphone (<strong>{{ payment.phone_number }}</strong>).<br>
+                Veuillez valider la transaction sur votre compte Mobile Money.
+            </p>
+        </div>
+
+        <!-- PAYMENT INFO BOX -->
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left text-xs font-semibold space-y-2">
+            <div class="flex justify-between">
+                <span class="text-slate-500">Montant :</span>
+                <span class="text-[#071A49] font-extrabold">{{ payment.amount }} FCFA</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-500">Semestre :</span>
+                <span class="text-[#071A49] font-bold">{{ semester.label }} ({{ semester.filiere.name }})</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-500">Référence :</span>
+                <span class="text-blue-600 font-mono font-bold">{{ payment.external_reference }}</span>
+            </div>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-blue-50/80 border border-blue-200/60 text-blue-900 text-xs font-semibold flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-sync fa-spin text-blue-600 text-xs" aria-hidden="true"></i>
+            <span>Vérification automatique de votre paiement en cours...</span>
+        </div>
+
+        <div class="pt-4 border-t border-slate-100 flex flex-col sm:flex-row gap-3">
+            <button onclick="checkStatus(true)" class="w-full py-3 bg-[#071A49] hover:bg-blue-900 text-white font-extrabold text-xs rounded-xl transition-colors">
+                Rafraîchir maintenant
+            </button>
+            <a href="{% url 'payments:pass_semestre' semester_id=semester.id %}" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-extrabold text-xs rounded-xl transition-colors">
+                Réessayer avec un autre numéro
+            </a>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const reference = "{{ payment.external_reference }}";
+    const statusApiUrl = "{% url 'payments:payment_status_api' reference=payment.external_reference %}";
+    let attempts = 0;
+
+    function checkStatus(forceRemote = false) {
+        let url = statusApiUrl;
+        if (forceRemote || attempts % 3 === 0) {
+            url += "?check_remote=1";
+        }
+        attempts++;
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if (data.is_approved) {
+                    window.location.href = "{% url 'academics:matieres' semester_id=semester.id %}";
+                } else if (data.is_rejected) {
+                    alert("Le paiement n'a pas été validé. Vous pouvez réessayer.");
+                    window.location.href = "{% url 'payments:pass_semestre' semester_id=semester.id %}";
+                }
+            })
+            .catch(err => console.error("Status check error:", err));
+    }
+
+    // Sondage automatique toutes les 3 secondes
+    setInterval(checkStatus, 3000);
+</script>
+{% endblock %}

@@ -39,6 +39,7 @@
                         <th class="py-3 px-3">Titre de l'épreuve</th>
                         <th class="py-3 px-3">Matière / UE</th>
                         <th class="py-3 px-3">Semestre & Filière</th>
+                        <th class="py-3 px-3">Complétude</th>
                         <th class="py-3 px-3">Accès</th>
                         <th class="py-3 px-3">Statut</th>
                         <th class="py-3 px-3 text-right">Actions</th>
@@ -54,6 +55,17 @@
                             <td class="py-3.5 px-3 font-semibold text-[#2563EB]">{{ ex.subject.name }}</td>
                             <td class="py-3.5 px-3 text-slate-600">
                                 {{ ex.filiere.name }} <span class="text-slate-400">({{ ex.semester.label }})</span>
+                            </td>
+                            <td class="py-3.5 px-3">
+                                {% if ex.has_correction and ex.has_summary %}
+                                    <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">100% Complète</span>
+                                {% elif ex.has_correction %}
+                                    <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-bold">+ Correction</span>
+                                {% elif ex.has_summary %}
+                                    <span class="px-2 py-0.5 rounded bg-purple-100 text-purple-800 text-[10px] font-bold">+ Résumé</span>
+                                {% else %}
+                                    <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-500 text-[10px] font-bold">Épreuve seule</span>
+                                {% endif %}
                             </td>
                             <td class="py-3.5 px-3">
                                 {% if ex.is_free %}

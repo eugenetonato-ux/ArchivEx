@@ -22,11 +22,34 @@ class Exam(models.Model):
     exam_type = models.CharField(max_length=20, choices=EXAM_TYPE_CHOICES)
     year = models.PositiveIntegerField()
     description = models.TextField(blank=True)
-    file = models.FileField(upload_to="exams/")
+    file = models.FileField(upload_to="exams/", help_text="Fichier PDF de l'épreuve")
+    correction_file = models.FileField(upload_to="corrections/", blank=True, null=True, help_text="Fichier PDF de la correction (optionnel)")
+    summary_file = models.FileField(upload_to="summaries_pdf/", blank=True, null=True, help_text="Fichier PDF du résumé/fiche (optionnel)")
+    summary = models.ForeignKey("content.Summary", on_delete=models.SET_NULL, blank=True, null=True, related_name="exams", help_text="Fiche résumé rédigée associée (optionnelle)")
     is_free = models.BooleanField(default=False)
     is_published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def has_correction(self):
+        return bool(self.correction_file)
+
+    @property
+    def has_summary(self):
+        return bool(self.summary_file or self.summary)
+
+    @property
+    def completeness_status(self):
+        corr = self.has_correction
+        summ = self.has_summary
+        if corr and summ:
+            return "COMPLETE"
+        elif corr:
+            return "EXAM_CORRECTION"
+        elif summ:
+            return "EXAM_SUMMARY"
+        return "EXAM_ONLY"
 
     def __str__(self):
         return self.title

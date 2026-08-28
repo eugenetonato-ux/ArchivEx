@@ -1,0 +1,149 @@
+{% extends "contributors/admin_base.html" %}
+{% load static %}
+
+{% block admin_title %}Fiche Bibliothèque — {{ exam.title }} | Administration{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+
+    <!-- BREADCRUMB & HEADER -->
+    <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <nav class="flex items-center space-x-2 text-xs font-bold text-slate-400 mb-2 flex-wrap">
+                <a href="{% url 'contributors:library_index' %}" class="hover:text-blue-600">Bibliothèque</a>
+                <span>/</span>
+                <span class="text-slate-600">{{ exam.filiere.school.name|default:"Université" }}</span>
+                <span>/</span>
+                <span class="text-slate-600">{{ exam.filiere.name }}</span>
+                <span>/</span>
+                <span class="text-[#071A49] font-extrabold">{{ exam.subject.name }}</span>
+            </nav>
+            <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">
+                {{ exam.title }}
+            </h1>
+            <p class="text-xs text-slate-500 font-semibold mt-1">
+                Année {{ exam.year }} · {{ exam.get_exam_type_display|default:"Session Normale" }} · {{ exam.semester.label }}
+            </p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <a href="{% url 'contributors:exam_edit' pk=exam.id %}" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-colors shadow-md shadow-blue-500/20 inline-flex items-center space-x-2">
+                <i class="fa-solid fa-pen-to-square text-xs" aria-hidden="true"></i>
+                <span>Compléter / Modifier la ressource</span>
+            </a>
+            <a href="{% url 'contributors:library_index' %}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors">
+                Retour à la Bibliothèque
+            </a>
+        </div>
+    </div>
+
+    <!-- RESOURCE COMPLETENESS STATUS MATRIX -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+        <!-- 1. ÉPREUVE PRINCIPALE -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2 text-xs font-black text-[#071A49]">
+                    <i class="fa-solid fa-file-pdf text-blue-600 text-sm" aria-hidden="true"></i>
+                    <span>Épreuve Principale</span>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-50 text-blue-700">Stockée</span>
+            </div>
+
+            <p class="text-xs text-slate-500 font-medium">Document PDF d'examen original enregistré dans le dépôt central.</p>
+
+            {% if is_main_admin %}
+                <!-- ADMIN ONLY ORIGINAL FILE RECOVERY -->
+                <div class="pt-3 border-t border-slate-100">
+                    <a href="{% url 'contributors:library_download_original' pk=exam.id file_type='exam' %}" class="w-full px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl transition-colors flex items-center justify-center space-x-2 shadow-sm">
+                        <i class="fa-solid fa-download text-xs" aria-hidden="true"></i>
+                        <span>Récupérer l'original (Admin)</span>
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- 2. CORRECTION DÉTAILLÉE -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2 text-xs font-black text-[#071A49]">
+                    <i class="fa-solid fa-file-signature text-amber-600 text-sm" aria-hidden="true"></i>
+                    <span>Correction Détaillée</span>
+                </div>
+                {% if exam.has_correction %}
+                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-800">Complète</span>
+                {% else %}
+                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200/60">Manquante</span>
+                {% endif %}
+            </div>
+
+            <p class="text-xs text-slate-500 font-medium">
+                {% if exam.has_correction %}
+                    Le fichier de correction rédigé est disponible dans la Bibliothèque.
+                {% else %}
+                    Aucune correction n'a encore été rattachée à cette épreuve.
+                {% endif %}
+            </p>
+
+            {% if exam.has_correction and is_main_admin %}
+                <!-- ADMIN ONLY ORIGINAL FILE RECOVERY -->
+                <div class="pt-3 border-t border-slate-100">
+                    <a href="{% url 'contributors:library_download_original' pk=exam.id file_type='correction' %}" class="w-full px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl transition-colors flex items-center justify-center space-x-2 shadow-sm">
+                        <i class="fa-solid fa-download text-xs" aria-hidden="true"></i>
+                        <span>Récupérer la correction originale (Admin)</span>
+                    </a>
+                </div>
+            {% elif not exam.has_correction %}
+                <div class="pt-3 border-t border-slate-100">
+                    <a href="{% url 'contributors:exam_edit' pk=exam.id %}" class="w-full px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold text-xs rounded-xl transition-colors flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i>
+                        <span>Ajouter le corrigé</span>
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- 3. FICHE RÉSUMÉ -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2 text-xs font-black text-[#071A49]">
+                    <i class="fa-solid fa-book-open text-purple-600 text-sm" aria-hidden="true"></i>
+                    <span>Fiche Résumé</span>
+                </div>
+                {% if exam.has_summary %}
+                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-purple-100 text-purple-800">Complète</span>
+                {% else %}
+                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-100 text-slate-500">Manquante</span>
+                {% endif %}
+            </div>
+
+            <p class="text-xs text-slate-500 font-medium">
+                {% if exam.has_summary %}
+                    La fiche résumé de cours est rattachée à cette ressource.
+                {% else %}
+                    Aucune fiche résumé n'a encore été rattachée à cette épreuve.
+                {% endif %}
+            </p>
+
+            {% if exam.has_summary and is_main_admin %}
+                <!-- ADMIN ONLY ORIGINAL FILE RECOVERY -->
+                <div class="pt-3 border-t border-slate-100">
+                    <a href="{% url 'contributors:library_download_original' pk=exam.id file_type='summary' %}" class="w-full px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl transition-colors flex items-center justify-center space-x-2 shadow-sm">
+                        <i class="fa-solid fa-download text-xs" aria-hidden="true"></i>
+                        <span>Récupérer le résumé original (Admin)</span>
+                    </a>
+                </div>
+            {% elif not exam.has_summary %}
+                <div class="pt-3 border-t border-slate-100">
+                    <a href="{% url 'contributors:exam_edit' pk=exam.id %}" class="w-full px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold text-xs rounded-xl transition-colors flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i>
+                        <span>Ajouter le résumé</span>
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

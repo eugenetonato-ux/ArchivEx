@@ -1,5 +1,6 @@
 import os
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, FileResponse, Http404, JsonResponse
 from django.core.paginator import Paginator
@@ -12,15 +13,27 @@ from payments.models import SemesterAccess
 from academics.models import Subject
 
 
-from subscriptions.services import can_user_access
+from subscriptions.services import (
+    can_user_access,
+    can_user_access_exam_pdf,
+    can_user_access_correction,
+    can_user_access_summary,
+)
 
 
 @login_required
 def exam_list(request):
     """Vue des épreuves d'une UE ou de recherche d'épreuves (Connexion requise)."""
+    mode = request.GET.get("mode", "premium")  # 'free' or 'premium'
+    if request.resolver_match and request.resolver_match.url_name == "free_liste":
+        mode = "free"
+
     exams = Exam.objects.filter(is_published=True).select_related(
-        "subject", "filiere", "level", "academic_year", "semester", "filiere__school"
+        "subject", "filiere", "level", "academic_year", "semester", "filiere__school", "summary"
     ).order_by("-created_at")
+
+    if mode == "free":
+        exams = exams.filter(is_free=True)
 
     # Search query
     q = request.GET.get("q")
@@ -71,7 +84,9 @@ def exam_list(request):
     )
 
     for exam in page_obj:
-        exam.user_has_access = can_user_access(request.user, exam)
+        exam.user_has_access = can_user_access_exam_pdf(request.user, exam)
+        exam.user_has_correction_access = can_user_access_correction(request.user, exam)
+        exam.user_has_summary_access = can_user_access_summary(request.user, exam)
         exam.is_favorited = exam.id in user_favorites
 
     context = {
@@ -82,6 +97,8 @@ def exam_list(request):
         "selected_type": exam_type or "",
         "selected_year": year or "",
         "exam_types": Exam.EXAM_TYPE_CHOICES,
+        "mode": mode,
+        "is_free_mode": mode == "free",
     }
     return render(request, "exams/liste.html", context)
 
@@ -91,13 +108,15 @@ def exam_detail(request, pk):
     """Page de détail d'une épreuve (Connexion requise)."""
     exam = get_object_or_404(
         Exam.objects.select_related(
-            "subject", "semester", "filiere", "level", "academic_year", "filiere__school"
+            "subject", "semester", "filiere", "level", "academic_year", "filiere__school", "summary"
         ),
         pk=pk,
         is_published=True
     )
 
-    has_access = can_user_access(request.user, exam)
+    has_access = can_user_access_exam_pdf(request.user, exam)
+    has_correction_access = can_user_access_correction(request.user, exam)
+    has_summary_access = can_user_access_summary(request.user, exam)
     is_favorited = Favorite.objects.filter(user=request.user, exam=exam).exists()
 
     exams_count = 0
@@ -113,6 +132,8 @@ def exam_detail(request, pk):
     context = {
         "exam": exam,
         "has_access": has_access,
+        "has_correction_access": has_correction_access,
+        "has_summary_access": has_summary_access,
         "is_favorited": is_favorited,
         "exams_count": exams_count,
         "summaries_count": summaries_count,
@@ -121,13 +142,12 @@ def exam_detail(request, pk):
     return render(request, "exams/detail.html", context)
 
 
-
 @login_required
 def stream_exam_pdf(request, pk):
-    """Vue de sécurité : Sert le fichier PDF de l'épreuve (Connexion requise)."""
+    """Vue de sécurité : Sert le fichier PDF de l'épreuve principale."""
     exam = get_object_or_404(Exam, pk=pk, is_published=True)
 
-    has_access = can_user_access(request.user, exam)
+    has_access = can_user_access_exam_pdf(request.user, exam)
 
     if not has_access:
         messages.warning(
@@ -135,7 +155,6 @@ def stream_exam_pdf(request, pk):
             "Cette épreuve est réservée aux étudiants disposant du Pass actif pour ce semestre."
         )
         return redirect("payments:pass_semestre", semester_id=exam.semester.id)
-
 
     if not exam.file or not os.path.exists(exam.file.path):
         raise Http404("Le fichier de l'épreuve est introuvable sur le serveur.")
@@ -147,6 +166,72 @@ def stream_exam_pdf(request, pk):
     is_download = request.GET.get("download") == "1"
     disposition = "attachment" if is_download else "inline"
     safe_filename = f"ArchivEx_{exam.subject.name}_{exam.year}.pdf".replace(" ", "_")
+    response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
+    return response
+
+
+@login_required
+def stream_correction_pdf(request, pk):
+    """Vue de sécurité : Sert le fichier PDF de la correction (Accès Premium strict)."""
+    exam = get_object_or_404(Exam, pk=pk, is_published=True)
+
+    if not exam.correction_file:
+        raise Http404("Aucune correction PDF n'est associée à cette épreuve.")
+
+    has_access = can_user_access_correction(request.user, exam)
+    if not has_access:
+        messages.warning(
+            request,
+            "Les corrections sont des ressources Premium réservées aux étudiants disposant du Pass actif pour ce semestre."
+        )
+        return redirect("payments:pass_semestre", semester_id=exam.semester.id)
+
+    if not os.path.exists(exam.correction_file.path):
+        raise Http404("Le fichier de correction est introuvable sur le serveur.")
+
+    response = FileResponse(
+        open(exam.correction_file.path, "rb"),
+        content_type="application/pdf"
+    )
+    is_download = request.GET.get("download") == "1"
+    disposition = "attachment" if is_download else "inline"
+    safe_filename = f"ArchivEx_Correction_{exam.subject.name}_{exam.year}.pdf".replace(" ", "_")
+    response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
+    return response
+
+
+@login_required
+def stream_summary_pdf(request, pk):
+    """Vue de sécurité : Sert le fichier PDF du résumé de cours (Accès Premium strict)."""
+    exam = get_object_or_404(Exam, pk=pk, is_published=True)
+
+    target_file = None
+    if exam.summary_file:
+        target_file = exam.summary_file
+    elif exam.summary and exam.summary.file:
+        target_file = exam.summary.file
+
+    if not target_file:
+        raise Http404("Aucun résumé PDF n'est associé à cette épreuve.")
+
+    has_access = can_user_access_summary(request.user, exam)
+    if not has_access:
+        messages.warning(
+            request,
+            "Les résumés de cours sont des ressources Premium réservées aux étudiants disposant du Pass actif pour ce semestre."
+        )
+        return redirect("payments:pass_semestre", semester_id=exam.semester.id)
+
+    if not os.path.exists(target_file.path):
+        raise Http404("Le fichier du résumé est introuvable sur le serveur.")
+
+    response = FileResponse(
+        open(target_file.path, "rb"),
+        content_type="application/pdf"
+    )
+    is_download = request.GET.get("download") == "1"
+    disposition = "attachment" if is_download else "inline"
+    safe_filename = f"ArchivEx_Resume_{exam.subject.name}_{exam.year}.pdf".replace(" ", "_")
     response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
     return response
 
@@ -170,3 +255,93 @@ def toggle_favorite(request, pk):
 
     next_url = request.META.get("HTTP_REFERER") or "exams:detail"
     return redirect(next_url if next_url != request.build_absolute_uri() else "exams:liste")
+
+
+@login_required
+def student_viewer_view(request, pk):
+    """Lecteur académique sécurisé avec filigrane dynamique et protections anti-copie."""
+    exam = get_object_or_404(
+        Exam.objects.select_related(
+            "subject", "semester", "filiere", "level", "academic_year", "filiere__school"
+        ),
+        pk=pk,
+        is_published=True
+    )
+
+    res_type = request.GET.get("type", "exam")  # 'exam', 'correction', 'summary'
+    has_access = False
+    resource_label = "Épreuve d'Examen"
+
+    if res_type == "correction":
+        has_access = can_user_access_correction(request.user, exam)
+        resource_label = "Correction Détaillée"
+        if not exam.correction_file:
+            raise Http404("Aucune correction n'est associée à cette épreuve.")
+    elif res_type == "summary":
+        has_access = can_user_access_summary(request.user, exam)
+        resource_label = "Fiche Résumé"
+        if not (exam.summary_file or (exam.summary and exam.summary.file)):
+            raise Http404("Aucun résumé n'est associé à cette épreuve.")
+    else:
+        has_access = can_user_access_exam_pdf(request.user, exam)
+        if not (exam.file and os.path.exists(exam.file.path)):
+            raise Http404("Le fichier de l'épreuve est introuvable.")
+
+    if not has_access:
+        messages.warning(
+            request,
+            "Cette ressource est réservée aux étudiants disposant du Pass actif pour ce semestre."
+        )
+        return redirect("payments:pass_semestre", semester_id=exam.semester.id)
+
+    stream_url = reverse("exams:stream_watermarked_pdf", kwargs={"pk": exam.id}) + f"?type={res_type}"
+
+    context = {
+        "exam": exam,
+        "resource_label": resource_label,
+        "res_type": res_type,
+        "stream_url": stream_url,
+    }
+    return render(request, "exams/viewer.html", context)
+
+
+@login_required
+def stream_watermarked_pdf_view(request, pk):
+    """Sert le fichier PDF dynamique tatoué/filigrané au nom et horodatage de l'étudiant."""
+    from .services import apply_student_watermark
+
+    exam = get_object_or_404(Exam, pk=pk, is_published=True)
+    res_type = request.GET.get("type", "exam")
+
+    target_file = None
+    has_access = False
+
+    if res_type == "correction":
+        target_file = exam.correction_file
+        has_access = can_user_access_correction(request.user, exam)
+    elif res_type == "summary":
+        target_file = exam.summary_file or (exam.summary.file if exam.summary else None)
+        has_access = can_user_access_summary(request.user, exam)
+    else:
+        target_file = exam.file
+        has_access = can_user_access_exam_pdf(request.user, exam)
+
+    if not has_access:
+        messages.warning(
+            request,
+            "Accès refusé. Le Pass Semestre actif est requis pour consulter ce document."
+        )
+        return redirect("payments:pass_semestre", semester_id=exam.semester.id)
+
+    if not target_file or not os.path.exists(target_file.path):
+        raise Http404("Le fichier demandé est introuvable sur le serveur.")
+
+    watermarked_io = apply_student_watermark(target_file.path, request.user)
+
+    response = FileResponse(
+        watermarked_io,
+        content_type="application/pdf"
+    )
+    safe_filename = f"ArchivEx_{res_type}_{exam.subject.name}_{exam.year}.pdf".replace(" ", "_")
+    response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
+    return response

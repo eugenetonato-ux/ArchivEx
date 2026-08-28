@@ -34,13 +34,13 @@ class ContextSelectForm(forms.Form):
 class ExamAdminForm(forms.ModelForm):
     """Formulaire d'édition/publication rapide d'une épreuve d'examen."""
     ACCESS_CHOICES = [
-        (False, "Pass Semestre (Premium)"),
-        (True, "Gratuit (Accès libre)"),
+        ("False", "Pass Semestre (Premium)"),
+        ("True", "Gratuit (Accès libre)"),
     ]
 
     PUBLICATION_CHOICES = [
-        (True, "Publié (Visible par les étudiants)"),
-        (False, "Brouillon (Dépublié)"),
+        ("True", "Publié (Visible par les étudiants)"),
+        ("False", "Brouillon (Dépublié)"),
     ]
 
     subject_name = forms.CharField(
@@ -72,6 +72,18 @@ class ExamAdminForm(forms.ModelForm):
         widget=forms.FileInput(attrs={"class": "w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"})
     )
 
+    correction_file = forms.FileField(
+        required=False,
+        label="Correction PDF optionnelle",
+        widget=forms.FileInput(attrs={"class": "w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"})
+    )
+
+    summary_file = forms.FileField(
+        required=False,
+        label="Résumé / Fiche PDF optionnel",
+        widget=forms.FileInput(attrs={"class": "w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"})
+    )
+
     semester = forms.ModelChoiceField(
         queryset=Semester.objects.all(),
         required=False,
@@ -81,12 +93,14 @@ class ExamAdminForm(forms.ModelForm):
 
     class Meta:
         model = Exam
-        fields = ["title", "year", "exam_type", "file", "description", "semester"]
+        fields = ["title", "year", "exam_type", "file", "correction_file", "summary_file", "description", "semester"]
         labels = {
             "title": "Titre de l'épreuve",
             "year": "Année académique / Session",
             "exam_type": "Type d'épreuve",
             "file": "Document PDF de l'épreuve",
+            "correction_file": "Correction PDF optionnelle",
+            "summary_file": "Fiche résumé PDF optionnel",
             "description": "Description / Remarques optionnelles",
         }
         widgets = {
@@ -94,14 +108,16 @@ class ExamAdminForm(forms.ModelForm):
             "year": forms.TextInput(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]", "placeholder": "2026"}),
             "exam_type": forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"}),
             "file": forms.FileInput(attrs={"class": "w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"}),
+            "correction_file": forms.FileInput(attrs={"class": "w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"}),
+            "summary_file": forms.FileInput(attrs={"class": "w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"}),
             "description": forms.Textarea(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-[#071A49]", "rows": 3}),
         }
 
     def __init__(self, *args, active_filiere=None, active_semester=None, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.pk:
-            self.fields["is_free"].initial = self.instance.is_free
-            self.fields["is_published"].initial = self.instance.is_published
+            self.fields["is_free"].initial = "true" if self.instance.is_free else "false"
+            self.fields["is_published"].initial = "true" if self.instance.is_published else "false"
             if self.instance.subject:
                 self.fields["subject_name"].initial = self.instance.subject.name
             if self.instance.semester:
@@ -119,6 +135,26 @@ class ExamAdminForm(forms.ModelForm):
             ext = os.path.splitext(file.name)[1].lower()
             if ext != ".pdf":
                 raise forms.ValidationError("Seuls les fichiers au format PDF (.pdf) sont autorisés.")
+            if file.size > 20 * 1024 * 1024:
+                raise forms.ValidationError("La taille du fichier ne doit pas dépasser 20 Mo.")
+        return file
+
+    def clean_correction_file(self):
+        file = self.cleaned_data.get("correction_file")
+        if file:
+            ext = os.path.splitext(file.name)[1].lower()
+            if ext != ".pdf":
+                raise forms.ValidationError("Seuls les fichiers au format PDF (.pdf) sont autorisés pour la correction.")
+            if file.size > 20 * 1024 * 1024:
+                raise forms.ValidationError("La taille du fichier ne doit pas dépasser 20 Mo.")
+        return file
+
+    def clean_summary_file(self):
+        file = self.cleaned_data.get("summary_file")
+        if file:
+            ext = os.path.splitext(file.name)[1].lower()
+            if ext != ".pdf":
+                raise forms.ValidationError("Seuls les fichiers au format PDF (.pdf) sont autorisés pour le résumé.")
             if file.size > 20 * 1024 * 1024:
                 raise forms.ValidationError("La taille du fichier ne doit pas dépasser 20 Mo.")
         return file

@@ -5,15 +5,19 @@
 
 {% block content %}
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-    <!-- Breadcrumb -->
-    <nav class="flex items-center text-xs font-medium text-slate-500 space-x-2 mb-6">
+    <!-- BREADCRUMB ACADEMIC HIERARCHY -->
+    <nav class="flex items-center text-xs font-medium text-slate-500 space-x-2 mb-6 flex-wrap gap-y-1">
         <a href="{% url 'academics:home' %}" class="hover:text-[#2563EB]">Accueil</a>
         <span>/</span>
-        <a href="{% url 'academics:filieres' %}" class="hover:text-[#2563EB]">Mes UE</a>
+        <span class="text-slate-600">{{ exam.filiere.school.name|default:"Université" }}</span>
         <span>/</span>
-        <a href="{% url 'exams:liste' %}?subject={{ exam.subject.id }}" class="hover:text-[#2563EB]">{{ exam.subject.name }}</a>
+        <a href="{% url 'academics:filieres' %}" class="hover:text-[#2563EB]">{{ exam.filiere.name }}</a>
         <span>/</span>
-        <span class="text-[#071A49] font-bold">{{ exam.title|truncatechars:30 }}</span>
+        <span class="text-slate-600">{{ exam.semester.label }}</span>
+        <span>/</span>
+        <a href="{% url 'exams:liste' %}?subject={{ exam.subject.id }}" class="hover:text-[#2563EB] font-semibold">{{ exam.subject.name }}</a>
+        <span>/</span>
+        <span class="text-[#071A49] font-bold">{{ exam.title|truncatechars:25 }}</span>
     </nav>
 
     <!-- HEADER CARD -->
@@ -53,105 +57,138 @@
         {% endif %}
     </div>
 
-    <!-- DOCUMENT VIEW / ACCÈS VERROUILLÉ -->
-    {% if has_access %}
-        <div class="card-academic p-6 sm:p-8 bg-white mb-8 rounded-3xl">
+    <!-- DOCUMENTS RESOURCES CONTAINER (EXAM, CORRECTION, SUMMARY) -->
+    <div class="space-y-8">
+
+        <!-- 1. ÉPREUVE PRINCIPALE PDF -->
+        <div class="card-academic p-6 sm:p-8 bg-white rounded-3xl border border-slate-200 shadow-sm">
             <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-100">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg">
-                        <i class="fa-solid fa-circle-check"></i>
+                    <div class="w-10 h-10 rounded-xl {% if has_access %}bg-emerald-50 text-emerald-600{% else %}bg-amber-50 text-amber-600{% endif %} flex items-center justify-center font-bold text-lg">
+                        <i class="fa-solid {% if has_access %}fa-circle-check{% else %}fa-lock{% endif %}"></i>
                     </div>
                     <div>
-                        <h2 class="text-base font-bold text-[#071A49]">Épreuve débloquée</h2>
-                        <p class="text-xs text-emerald-600 font-semibold">Accès complet au document PDF d'examen.</p>
+                        <h2 class="text-base font-bold text-[#071A49]">Épreuve d'Examen</h2>
+                        <p class="text-xs {% if has_access %}text-emerald-600{% else %}text-amber-600{% endif %} font-semibold">
+                            {% if has_access %}PDF disponible et accessible{% else %}Accès réservé au Pass Semestre{% endif %}
+                        </p>
                     </div>
                 </div>
 
-                <div class="flex items-center space-x-3 w-full sm:w-auto">
-                    <a href="{% url 'exams:stream_pdf' pk=exam.id %}" target="_blank" class="btn-primary text-xs px-6 py-2.5 font-bold">
-                        Consulter
-                    </a>
-                    <a href="{% url 'exams:stream_pdf' pk=exam.id %}?download=1" class="btn-secondary text-xs px-6 py-2.5 font-bold">
-                        Télécharger
-                    </a>
-                </div>
-            </div>
-
-            <!-- PDF PREVIEW -->
-            <div class="w-full h-[600px] rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 flex items-center justify-center">
-                <iframe src="{% url 'exams:stream_pdf' pk=exam.id %}" class="w-full h-full border-0"></iframe>
-            </div>
-        </div>
-    {% else %}
-        <!-- LOCKED PREMIUM ACCESS CARD WITH VALUE SHOWCASE -->
-        <div class="bg-gradient-to-br from-[#071A49] via-[#0E2461] to-[#1D4ED8] rounded-3xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden border border-blue-900/40">
-            <div class="flex items-center justify-center space-x-2 text-amber-300 text-xs font-extrabold uppercase tracking-wider mb-3">
-                <i class="fa-solid fa-bolt text-amber-400"></i>
-                <span>ARCHIVEX PASS</span>
-                <span>·</span>
-                <span>{{ exam.semester.label }}</span>
-            </div>
-
-            <h2 class="text-2xl sm:text-3xl font-black text-white text-center mb-3">
-                Débloque cette épreuve et tout ton semestre
-            </h2>
-
-            <p class="text-xs sm:text-sm text-blue-100 text-center max-w-lg mx-auto mb-8 leading-relaxed">
-                Un règlement unique de <strong class="text-amber-400 font-extrabold">2 000 FCFA</strong> débloque l'intégralité des épreuves et contenus pédagogiques de <strong class="text-white font-extrabold">{{ exam.filiere.name }}</strong>.
-            </p>
-
-            <!-- DYNAMIC BENEFITS SHOWCASE -->
-            <div class="max-w-md mx-auto bg-white/10 backdrop-blur-md rounded-2xl p-5 mb-8 border border-white/15 space-y-3 text-xs font-semibold text-slate-100">
-                {% if exams_count > 0 %}
-                <div class="flex items-center space-x-3">
-                    <span class="w-5 h-5 rounded-full bg-amber-400 text-[#071A49] flex items-center justify-center font-black text-xs">
-                        <i class="fa-solid fa-check text-[10px]"></i>
-                    </span>
-                    <span><strong>{{ exams_count }} épreuves d'examens</strong> et devoirs avec corrigés</span>
-                </div>
+                {% if has_access %}
+                    <div class="flex items-center space-x-3 w-full sm:w-auto">
+                        <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=exam" class="btn-primary text-xs px-6 py-2.5 font-bold inline-flex items-center space-x-1.5">
+                            <i class="fa-solid fa-eye text-xs" aria-hidden="true"></i>
+                            <span>Consulter l'Épreuve</span>
+                        </a>
+                        {% if exam.is_free %}
+                            <a href="{% url 'exams:stream_pdf' pk=exam.id %}?download=1" class="btn-secondary text-xs px-6 py-2.5 font-bold">
+                                Télécharger
+                            </a>
+                        {% endif %}
+                    </div>
                 {% endif %}
-
-                {% if summaries_count > 0 %}
-                <div class="flex items-center space-x-3">
-                    <span class="w-5 h-5 rounded-full bg-amber-400 text-[#071A49] flex items-center justify-center font-black text-xs">
-                        <i class="fa-solid fa-check text-[10px]"></i>
-                    </span>
-                    <span><strong>{{ summaries_count }} résumés de cours</strong> essentiels rédigés</span>
-                </div>
-                {% endif %}
-
-                {% if guides_count > 0 %}
-                <div class="flex items-center space-x-3">
-                    <span class="w-5 h-5 rounded-full bg-amber-400 text-[#071A49] flex items-center justify-center font-black text-xs">
-                        <i class="fa-solid fa-check text-[10px]"></i>
-                    </span>
-                    <span><strong>{{ guides_count }} guides méthodologiques</strong> et conseils</span>
-                </div>
-                {% endif %}
-
-                <div class="flex items-center space-x-3 text-emerald-300">
-                    <span class="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-xs">
-                        <i class="fa-solid fa-check text-[10px]"></i>
-                    </span>
-                    <span>Téléchargement PDF + lecture web 24/7 sur mobile</span>
-                </div>
             </div>
 
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <a href="{% url 'payments:pass_semestre' semester_id=exam.semester.id %}" class="btn-gold text-sm py-4 px-8 font-black rounded-2xl shadow-xl shadow-amber-500/30 hover:scale-105 transition-all text-center w-full sm:w-auto flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-lock text-xs"></i>
-                    <span>Débloquer mon Pass Semestre (2 000 FCFA)</span>
-                </a>
-            </div>
+            {% if has_access %}
+                <!-- PDF PREVIEW / SECURE VIEWER EMBED -->
+                <div class="w-full h-[600px] rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 flex items-center justify-center">
+                    <iframe src="{% url 'exams:stream_watermarked_pdf' pk=exam.id %}?type=exam" class="w-full h-full border-0"></iframe>
+                </div>
+            {% else %}
+                <!-- LOCKED PREMIUM ACCESS CARD WITH VALUE SHOWCASE -->
+                <div class="bg-gradient-to-br from-[#071A49] via-[#0E2461] to-[#1D4ED8] rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-blue-900/40">
+                    <div class="flex items-center justify-center space-x-2 text-amber-300 text-xs font-extrabold uppercase tracking-wider mb-2">
+                        <i class="fa-solid fa-bolt text-amber-400"></i>
+                        <span>ARCHIVEX PASS · {{ exam.semester.label }}</span>
+                    </div>
 
+                    <h2 class="text-xl sm:text-2xl font-black text-white text-center mb-2">
+                        Débloque cette épreuve et tout ton semestre
+                    </h2>
 
-            <div class="mt-4 text-center">
-                <a href="{% url 'payments:pass_semestre' semester_id=exam.semester.id %}" class="text-xs text-blue-200 hover:text-white underline font-medium">
-                    En savoir plus sur les avantages inclus
-                </a>
-            </div>
+                    <p class="text-xs text-blue-100 text-center max-w-lg mx-auto mb-6 leading-relaxed">
+                        Un règlement unique de <strong class="text-amber-400 font-extrabold">4 500 FCFA</strong> débloque l'intégralité des épreuves et contenus pédagogiques de <strong class="text-white font-extrabold">{{ exam.filiere.name }}</strong>.
+                    </p>
+
+                    <div class="flex items-center justify-center">
+                        <a href="{% url 'payments:pass_semestre' semester_id=exam.semester.id %}" class="btn-gold text-xs py-3 px-6 font-black rounded-xl shadow-lg hover:scale-105 transition-all text-center flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-lock text-xs"></i>
+                            <span>Débloquer mon Pass Semestre (4 500 FCFA)</span>
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
         </div>
 
-    {% endif %}
+        <!-- 2. CORRECTION PDF (ALWAYS PREMIUM) -->
+        {% if exam.has_correction %}
+            <div class="card-academic p-6 sm:p-8 bg-white rounded-3xl border border-slate-200 shadow-sm">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl {% if has_correction_access %}bg-emerald-50 text-emerald-600{% else %}bg-amber-50 text-amber-600{% endif %} flex items-center justify-center font-bold text-lg">
+                            <i class="fa-solid {% if has_correction_access %}fa-file-signature{% else %}fa-lock{% endif %}"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <h2 class="text-base font-bold text-[#071A49]">Correction Détaillée</h2>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800">Ressource Premium</span>
+                            </div>
+                            <p class="text-xs text-slate-500 font-medium mt-0.5">Solution rédigée par l'équipe pédagogique.</p>
+                        </div>
+                    </div>
+
+                    {% if has_correction_access %}
+                        <div class="flex items-center space-x-3 w-full sm:w-auto">
+                            <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=correction" class="btn-primary text-xs px-6 py-2.5 font-bold inline-flex items-center space-x-1.5">
+                                <i class="fa-solid fa-eye text-xs" aria-hidden="true"></i>
+                                <span>Consulter la Correction</span>
+                            </a>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'payments:pass_semestre' semester_id=exam.semester.id %}" class="btn-gold text-xs px-5 py-2.5 font-extrabold inline-flex items-center space-x-2 shrink-0">
+                            <i class="fa-solid fa-lock text-xs" aria-hidden="true"></i>
+                            <span>Débloquer la correction</span>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- 3. RÉSUMÉ PDF (ALWAYS PREMIUM) -->
+        {% if exam.has_summary %}
+            <div class="card-academic p-6 sm:p-8 bg-white rounded-3xl border border-slate-200 shadow-sm">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl {% if has_summary_access %}bg-purple-50 text-purple-600{% else %}bg-purple-50 text-purple-600{% endif %} flex items-center justify-center font-bold text-lg">
+                            <i class="fa-solid {% if has_summary_access %}fa-book-open{% else %}fa-lock{% endif %}"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <h2 class="text-base font-bold text-[#071A49]">Fiche Résumé de Cours</h2>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-purple-100 text-purple-800">Ressource Premium</span>
+                            </div>
+                            <p class="text-xs text-slate-500 font-medium mt-0.5">Synthèse des notions clés de la matière.</p>
+                        </div>
+                    </div>
+
+                    {% if has_summary_access %}
+                        <div class="flex items-center space-x-3 w-full sm:w-auto">
+                            <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=summary" class="btn-primary text-xs px-6 py-2.5 font-bold inline-flex items-center space-x-1.5">
+                                <i class="fa-solid fa-eye text-xs" aria-hidden="true"></i>
+                                <span>Consulter la Fiche Résumé</span>
+                            </a>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'payments:pass_semestre' semester_id=exam.semester.id %}" class="btn-gold text-xs px-5 py-2.5 font-extrabold inline-flex items-center space-x-2 shrink-0">
+                            <i class="fa-solid fa-lock text-xs" aria-hidden="true"></i>
+                            <span>Débloquer la fiche résumé</span>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
 </div>
 {% endblock %}

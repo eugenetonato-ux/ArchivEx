@@ -1,54 +1,147 @@
 {% extends "contributors/admin_base.html" %}
+{% load static %}
 
-{% block title %}Pass & Paiements — Administration ArchivEx{% endblock %}
+{% block admin_title %}Suivi des Paiements SebPay | Administration ArchivEx{% endblock %}
 
 {% block admin_content %}
 <div class="space-y-6">
 
-    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-        <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">Suivi des Pass Semestre & Accès</h1>
-        <p class="text-xs text-slate-500 font-medium">Aperçu des accès Pass Semestre activés par les étudiants.</p>
+    <!-- PAGE HEADER -->
+    <div class="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2 text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">
+                <i class="fa-solid fa-credit-card text-sm" aria-hidden="true"></i>
+                <span>Supervision Financière Mobile Money</span>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">
+                Paiements SebPay & Pass Semestre
+            </h1>
+            <p class="text-xs text-slate-500 font-medium mt-1">
+                Suivi des encaissements MTN, Moov et Celtiis en temps réel.
+            </p>
+        </div>
+        <div class="flex items-center space-x-2">
+            <span class="px-3.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-black">
+                Chiffre d'affaires : {{ total_revenue }} FCFA
+            </span>
+        </div>
     </div>
 
-    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+    <!-- METRICS CARDS -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <!-- TOTAL -->
+        <a href="?filter=all" class="p-4 rounded-2xl border transition-all {% if status_filter == 'all' %}bg-[#071A49] text-white border-[#071A49] shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-blue-300{% endif %}">
+            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Total Transactions</div>
+            <div class="text-2xl font-black mt-1">{{ total_count }}</div>
+            <div class="text-[11px] font-semibold mt-2 opacity-90">Toutes références</div>
+        </a>
+
+        <!-- PENDING -->
+        <a href="?filter=pending" class="p-4 rounded-2xl border transition-all {% if status_filter == 'pending' %}bg-amber-500 text-white border-amber-500 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-amber-300{% endif %}">
+            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">En Attente</div>
+            <div class="text-2xl font-black mt-1 {% if status_filter == 'pending' %}text-white{% else %}text-amber-600{% endif %}">{{ pending_count }}</div>
+            <div class="text-[11px] font-semibold mt-2 opacity-90">Validation téléphone</div>
+        </a>
+
+        <!-- APPROVED -->
+        <a href="?filter=approved" class="p-4 rounded-2xl border transition-all {% if status_filter == 'approved' %}bg-emerald-600 text-white border-emerald-600 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-emerald-300{% endif %}">
+            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Paiements Validés</div>
+            <div class="text-2xl font-black mt-1 {% if status_filter == 'approved' %}text-white{% else %}text-emerald-600{% endif %}">{{ approved_count }}</div>
+            <div class="text-[11px] font-semibold mt-2 opacity-90">Pass débloqués</div>
+        </a>
+
+        <!-- REJECTED -->
+        <a href="?filter=rejected" class="p-4 rounded-2xl border transition-all {% if status_filter == 'rejected' %}bg-rose-600 text-white border-rose-600 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-rose-300{% endif %}">
+            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Rejetés / Échoués</div>
+            <div class="text-2xl font-black mt-1 {% if status_filter == 'rejected' %}text-white{% else %}text-rose-600{% endif %}">{{ rejected_count }}</div>
+            <div class="text-[11px] font-semibold mt-2 opacity-90">Transactions annulées</div>
+        </a>
+    </div>
+
+    <!-- SEARCH & FILTER BAR -->
+    <form method="get" class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row gap-3">
+        <input type="hidden" name="filter" value="{{ status_filter }}">
+        <div class="relative flex-grow">
+            <input type="text" name="q" value="{{ q }}" placeholder="Rechercher par étudiant, téléphone, référence externe ou transaction SebPay..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#071A49] placeholder-slate-400 focus:ring-2 focus:ring-blue-600 outline-none">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs" aria-hidden="true"></i>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button type="submit" class="px-4 py-2 bg-[#071A49] hover:bg-blue-900 text-white text-xs font-bold rounded-xl transition-colors shrink-0">
+                Rechercher
+            </button>
+            <a href="{% url 'contributors:payment_list' %}" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-colors shrink-0">
+                Effacer
+            </a>
+        </div>
+    </form>
+
+    <!-- PAYMENTS TABLE -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
+            <table class="w-full text-left text-xs border-collapse">
                 <thead>
-                    <tr class="border-b border-slate-200 text-slate-400 font-bold uppercase text-[10px]">
-                        <th class="py-3 px-3">Étudiant</th>
-                        <th class="py-3 px-3">Filière / Semestre</th>
-                        <th class="py-3 px-3">Date d'activation</th>
-                        <th class="py-3 px-3">Statut Pass</th>
+                    <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-400 font-extrabold uppercase text-[10px] tracking-wider">
+                        <th class="py-3.5 px-4">Date</th>
+                        <th class="py-3.5 px-4">Étudiant</th>
+                        <th class="py-3.5 px-4">Semestre / Filière</th>
+                        <th class="py-3.5 px-4">Opérateur / Téléphone</th>
+                        <th class="py-3.5 px-4">Montant</th>
+                        <th class="py-3.5 px-4 text-center">Statut</th>
+                        <th class="py-3.5 px-4 text-right">Référence</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 font-medium">
-                    {% for acc in access_records %}
+                <tbody class="divide-y divide-slate-100 font-semibold text-slate-700">
+                    {% for p in payments %}
                         <tr class="hover:bg-slate-50/80 transition-colors">
-                            <td class="py-3.5 px-3">
-                                <p class="font-extrabold text-[#071A49] text-xs mb-0.5">{{ acc.user.get_full_name|default:acc.user.username }}</p>
-                                <span class="text-[10px] text-slate-400 font-semibold">{{ acc.user.email }}</span>
+                            <td class="py-3.5 px-4 text-slate-500">
+                                {{ p.created_at|date:"d/m/Y • H:i" }}
                             </td>
-                            <td class="py-3.5 px-3 text-slate-700 font-semibold">
-                                {{ acc.filiere.name }} <span class="text-slate-400">({{ acc.semester.label }})</span>
+                            <td class="py-3.5 px-4">
+                                <p class="font-extrabold text-[#071A49] text-xs mb-0.5">{{ p.user.get_full_name|default:p.user.username }}</p>
+                                <span class="text-[10px] text-slate-400 font-semibold">{{ p.user.email }}</span>
                             </td>
-                            <td class="py-3.5 px-3 text-slate-500 font-semibold">
-                                {{ acc.activated_at|date:"d M Y à H:i"|default:"Non activé" }}
+                            <td class="py-3.5 px-4 text-slate-700">
+                                <div class="font-extrabold text-[#071A49]">{{ p.semester.label }}</div>
+                                <span class="text-[10px] text-slate-400 font-semibold">{{ p.semester.filiere.name }}</span>
                             </td>
-                            <td class="py-3.5 px-3">
-                                {% if acc.activated_at %}
-                                    <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-extrabold text-[10px] flex items-center space-x-1 w-max">
+                            <td class="py-3.5 px-4">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-slate-100 text-slate-800 inline-block mb-1">
+                                    {{ p.get_operator_display }}
+                                </span>
+                                <div class="text-[11px] font-bold text-slate-600">{{ p.phone_number }}</div>
+                            </td>
+                            <td class="py-3.5 px-4 font-black text-[#071A49]">
+                                {{ p.amount }} {{ p.currency }}
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                {% if p.is_approved %}
+                                    <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">
                                         <i class="fa-solid fa-check text-[9px]" aria-hidden="true"></i>
-                                        <span>Pass Actif</span>
+                                        <span>Payé</span>
+                                    </span>
+                                {% elif p.is_pending %}
+                                    <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-extrabold">
+                                        <i class="fa-solid fa-spinner fa-spin text-[9px]" aria-hidden="true"></i>
+                                        <span>En attente</span>
                                     </span>
                                 {% else %}
-                                    <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 font-extrabold text-[10px]">En attente</span>
+                                    <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 text-[10px] font-extrabold">
+                                        <i class="fa-solid fa-xmark text-[9px]" aria-hidden="true"></i>
+                                        <span>Rejeté</span>
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3.5 px-4 text-right font-mono font-bold text-[11px] text-blue-600">
+                                {{ p.external_reference }}
+                                {% if p.sebpay_transaction_id %}
+                                    <div class="text-[10px] text-slate-400 font-normal">ID: {{ p.sebpay_transaction_id }}</div>
                                 {% endif %}
                             </td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="4" class="py-8 text-center text-slate-400 font-medium">
-                                Aucun accès enregistrés dans le système.
+                            <td colspan="7" class="py-8 text-center text-slate-400 font-medium">
+                                Aucun paiement répertorié dans le système.
                             </td>
                         </tr>
                     {% endfor %}

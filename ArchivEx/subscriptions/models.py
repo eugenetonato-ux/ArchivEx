@@ -14,7 +14,7 @@ class SubscriptionPlan(models.Model):
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=50, unique=True)
     scope = models.CharField(max_length=20, choices=SCOPE_CHOICES, default="semester")
-    price = models.PositiveIntegerField(default=2000, help_text="Prix en FCFA")
+    price = models.PositiveIntegerField(default=4500, help_text="Prix en FCFA")
     duration_days = models.PositiveIntegerField(default=180, help_text="Durée de validité en jours")
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)

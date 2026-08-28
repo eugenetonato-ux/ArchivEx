@@ -137,6 +137,19 @@ def execute_intelligent_search(query_string, category="all", user=None):
     all_variants.add(q_raw)
     all_variants.add(remove_accents(q_raw))
 
+    extra_variants = set()
+    for v in list(all_variants):
+        extra_variants.add(v.capitalize())
+        extra_variants.add(v.title())
+        extra_variants.add(v.upper())
+        if v.lower().startswith("e") or v.lower().startswith("é"):
+            rest = v[1:]
+            extra_variants.add("é" + rest)
+            extra_variants.add("É" + rest)
+            extra_variants.add("e" + rest)
+            extra_variants.add("E" + rest)
+    all_variants.update(extra_variants)
+
     profile = getattr(user, "profile", None) if user and user.is_authenticated else None
     user_school = profile.school if profile else None
     user_filiere = profile.filiere if profile else None
@@ -155,9 +168,21 @@ def execute_intelligent_search(query_string, category="all", user=None):
         for v in all_variants:
             subj_q |= Q(name__icontains=v) | Q(semester__filiere__name__icontains=v)
 
-        subj_qs = Subject.objects.filter(subj_q).select_related(
+        subj_qs = list(Subject.objects.filter(subj_q).select_related(
             "semester", "semester__filiere", "semester__filiere__school", "semester__filiere__level"
-        ).distinct()
+        ).distinct())
+
+        # Fallback for accent-normalized matching in DBs like SQLite without unicode icontains
+        matched_ids = set(s.id for s in subj_qs)
+        all_subjs = Subject.objects.select_related(
+            "semester", "semester__filiere", "semester__filiere__school", "semester__filiere__level"
+        ).all()
+        for s in all_subjs:
+            if s.id not in matched_ids:
+                s_name_norm = remove_accents(s.name.lower())
+                if any(remove_accents(v.lower()) in s_name_norm for v in all_variants if len(v) >= 3):
+                    subj_qs.append(s)
+                    matched_ids.add(s.id)
 
         for s in subj_qs:
             is_priority = bool(user_filiere and s.semester.filiere_id == user_filiere.id)
@@ -184,7 +209,7 @@ def execute_intelligent_search(query_string, category="all", user=None):
             exam_q |= Q(title__icontains=v) | Q(subject__name__icontains=v) | Q(description__icontains=v)
 
         exam_qs = Exam.objects.filter(is_published=True).filter(exam_q).select_related(
-            "subject", "filiere", "level", "semester", "filiere__school"
+            "subject", "filiere", "level", "semester", "filiere__school", "summary"
         ).distinct()
 
         for ex in exam_qs:
@@ -203,6 +228,9 @@ def execute_intelligent_search(query_string, category="all", user=None):
                 "has_access": has_access,
                 "is_priority": is_priority,
                 "score": score,
+                "is_free": ex.is_free,
+                "has_correction": ex.has_correction,
+                "has_summary": ex.has_summary,
             })
         exams_results.sort(key=lambda x: x["score"], reverse=True)
         total_results_count += len(exams_results)

@@ -110,9 +110,34 @@
                 <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.file.label }}</label>
                 {{ form.file }}
                 {% if form.instance.file %}
-                    <p class="text-[11px] text-slate-500 mt-1 font-medium">Document actuel : <a href="{{ form.instance.file.url }}" target="_blank" class="text-[#2563EB] underline font-bold">Consulter le PDF</a></p>
+                    <p class="text-[11px] text-slate-500 mt-1 font-medium">Document actuel : <a href="{{ form.instance.file.url }}" target="_blank" class="text-[#2563EB] underline font-bold">Consulter le PDF Épreuve</a></p>
                 {% endif %}
                 {% if form.file.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.file.errors.0 }}</p>{% endif %}
+            </div>
+
+            <!-- OPTIONAL CORRECTION & SUMMARY PDF UPLOADS -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50/80 p-4 rounded-xl border border-slate-200/80">
+                <div>
+                    <label class="block text-xs font-bold text-[#071A49] mb-1.5">
+                        <i class="fa-solid fa-file-signature text-amber-500 mr-1" aria-hidden="true"></i> {{ form.correction_file.label }}
+                    </label>
+                    {{ form.correction_file }}
+                    {% if form.instance.correction_file %}
+                        <p class="text-[11px] text-emerald-600 mt-1 font-bold">✓ Correction PDF actuellement rattachée</p>
+                    {% endif %}
+                    {% if form.correction_file.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.correction_file.errors.0 }}</p>{% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-[#071A49] mb-1.5">
+                        <i class="fa-solid fa-book-open text-purple-500 mr-1" aria-hidden="true"></i> {{ form.summary_file.label }}
+                    </label>
+                    {{ form.summary_file }}
+                    {% if form.instance.has_summary %}
+                        <p class="text-[11px] text-emerald-600 mt-1 font-bold">✓ Résumé / Fiche actuellement rattaché</p>
+                    {% endif %}
+                    {% if form.summary_file.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.summary_file.errors.0 }}</p>{% endif %}
+                </div>
             </div>
 
             {% if form.semester.field.queryset.count > 1 %}

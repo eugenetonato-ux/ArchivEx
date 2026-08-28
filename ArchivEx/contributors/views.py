@@ -1,9 +1,10 @@
+import os
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q, Count
 from django.contrib.auth import get_user_model, authenticate, login, logout
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden, FileResponse, Http404
 
 from academics.models import School, Level, Filiere, AcademicYear, Semester, Subject
 from exams.models import Exam
@@ -841,6 +842,67 @@ def structure_overview_view(request):
     return render(request, "contributors/structure/overview.html", context)
 
 
+@contributor_required
+def resource_completeness_view(request):
+    """
+    Vue de synthèse de la complétude des ressources pour les contributeurs.
+    Permet d'identifier rapidement les épreuves sans correction ou sans résumé.
+    """
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
+
+    exams = Exam.objects.select_related("subject", "semester", "filiere", "filiere__school", "summary").order_by("-created_at")
+
+    if active_school:
+        exams = exams.filter(filiere__school=active_school)
+    if active_filiere:
+        exams = exams.filter(filiere=active_filiere)
+    if active_semester:
+        exams = exams.filter(semester=active_semester)
+
+    total_exams = exams.count()
+    with_correction_count = exams.filter(correction_file__isnull=False).exclude(correction_file="").count()
+
+    with_summary_count = exams.filter(
+        Q(summary_file__isnull=False) & ~Q(summary_file="") | Q(summary__isnull=False)
+    ).count()
+
+    complete_count = 0
+    all_exams_list = list(exams)
+    for e in all_exams_list:
+        if e.has_correction and e.has_summary:
+            complete_count += 1
+
+    without_correction_count = total_exams - with_correction_count
+    without_summary_count = total_exams - with_summary_count
+
+    filter_type = request.GET.get("filter", "all")
+    if filter_type == "missing_correction":
+        exams_list = [e for e in all_exams_list if not e.has_correction]
+    elif filter_type == "missing_summary":
+        exams_list = [e for e in all_exams_list if not e.has_summary]
+    elif filter_type == "missing_both":
+        exams_list = [e for e in all_exams_list if not e.has_correction and not e.has_summary]
+    elif filter_type == "complete":
+        exams_list = [e for e in all_exams_list if e.has_correction and e.has_summary]
+    else:
+        exams_list = all_exams_list[:100]
+
+    context = {
+        "active_school": active_school,
+        "active_filiere": active_filiere,
+        "active_semester": active_semester,
+        "total_exams": total_exams,
+        "with_correction_count": with_correction_count,
+        "without_correction_count": without_correction_count,
+        "with_summary_count": with_summary_count,
+        "without_summary_count": without_summary_count,
+        "complete_count": complete_count,
+        "selected_filter": filter_type,
+        "exams": exams_list,
+    }
+    return render(request, "contributors/completeness.html", context)
+
+
 # ==========================================
 # 6. ÉTUDIANTS, PAIEMENTS & NOTIFICATIONS
 # ==========================================
@@ -873,17 +935,58 @@ def student_list_view(request):
 
 @contributor_required
 def payment_list_view(request):
-    """Aperçu des accès Pass Semestre et transactions."""
+    """Supervision des paiements SebPay Mobile Money et accès Pass Semestre."""
     active_school, active_filiere, active_semester = get_active_academic_context(request)
+    q = request.GET.get("q", "").strip()
+    status_filter = request.GET.get("filter", "all")
 
-    access_records = SemesterAccess.objects.select_related("user", "filiere", "semester").order_by("-activated_at")
+    payments_qs = Payment.objects.select_related("user", "semester", "semester__filiere").order_by("-created_at")
+
+    if active_school:
+        payments_qs = payments_qs.filter(semester__filiere__school=active_school)
     if active_filiere:
-        access_records = access_records.filter(filiere=active_filiere)
+        payments_qs = payments_qs.filter(semester__filiere=active_filiere)
+    if active_semester:
+        payments_qs = payments_qs.filter(semester=active_semester)
+
+    if q:
+        payments_qs = payments_qs.filter(
+            Q(user__username__icontains=q) |
+            Q(user__first_name__icontains=q) |
+            Q(user__last_name__icontains=q) |
+            Q(external_reference__icontains=q) |
+            Q(sebpay_transaction_id__icontains=q) |
+            Q(phone_number__icontains=q)
+        )
+
+    all_payments = list(payments_qs)
+    total_count = len(all_payments)
+    pending_count = sum(1 for p in all_payments if p.is_pending)
+    approved_count = sum(1 for p in all_payments if p.is_approved)
+    rejected_count = sum(1 for p in all_payments if p.is_rejected)
+    total_revenue = sum(p.amount for p in all_payments if p.is_approved)
+
+    if status_filter == "pending":
+        filtered_payments = [p for p in all_payments if p.is_pending]
+    elif status_filter == "approved":
+        filtered_payments = [p for p in all_payments if p.is_approved]
+    elif status_filter == "rejected":
+        filtered_payments = [p for p in all_payments if p.is_rejected]
+    else:
+        filtered_payments = all_payments
 
     context = {
         "active_school": active_school,
         "active_filiere": active_filiere,
-        "access_records": access_records,
+        "active_semester": active_semester,
+        "payments": filtered_payments,
+        "q": q,
+        "status_filter": status_filter,
+        "total_count": total_count,
+        "pending_count": pending_count,
+        "approved_count": approved_count,
+        "rejected_count": rejected_count,
+        "total_revenue": total_revenue,
     }
     return render(request, "contributors/payments/list.html", context)
 
@@ -923,3 +1026,124 @@ def notification_create_view(request):
         "form": form,
     }
     return render(request, "contributors/notifications/form.html", context)
+
+
+# ==========================================
+# 7. BIBLIOTHÈQUE CENTRALE ARCHIVEX & RÉCUPÉRATION ADMIN
+# ==========================================
+
+@contributor_required
+def library_index_view(request):
+    """Bibliothèque centrale ArchivEx : Gestion des ressources académiques et de leur complétude."""
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
+    q = request.GET.get("q", "").strip()
+    status_filter = request.GET.get("filter", "all")
+
+    qs = Exam.objects.select_related(
+        "subject", "semester", "filiere", "level", "academic_year", "filiere__school", "summary"
+    ).order_by("-created_at")
+
+    if active_school:
+        qs = qs.filter(filiere__school=active_school)
+    if active_filiere:
+        qs = qs.filter(filiere=active_filiere)
+    if active_semester:
+        qs = qs.filter(semester=active_semester)
+
+    if q:
+        qs = qs.filter(
+            Q(title__icontains=q) |
+            Q(subject__name__icontains=q) |
+            Q(year__icontains=q)
+        )
+
+    all_exams = list(qs)
+    total_count = len(all_exams)
+    missing_corr_count = sum(1 for e in all_exams if not e.has_correction)
+    missing_sum_count = sum(1 for e in all_exams if not e.has_summary)
+    complete_count = sum(1 for e in all_exams if e.has_correction and e.has_summary)
+
+    if status_filter == "missing_correction":
+        all_exams = [e for e in all_exams if not e.has_correction]
+    elif status_filter == "missing_summary":
+        all_exams = [e for e in all_exams if not e.has_summary]
+    elif status_filter == "complete":
+        all_exams = [e for e in all_exams if e.has_correction and e.has_summary]
+    elif status_filter == "exam_only":
+        all_exams = [e for e in all_exams if not e.has_correction and not e.has_summary]
+
+    context = {
+        "active_school": active_school,
+        "active_filiere": active_filiere,
+        "active_semester": active_semester,
+        "exams": all_exams,
+        "q": q,
+        "status_filter": status_filter,
+        "total_count": total_count,
+        "missing_corr_count": missing_corr_count,
+        "missing_sum_count": missing_sum_count,
+        "complete_count": complete_count,
+    }
+    return render(request, "contributors/library/index.html", context)
+
+
+@contributor_required
+def library_exam_detail_view(request, pk):
+    """Page de détail d'une ressource de la Bibliothèque centrale."""
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
+    exam = get_object_or_404(
+        Exam.objects.select_related(
+            "subject", "semester", "filiere", "level", "academic_year", "filiere__school", "summary"
+        ),
+        pk=pk
+    )
+
+    if active_school and exam.filiere.school_id != active_school.id:
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied("Vous n'avez pas la permission de gérer les ressources de cette université.")
+
+    profile = getattr(request.user, "contributor_profile", None)
+    is_main_admin = request.user.is_superuser or (profile and profile.role == "SUPER_ADMIN")
+
+    context = {
+        "active_school": active_school,
+        "active_filiere": active_filiere,
+        "exam": exam,
+        "is_main_admin": is_main_admin,
+    }
+    return render(request, "contributors/library/detail.html", context)
+
+
+@contributor_required
+def library_download_original_view(request, pk, file_type):
+    """
+    Récupération du fichier original non-filigrané par l'administrateur principal.
+    Rôle réservé au superadministrateur ou SUPER_ADMIN.
+    """
+    profile = getattr(request.user, "contributor_profile", None)
+    is_main_admin = request.user.is_superuser or (profile and profile.role == "SUPER_ADMIN")
+
+    if not is_main_admin:
+        return HttpResponseForbidden("Action de récupération d'original réservée à l'administrateur principal de la plateforme.")
+
+    exam = get_object_or_404(Exam, pk=pk)
+    target_file = None
+
+    if file_type == "correction":
+        target_file = exam.correction_file
+    elif file_type == "summary":
+        target_file = exam.summary_file or (exam.summary.file if exam.summary else None)
+    else:
+        target_file = exam.file
+
+    if not target_file or not os.path.exists(target_file.path):
+        raise Http404("Le fichier original réclamé est introuvable sur le serveur.")
+
+    response = FileResponse(
+        open(target_file.path, "rb"),
+        content_type="application/pdf"
+    )
+    filename = os.path.basename(target_file.path)
+    response["Content-Disposition"] = f'attachment; filename="ORIGINAL_{filename}"'
+    return response
+

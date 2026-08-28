@@ -1,0 +1,81 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Lecteur Académique — {{ exam.title }} | ArchivEx{% endblock %}
+
+{% block content %}
+<style>
+    /* Protection anti-impression et anti-copie */
+    @media print {
+        body { display: none !important; }
+    }
+    .no-select {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+</style>
+
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 no-select" oncontextmenu="return false;">
+
+    <!-- BREADCRUMB ACADEMIC HIERARCHY -->
+    <nav class="flex items-center text-xs font-medium text-slate-500 space-x-2 mb-6 flex-wrap gap-y-1">
+        <a href="{% url 'academics:home' %}" class="hover:text-[#2563EB]">Accueil</a>
+        <span>/</span>
+        <a href="{% url 'academics:filieres' %}" class="hover:text-[#2563EB]">{{ exam.filiere.name }}</a>
+        <span>/</span>
+        <span class="text-slate-600">{{ exam.semester.label }}</span>
+        <span>/</span>
+        <a href="{% url 'exams:liste' %}?subject={{ exam.subject.id }}" class="hover:text-[#2563EB] font-semibold">{{ exam.subject.name }}</a>
+        <span>/</span>
+        <span class="text-[#071A49] font-bold">Lecteur Académique</span>
+    </nav>
+
+    <!-- VIEWER CONTROL HEADER CARD -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 mb-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <div class="flex items-center space-x-2 mb-2 flex-wrap gap-1">
+                <span class="px-2.5 py-0.5 rounded-full bg-blue-50 text-[#2563EB] text-[10px] font-extrabold uppercase">
+                    {{ resource_label }}
+                </span>
+                <span class="text-xs font-bold text-slate-500">{{ exam.year }} · {{ exam.get_exam_type_display|default:"Session Normale" }}</span>
+                <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold flex items-center space-x-1">
+                    <i class="fa-solid fa-shield-halved text-[9px]" aria-hidden="true"></i>
+                    <span>Consultation Sécurisée Filigranée</span>
+                </span>
+            </div>
+
+            <h1 class="text-xl sm:text-2xl font-black text-[#071A49]">
+                {{ exam.title }}
+            </h1>
+            <p class="text-xs font-bold text-[#2563EB] mt-0.5">
+                UE — {{ exam.subject.name }} · {{ exam.filiere.school.name|default:"ENEAM" }} ({{ exam.filiere.name }})
+            </p>
+        </div>
+
+        <div class="flex items-center space-x-3 w-full md:w-auto">
+            <a href="{% url 'exams:detail' pk=exam.id %}" class="btn-secondary text-xs px-4 py-2.5 font-bold inline-flex items-center space-x-1.5 w-full md:w-auto justify-center">
+                <i class="fa-solid fa-arrow-left text-xs" aria-hidden="true"></i>
+                <span>Retour à la fiche</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- WATERMARK NOTICE ALERT -->
+    <div class="p-3.5 sm:p-4 rounded-2xl bg-amber-50/90 border border-amber-200/70 text-amber-900 flex items-center justify-between text-xs font-semibold mb-6">
+        <div class="flex items-center space-x-2.5">
+            <i class="fa-solid fa-user-shield text-amber-600 text-sm" aria-hidden="true"></i>
+            <span>Document personnalisé au nom de <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>. Consultation personnelle exclusive.</span>
+        </div>
+    </div>
+
+    <!-- PROTECTED PDF EMBEDDED CANVAS / IFRAME VIEWER -->
+    <div class="w-full h-[750px] rounded-3xl overflow-hidden bg-slate-900 border border-slate-300 shadow-xl relative">
+        <iframe src="{{ stream_url }}" class="w-full h-full border-0 no-select" title="Lecteur de document académique sécurisé"></iframe>
+    </div>
+
+</div>
+{% endblock %}

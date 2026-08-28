@@ -1,0 +1,98 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Guide Étudiant — Comment utiliser ArchivEx{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+
+    <!-- HEADER BLOCK -->
+    <div class="bg-gradient-to-r from-[#071A49] to-blue-900 rounded-3xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden">
+        <div class="relative z-10 space-y-4 max-w-2xl">
+            <span class="inline-flex items-center space-x-2 bg-blue-500/20 text-blue-200 border border-blue-400/30 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+                <i class="fa-solid fa-graduation-cap text-xs" aria-hidden="true"></i>
+                <span>Guide de l'étudiant</span>
+            </span>
+            <h1 class="text-2xl sm:text-4xl font-black tracking-tight leading-tight">
+                Comment fonctionne ArchivEx ?
+            </h1>
+            <p class="text-slate-200 text-xs sm:text-sm leading-relaxed">
+                Retrouvez en quelques clics l'ensemble des ressources académiques (épreuves, corrections et fiches de révision) classées par université, filière et semestre.
+            </p>
+        </div>
+    </div>
+
+    <!-- 4-STEP METHODOLOGY -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- STEP 1 -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm flex space-x-4">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 text-[#071A49] flex items-center justify-center font-black text-lg shrink-0 border border-blue-100">
+                1
+            </div>
+            <div class="space-y-1.5">
+                <h3 class="text-base font-bold text-[#071A49]">Sélectionnez votre parcours</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Accédez aux épreuves de votre université, choisis ta filière (ex: Licence 1 Informatique) et naviguez par semestre.
+                </p>
+            </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm flex space-x-4">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 text-[#071A49] flex items-center justify-center font-black text-lg shrink-0 border border-blue-100">
+                2
+            </div>
+            <div class="space-y-1.5">
+                <h3 class="text-base font-bold text-[#071A49]">Espace Gratuit vs Premium</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    L'Espace Gratuit propose une sélection d'annales en accès libre. L'Espace Premium donne accès à l'intégralité du catalogue, corrections et fiches résumés.
+                </p>
+            </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm flex space-x-4">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 text-[#071A49] flex items-center justify-center font-black text-lg shrink-0 border border-blue-100">
+                3
+            </div>
+            <div class="space-y-1.5">
+                <h3 class="text-base font-bold text-[#071A49]">Activer le Pass Semestre</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Le Pass Semestre débloque en un clic toutes les épreuves, leurs corrections rédigées et les fiches résumés pour l'ensemble du semestre actif.
+                </p>
+            </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm flex space-x-4">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 text-[#071A49] flex items-center justify-center font-black text-lg shrink-0 border border-blue-100">
+                4
+            </div>
+            <div class="space-y-1.5">
+                <h3 class="text-base font-bold text-[#071A49]">Recherche Intelligente</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Utilisez la barre de recherche globale pour retrouver une matière ou une annale spécifique en tapant par mot-clé (ex: <i>"droit"</i>, <i>"analyse"</i>).
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- CTA -->
+    <div class="bg-slate-900 rounded-2xl p-6 sm:p-8 text-center text-white space-y-4">
+        <h2 class="text-xl font-black">Prêt à réviser efficacement ?</h2>
+        <div class="flex flex-wrap justify-center gap-3">
+            <a href="{% url 'academics:filieres' %}" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors inline-flex items-center space-x-2">
+                <i class="fa-solid fa-compass" aria-hidden="true"></i>
+                <span>Parcourir les filières</span>
+            </a>
+            <a href="{% url 'exams:free_liste' %}" class="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors inline-flex items-center space-x-2">
+                <i class="fa-solid fa-gift" aria-hidden="true"></i>
+                <span>Voir les épreuves gratuites</span>
+            </a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

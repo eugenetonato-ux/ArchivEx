@@ -10,12 +10,16 @@ urlpatterns = [
     path("", views.admin_dashboard_view, name="admin_dashboard"),
     path("contexte/", views.set_context_view, name="set_context"),
 
-    # Épreuves
+    # Épreuves & Bibliothèque
+    path("library/", views.library_index_view, name="library_index"),
+    path("library/<int:pk>/", views.library_exam_detail_view, name="library_detail"),
+    path("library/<int:pk>/download-original/<str:file_type>/", views.library_download_original_view, name="library_download_original"),
     path("epreuves/", views.exam_list_view, name="exam_list"),
     path("epreuves/ajouter/", views.exam_create_view, name="exam_create"),
     path("epreuves/<int:pk>/modifier/", views.exam_edit_view, name="exam_edit"),
     path("epreuves/<int:pk>/statut/", views.exam_toggle_status_view, name="exam_toggle_status"),
     path("epreuves/<int:pk>/supprimer/", views.exam_delete_view, name="exam_delete"),
+    path("completeness/", views.resource_completeness_view, name="completeness_overview"),
 
     # Résumés
     path("resumes/", views.summary_list_view, name="summary_list"),

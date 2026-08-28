@@ -42,6 +42,11 @@ def about_view(request):
     return render(request, "academics/about.html")
 
 
+def student_guide_view(request):
+    """Guide d'utilisation d'ArchivEx pour les étudiants."""
+    return render(request, "academics/student_guide.html")
+
+
 from subscriptions.services import can_user_access
 
 

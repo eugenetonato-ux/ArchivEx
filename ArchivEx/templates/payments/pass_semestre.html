@@ -181,7 +181,7 @@
                 <div class="mb-6">
                     <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block mb-1">Tarif unique du semestre</span>
                     <div class="flex items-baseline space-x-2">
-                        <span class="text-4xl sm:text-5xl font-black text-[#071A49] tracking-tight">2 000</span>
+                        <span class="text-4xl sm:text-5xl font-black text-[#071A49] tracking-tight">4 500</span>
                         <span class="text-lg font-black text-[#2563EB]">FCFA</span>
                     </div>
                     <p class="text-[11px] text-slate-400 font-medium mt-1">Paiement unique sans abonnement ni renouvellement automatique.</p>
@@ -228,11 +228,63 @@
                         </a>
                     </div>
                 {% else %}
-                    <form method="post" action="{% url 'payments:initier_paiement' semester_id=semester.id %}">
+                    <form method="post" action="{% url 'payments:initier_paiement' semester_id=semester.id %}" class="space-y-4">
                         {% csrf_token %}
-                        <button type="submit" class="btn-gold w-full text-sm py-4 font-black shadow-lg shadow-amber-500/30 hover:scale-[1.02] transition-all rounded-2xl block text-center cursor-pointer flex items-center justify-center space-x-2">
-                            <i class="fa-solid fa-lock text-xs"></i>
-                            <span>Débloquer mon Pass Semestre (2 000 FCFA)</span>
+
+                        <!-- OPERATOR SELECTION RADIO CARDS -->
+                        <div>
+                            <label class="text-xs font-extrabold text-[#071A49] block mb-2">
+                                Choisissez votre opérateur Mobile Money :
+                            </label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="operator" value="mtn" checked class="peer sr-only">
+                                    <div class="p-3 rounded-2xl border border-slate-200 peer-checked:border-amber-500 peer-checked:bg-amber-50/70 text-center transition-all">
+                                        <div class="w-8 h-8 mx-auto rounded-xl bg-amber-400 text-amber-950 font-black text-[10px] flex items-center justify-center mb-1">
+                                            MTN
+                                        </div>
+                                        <span class="text-[11px] font-extrabold text-[#071A49] block">MTN MoMo</span>
+                                    </div>
+                                </label>
+
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="operator" value="moov" class="peer sr-only">
+                                    <div class="p-3 rounded-2xl border border-slate-200 peer-checked:border-blue-500 peer-checked:bg-blue-50/70 text-center transition-all">
+                                        <div class="w-8 h-8 mx-auto rounded-xl bg-blue-600 text-white font-black text-[10px] flex items-center justify-center mb-1">
+                                            MOOV
+                                        </div>
+                                        <span class="text-[11px] font-extrabold text-[#071A49] block">Moov Money</span>
+                                    </div>
+                                </label>
+
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="operator" value="celtiis" class="peer sr-only">
+                                    <div class="p-3 rounded-2xl border border-slate-200 peer-checked:border-cyan-500 peer-checked:bg-cyan-50/70 text-center transition-all">
+                                        <div class="w-8 h-8 mx-auto rounded-xl bg-cyan-600 text-white font-black text-[10px] flex items-center justify-center mb-1">
+                                            CEL
+                                        </div>
+                                        <span class="text-[11px] font-extrabold text-[#071A49] block">Celtiis Cash</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- PHONE NUMBER INPUT -->
+                        <div>
+                            <label for="phone_number" class="text-xs font-extrabold text-[#071A49] block mb-1">
+                                Numéro Mobile Money (Bénin) :
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-xs font-black text-slate-400">
+                                    +229
+                                </div>
+                                <input type="tel" id="phone_number" name="phone_number" required placeholder="Ex: 97 00 00 00" class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-black text-[#071A49] placeholder-slate-400 focus:ring-2 focus:ring-blue-600 outline-none">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-gold w-full text-xs sm:text-sm py-4 font-black shadow-lg shadow-amber-500/30 hover:scale-[1.02] transition-all rounded-2xl block text-center cursor-pointer flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-[#071A49] fa-lock text-xs" aria-hidden="true"></i>
+                            <span>Payer maintenant (4 500 FCFA)</span>
                         </button>
                     </form>
                 {% endif %}
@@ -241,12 +293,12 @@
                 <div class="mt-6 pt-4 border-t border-slate-100 text-center space-y-3">
                     <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Moyens de paiement acceptés</p>
                     <div class="flex items-center justify-center space-x-2 text-[10px] font-extrabold text-slate-600">
-                        <span class="px-2 py-1 bg-amber-50 border border-amber-200 rounded-lg text-amber-800">MTN MoMo</span>
-                        <span class="px-2 py-1 bg-blue-50 border border-blue-200 rounded-lg text-blue-800">Moov Money</span>
-                        <span class="px-2 py-1 bg-cyan-50 border border-cyan-200 rounded-lg text-cyan-800">Wave</span>
+                        <span class="px-2 py-1 bg-amber-50 border border-amber-200 rounded-lg text-amber-800">MTN Money</span>
+                        <span class="px-2.5 py-1 bg-blue-50 border border-blue-200 rounded-lg text-blue-800">Moov Money</span>
+                        <span class="px-2.5 py-1 bg-cyan-50 border border-cyan-200 rounded-lg text-cyan-800">Celtiis Cash</span>
                     </div>
                     <div class="flex items-center justify-center space-x-1.5 text-[11px] text-slate-400 font-medium">
-                        <i class="fa-solid fa-shield-halved text-emerald-500 text-xs"></i>
+                        <i class="fa-solid fa-shield-halved text-emerald-500 text-xs" aria-hidden="true"></i>
                         <span>Paiement sécurisé · Activation immédiate</span>
                     </div>
                 </div>

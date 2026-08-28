@@ -270,6 +270,145 @@ class Phase11AdministrationTests(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertContains(res, "Django")
 
+    def test_exam_creation_with_optional_correction_and_summary_files(self):
+        """Contributor can publish an exam with optional correction and summary PDF files in a single form."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from exams.models import Exam
+
+        self.client.login(username="admin_boss", password="Password123!")
+
+        exam_file = SimpleUploadedFile("epreuve.pdf", b"%PDF-1.4 epreuve", content_type="application/pdf")
+        corr_file = SimpleUploadedFile("correction.pdf", b"%PDF-1.4 correction", content_type="application/pdf")
+        sum_file = SimpleUploadedFile("summary.pdf", b"%PDF-1.4 summary", content_type="application/pdf")
+
+        post_data = {
+            "title": "Examen Complet Algorithme 2026",
+            "subject_name": "Algorithmique Avancée",
+            "year": "2026",
+            "exam_type": "examen",
+            "is_free": "False",
+            "is_published": "True",
+            "file": exam_file,
+            "correction_file": corr_file,
+            "summary_file": sum_file,
+            "description": "Description épreuve complète",
+        }
+
+        res = self.client.post(reverse("contributors:exam_create"), data=post_data)
+        self.assertEqual(res.status_code, 302)
+
+        exam = Exam.objects.filter(title="Examen Complet Algorithme 2026").first()
+        self.assertIsNotNone(exam)
+        self.assertTrue(exam.has_correction)
+        self.assertTrue(exam.has_summary)
+        self.assertEqual(exam.completeness_status, "COMPLETE")
+        self.assertEqual(exam.subject.name, "Algorithmique Avancée")
+
+    def test_resource_completeness_overview_and_filtering(self):
+        """Resource completeness dashboard lists exams and filters by missing correction/summary."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from exams.models import Exam
+
+        # Exam 1: Complete
+        Exam.objects.create(
+            title="Épreuve Complète 100%",
+            subject=self.subject,
+            semester=self.semester,
+            filiere=self.filiere,
+            level=self.level,
+            academic_year=self.year,
+            year=2026,
+            exam_type="examen",
+            is_published=True,
+            file=SimpleUploadedFile("ep.pdf", b"%PDF-1.4", content_type="application/pdf"),
+            correction_file=SimpleUploadedFile("co.pdf", b"%PDF-1.4", content_type="application/pdf"),
+            summary_file=SimpleUploadedFile("su.pdf", b"%PDF-1.4", content_type="application/pdf"),
+        )
+
+        # Exam 2: Missing correction
+        Exam.objects.create(
+            title="Épreuve Sans Correction",
+            subject=self.subject,
+            semester=self.semester,
+            filiere=self.filiere,
+            level=self.level,
+            academic_year=self.year,
+            year=2026,
+            exam_type="examen",
+            is_published=True,
+            file=SimpleUploadedFile("ep.pdf", b"%PDF-1.4", content_type="application/pdf"),
+            summary_file=SimpleUploadedFile("su.pdf", b"%PDF-1.4", content_type="application/pdf"),
+        )
+
+        self.client.login(username="admin_boss", password="Password123!")
+
+        res_overview = self.client.get(reverse("contributors:completeness_overview"))
+        self.assertEqual(res_overview.status_code, 200)
+
+        res_missing_corr = self.client.get(reverse("contributors:completeness_overview") + "?filter=missing_correction")
+        self.assertEqual(res_missing_corr.status_code, 200)
+        filtered_titles = [e.title for e in res_missing_corr.context["exams"]]
+        self.assertIn("Épreuve Sans Correction", filtered_titles)
+        self.assertNotIn("Épreuve Complète 100%", filtered_titles)
+
+    def test_library_index_and_detail_views(self):
+        """Staff can browse central library index and detail views."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from exams.models import Exam
+
+        exam = Exam.objects.create(
+            title="Épreuve Bibliothèque 2026",
+            subject=self.subject,
+            semester=self.semester,
+            filiere=self.filiere,
+            level=self.level,
+            academic_year=self.year,
+            year=2026,
+            exam_type="examen",
+            is_published=True,
+            file=SimpleUploadedFile("orig.pdf", b"%PDF-1.4 original file", content_type="application/pdf"),
+        )
+
+        self.client.login(username="admin_boss", password="Password123!")
+
+        res_idx = self.client.get(reverse("contributors:library_index"))
+        self.assertEqual(res_idx.status_code, 200)
+        self.assertIn(exam, list(res_idx.context["exams"]))
+
+        res_det = self.client.get(reverse("contributors:library_detail", kwargs={"pk": exam.id}))
+        self.assertEqual(res_det.status_code, 200)
+
+    def test_admin_recovery_route_restricted_to_superadmin(self):
+        """Superuser can download original file; ordinary contributor receives 403 Forbidden."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from exams.models import Exam
+
+        exam = Exam.objects.create(
+            title="Épreuve Original Admin Test",
+            subject=self.subject,
+            semester=self.semester,
+            filiere=self.filiere,
+            level=self.level,
+            academic_year=self.year,
+            year=2026,
+            exam_type="examen",
+            is_published=True,
+            file=SimpleUploadedFile("orig_exam.pdf", b"%PDF-1.4 original file data", content_type="application/pdf"),
+        )
+
+        url = reverse("contributors:library_download_original", kwargs={"pk": exam.id, "file_type": "exam"})
+
+        # 1. Ordinary staff / School manager -> 403 Forbidden expected
+        self.client.login(username="staff_eneam", password="Password123!")
+        res_staff = self.client.get(url)
+        self.assertEqual(res_staff.status_code, 403)
+
+        # 2. Superadmin -> 200 OK download expected
+        self.client.login(username="admin_boss", password="Password123!")
+        res_admin = self.client.get(url)
+        self.assertEqual(res_admin.status_code, 200)
+        self.assertIn("attachment", res_admin["Content-Disposition"])
+
     def test_zero_emoji_policy_in_administration_portal(self):
         """Verify zero Unicode emojis appear in custom administration templates."""
         emojis = ["📚", "📄", "🎯", "💡", "🔒", "⚡", "✓", "⭐", "🚀", "👋", "❤️", "🔔"]
@@ -277,6 +416,8 @@ class Phase11AdministrationTests(TestCase):
         for route_name in [
             "contributors:admin_dashboard",
             "contributors:exam_list",
+            "contributors:library_index",
+            "contributors:completeness_overview",
             "contributors:summary_list",
             "contributors:guide_list",
             "contributors:article_list",
@@ -287,4 +428,6 @@ class Phase11AdministrationTests(TestCase):
             content = res.content.decode("utf-8")
             for emoji in emojis:
                 self.assertNotIn(emoji, content, f"Emoji {emoji} found in response for {route_name}")
+
+
 
