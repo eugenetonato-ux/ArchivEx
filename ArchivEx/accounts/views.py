@@ -42,7 +42,12 @@ def login_view(request):
             user = form.get_user()
             login(request, user)
             messages.success(request, f"Ravi de te revoir, {user.first_name or user.username} !")
-            next_url = request.GET.get("next") or "accounts:dashboard"
+            next_url = request.GET.get("next")
+            from django.urls import reverse
+            if not next_url or next_url == "/" or next_url == reverse("academics:home"):
+                if user.is_staff or user.is_superuser or getattr(user, "contributor_profile", None):
+                    return redirect("contributors:admin_dashboard")
+                return redirect("accounts:dashboard")
             return redirect(next_url)
         else:
             messages.error(request, "Email ou mot de passe incorrect.")

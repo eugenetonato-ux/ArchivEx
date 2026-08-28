@@ -30,88 +30,148 @@
 {% endif %}
 
 <!-- 2. HERO SECTION WITH ACADEMIC POSITIONING -->
-<section class="relative overflow-hidden pt-12 pb-16 md:pt-20 md:pb-24 bg-[#071A49] text-white">
-    <div class="tech-wave-bg" aria-hidden="true">
-        <svg class="tech-wave-svg" viewBox="0 0 1600 600" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <filter id="neonGlowFilter" x="-20%" y="-20%" width="140%" height="140%">
-                    <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
-                    <feMerge>
-                        <feMergeNode in="coloredBlur"/>
-                        <feMergeNode in="SourceGraphic"/>
-                    </feMerge>
-                </filter>
-            </defs>
-            <path class="wave-layer-1" filter="url(#neonGlowFilter)" stroke-width="2.5" d="M-200 280 Q 200 120, 600 280 T 1400 280 T 2200 280" />
-            <path class="wave-layer-2" filter="url(#neonGlowFilter)" stroke-width="3.0" d="M-200 320 Q 250 480, 700 320 T 1500 320 T 2300 320" />
-            <path class="wave-layer-3" filter="url(#neonGlowFilter)" stroke-width="1.8" d="M-200 240 Q 300 100, 800 240 T 1600 240 T 2400 240" />
-        </svg>
-    </div>
+<section class="hero-light-section relative overflow-hidden pt-10 pb-14 md:pt-16 md:pb-20">
+    <div class="hero-bg-glow" aria-hidden="true"></div>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-        
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-6 items-center">
+
         <!-- LEFT COLUMN: EDITORIAL CONTENT -->
-        <div class="lg:col-span-7 text-center lg:text-left">
-            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-bold text-blue-200 mb-4">
-                <i class="fa-solid fa-graduation-cap text-[#FBBF24]" aria-hidden="true"></i>
-                <span>ArchivEx</span>
+        <div class="lg:col-span-6 text-center lg:text-left hero-fade-in-up">
+            <div class="badge-l1 inline-flex items-center space-x-2 mb-5">
+                <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+                <span>La référence des étudiants</span>
             </div>
 
-            <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-5 leading-tight">
-                Votre espace de ressources pour<br>
-                <span class="text-[#FBBF24]">mieux préparer vos études.</span>
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[#0B1730] mb-5 leading-[1.1]">
+                Prépare tes examens avec <span class="text-[#2563EB]">ArchivEx</span>
             </h1>
 
-            <p class="max-w-xl mx-auto lg:mx-0 text-sm sm:text-base text-slate-300 mb-8 leading-relaxed font-medium">
-                Accédez aux épreuves des années précédentes, résumés de cours, guides méthodologiques et conseils pratiques structurés par filière et semestre.
+            <p class="max-w-lg mx-auto lg:mx-0 text-sm sm:text-base text-slate-500 mb-7 leading-relaxed font-medium">
+                La plateforme qui centralise les épreuves, corrigés et résumés de tes filières pour t'accompagner tout au long de ton parcours universitaire.
             </p>
+
+            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 mb-8">
+                <div class="hero-feature-chip">
+                    <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+                    <span>Épreuves des années passées</span>
+                </div>
+                <div class="hero-feature-chip">
+                    <i class="fa-solid fa-file-circle-check" aria-hidden="true"></i>
+                    <span>Corrigés détaillés</span>
+                </div>
+                <div class="hero-feature-chip">
+                    <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+                    <span>Résumés de qualité</span>
+                </div>
+            </div>
 
             <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
                 {% if user.is_authenticated %}
-                    <a href="{% url 'academics:filieres' %}" class="btn-primary w-full sm:w-auto text-sm px-7 py-3.5 rounded-xl shadow-lg shadow-blue-600/40 font-extrabold flex items-center justify-center space-x-2">
+                    <a href="{% url 'academics:filieres' %}" class="btn-primary w-full sm:w-auto text-sm px-7 py-3.5 rounded-xl font-extrabold flex items-center justify-center space-x-2">
                         <i class="fa-solid fa-book-open text-sm" aria-hidden="true"></i>
                         <span>Explorer mes épreuves</span>
                     </a>
                     {% if user.is_staff or user.is_superuser or user.contributor_profile %}
-                        <a href="{% url 'contributors:admin_dashboard' %}" class="w-full sm:w-auto text-sm px-6 py-3.5 rounded-xl border border-amber-400/50 bg-amber-500/20 text-amber-300 font-extrabold hover:bg-amber-500/30 transition-colors flex items-center justify-center space-x-2">
+                        <a href="{% url 'contributors:admin_dashboard' %}" class="w-full sm:w-auto text-sm px-6 py-3.5 rounded-xl border border-amber-300 bg-amber-50 text-amber-700 font-extrabold hover:bg-amber-100 transition-colors flex items-center justify-center space-x-2">
                             <i class="fa-solid fa-user-shield text-sm" aria-hidden="true"></i>
                             <span>Espace Administration</span>
                         </a>
                     {% else %}
-                        <a href="{% url 'accounts:dashboard' %}" class="w-full sm:w-auto text-sm px-6 py-3.5 rounded-xl border border-white/30 text-white font-bold hover:bg-white/10 transition-colors flex items-center justify-center space-x-2">
-                            <i class="fa-solid fa-gauge text-sm text-blue-300" aria-hidden="true"></i>
+                        <a href="{% url 'accounts:dashboard' %}" class="btn-secondary w-full sm:w-auto text-sm px-6 py-3.5 rounded-xl font-bold flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-gauge text-sm text-[#2563EB]" aria-hidden="true"></i>
                             <span>Mon tableau de bord</span>
                         </a>
                     {% endif %}
                 {% else %}
-                    <a href="{% url 'accounts:register' %}" class="btn-primary w-full sm:w-auto text-sm px-7 py-3.5 rounded-xl shadow-lg shadow-blue-600/40 font-extrabold flex items-center justify-center space-x-2">
+                    <a href="{% url 'accounts:register' %}" class="btn-primary w-full sm:w-auto text-sm px-7 py-3.5 rounded-xl font-extrabold flex items-center justify-center space-x-2">
                         <i class="fa-solid fa-user-plus text-sm" aria-hidden="true"></i>
                         <span>Créer un compte</span>
                     </a>
-                    <a href="{% url 'accounts:login' %}" class="w-full sm:w-auto text-sm px-6 py-3.5 rounded-xl border border-white/30 text-white font-bold hover:bg-white/10 transition-colors flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-right-to-bracket text-sm text-blue-300" aria-hidden="true"></i>
+                    <a href="{% url 'accounts:login' %}" class="btn-secondary w-full sm:w-auto text-sm px-6 py-3.5 rounded-xl font-bold flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-right-to-bracket text-sm text-[#2563EB]" aria-hidden="true"></i>
                         <span>Se connecter</span>
                     </a>
                 {% endif %}
             </div>
         </div>
 
-        <!-- RIGHT COLUMN: ACADEMIC INFOGRAPHIC -->
-        <div class="lg:col-span-5 flex justify-center">
-            <div class="relative w-full max-w-sm sm:max-w-md p-4">
-                <svg class="w-full h-auto drop-shadow-2xl" viewBox="0 0 400 320" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <circle cx="200" cy="160" r="130" fill="#2563EB" fill-opacity="0.15" />
-                    <rect x="70" y="80" width="170" height="200" rx="14" fill="#0B1B47" stroke="#1D4ED8" stroke-width="2"/>
-                    <rect x="90" y="60" width="170" height="200" rx="14" fill="#0E2461" stroke="#3B82F6" stroke-width="2"/>
-                    <rect x="110" y="40" width="170" height="210" rx="16" fill="#FFFFFF"/>
-                    <rect x="130" y="65" width="130" height="12" rx="4" fill="#071A49"/>
-                    <rect x="130" y="90" width="90" height="8" rx="4" fill="#94A3B8"/>
-                    <rect x="130" y="108" width="110" height="8" rx="4" fill="#CBD5E1"/>
-                    <rect x="130" y="126" width="75" height="8" rx="4" fill="#CBD5E1"/>
-                    <circle cx="155" cy="180" r="22" fill="#071A49"/>
-                    <text x="145" y="187" fill="#3B82F6" font-family="Plus Jakarta Sans, sans-serif" font-weight="900" font-size="20">A</text>
-                    <text x="160" y="187" fill="#FFFFFF" font-family="Plus Jakarta Sans, sans-serif" font-weight="900" font-size="16">x</text>
-                </svg>
+        <!-- RIGHT COLUMN: ARCHIVEX PLATFORM PREVIEW -->
+        <div class="lg:col-span-6 flex justify-center hero-fade-in-up hero-fade-in-up-delay">
+            <div class="relative w-full max-w-md sm:max-w-lg">
+
+                <!-- Floating card: Pass Semestre -->
+                <div class="hero-float-card hero-float-card-top card-tint-blue" aria-hidden="true">
+                    <div class="w-8 h-8 rounded-lg bg-[#2563EB] text-white flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-graduation-cap text-xs" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-extrabold text-[#071A49] leading-tight">Pass Semestre</p>
+                        <p class="text-[10px] text-slate-500 leading-tight">Accès aux ressources du semestre</p>
+                    </div>
+                </div>
+
+                <!-- Floating card: Fichiers protégés -->
+                <div class="hero-float-card hero-float-card-bottom card-tint-emerald" aria-hidden="true">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-shield-halved text-xs" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-extrabold text-[#071A49] leading-tight">Fichiers protégés</p>
+                        <p class="text-[10px] text-slate-500 leading-tight">Documents filigranés</p>
+                    </div>
+                </div>
+
+                <!-- Laptop / product preview -->
+                <div class="laptop-mockup" aria-hidden="true">
+                    <div class="laptop-screen">
+                        <div class="laptop-browser-bar">
+                            <span class="laptop-dot"></span>
+                            <span class="laptop-dot"></span>
+                            <span class="laptop-dot"></span>
+                            <span class="laptop-brand">
+                                <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i> ArchivEx
+                            </span>
+                        </div>
+                        <div class="laptop-body">
+                            <aside class="laptop-sidebar">
+                                <div class="laptop-nav-item laptop-nav-item-active">
+                                    <i class="fa-solid fa-gauge" aria-hidden="true"></i><span>Tableau de bord</span>
+                                </div>
+                                <div class="laptop-nav-item">
+                                    <i class="fa-solid fa-book-open" aria-hidden="true"></i><span>Mes matières</span>
+                                </div>
+                                <div class="laptop-nav-item">
+                                    <i class="fa-solid fa-file-lines" aria-hidden="true"></i><span>Résumés</span>
+                                </div>
+                                <div class="laptop-nav-item">
+                                    <i class="fa-solid fa-id-card" aria-hidden="true"></i><span>Pass Semestre</span>
+                                </div>
+                            </aside>
+                            <main class="laptop-main">
+                                <p class="laptop-main-title">Bienvenue sur ArchivEx</p>
+                                <p class="laptop-main-sub">Retrouve tes épreuves, corrigés et résumés par filière et semestre.</p>
+                                <div class="laptop-resource-row">
+                                    <div class="laptop-resource-card">
+                                        <span class="badge-premium"><i class="fa-solid fa-crown" aria-hidden="true"></i>Premium</span>
+                                        <p class="laptop-resource-name">Base de données</p>
+                                        <p class="laptop-resource-meta">Licence Informatique</p>
+                                    </div>
+                                    <div class="laptop-resource-card">
+                                        <span class="badge-free">Gratuit</span>
+                                        <p class="laptop-resource-name">Algorithmique</p>
+                                        <p class="laptop-resource-meta">Licence Informatique</p>
+                                    </div>
+                                    <div class="laptop-resource-card">
+                                        <span class="badge-premium"><i class="fa-solid fa-crown" aria-hidden="true"></i>Premium</span>
+                                        <p class="laptop-resource-name">Réseaux</p>
+                                        <p class="laptop-resource-meta">Résumé de cours</p>
+                                    </div>
+                                </div>
+                            </main>
+                        </div>
+                    </div>
+                    <div class="laptop-base"></div>
+                </div>
             </div>
         </div>
 
