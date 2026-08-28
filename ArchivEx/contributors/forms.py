@@ -167,6 +167,16 @@ class ExamAdminForm(forms.ModelForm):
         val = self.cleaned_data.get("is_published")
         return str(val).lower() in ["true", "1"]
 
+    def clean(self):
+        cleaned_data = super().clean()
+        file = cleaned_data.get("file")
+
+        has_file = bool(file or (self.instance and self.instance.pk and self.instance.file))
+        if not has_file:
+            self.add_error("file", "Le document PDF de l'épreuve est obligatoire. Veuillez sélectionner ou glisser-déposer un fichier PDF.")
+
+        return cleaned_data
+
 
 class SummaryAdminForm(forms.ModelForm):
     """Formulaire d'édition/publication d'un résumé de cours."""
@@ -212,6 +222,18 @@ class SummaryAdminForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if active_filiere:
             self.fields["subject"].queryset = Subject.objects.filter(semester__filiere=active_filiere)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        content = cleaned_data.get("content", "").strip() if cleaned_data.get("content") else ""
+        file = cleaned_data.get("file")
+        status = cleaned_data.get("publication_status")
+
+        has_file = bool(file or (self.instance and self.instance.pk and self.instance.file))
+        if status == "PUBLISHED" and not content and not has_file:
+            self.add_error("file", "Un résumé publié doit comporter au moins du texte rédigé ou un fichier PDF.")
+
+        return cleaned_data
 
 
 class GuideAdminForm(forms.ModelForm):

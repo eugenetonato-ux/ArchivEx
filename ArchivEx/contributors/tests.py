@@ -429,5 +429,25 @@ class Phase11AdministrationTests(TestCase):
             for emoji in emojis:
                 self.assertNotIn(emoji, content, f"Emoji {emoji} found in response for {route_name}")
 
+    def test_exam_creation_without_pdf_fails_validation(self):
+        """Creating an exam without attaching a PDF file returns form error and does not save the exam."""
+        self.client.login(username="admin_boss", password="Password123!")
+        exam_data = {
+            "title": "Épreuve Sans Fichier",
+            "subject_name": "Algorithmique Avancée",
+            "year": "2026",
+            "exam_type": "examen",
+            "is_free": "False",
+            "is_published": "True",
+            "description": "Tentative sans PDF",
+        }
+        res = self.client.post(reverse("contributors:exam_create"), data=exam_data)
+        self.assertEqual(res.status_code, 200)  # Form re-rendered with errors
+        self.assertContains(res, "Le document PDF de l'épreuve est obligatoire")
+
+        from exams.models import Exam
+        self.assertIsNone(Exam.objects.filter(title="Épreuve Sans Fichier").first())
+
+
 
 
