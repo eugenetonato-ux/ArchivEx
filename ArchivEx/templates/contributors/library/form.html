@@ -1,0 +1,91 @@
+{% extends "contributors/admin_base.html" %}
+{% load static %}
+
+{% block admin_title %}Déposer un fichier sur le Cloud Integrated | Administration{% endblock %}
+
+{% block admin_content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- BREADCRUMB & HEADER -->
+    <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <nav class="flex items-center space-x-2 text-xs font-bold text-slate-400 mb-1">
+                <a href="{% url 'contributors:library_index' %}" class="hover:text-blue-600">Bibliothèque Cloud</a>
+                <span>/</span>
+                <span class="text-[#071A49]">Nouveau dépôt de stockage</span>
+            </nav>
+            <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">
+                Déposer un Fichier sur le Cloud Storage
+            </h1>
+            <p class="text-xs text-slate-500 font-medium mt-1">
+                Archivage centralisé de documents PDF (Stocké uniquement, non visible sur le site public des étudiants).
+            </p>
+        </div>
+        <a href="{% url 'contributors:library_index' %}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors shrink-0">
+            Retour à la Bibliothèque
+        </a>
+    </div>
+
+    <!-- FORM CARD -->
+    <form method="post" enctype="multipart/form-data" class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-sm space-y-6">
+        {% csrf_token %}
+
+        {% if form.errors %}
+            <div class="p-4 bg-rose-50 border border-rose-200 rounded-xl text-xs font-bold text-rose-700 space-y-1">
+                <p>Des erreurs sont survenues lors du dépôt du fichier :</p>
+                <ul class="list-disc list-inside font-semibold">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ field }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.title.label }}</label>
+                {{ form.title }}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.file_type.label }}</label>
+                    {{ form.file_type }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.file.label }}</label>
+                    {{ form.file }}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                <div>
+                    <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.school.label }}</label>
+                    {{ form.school }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.filiere.label }}</label>
+                    {{ form.filiere }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.semester.label }}</label>
+                    {{ form.semester }}
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+            <a href="{% url 'contributors:library_index' %}" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors">
+                Annuler
+            </a>
+            <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-colors shadow-md shadow-blue-500/20 inline-flex items-center space-x-2">
+                <i class="fa-solid fa-cloud-arrow-up text-xs" aria-hidden="true"></i>
+                <span>Enregistrer dans le Cloud</span>
+            </button>
+        </div>
+    </form>
+
+</div>
+{% endblock %}

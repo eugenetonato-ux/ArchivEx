@@ -2,7 +2,7 @@ import os
 from django import forms
 from academics.models import School, Level, Filiere, Semester, Subject
 from exams.models import Exam
-from content.models import Summary, Guide, Article, STATUS_CHOICES, ACCESS_CHOICES
+from content.models import Summary, Guide, Article, CloudFile, STATUS_CHOICES, ACCESS_CHOICES
 
 
 class ContextSelectForm(forms.Form):
@@ -29,6 +29,39 @@ class ContextSelectForm(forms.Form):
             profile = getattr(user, "contributor_profile", None)
             if profile and profile.assigned_schools.exists():
                 self.fields["school"].queryset = profile.assigned_schools.filter(is_active=True)
+
+
+class CloudFileAdminForm(forms.ModelForm):
+    """Formulaire pour le dépôt direct d'un fichier dans la Bibliothèque Cloud."""
+    class Meta:
+        model = CloudFile
+        fields = ["title", "file_type", "file", "school", "filiere", "semester"]
+        labels = {
+            "title": "Nom / Titre du document",
+            "file_type": "Type de ressource",
+            "file": "Fichier PDF (Stockage Cloud)",
+            "school": "Université associée (optionnelle)",
+            "filiere": "Filière associée (optionnelle)",
+            "semester": "Semestre associé (optionnel)",
+        }
+        widgets = {
+            "title": forms.TextInput(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]", "placeholder": "Ex: Sujet Examen Math 2025.pdf"}),
+            "file_type": forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"}),
+            "file": forms.FileInput(attrs={"class": "w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"}),
+            "school": forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"}),
+            "filiere": forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"}),
+            "semester": forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"}),
+        }
+
+    def clean_file(self):
+        file = self.cleaned_data.get("file")
+        if file:
+            ext = os.path.splitext(file.name)[1].lower()
+            if ext != ".pdf":
+                raise forms.ValidationError("Seuls les fichiers PDF (.pdf) sont autorisés.")
+            if file.size > 20 * 1024 * 1024:
+                raise forms.ValidationError("La taille du fichier ne doit pas dépasser 20 Mo.")
+        return file
 
 
 class ExamAdminForm(forms.ModelForm):
@@ -66,21 +99,40 @@ class ExamAdminForm(forms.ModelForm):
         widget=forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"})
     )
 
+    cloud_file = forms.ModelChoiceField(
+        queryset=CloudFile.objects.all(),
+        required=False,
+        label="Sélectionner depuis la Bibliothèque Cloud (Optionnel)",
+        widget=forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"})
+    )
+    cloud_correction_file = forms.ModelChoiceField(
+        queryset=CloudFile.objects.all(),
+        required=False,
+        label="Sélectionner la correction depuis le Cloud (Optionnel)",
+        widget=forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"})
+    )
+    cloud_summary_file = forms.ModelChoiceField(
+        queryset=CloudFile.objects.all(),
+        required=False,
+        label="Sélectionner le résumé depuis le Cloud (Optionnel)",
+        widget=forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"})
+    )
+
     file = forms.FileField(
         required=False,
-        label="Document PDF de l'épreuve",
+        label="Nouveau document PDF (Téléversement direct)",
         widget=forms.FileInput(attrs={"class": "w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"})
     )
 
     correction_file = forms.FileField(
         required=False,
-        label="Correction PDF optionnelle",
+        label="Nouvelle correction PDF (Téléversement direct)",
         widget=forms.FileInput(attrs={"class": "w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"})
     )
 
     summary_file = forms.FileField(
         required=False,
-        label="Résumé / Fiche PDF optionnel",
+        label="Nouveau résumé / fiche PDF (Téléversement direct)",
         widget=forms.FileInput(attrs={"class": "w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"})
     )
 
@@ -93,23 +145,17 @@ class ExamAdminForm(forms.ModelForm):
 
     class Meta:
         model = Exam
-        fields = ["title", "year", "exam_type", "file", "correction_file", "summary_file", "description", "semester"]
+        fields = ["title", "year", "exam_type", "cloud_file", "cloud_correction_file", "cloud_summary_file", "file", "correction_file", "summary_file", "description", "semester"]
         labels = {
             "title": "Titre de l'épreuve",
             "year": "Année académique / Session",
             "exam_type": "Type d'épreuve",
-            "file": "Document PDF de l'épreuve",
-            "correction_file": "Correction PDF optionnelle",
-            "summary_file": "Fiche résumé PDF optionnel",
             "description": "Description / Remarques optionnelles",
         }
         widgets = {
             "title": forms.TextInput(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]", "placeholder": "Ex: Examen d'analyse S1 2025"}),
             "year": forms.TextInput(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]", "placeholder": "2026"}),
             "exam_type": forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"}),
-            "file": forms.FileInput(attrs={"class": "w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"}),
-            "correction_file": forms.FileInput(attrs={"class": "w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"}),
-            "summary_file": forms.FileInput(attrs={"class": "w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"}),
             "description": forms.Textarea(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-[#071A49]", "rows": 3}),
         }
 
@@ -125,6 +171,9 @@ class ExamAdminForm(forms.ModelForm):
 
         if active_filiere:
             self.fields["semester"].queryset = Semester.objects.filter(filiere=active_filiere)
+            self.fields["cloud_file"].queryset = CloudFile.objects.filter(filiere=active_filiere)
+            self.fields["cloud_correction_file"].queryset = CloudFile.objects.filter(filiere=active_filiere)
+            self.fields["cloud_summary_file"].queryset = CloudFile.objects.filter(filiere=active_filiere)
 
         if active_semester and not self.fields["semester"].initial:
             self.fields["semester"].initial = active_semester
@@ -170,12 +219,14 @@ class ExamAdminForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         file = cleaned_data.get("file")
+        cloud_file = cleaned_data.get("cloud_file")
 
-        has_file = bool(file or (self.instance and self.instance.pk and self.instance.file))
+        has_file = bool(file or cloud_file or (self.instance and self.instance.pk and (self.instance.file or self.instance.cloud_file)))
         if not has_file:
-            self.add_error("file", "Le document PDF de l'épreuve est obligatoire. Veuillez sélectionner ou glisser-déposer un fichier PDF.")
+            self.add_error("file", "Veuillez sélectionner un fichier depuis la Bibliothèque Cloud ou téléverser un fichier PDF.")
 
         return cleaned_data
+
 
 
 class SummaryAdminForm(forms.ModelForm):

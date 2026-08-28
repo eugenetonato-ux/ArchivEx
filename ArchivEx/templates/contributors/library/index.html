@@ -1,7 +1,7 @@
 {% extends "contributors/admin_base.html" %}
 {% load static %}
 
-{% block admin_title %}Bibliothèque Centrale ArchivEx | Administration{% endblock %}
+{% block admin_title %}Bibliothèque Cloud Integrated | Administration{% endblock %}
 
 {% block admin_content %}
 <div class="space-y-6">
@@ -10,20 +10,20 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-sm">
         <div>
             <div class="flex items-center space-x-2 text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">
-                <i class="fa-solid fa-book-bookmark" aria-hidden="true"></i>
-                <span>Dépôt Central des Ressources</span>
+                <i class="fa-solid fa-cloud" aria-hidden="true"></i>
+                <span>Bibliothèque Cloud Integrated — Espace de Stockage</span>
             </div>
             <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">
-                Bibliothèque Centrale ArchivEx
+                Dépôt Central & Stockage Cloud
             </h1>
             <p class="text-xs text-slate-500 font-medium mt-1">
-                Gestion centralisée et complétude des ressources académiques (Université → Filière → Semestre → Matière → Épreuve).
+                Stockage sécurisé des fichiers PDF bruts. Les éléments versés ici restent archivés sur le Cloud et ne sont pas publiés sur le site public tant que vous ne les avez pas associés à une épreuve.
             </p>
         </div>
-        <div>
-            <a href="{% url 'contributors:exam_create' %}" class="inline-flex items-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-colors shadow-md shadow-blue-500/20">
+        <div class="flex items-center space-x-3 shrink-0">
+            <a href="{% url 'contributors:cloud_file_create' %}" class="inline-flex items-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-colors shadow-md shadow-blue-500/20">
                 <i class="fa-solid fa-cloud-arrow-up text-xs" aria-hidden="true"></i>
-                <span>Déposer une nouvelle ressource</span>
+                <span>Déposer un fichier sur le Cloud</span>
             </a>
         </div>
     </div>
@@ -31,39 +31,39 @@
     <!-- METRICS STATS CARDS -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <!-- TOTAL -->
-        <a href="?filter=all" class="p-4 rounded-2xl border transition-all {% if status_filter == 'all' %}bg-[#071A49] text-white border-[#071A49] shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-blue-300{% endif %}">
-            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Total Ressources</div>
+        <a href="?filter=all" class="p-4 rounded-2xl border transition-all {% if type_filter == 'all' %}bg-[#071A49] text-white border-[#071A49] shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-blue-300{% endif %}">
+            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Stockage Total</div>
             <div class="text-2xl font-black mt-1">{{ total_count }}</div>
-            <div class="text-[11px] font-semibold mt-2 opacity-90">Annales répertoriées</div>
+            <div class="text-[11px] font-semibold mt-2 opacity-90">Fichiers conservés</div>
         </a>
 
-        <!-- MISSING CORRECTION -->
-        <a href="?filter=missing_correction" class="p-4 rounded-2xl border transition-all {% if status_filter == 'missing_correction' %}bg-amber-500 text-white border-amber-500 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-amber-300{% endif %}">
-            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Sans Correction</div>
-            <div class="text-2xl font-black mt-1 {% if status_filter == 'missing_correction' %}text-white{% else %}text-amber-600{% endif %}">{{ missing_corr_count }}</div>
-            <div class="text-[11px] font-semibold mt-2 opacity-90">Corrigés manquants</div>
+        <!-- EXAMS -->
+        <a href="?filter=EXAM" class="p-4 rounded-2xl border transition-all {% if type_filter == 'EXAM' %}bg-blue-600 text-white border-blue-600 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-blue-300{% endif %}">
+            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Sujets d'Épreuves</div>
+            <div class="text-2xl font-black mt-1 {% if type_filter == 'EXAM' %}text-white{% else %}text-blue-600{% endif %}">{{ exam_count }}</div>
+            <div class="text-[11px] font-semibold mt-2 opacity-90">Sujets d'examens</div>
         </a>
 
-        <!-- MISSING SUMMARY -->
-        <a href="?filter=missing_summary" class="p-4 rounded-2xl border transition-all {% if status_filter == 'missing_summary' %}bg-purple-600 text-white border-purple-600 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-purple-300{% endif %}">
-            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Sans Résumé</div>
-            <div class="text-2xl font-black mt-1 {% if status_filter == 'missing_summary' %}text-white{% else %}text-purple-600{% endif %}">{{ missing_sum_count }}</div>
-            <div class="text-[11px] font-semibold mt-2 opacity-90">Fiches manquantes</div>
+        <!-- CORRECTIONS -->
+        <a href="?filter=CORRECTION" class="p-4 rounded-2xl border transition-all {% if type_filter == 'CORRECTION' %}bg-emerald-600 text-white border-emerald-600 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-emerald-300{% endif %}">
+            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Corrigés & Corrections</div>
+            <div class="text-2xl font-black mt-1 {% if type_filter == 'CORRECTION' %}text-white{% else %}text-emerald-600{% endif %}">{{ correction_count }}</div>
+            <div class="text-[11px] font-semibold mt-2 opacity-90">Corrections répertoriées</div>
         </a>
 
-        <!-- COMPLETE -->
-        <a href="?filter=complete" class="p-4 rounded-2xl border transition-all {% if status_filter == 'complete' %}bg-emerald-600 text-white border-emerald-600 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-emerald-300{% endif %}">
-            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Ressources Complètes</div>
-            <div class="text-2xl font-black mt-1 {% if status_filter == 'complete' %}text-white{% else %}text-emerald-600{% endif %}">{{ complete_count }}</div>
-            <div class="text-[11px] font-semibold mt-2 opacity-90">Épreuve + Corrigé + Fiche</div>
+        <!-- SUMMARIES -->
+        <a href="?filter=SUMMARY" class="p-4 rounded-2xl border transition-all {% if type_filter == 'SUMMARY' %}bg-purple-600 text-white border-purple-600 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-purple-300{% endif %}">
+            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Fiches & Résumés</div>
+            <div class="text-2xl font-black mt-1 {% if type_filter == 'SUMMARY' %}text-white{% else %}text-purple-600{% endif %}">{{ summary_count }}</div>
+            <div class="text-[11px] font-semibold mt-2 opacity-90">Fiches PDF de synthèse</div>
         </a>
     </div>
 
     <!-- SEARCH & FILTER BAR -->
     <form method="get" class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row gap-3">
-        <input type="hidden" name="filter" value="{{ status_filter }}">
+        <input type="hidden" name="filter" value="{{ type_filter }}">
         <div class="relative flex-grow">
-            <input type="text" name="q" value="{{ q }}" placeholder="Rechercher par titre d'épreuve, matière ou année..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#071A49] placeholder-slate-400 focus:ring-2 focus:ring-blue-600 outline-none">
+            <input type="text" name="q" value="{{ q }}" placeholder="Rechercher un document dans la Bibliothèque Cloud..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#071A49] placeholder-slate-400 focus:ring-2 focus:ring-blue-600 outline-none">
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs" aria-hidden="true"></i>
         </div>
         <div class="flex items-center space-x-2">
@@ -76,85 +76,81 @@
         </div>
     </form>
 
-    <!-- LIBRARY RESOURCES TABLE -->
+    <!-- LIBRARY CLOUD FILES TABLE -->
     <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50/80 border-b border-slate-200 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
-                        <th class="py-3.5 px-4">Titre & Matière</th>
+                        <th class="py-3.5 px-4">Titre du Fichier Cloud</th>
+                        <th class="py-3.5 px-4 text-center">Type</th>
                         <th class="py-3.5 px-4">Contexte Académique</th>
-                        <th class="py-3.5 px-4 text-center">Épreuve</th>
-                        <th class="py-3.5 px-4 text-center">Corrigé</th>
-                        <th class="py-3.5 px-4 text-center">Résumé</th>
-                        <th class="py-3.5 px-4 text-center">Statut</th>
-                        <th class="py-3.5 px-4 text-right">Actions</th>
+                        <th class="py-3.5 px-4">Date de dépôt</th>
+                        <th class="py-3.5 px-4 text-right">Actions de publication / Stockage</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-                    {% for exam in exams %}
+                    {% for cloud_file in cloud_files %}
                         <tr class="hover:bg-slate-50/60 transition-colors">
                             <td class="py-3.5 px-4">
-                                <div class="font-extrabold text-[#071A49] text-xs mb-0.5">{{ exam.title }}</div>
-                                <div class="text-[11px] text-blue-600 font-bold">{{ exam.subject.name }} · {{ exam.year }}</div>
+                                <div class="font-extrabold text-[#071A49] text-xs mb-0.5 flex items-center space-x-2">
+                                    <i class="fa-solid fa-file-pdf text-rose-500 text-sm"></i>
+                                    <span>{{ cloud_file.title }}</span>
+                                </div>
+                                {% if cloud_file.file %}
+                                    <a href="{{ cloud_file.file.url }}" target="_blank" class="text-[10px] text-blue-600 font-bold hover:underline">
+                                        <i class="fa-solid fa-arrow-up-right-from-square text-[9px] mr-1"></i>Aperçu PDF direct
+                                    </a>
+                                {% endif %}
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                {% if cloud_file.file_type == 'EXAM' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800">
+                                        Épreuve / Sujet
+                                    </span>
+                                {% elif cloud_file.file_type == 'CORRECTION' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                                        Correction
+                                    </span>
+                                {% elif cloud_file.file_type == 'SUMMARY' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800">
+                                        Fiche Résumé
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700">
+                                        Autre Document
+                                    </span>
+                                {% endif %}
                             </td>
                             <td class="py-3.5 px-4">
-                                <div class="text-slate-800 font-bold">{{ exam.filiere.school.name|default:"ENEAM" }}</div>
-                                <div class="text-[10px] text-slate-400 font-semibold">{{ exam.filiere.name }} ({{ exam.semester.label }})</div>
+                                <div class="text-slate-800 font-bold">{{ cloud_file.school.name|default:"Non spécifié" }}</div>
+                                <div class="text-[10px] text-slate-400 font-semibold">
+                                    {{ cloud_file.filiere.name|default:"Toutes filières" }}
+                                    {% if cloud_file.semester %} ({{ cloud_file.semester.label }}){% endif %}
+                                </div>
                             </td>
-                            <td class="py-3.5 px-4 text-center">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200/60">
-                                    Fichier PDF
-                                </span>
-                            </td>
-                            <td class="py-3.5 px-4 text-center">
-                                {% if exam.has_correction %}
-                                    <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
-                                        <i class="fa-solid fa-check text-[9px]" aria-hidden="true"></i>
-                                        <span>Présent</span>
-                                    </span>
-                                {% else %}
-                                    <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200/60">
-                                        <span>Manquant</span>
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="py-3.5 px-4 text-center">
-                                {% if exam.has_summary %}
-                                    <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-purple-100 text-purple-800">
-                                        <i class="fa-solid fa-check text-[9px]" aria-hidden="true"></i>
-                                        <span>Présent</span>
-                                    </span>
-                                {% else %}
-                                    <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-100 text-slate-500 border border-slate-200/60">
-                                        <span>Manquant</span>
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="py-3.5 px-4 text-center">
-                                {% if exam.is_published %}
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800">Publié</span>
-                                {% else %}
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-600">Brouillon</span>
-                                {% endif %}
+                            <td class="py-3.5 px-4 text-slate-500 font-medium">
+                                {{ cloud_file.created_at|date:"d/m/Y H:i" }}
                             </td>
                             <td class="py-3.5 px-4 text-right">
                                 <div class="flex items-center justify-end space-x-2">
-                                    <a href="{% url 'contributors:library_detail' pk=exam.id %}" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition-colors inline-flex items-center space-x-1">
-                                        <i class="fa-solid fa-circle-info text-[10px]" aria-hidden="true"></i>
-                                        <span>Détails</span>
+                                    <a href="{% url 'contributors:publish_from_cloud' pk=cloud_file.id %}" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold transition-colors inline-flex items-center space-x-1 shadow-sm">
+                                        <i class="fa-solid fa-paper-plane text-[10px]" aria-hidden="true"></i>
+                                        <span>Publier sur le site</span>
                                     </a>
-                                    <a href="{% url 'contributors:exam_edit' pk=exam.id %}" class="px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-[11px] font-bold transition-colors inline-flex items-center space-x-1">
-                                        <i class="fa-solid fa-pen-to-square text-[10px]" aria-hidden="true"></i>
-                                        <span>Compléter</span>
-                                    </a>
+                                    <form method="post" action="{% url 'contributors:cloud_file_delete' pk=cloud_file.id %}" onsubmit="return confirm('Supprimer définitivement ce fichier du stockage Cloud ?');" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-bold transition-colors inline-flex items-center space-x-1">
+                                            <i class="fa-solid fa-trash text-[10px]" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="7" class="py-10 text-center text-slate-400 font-medium">
-                                Aucune ressource trouvée dans la Bibliothèque centrale.
+                            <td colspan="5" class="py-12 text-center text-slate-400 font-medium">
+                                Aucun fichier trouvé dans la Bibliothèque Cloud Integrated.
                             </td>
                         </tr>
                     {% endfor %}

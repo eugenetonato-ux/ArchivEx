@@ -8,7 +8,7 @@ from django.http import JsonResponse, HttpResponseForbidden, FileResponse, Http4
 
 from academics.models import School, Level, Filiere, AcademicYear, Semester, Subject
 from exams.models import Exam
-from content.models import Summary, Guide, Article
+from content.models import Summary, Guide, Article, CloudFile
 from accounts.models import StudentProfile
 from payments.models import SemesterAccess, Payment
 from notifications.services import notify_target_students
@@ -18,6 +18,7 @@ from .permissions import check_school_permission
 from .forms import (
     ContextSelectForm,
     ExamAdminForm,
+    CloudFileAdminForm,
     SummaryAdminForm,
     GuideAdminForm,
     ArticleAdminForm,
@@ -274,6 +275,64 @@ def exam_list_view(request):
     return render(request, "contributors/exams/list.html", context)
 
 
+def _process_exam_cloud_files(form, exam, target_semester, active_school, active_filiere, active_semester, user):
+    cloud_file = form.cleaned_data.get("cloud_file")
+    cloud_corr = form.cleaned_data.get("cloud_correction_file")
+    cloud_sum = form.cleaned_data.get("cloud_summary_file")
+
+    school_obj = target_semester.filiere.school if target_semester and getattr(target_semester, "filiere", None) else active_school
+    filiere_obj = target_semester.filiere if target_semester and getattr(target_semester, "filiere", None) else active_filiere
+    semester_obj = target_semester or active_semester
+
+    if cloud_file:
+        exam.cloud_file = cloud_file
+        if cloud_file.file:
+            exam.file = cloud_file.file
+    elif form.cleaned_data.get("file"):
+        cf = CloudFile.objects.create(
+            title=f"Épreuve — {exam.title}",
+            file=form.cleaned_data["file"],
+            file_type="EXAM",
+            school=school_obj,
+            filiere=filiere_obj,
+            semester=semester_obj,
+            uploaded_by=user,
+        )
+        exam.cloud_file = cf
+
+    if cloud_corr:
+        exam.cloud_correction_file = cloud_corr
+        if cloud_corr.file:
+            exam.correction_file = cloud_corr.file
+    elif form.cleaned_data.get("correction_file"):
+        cf = CloudFile.objects.create(
+            title=f"Correction — {exam.title}",
+            file=form.cleaned_data["correction_file"],
+            file_type="CORRECTION",
+            school=school_obj,
+            filiere=filiere_obj,
+            semester=semester_obj,
+            uploaded_by=user,
+        )
+        exam.cloud_correction_file = cf
+
+    if cloud_sum:
+        exam.cloud_summary_file = cloud_sum
+        if cloud_sum.file:
+            exam.summary_file = cloud_sum.file
+    elif form.cleaned_data.get("summary_file"):
+        cf = CloudFile.objects.create(
+            title=f"Résumé — {exam.title}",
+            file=form.cleaned_data["summary_file"],
+            file_type="SUMMARY",
+            school=school_obj,
+            filiere=filiere_obj,
+            semester=semester_obj,
+            uploaded_by=user,
+        )
+        exam.cloud_summary_file = cf
+
+
 @contributor_required
 def exam_create_view(request):
     """Ajouter une épreuve d'examen avec héritage du contexte actif et saisie libre de la matière."""
@@ -316,6 +375,10 @@ def exam_create_view(request):
 
             exam.is_free = form.cleaned_data["is_free"]
             exam.is_published = form.cleaned_data["is_published"]
+
+            # Traitement des fichiers Cloud et téléversements directs
+            _process_exam_cloud_files(form, exam, target_semester, active_school, active_filiere, active_semester, request.user)
+
             exam.save()
 
             status_str = "publiée" if exam.is_published else "enregistrée en brouillon"
@@ -368,6 +431,9 @@ def exam_edit_view(request, pk):
 
             exam.is_free = form.cleaned_data["is_free"]
             exam.is_published = form.cleaned_data["is_published"]
+
+            _process_exam_cloud_files(form, exam, target_semester, active_school, active_filiere, active_semester, request.user)
+
             exam.save()
 
             messages.success(request, f"Épreuve « {exam.title} » mise à jour avec succès.")
@@ -1029,78 +1095,146 @@ def notification_create_view(request):
 
 
 # ==========================================
-# 7. BIBLIOTHÈQUE CENTRALE ARCHIVEX & RÉCUPÉRATION ADMIN
+# 7. BIBLIOTHÈQUE CLOUD INTEGRATED & DÉPÔT CENTRAL
 # ==========================================
 
 @contributor_required
 def library_index_view(request):
-    """Bibliothèque centrale ArchivEx : Gestion des ressources académiques et de leur complétude."""
+    """Bibliothèque Cloud Integrated : Dépôt central de stockage des fichiers sans publication automatique."""
     active_school, active_filiere, active_semester = get_active_academic_context(request)
     q = request.GET.get("q", "").strip()
-    status_filter = request.GET.get("filter", "all")
+    type_filter = request.GET.get("filter", "all")
 
-    qs = Exam.objects.select_related(
-        "subject", "semester", "filiere", "level", "academic_year", "filiere__school", "summary"
-    ).order_by("-created_at")
+    qs = CloudFile.objects.select_related("school", "filiere", "semester", "uploaded_by").order_by("-created_at")
 
     if active_school:
-        qs = qs.filter(filiere__school=active_school)
+        qs = qs.filter(Q(school=active_school) | Q(school__isnull=True))
     if active_filiere:
-        qs = qs.filter(filiere=active_filiere)
+        qs = qs.filter(Q(filiere=active_filiere) | Q(filiere__isnull=True))
     if active_semester:
-        qs = qs.filter(semester=active_semester)
+        qs = qs.filter(Q(semester=active_semester) | Q(semester__isnull=True))
 
     if q:
-        qs = qs.filter(
-            Q(title__icontains=q) |
-            Q(subject__name__icontains=q) |
-            Q(year__icontains=q)
-        )
+        qs = qs.filter(Q(title__icontains=q))
 
-    all_exams = list(qs)
-    total_count = len(all_exams)
-    missing_corr_count = sum(1 for e in all_exams if not e.has_correction)
-    missing_sum_count = sum(1 for e in all_exams if not e.has_summary)
-    complete_count = sum(1 for e in all_exams if e.has_correction and e.has_summary)
+    if type_filter in ["EXAM", "CORRECTION", "SUMMARY", "OTHER"]:
+        qs = qs.filter(file_type=type_filter)
 
-    if status_filter == "missing_correction":
-        all_exams = [e for e in all_exams if not e.has_correction]
-    elif status_filter == "missing_summary":
-        all_exams = [e for e in all_exams if not e.has_summary]
-    elif status_filter == "complete":
-        all_exams = [e for e in all_exams if e.has_correction and e.has_summary]
-    elif status_filter == "exam_only":
-        all_exams = [e for e in all_exams if not e.has_correction and not e.has_summary]
+    cloud_files = list(qs)
+    total_count = len(cloud_files)
+    exam_count = sum(1 for f in cloud_files if f.file_type == "EXAM")
+    correction_count = sum(1 for f in cloud_files if f.file_type == "CORRECTION")
+    summary_count = sum(1 for f in cloud_files if f.file_type == "SUMMARY")
 
     context = {
         "active_school": active_school,
         "active_filiere": active_filiere,
         "active_semester": active_semester,
-        "exams": all_exams,
+        "cloud_files": cloud_files,
         "q": q,
-        "status_filter": status_filter,
+        "type_filter": type_filter,
         "total_count": total_count,
-        "missing_corr_count": missing_corr_count,
-        "missing_sum_count": missing_sum_count,
-        "complete_count": complete_count,
+        "exam_count": exam_count,
+        "correction_count": correction_count,
+        "summary_count": summary_count,
     }
     return render(request, "contributors/library/index.html", context)
 
 
 @contributor_required
-def library_exam_detail_view(request, pk):
-    """Page de détail d'une ressource de la Bibliothèque centrale."""
+def cloud_file_create_view(request):
+    """Déposer un fichier PDF sur la Bibliothèque Cloud Integrated (Stockage uniquement, sans publication)."""
     active_school, active_filiere, active_semester = get_active_academic_context(request)
-    exam = get_object_or_404(
-        Exam.objects.select_related(
-            "subject", "semester", "filiere", "level", "academic_year", "filiere__school", "summary"
-        ),
-        pk=pk
-    )
+    if active_school and not check_school_permission(request.user, active_school):
+        raise PermissionDenied("Vous n'êtes pas autorisé à déposer des fichiers pour cette université.")
 
-    if active_school and exam.filiere.school_id != active_school.id:
-        from django.core.exceptions import PermissionDenied
-        raise PermissionDenied("Vous n'avez pas la permission de gérer les ressources de cette université.")
+    if request.method == "POST":
+        form = CloudFileAdminForm(request.POST, request.FILES)
+        if form.is_valid():
+            cloud_file = form.save(commit=False)
+            if not cloud_file.school:
+                cloud_file.school = active_school
+            if not cloud_file.filiere:
+                cloud_file.filiere = active_filiere
+            if not cloud_file.semester:
+                cloud_file.semester = active_semester
+            cloud_file.uploaded_by = request.user
+            cloud_file.save()
+
+            messages.success(request, f"Fichier « {cloud_file.title} » conservé avec succès sur le Cloud Integrated (Non publié sur le site).")
+            return redirect("contributors:library_index")
+    else:
+        form = CloudFileAdminForm(initial={
+            "school": active_school,
+            "filiere": active_filiere,
+            "semester": active_semester,
+        })
+
+    context = {
+        "active_school": active_school,
+        "active_filiere": active_filiere,
+        "active_semester": active_semester,
+        "form": form,
+    }
+    return render(request, "contributors/library/form.html", context)
+
+
+@contributor_required
+def cloud_file_delete_view(request, pk):
+    """Supprimer un fichier du stockage Cloud Integrated."""
+    if request.method == "POST":
+        cloud_file = get_object_or_404(CloudFile, pk=pk)
+        if cloud_file.school and not check_school_permission(request.user, cloud_file.school):
+            raise PermissionDenied("Vous n'êtes pas autorisé à supprimer ce fichier.")
+
+        title = cloud_file.title
+        cloud_file.delete()
+        messages.success(request, f"Fichier Cloud « {title} » supprimé avec succès.")
+    return redirect("contributors:library_index")
+
+
+@contributor_required
+def publish_from_cloud_view(request, pk):
+    """Pré-remplit le formulaire de publication d'épreuve avec un fichier Cloud sélectionné."""
+    cloud_file = get_object_or_404(CloudFile, pk=pk)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
+
+    initial_title = cloud_file.title.replace("Épreuve — ", "").replace(".pdf", "").strip()
+
+    form = ExamAdminForm(initial={
+        "title": initial_title,
+        "cloud_file": cloud_file if cloud_file.file_type == "EXAM" else None,
+        "cloud_correction_file": cloud_file if cloud_file.file_type == "CORRECTION" else None,
+        "cloud_summary_file": cloud_file if cloud_file.file_type == "SUMMARY" else None,
+        "semester": cloud_file.semester or active_semester,
+    }, active_filiere=cloud_file.filiere or active_filiere, active_semester=cloud_file.semester or active_semester)
+
+    available_subjects = Subject.objects.filter(semester__filiere=active_filiere) if active_filiere else Subject.objects.none()
+
+    context = {
+        "active_school": active_school,
+        "active_filiere": active_filiere,
+        "active_semester": active_semester,
+        "available_subjects": available_subjects,
+        "form": form,
+        "is_create": True,
+        "selected_cloud_file": cloud_file,
+    }
+    return render(request, "contributors/exams/form.html", context)
+
+
+@contributor_required
+def library_exam_detail_view(request, pk):
+    """Page de détail d'un fichier dans la Bibliothèque Cloud."""
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
+    cloud_file = CloudFile.objects.filter(pk=pk).select_related("school", "filiere", "semester", "uploaded_by").first()
+
+    exam = None
+    if not cloud_file:
+        exam = get_object_or_404(
+            Exam.objects.select_related("subject", "semester", "filiere", "level", "academic_year", "filiere__school", "summary"),
+            pk=pk
+        )
 
     profile = getattr(request.user, "contributor_profile", None)
     is_main_admin = request.user.is_superuser or (profile and profile.role == "SUPER_ADMIN")
@@ -1108,6 +1242,7 @@ def library_exam_detail_view(request, pk):
     context = {
         "active_school": active_school,
         "active_filiere": active_filiere,
+        "cloud_file": cloud_file,
         "exam": exam,
         "is_main_admin": is_main_admin,
     }
@@ -1117,8 +1252,7 @@ def library_exam_detail_view(request, pk):
 @contributor_required
 def library_download_original_view(request, pk, file_type):
     """
-    Récupération du fichier original non-filigrané par l'administrateur principal.
-    Rôle réservé au superadministrateur ou SUPER_ADMIN.
+    Récupération du fichier original non-filigrané par l'administrateur principal (SUPER_ADMIN).
     """
     profile = getattr(request.user, "contributor_profile", None)
     is_main_admin = request.user.is_superuser or (profile and profile.role == "SUPER_ADMIN")
@@ -1126,24 +1260,36 @@ def library_download_original_view(request, pk, file_type):
     if not is_main_admin:
         return HttpResponseForbidden("Action de récupération d'original réservée à l'administrateur principal de la plateforme.")
 
-    exam = get_object_or_404(Exam, pk=pk)
     target_file = None
-
-    if file_type == "correction":
-        target_file = exam.correction_file
-    elif file_type == "summary":
-        target_file = exam.summary_file or (exam.summary.file if exam.summary else None)
+    cloud_file = CloudFile.objects.filter(pk=pk).first()
+    if cloud_file and cloud_file.file:
+        target_file = cloud_file.file
     else:
-        target_file = exam.file
+        exam = Exam.objects.filter(pk=pk).first()
+        if exam:
+            if file_type == "correction":
+                target_file = exam.correction_file
+            elif file_type == "summary":
+                target_file = exam.summary_file or (exam.summary.file if exam.summary else None)
+            else:
+                target_file = exam.file
 
-    if not target_file or not os.path.exists(target_file.path):
+    if not target_file or not bool(target_file):
         raise Http404("Le fichier original réclamé est introuvable sur le serveur.")
 
+    try:
+        file_path = target_file.path
+        if not os.path.exists(file_path):
+            raise Http404("Le fichier physique original est introuvable sur le disque serveur.")
+    except Exception:
+        raise Http404("Fichier introuvable.")
+
     response = FileResponse(
-        open(target_file.path, "rb"),
+        open(file_path, "rb"),
         content_type="application/pdf"
     )
-    filename = os.path.basename(target_file.path)
+    filename = os.path.basename(file_path)
     response["Content-Disposition"] = f'attachment; filename="ORIGINAL_{filename}"'
     return response
+
 

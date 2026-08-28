@@ -157,6 +157,10 @@ class Phase11AdministrationTests(TestCase):
 
     def test_free_text_subject_creation_and_context_inheritance(self):
         """Creating an exam with a new subject name automatically creates the Subject in the active semester context."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        dummy_pdf_1 = SimpleUploadedFile("physique1.pdf", b"%PDF-1.4 sample pdf content", content_type="application/pdf")
+        dummy_pdf_2 = SimpleUploadedFile("physique2.pdf", b"%PDF-1.4 sample pdf content", content_type="application/pdf")
+
         self.client.login(username="admin_boss", password="Password123!")
         self.client.get(reverse("contributors:set_context") + f"?school_id={self.school_eneam.id}&filiere_id={self.filiere.id}&semester_id={self.semester.id}")
 
@@ -167,6 +171,7 @@ class Phase11AdministrationTests(TestCase):
             "exam_type": "examen",
             "is_free": "True",
             "is_published": "True",
+            "file": dummy_pdf_1,
         }
         res = self.client.post(reverse("contributors:exam_create"), data=exam_data)
         self.assertEqual(res.status_code, 302)
@@ -182,6 +187,7 @@ class Phase11AdministrationTests(TestCase):
             "exam_type": "rattrapage",
             "is_free": "True",
             "is_published": "True",
+            "file": dummy_pdf_2,
         }
         res2 = self.client.post(reverse("contributors:exam_create"), data=exam_data_2)
         self.assertEqual(res2.status_code, 302)
@@ -354,28 +360,23 @@ class Phase11AdministrationTests(TestCase):
     def test_library_index_and_detail_views(self):
         """Staff can browse central library index and detail views."""
         from django.core.files.uploadedfile import SimpleUploadedFile
-        from exams.models import Exam
+        from content.models import CloudFile
 
-        exam = Exam.objects.create(
-            title="Épreuve Bibliothèque 2026",
-            subject=self.subject,
-            semester=self.semester,
-            filiere=self.filiere,
-            level=self.level,
-            academic_year=self.year,
-            year=2026,
-            exam_type="examen",
-            is_published=True,
+        cloud_file = CloudFile.objects.create(
+            title="Fichier Cloud Test",
             file=SimpleUploadedFile("orig.pdf", b"%PDF-1.4 original file", content_type="application/pdf"),
+            school=self.school_eneam,
+            filiere=self.filiere,
+            semester=self.semester,
         )
 
         self.client.login(username="admin_boss", password="Password123!")
 
         res_idx = self.client.get(reverse("contributors:library_index"))
         self.assertEqual(res_idx.status_code, 200)
-        self.assertIn(exam, list(res_idx.context["exams"]))
+        self.assertIn(cloud_file, list(res_idx.context["cloud_files"]))
 
-        res_det = self.client.get(reverse("contributors:library_detail", kwargs={"pk": exam.id}))
+        res_det = self.client.get(reverse("contributors:library_detail", kwargs={"pk": cloud_file.id}))
         self.assertEqual(res_det.status_code, 200)
 
     def test_admin_recovery_route_restricted_to_superadmin(self):
@@ -443,7 +444,7 @@ class Phase11AdministrationTests(TestCase):
         }
         res = self.client.post(reverse("contributors:exam_create"), data=exam_data)
         self.assertEqual(res.status_code, 200)  # Form re-rendered with errors
-        self.assertContains(res, "Le document PDF de l'épreuve est obligatoire")
+        self.assertContains(res, "Veuillez sélectionner un fichier depuis la Bibliothèque Cloud ou téléverser un fichier PDF.")
 
         from exams.models import Exam
         self.assertIsNone(Exam.objects.filter(title="Épreuve Sans Fichier").first())

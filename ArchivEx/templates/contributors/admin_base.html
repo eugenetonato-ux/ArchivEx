@@ -125,13 +125,13 @@
                 </a>
 
                 <a href="{% url 'contributors:library_index' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'library' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
-                    <i class="fa-solid fa-book-bookmark w-4 text-center text-amber-500" aria-hidden="true"></i>
-                    <span>Bibliothèque Centrale</span>
+                    <i class="fa-solid fa-cloud w-4 text-center text-sky-500" aria-hidden="true"></i>
+                    <span>Bibliothèque Cloud Storage</span>
                 </a>
 
                 <a href="{% url 'contributors:exam_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'epreuves' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
-                    <i class="fa-solid fa-file-lines w-4 text-center text-blue-600" aria-hidden="true"></i>
-                    <span>Épreuves</span>
+                    <i class="fa-solid fa-paper-plane w-4 text-center text-blue-600" aria-hidden="true"></i>
+                    <span>Épreuves Publiées</span>
                 </a>
 
                 <a href="{% url 'contributors:completeness_overview' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'completeness' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">

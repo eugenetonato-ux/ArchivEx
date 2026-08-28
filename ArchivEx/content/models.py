@@ -126,3 +126,37 @@ class Article(models.Model):
 
     def __str__(self):
         return f"Article : {self.title}"
+
+
+class CloudFile(models.Model):
+    """
+    Fichier stocké dans la Bibliothèque Cloud Intégrée.
+    Ce dépôt sert de stockage centralisé (sans publication automatique sur le site public).
+    """
+    FILE_TYPE_CHOICES = [
+        ("EXAM", "Épreuve / Sujet"),
+        ("CORRECTION", "Correction / Corrigé"),
+        ("SUMMARY", "Fiche / Résumé"),
+        ("OTHER", "Autre Document"),
+    ]
+
+    title = models.CharField(max_length=255, verbose_name="Titre du fichier")
+    file = models.FileField(upload_to="cloud_library/%Y/%m/", help_text="Fichier PDF conservé dans le dépôt Cloud")
+    file_type = models.CharField(max_length=20, choices=FILE_TYPE_CHOICES, default="EXAM", verbose_name="Type de ressource")
+
+    school = models.ForeignKey("academics.School", on_delete=models.SET_NULL, null=True, blank=True, related_name="cloud_files")
+    filiere = models.ForeignKey("academics.Filiere", on_delete=models.SET_NULL, null=True, blank=True, related_name="cloud_files")
+    semester = models.ForeignKey("academics.Semester", on_delete=models.SET_NULL, null=True, blank=True, related_name="cloud_files")
+
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="uploaded_cloud_files")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Fichier Cloud"
+        verbose_name_plural = "Fichiers Cloud"
+
+    def __str__(self):
+        return f"{self.title} ({self.get_file_type_display()})"
+

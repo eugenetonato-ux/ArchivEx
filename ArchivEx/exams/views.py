@@ -142,6 +142,19 @@ def exam_detail(request, pk):
     return render(request, "exams/detail.html", context)
 
 
+def _get_safe_file_path(field_file):
+    """Retourne le chemin système du fichier s'il existe physiquement, sinon None."""
+    if not field_file or not bool(field_file):
+        return None
+    try:
+        path = field_file.path
+        if os.path.exists(path):
+            return path
+    except Exception:
+        pass
+    return None
+
+
 @login_required
 def stream_exam_pdf(request, pk):
     """Vue de sécurité : Sert le fichier PDF de l'épreuve principale."""
@@ -156,11 +169,12 @@ def stream_exam_pdf(request, pk):
         )
         return redirect("payments:pass_semestre", semester_id=exam.semester.id)
 
-    if not exam.file or not os.path.exists(exam.file.path):
+    file_path = _get_safe_file_path(exam.file)
+    if not file_path:
         raise Http404("Le fichier de l'épreuve est introuvable sur le serveur.")
 
     response = FileResponse(
-        open(exam.file.path, "rb"),
+        open(file_path, "rb"),
         content_type="application/pdf"
     )
     is_download = request.GET.get("download") == "1"
@@ -186,11 +200,12 @@ def stream_correction_pdf(request, pk):
         )
         return redirect("payments:pass_semestre", semester_id=exam.semester.id)
 
-    if not os.path.exists(exam.correction_file.path):
+    file_path = _get_safe_file_path(exam.correction_file)
+    if not file_path:
         raise Http404("Le fichier de correction est introuvable sur le serveur.")
 
     response = FileResponse(
-        open(exam.correction_file.path, "rb"),
+        open(file_path, "rb"),
         content_type="application/pdf"
     )
     is_download = request.GET.get("download") == "1"
@@ -222,11 +237,12 @@ def stream_summary_pdf(request, pk):
         )
         return redirect("payments:pass_semestre", semester_id=exam.semester.id)
 
-    if not os.path.exists(target_file.path):
+    file_path = _get_safe_file_path(target_file)
+    if not file_path:
         raise Http404("Le fichier du résumé est introuvable sur le serveur.")
 
     response = FileResponse(
-        open(target_file.path, "rb"),
+        open(file_path, "rb"),
         content_type="application/pdf"
     )
     is_download = request.GET.get("download") == "1"
@@ -275,16 +291,17 @@ def student_viewer_view(request, pk):
     if res_type == "correction":
         has_access = can_user_access_correction(request.user, exam)
         resource_label = "Correction Détaillée"
-        if not exam.correction_file:
-            raise Http404("Aucune correction n'est associée à cette épreuve.")
+        if not _get_safe_file_path(exam.correction_file):
+            raise Http404("Aucune correction n'est disponible pour cette épreuve.")
     elif res_type == "summary":
         has_access = can_user_access_summary(request.user, exam)
         resource_label = "Fiche Résumé"
-        if not (exam.summary_file or (exam.summary and exam.summary.file)):
-            raise Http404("Aucun résumé n'est associé à cette épreuve.")
+        summary_target = exam.summary_file or (exam.summary.file if exam.summary else None)
+        if not _get_safe_file_path(summary_target):
+            raise Http404("Aucun résumé n'est disponible pour cette épreuve.")
     else:
         has_access = can_user_access_exam_pdf(request.user, exam)
-        if not (exam.file and os.path.exists(exam.file.path)):
+        if not _get_safe_file_path(exam.file):
             raise Http404("Le fichier de l'épreuve est introuvable.")
 
     if not has_access:
@@ -333,10 +350,14 @@ def stream_watermarked_pdf_view(request, pk):
         )
         return redirect("payments:pass_semestre", semester_id=exam.semester.id)
 
-    if not target_file or not os.path.exists(target_file.path):
+    file_path = _get_safe_file_path(target_file)
+    if not file_path:
         raise Http404("Le fichier demandé est introuvable sur le serveur.")
 
-    watermarked_io = apply_student_watermark(target_file.path, request.user)
+    try:
+        watermarked_io = apply_student_watermark(file_path, request.user)
+    except Exception:
+        watermarked_io = open(file_path, "rb")
 
     response = FileResponse(
         watermarked_io,
