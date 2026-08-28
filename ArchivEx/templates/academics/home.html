@@ -29,148 +29,249 @@
 </section>
 {% endif %}
 
-<!-- 2. HERO SECTION WITH ACADEMIC POSITIONING -->
-<section class="hero-light-section relative overflow-hidden pt-10 pb-14 md:pt-16 md:pb-20">
-    <div class="hero-bg-glow" aria-hidden="true"></div>
+<!-- 2. HERO SECTION WITH ACADEMIC POSITIONING (EXACT DESIGN MATCH) -->
+<section class="relative overflow-hidden pt-8 pb-14 md:pt-14 md:pb-20 bg-gradient-to-br from-[#F4F8FE] via-[#EDF3FE] to-[#F6F9FF] border-b border-blue-100/60">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-6 items-center">
-
-        <!-- LEFT COLUMN: EDITORIAL CONTENT -->
-        <div class="lg:col-span-6 text-center lg:text-left hero-fade-in-up">
-            <div class="badge-l1 inline-flex items-center space-x-2 mb-5">
-                <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+        <!-- LEFT COLUMN: EDITORIAL CONTENT & ACTIONS -->
+        <div class="lg:col-span-6 text-center lg:text-left">
+            <!-- Top Badge Pill -->
+            <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#E1EEFE] border border-[#CDE1FE] text-[#2563EB] text-xs font-bold mb-5 shadow-xs">
+                <i class="fa-solid fa-graduation-cap"></i>
                 <span>La référence des étudiants</span>
             </div>
 
-            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[#0B1730] mb-5 leading-[1.1]">
-                Prépare tes examens avec <span class="text-[#2563EB]">ArchivEx</span>
+            <!-- Main Heading -->
+            <h1 class="text-3xl sm:text-5xl lg:text-[52px] font-black tracking-tight text-[#071A49] mb-5 leading-[1.08]">
+                Réussis tes examens<br>
+                avec <span class="text-[#2563EB]">ArchivEx</span>
             </h1>
 
-            <p class="max-w-lg mx-auto lg:mx-0 text-sm sm:text-base text-slate-500 mb-7 leading-relaxed font-medium">
-                La plateforme qui centralise les épreuves, corrigés et résumés de tes filières pour t'accompagner tout au long de ton parcours universitaire.
+            <!-- Subtitle -->
+            <p class="max-w-xl mx-auto lg:mx-0 text-sm sm:text-base text-slate-600 mb-7 leading-relaxed font-medium">
+                La plateforme qui centralise les épreuves, corrigés et résumés de toutes les universités du Bénin pour t'accompagner tout au long de ton parcours universitaire.
             </p>
 
-            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 mb-8">
-                <div class="hero-feature-chip">
-                    <i class="fa-solid fa-book-open" aria-hidden="true"></i>
-                    <span>Épreuves des années passées</span>
+            <!-- 3 Mini Feature Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 max-w-xl mx-auto lg:mx-0 text-left">
+                <!-- Card 1: Épreuves -->
+                <div class="bg-white/90 backdrop-blur border border-slate-200/80 rounded-2xl p-3.5 flex items-center space-x-3 shadow-xs">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center shrink-0 text-lg">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-black text-[#071A49] leading-snug">Épreuves</h4>
+                        <p class="text-[11px] text-slate-500 font-medium">années passées</p>
+                    </div>
                 </div>
-                <div class="hero-feature-chip">
-                    <i class="fa-solid fa-file-circle-check" aria-hidden="true"></i>
-                    <span>Corrigés détaillés</span>
+
+                <!-- Card 2: Corrigés -->
+                <div class="bg-white/90 backdrop-blur border border-slate-200/80 rounded-2xl p-3.5 flex items-center space-x-3 shadow-xs">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center shrink-0 text-lg">
+                        <i class="fa-solid fa-file-circle-check"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-black text-[#071A49] leading-snug">Corrigés</h4>
+                        <p class="text-[11px] text-slate-500 font-medium">détaillés</p>
+                    </div>
                 </div>
-                <div class="hero-feature-chip">
-                    <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
-                    <span>Résumés de qualité</span>
+
+                <!-- Card 3: Résumés -->
+                <div class="bg-white/90 backdrop-blur border border-slate-200/80 rounded-2xl p-3.5 flex items-center space-x-3 shadow-xs">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center shrink-0 text-lg">
+                        <i class="fa-solid fa-file-lines"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-black text-[#071A49] leading-snug">Résumés</h4>
+                        <p class="text-[11px] text-slate-500 font-medium">de qualité</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
-                {% if user.is_authenticated %}
-                    <a href="{% url 'academics:filieres' %}" class="btn-primary w-full sm:w-auto text-sm px-7 py-3.5 rounded-xl font-extrabold flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-book-open text-sm" aria-hidden="true"></i>
-                        <span>Explorer mes épreuves</span>
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5">
+                {% if user.is_authenticated and user.is_staff or user.is_authenticated and user.is_superuser or user.is_authenticated and user.contributor_profile %}
+                    <a href="{% url 'contributors:admin_dashboard' %}" class="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-slate-900 font-black text-sm px-7 py-3.5 rounded-2xl shadow-lg shadow-amber-500/25 flex items-center justify-center space-x-2.5 transition-all">
+                        <i class="fa-solid fa-user-shield"></i>
+                        <span>Espace Administration</span>
                     </a>
-                    {% if user.is_staff or user.is_superuser or user.contributor_profile %}
-                        <a href="{% url 'contributors:admin_dashboard' %}" class="w-full sm:w-auto text-sm px-6 py-3.5 rounded-xl border border-amber-300 bg-amber-50 text-amber-700 font-extrabold hover:bg-amber-100 transition-colors flex items-center justify-center space-x-2">
-                            <i class="fa-solid fa-user-shield text-sm" aria-hidden="true"></i>
-                            <span>Espace Administration</span>
-                        </a>
-                    {% else %}
-                        <a href="{% url 'accounts:dashboard' %}" class="btn-secondary w-full sm:w-auto text-sm px-6 py-3.5 rounded-xl font-bold flex items-center justify-center space-x-2">
-                            <i class="fa-solid fa-gauge text-sm text-[#2563EB]" aria-hidden="true"></i>
-                            <span>Mon tableau de bord</span>
-                        </a>
-                    {% endif %}
                 {% else %}
-                    <a href="{% url 'accounts:register' %}" class="btn-primary w-full sm:w-auto text-sm px-7 py-3.5 rounded-xl font-extrabold flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-user-plus text-sm" aria-hidden="true"></i>
-                        <span>Créer un compte</span>
-                    </a>
-                    <a href="{% url 'accounts:login' %}" class="btn-secondary w-full sm:w-auto text-sm px-6 py-3.5 rounded-xl font-bold flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-right-to-bracket text-sm text-[#2563EB]" aria-hidden="true"></i>
-                        <span>Se connecter</span>
+                    <a href="{% url 'academics:filieres' %}" class="w-full sm:w-auto bg-[#2563EB] hover:bg-blue-700 text-white font-black text-sm px-7 py-3.5 rounded-2xl shadow-lg shadow-blue-500/25 flex items-center justify-center space-x-2.5 transition-all">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        <span>Explorer les universités</span>
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
                     </a>
                 {% endif %}
+
+                <a href="{% url 'academics:about' %}" class="w-full sm:w-auto bg-white hover:bg-slate-50 text-[#071A49] border border-slate-200/90 font-extrabold text-sm px-6 py-3.5 rounded-2xl shadow-xs flex items-center justify-center space-x-2.5 transition-all">
+                    <div class="w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center text-[10px]">
+                        <i class="fa-solid fa-play text-[8px] text-[#071A49] ml-0.5"></i>
+                    </div>
+                    <span>Découvrir la plateforme</span>
+                </a>
             </div>
         </div>
 
-        <!-- RIGHT COLUMN: ARCHIVEX PLATFORM PREVIEW -->
-        <div class="lg:col-span-6 flex justify-center hero-fade-in-up hero-fade-in-up-delay">
-            <div class="relative w-full max-w-md sm:max-w-lg">
+        <!-- RIGHT COLUMN: LAPTOP MOCKUP & 3 FLOATING BADGES -->
+        <div class="lg:col-span-6 flex justify-center">
+            <div class="relative w-full max-w-[560px] mx-auto pt-6 pb-2">
 
-                <!-- Floating card: Pass Semestre -->
-                <div class="hero-float-card hero-float-card-top card-tint-blue" aria-hidden="true">
-                    <div class="w-8 h-8 rounded-lg bg-[#2563EB] text-white flex items-center justify-center shrink-0">
-                        <i class="fa-solid fa-graduation-cap text-xs" aria-hidden="true"></i>
+                <!-- FLOATING BADGE 1: PASS SEMESTRE (Top Left) -->
+                <div class="absolute top-0 left-0 sm:-left-4 z-30 bg-white/95 backdrop-blur border border-slate-200/90 rounded-2xl p-3 shadow-xl flex items-center space-x-3 transition-transform hover:scale-105 duration-200">
+                    <div class="w-10 h-10 rounded-xl bg-[#5E51E8] text-white flex items-center justify-center shrink-0 shadow-md">
+                        <i class="fa-solid fa-graduation-cap text-lg"></i>
                     </div>
                     <div>
-                        <p class="text-[11px] font-extrabold text-[#071A49] leading-tight">Pass Semestre</p>
-                        <p class="text-[10px] text-slate-500 leading-tight">Accès aux ressources du semestre</p>
+                        <h4 class="text-xs font-black text-[#071A49] leading-tight mb-0.5">Pass Semestre</h4>
+                        <p class="text-[10px] text-slate-500 font-medium leading-tight max-w-[130px]">Accès illimité aux ressources de ton semestre</p>
                     </div>
                 </div>
 
-                <!-- Floating card: Fichiers protégés -->
-                <div class="hero-float-card hero-float-card-bottom card-tint-emerald" aria-hidden="true">
-                    <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center shrink-0">
-                        <i class="fa-solid fa-shield-halved text-xs" aria-hidden="true"></i>
+                <!-- FLOATING BADGE 2: CONSOMMATION SÉCURISÉE (Top Right) -->
+                <div class="absolute top-2 right-0 sm:-right-4 z-30 bg-[#E8F8F2]/95 backdrop-blur border border-emerald-200/90 rounded-2xl p-2.5 shadow-lg flex items-center space-x-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-[#10B981] text-white flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-shield-check text-xs"></i>
                     </div>
                     <div>
-                        <p class="text-[11px] font-extrabold text-[#071A49] leading-tight">Fichiers protégés</p>
-                        <p class="text-[10px] text-slate-500 leading-tight">Documents filigranés</p>
+                        <h4 class="text-[11px] font-black text-emerald-950 leading-tight">Consommation sécurisée</h4>
+                        <p class="text-[9px] text-emerald-700 font-semibold">Fichiers protégés et filigranés</p>
                     </div>
                 </div>
 
-                <!-- Laptop / product preview -->
-                <div class="laptop-mockup" aria-hidden="true">
-                    <div class="laptop-screen">
-                        <div class="laptop-browser-bar">
-                            <span class="laptop-dot"></span>
-                            <span class="laptop-dot"></span>
-                            <span class="laptop-dot"></span>
-                            <span class="laptop-brand">
-                                <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i> ArchivEx
-                            </span>
+                <!-- FLOATING BADGE 3: PAIEMENT MOBILE MONEY (Bottom Right) -->
+                <div class="absolute -bottom-4 right-2 sm:-right-6 z-30 bg-[#FAF3FE]/95 backdrop-blur border border-purple-200/90 rounded-2xl p-3 shadow-xl flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-600 to-pink-500 text-white flex items-center justify-center shrink-0 shadow-md">
+                        <i class="fa-solid fa-bag-shopping text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-black text-slate-900 leading-tight">Paiement Mobile Money</h4>
+                        <p class="text-[10px] text-purple-700 font-bold mt-0.5">MTN • Moov • Celtiis</p>
+                    </div>
+                </div>
+
+                <!-- LAPTOP FRAME -->
+                <div class="relative mx-auto border-[10px] border-[#1E293B] rounded-t-2xl bg-[#1E293B] shadow-2xl overflow-hidden max-w-[500px]">
+                    <!-- SCREEN CONTENT -->
+                    <div class="bg-slate-50 text-slate-800 text-[11px] aspect-[16/10] overflow-hidden flex flex-col select-none">
+                        <!-- Screen Top Navbar -->
+                        <div class="bg-white border-b border-slate-200 px-3 py-1.5 flex items-center justify-between shrink-0">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-5 h-5 rounded-lg bg-[#071A49] flex items-center justify-center text-[10px] text-white font-extrabold">A</div>
+                                <span class="font-black text-[#071A49] text-[11px]">Archiv<span class="text-[#2563EB]">Ex</span></span>
+                                <span class="text-[8px] text-slate-400 font-medium hidden sm:inline">les épreuves en un clic</span>
+                            </div>
+                            <div class="bg-slate-100 rounded-lg px-2 py-0.5 flex items-center space-x-1.5 text-[9px] text-slate-400 w-44">
+                                <i class="fa-solid fa-magnifying-glass text-[8px]"></i>
+                                <span class="truncate">Rechercher une épreuve, une matière...</span>
+                            </div>
+                            <div class="flex items-center space-x-1.5">
+                                <div class="w-5 h-5 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-[9px] font-bold">É</div>
+                                <div class="hidden sm:block text-[9px]">
+                                    <p class="font-bold text-[#071A49] leading-none">Étudiant</p>
+                                    <p class="text-[8px] text-slate-400 leading-none">Licence Informatique</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="laptop-body">
-                            <aside class="laptop-sidebar">
-                                <div class="laptop-nav-item laptop-nav-item-active">
-                                    <i class="fa-solid fa-gauge" aria-hidden="true"></i><span>Tableau de bord</span>
+
+                        <!-- Screen Body -->
+                        <div class="flex-grow flex overflow-hidden">
+                            <!-- Sidebar -->
+                            <div class="w-28 bg-white border-r border-slate-200 p-2 space-y-1 shrink-0 text-[9px]">
+                                <div class="bg-blue-50 text-[#2563EB] font-bold p-1.5 rounded-lg flex items-center space-x-1.5">
+                                    <i class="fa-solid fa-house text-[9px]"></i>
+                                    <span class="truncate">Tableau de bord</span>
                                 </div>
-                                <div class="laptop-nav-item">
-                                    <i class="fa-solid fa-book-open" aria-hidden="true"></i><span>Mes matières</span>
+                                <div class="text-slate-600 p-1.5 rounded-lg flex items-center space-x-1.5 hover:bg-slate-50">
+                                    <i class="fa-solid fa-book-open text-[9px] text-slate-400"></i>
+                                    <span class="truncate">Mes matières</span>
                                 </div>
-                                <div class="laptop-nav-item">
-                                    <i class="fa-solid fa-file-lines" aria-hidden="true"></i><span>Résumés</span>
+                                <div class="text-slate-600 p-1.5 rounded-lg flex items-center space-x-1.5 hover:bg-slate-50">
+                                    <i class="fa-solid fa-download text-[9px] text-slate-400"></i>
+                                    <span class="truncate">Mes téléchargements</span>
                                 </div>
-                                <div class="laptop-nav-item">
-                                    <i class="fa-solid fa-id-card" aria-hidden="true"></i><span>Pass Semestre</span>
+                                <div class="text-slate-600 p-1.5 rounded-lg flex items-center space-x-1.5 hover:bg-slate-50">
+                                    <i class="fa-solid fa-id-card text-[9px] text-slate-400"></i>
+                                    <span class="truncate">Pass Semestre</span>
                                 </div>
-                            </aside>
-                            <main class="laptop-main">
-                                <p class="laptop-main-title">Bienvenue sur ArchivEx</p>
-                                <p class="laptop-main-sub">Retrouve tes épreuves, corrigés et résumés par filière et semestre.</p>
-                                <div class="laptop-resource-row">
-                                    <div class="laptop-resource-card">
-                                        <span class="badge-premium"><i class="fa-solid fa-crown" aria-hidden="true"></i>Premium</span>
-                                        <p class="laptop-resource-name">Base de données</p>
-                                        <p class="laptop-resource-meta">Licence Informatique</p>
+                            </div>
+
+                            <!-- Main Content -->
+                            <div class="flex-grow p-3 bg-slate-50/70 overflow-hidden">
+                                <div class="mb-2">
+                                    <h4 class="font-black text-[#071A49] text-xs leading-tight">Bienvenue sur ArchivEx</h4>
+                                    <p class="text-[9px] text-slate-500 font-medium">Accède aux meilleures ressources pour préparer tes examens.</p>
+                                </div>
+
+                                <!-- Mini Stat Cards -->
+                                <div class="grid grid-cols-3 gap-1.5 mb-2.5">
+                                    <div class="bg-white p-1.5 rounded-lg border border-slate-200/80 shadow-2xs flex items-center space-x-1.5">
+                                        <div class="w-5 h-5 rounded bg-blue-50 text-[#2563EB] flex items-center justify-center font-bold text-[9px]">EP</div>
+                                        <div>
+                                            <span class="font-black text-xs text-[#071A49] block leading-none">12</span>
+                                            <span class="text-[7px] text-slate-400 font-medium block">Épreuves consultées</span>
+                                        </div>
                                     </div>
-                                    <div class="laptop-resource-card">
-                                        <span class="badge-free">Gratuit</span>
-                                        <p class="laptop-resource-name">Algorithmique</p>
-                                        <p class="laptop-resource-meta">Licence Informatique</p>
+                                    <div class="bg-white p-1.5 rounded-lg border border-slate-200/80 shadow-2xs flex items-center space-x-1.5">
+                                        <div class="w-5 h-5 rounded bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-[9px]">8</div>
+                                        <div>
+                                            <span class="font-black text-xs text-[#071A49] block leading-none">8</span>
+                                            <span class="text-[7px] text-slate-400 font-medium block">Matières suivies</span>
+                                        </div>
                                     </div>
-                                    <div class="laptop-resource-card">
-                                        <span class="badge-premium"><i class="fa-solid fa-crown" aria-hidden="true"></i>Premium</span>
-                                        <p class="laptop-resource-name">Réseaux</p>
-                                        <p class="laptop-resource-meta">Résumé de cours</p>
+                                    <div class="bg-white p-1.5 rounded-lg border border-slate-200/80 shadow-2xs flex items-center space-x-1.5">
+                                        <div class="w-5 h-5 rounded bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-[9px]">1</div>
+                                        <div>
+                                            <span class="font-black text-xs text-[#071A49] block leading-none">1</span>
+                                            <span class="text-[7px] text-slate-400 font-medium block">Pass actif</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </main>
+
+                                <!-- Ressources récentes header -->
+                                <div class="flex items-center justify-between mb-1 text-[9px]">
+                                    <span class="font-bold text-[#071A49]">Ressources récentes</span>
+                                    <span class="text-[8px] text-[#2563EB] font-bold">Voir tout →</span>
+                                </div>
+
+                                <!-- Cards row -->
+                                <div class="grid grid-cols-3 gap-1.5">
+                                    <div class="bg-white p-2 rounded-lg border border-slate-200/80 shadow-2xs space-y-1">
+                                        <div class="flex items-center justify-between">
+                                            <i class="fa-solid fa-file-lines text-slate-400 text-[9px]"></i>
+                                            <span class="text-[7px] font-extrabold bg-amber-100 text-amber-800 px-1 py-0.2 rounded">Premium</span>
+                                        </div>
+                                        <p class="font-bold text-[#071A49] text-[9px] leading-tight truncate">Base de données</p>
+                                        <p class="text-[7px] text-slate-400">Licence Informatique - S4</p>
+                                        <span class="text-[6px] font-bold text-blue-600 bg-blue-50 px-1 py-0.2 rounded inline-block">+ Épreuve + Corrigé</span>
+                                    </div>
+
+                                    <div class="bg-white p-2 rounded-lg border border-slate-200/80 shadow-2xs space-y-1">
+                                        <div class="flex items-center justify-between">
+                                            <i class="fa-solid fa-file-lines text-slate-400 text-[9px]"></i>
+                                            <span class="text-[7px] font-extrabold bg-emerald-100 text-emerald-800 px-1 py-0.2 rounded">Gratuit</span>
+                                        </div>
+                                        <p class="font-bold text-[#071A49] text-[9px] leading-tight truncate">Algorithmique</p>
+                                        <p class="text-[7px] text-slate-400">Licence Informatique - S3</p>
+                                        <span class="text-[6px] font-bold text-emerald-600 bg-emerald-50 px-1 py-0.2 rounded inline-block">+ Épreuve</span>
+                                    </div>
+
+                                    <div class="bg-white p-2 rounded-lg border border-slate-200/80 shadow-2xs space-y-1">
+                                        <div class="flex items-center justify-between">
+                                            <i class="fa-solid fa-book-open text-slate-400 text-[9px]"></i>
+                                            <span class="text-[7px] font-extrabold bg-amber-100 text-amber-800 px-1 py-0.2 rounded">Premium</span>
+                                        </div>
+                                        <p class="font-bold text-[#071A49] text-[9px] leading-tight truncate">Réseaux</p>
+                                        <p class="text-[7px] text-slate-400">Licence Informatique - S5</p>
+                                        <span class="text-[6px] font-bold text-purple-600 bg-purple-50 px-1 py-0.2 rounded inline-block">+ Résumé</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="laptop-base"></div>
+                </div>
+                <!-- Laptop Base -->
+                <div class="w-[520px] max-w-[106%] h-3.5 bg-gradient-to-b from-[#334155] to-[#0F172A] rounded-b-xl mx-auto shadow-lg relative -mt-0.5 border-t border-slate-600/40">
+                    <div class="w-16 h-1 bg-slate-400/50 rounded-full mx-auto -mt-0.5"></div>
                 </div>
             </div>
         </div>
