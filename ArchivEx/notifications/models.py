@@ -5,6 +5,7 @@ from django.db import models
 class Notification(models.Model):
     NOTIFICATION_TYPES = [
         ("NEW_EXAM", "Nouvelle Épreuve"),
+        ("NEW_CORRECTION", "Nouveau Corrigé"),
         ("NEW_SUMMARY", "Nouveau Résumé"),
         ("NEW_GUIDE", "Nouveau Guide"),
         ("NEW_ADVICE", "Nouveau Conseil"),

@@ -47,6 +47,9 @@
         <a href="{% url 'notifications:list' %}?filter=NEW_EXAM" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors {% if selected_filter == 'NEW_EXAM' %}bg-[#071A49] text-white{% else %}bg-white border border-slate-200 text-slate-600 hover:border-slate-300{% endif %}">
             Épreuves
         </a>
+        <a href="{% url 'notifications:list' %}?filter=NEW_CORRECTION" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors {% if selected_filter == 'NEW_CORRECTION' %}bg-[#071A49] text-white{% else %}bg-white border border-slate-200 text-slate-600 hover:border-slate-300{% endif %}">
+            Corrigés
+        </a>
         <a href="{% url 'notifications:list' %}?filter=NEW_SUMMARY" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors {% if selected_filter == 'NEW_SUMMARY' %}bg-[#071A49] text-white{% else %}bg-white border border-slate-200 text-slate-600 hover:border-slate-300{% endif %}">
             Résumés
         </a>
@@ -69,11 +72,13 @@
                     <!-- ICON BADGE BY TYPE -->
                     <div class="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm flex-shrink-0 mt-0.5 
                         {% if notif.notification_type == 'NEW_EXAM' %}bg-blue-100 text-[#2563EB]
+                        {% elif notif.notification_type == 'NEW_CORRECTION' %}bg-indigo-100 text-indigo-700
                         {% elif notif.notification_type == 'NEW_SUMMARY' %}bg-amber-100 text-amber-800
                         {% elif notif.notification_type == 'NEW_GUIDE' %}bg-emerald-100 text-emerald-800
                         {% elif notif.notification_type == 'PAYMENT' %}bg-purple-100 text-purple-800
                         {% else %}bg-slate-100 text-slate-700{% endif %}">
                         {% if notif.notification_type == 'NEW_EXAM' %}<i class="fa-solid fa-file-lines"></i>
+                        {% elif notif.notification_type == 'NEW_CORRECTION' %}<i class="fa-solid fa-square-check"></i>
                         {% elif notif.notification_type == 'NEW_SUMMARY' %}<i class="fa-solid fa-book"></i>
                         {% elif notif.notification_type == 'NEW_GUIDE' %}<i class="fa-solid fa-compass"></i>
                         {% elif notif.notification_type == 'PAYMENT' %}<i class="fa-solid fa-credit-card"></i>
@@ -84,6 +89,7 @@
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full 
                                 {% if notif.notification_type == 'NEW_EXAM' %}bg-blue-100 text-[#2563EB]
+                                {% elif notif.notification_type == 'NEW_CORRECTION' %}bg-indigo-100 text-indigo-700
                                 {% elif notif.notification_type == 'NEW_SUMMARY' %}bg-amber-100 text-amber-800
                                 {% elif notif.notification_type == 'NEW_GUIDE' %}bg-emerald-100 text-emerald-800
                                 {% elif notif.notification_type == 'PAYMENT' %}bg-purple-100 text-purple-800
@@ -113,6 +119,7 @@
                         <a href="{% url 'notifications:mark_read' notif.pk %}" class="btn-primary text-xs px-4 py-2 font-extrabold rounded-xl shadow-sm flex items-center space-x-1">
                             <span>
                                 {% if notif.notification_type == 'NEW_EXAM' %}Voir l'épreuve
+                                {% elif notif.notification_type == 'NEW_CORRECTION' %}Consulter le corrigé
                                 {% elif notif.notification_type == 'NEW_SUMMARY' %}Consulter le résumé
                                 {% elif notif.notification_type == 'NEW_GUIDE' %}Lire le guide
                                 {% elif notif.notification_type == 'PAYMENT' %}Accéder aux ressources

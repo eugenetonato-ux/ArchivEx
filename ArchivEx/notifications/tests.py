@@ -104,4 +104,64 @@ class NotificationEngineTest(TestCase):
         res_target = self.client.get(notif.link)
         self.assertEqual(res_target.status_code, 404)
 
+    def test_automatic_exam_and_correction_publication_notification(self):
+        """When an exam with correction is published, notifications for exam and correction are created with tailored wording."""
+        from academics.models import Semester, AcademicYear, Subject
+        from exams.models import Exam
+
+        year = AcademicYear.objects.create(label="2024-2025")
+        sem = Semester.objects.create(filiere=self.filiere_eneam, label="Semestre 1", number=1)
+        subj = Subject.objects.create(semester=sem, name="Probabilité")
+
+        Exam.objects.create(
+            title="Épreuve de Probabilité 2024",
+            subject=subj,
+            semester=sem,
+            filiere=self.filiere_eneam,
+            level=self.level_l1,
+            academic_year=year,
+            exam_type="examen",
+            year=2024,
+            correction_file="corrections/probabilite_corrige.pdf",
+            is_published=True
+        )
+
+        # Check notification for ENEAM student
+        notifs = Notification.objects.filter(recipient=self.student_eneam)
+        self.assertEqual(notifs.count(), 2)  # 1 for exam, 1 for correction
+
+        exam_notif = notifs.filter(notification_type="NEW_EXAM").first()
+        self.assertIsNotNone(exam_notif)
+        self.assertIn("Probabilité", exam_notif.title)
+        self.assertIn("Probabilité", exam_notif.message)
+
+        corr_notif = notifs.filter(notification_type="NEW_CORRECTION").first()
+        self.assertIsNotNone(corr_notif)
+        self.assertIn("Probabilité", corr_notif.title)
+        self.assertIn("Un corrigé de Probabilité est disponible", corr_notif.message)
+
+        # Verify FLASH student received NO notifications
+        self.assertEqual(Notification.objects.filter(recipient=self.student_flash).count(), 0)
+
+    def test_automatic_summary_publication_notification(self):
+        """When a summary is published, a tailored notification is dispatched to targeted students."""
+        from academics.models import Semester, Subject
+        from content.models import Summary
+
+        sem = Semester.objects.create(filiere=self.filiere_eneam, label="Semestre 1", number=1)
+        subj = Subject.objects.create(semester=sem, name="Probabilité")
+
+        Summary.objects.create(
+            title="Résumé du cours Probabilité",
+            subject=subj,
+            content="Contenu du résumé...",
+            publication_status="PUBLISHED"
+        )
+
+        notif = Notification.objects.filter(recipient=self.student_eneam, notification_type="NEW_SUMMARY").first()
+        self.assertIsNotNone(notif)
+        self.assertIn("Probabilité", notif.title)
+        self.assertIn("Un résumé du cours Probabilité est disponible, cliquez pour consulter.", notif.message)
+
+
 
