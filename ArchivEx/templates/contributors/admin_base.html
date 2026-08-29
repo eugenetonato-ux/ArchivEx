@@ -172,6 +172,11 @@
                     <i class="fa-solid fa-paper-plane w-4 text-center text-slate-500" aria-hidden="true"></i>
                     <span>Diffuser notification</span>
                 </a>
+
+                <a href="{% url 'contributors:admin_support_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'support' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                    <i class="fa-solid fa-headset w-4 text-center text-rose-500" aria-hidden="true"></i>
+                    <span class="flex-1">Support</span>
+                </a>
             </div>
         </aside>
 

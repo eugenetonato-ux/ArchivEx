@@ -30,13 +30,18 @@ def apply_student_watermark(pdf_source, user):
         if not full_name:
             full_name = getattr(user, "username", "Étudiant ArchivEx")
 
+        email = getattr(user, "email", "")
         now_str = timezone.now().strftime("%d/%m/%Y • %H:%M")
 
         text_lines = [
             full_name,
+        ]
+        if email:
+            text_lines.append(email)
+        text_lines.extend([
             "ArchivEx — Consultation personnelle",
             now_str,
-        ]
+        ])
 
         for page in reader.pages:
             width = float(page.mediabox.width)

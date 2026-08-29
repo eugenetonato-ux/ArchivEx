@@ -72,10 +72,69 @@
         </div>
     </div>
 
-    <!-- PROTECTED PDF EMBEDDED CANVAS / IFRAME VIEWER -->
-    <div class="w-full h-[750px] rounded-3xl overflow-hidden bg-slate-900 border border-slate-300 shadow-xl relative">
-        <iframe src="{{ stream_url }}" class="w-full h-full border-0 no-select" title="Lecteur de document académique sécurisé"></iframe>
+    <!-- PROTECTED PDF EMBEDDED CANVAS / IFRAME VIEWER WITH ACTIVE SECURITY OVERLAY -->
+    <div id="viewer-container" class="w-full h-[750px] rounded-3xl overflow-hidden bg-slate-900 border border-slate-300 shadow-xl relative transition-all duration-200">
+        
+        <!-- FLOATING DYNAMIC HTML WATERMARK OVERLAY (BURNS USER IDENTITY INTO SCREENSHOTS & PHOTOS) -->
+        <div class="absolute inset-0 z-20 pointer-events-none overflow-hidden select-none opacity-20 flex flex-wrap content-start p-4 gap-12" aria-hidden="true">
+            {% for i in "123456789012" %}
+                <div class="transform -rotate-12 text-slate-400 text-xs font-black tracking-widest uppercase">
+                    {{ request.user.get_full_name|default:request.user.username }} • {{ request.user.email }} • ArchivEx
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- SECURITY BLUR OVERLAY (TRIGGERED ON WINDOW BLUR / SCREEN CAPTURE FOCUS LOSS) -->
+        <div id="security-blur-mask" class="absolute inset-0 z-30 bg-slate-900/95 backdrop-blur-md hidden flex-col items-center justify-center text-center p-6 transition-all duration-150">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-amber-300 flex items-center justify-center text-xl mb-3">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h3 class="text-white font-extrabold text-base mb-1">Consultation suspendue</h3>
+            <p class="text-slate-300 text-xs max-w-md">Le document est masqué automatiquement lorsque la fenêtre perd le focus afin de protéger le contenu académique.</p>
+        </div>
+
+        <iframe id="pdf-frame" src="{{ stream_url }}" class="w-full h-full border-0 no-select" title="Lecteur de document académique sécurisé"></iframe>
     </div>
 
 </div>
+
+<script>
+    // 1. BLUR CONTENT ON WINDOW BLUR / TAB SWITCH / CAPTURE TOOL FOCUS LOSS
+    const blurMask = document.getElementById('security-blur-mask');
+    
+    window.addEventListener('blur', () => {
+        if (blurMask) blurMask.classList.remove('hidden');
+    });
+    
+    window.addEventListener('focus', () => {
+        if (blurMask) blurMask.classList.add('hidden');
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            if (blurMask) blurMask.classList.remove('hidden');
+        } else {
+            if (blurMask) blurMask.classList.add('hidden');
+        }
+    });
+
+    // 2. BLOCK SENSITIVE KEYBOARD SHORTCUTS (PRINT, SAVE, INSPECT)
+    document.addEventListener('keydown', (e) => {
+        // Ctrl+P (Print), Ctrl+S (Save), F12, Ctrl+Shift+I (Inspect), PrintScreen
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S' || e.key === 'u' || e.key === 'U')) {
+            e.preventDefault();
+            return false;
+        }
+        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c'))) {
+            e.preventDefault();
+            return false;
+        }
+        if (e.key === 'PrintScreen') {
+            if (blurMask) blurMask.classList.remove('hidden');
+            setTimeout(() => {
+                if (blurMask) blurMask.classList.add('hidden');
+            }, 3000);
+        }
+    });
+</script>
 {% endblock %}

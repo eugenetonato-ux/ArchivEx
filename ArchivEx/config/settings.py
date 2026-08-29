@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "content",
     "contributors",
     "notifications",
+    "support",
 ]
 
 MIDDLEWARE = [

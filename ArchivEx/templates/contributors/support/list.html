@@ -1,0 +1,130 @@
+{% extends "contributors/admin_base.html" %}
+{% load static %}
+
+{% block title %}Support — Demandes étudiants | Admin ArchivEx{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+
+    <!-- PAGE HEADER -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-black text-[#071A49]">Support étudiants</h1>
+            <p class="text-xs text-slate-500 font-medium mt-1">Gérez les demandes d'assistance soumises par les étudiants.</p>
+        </div>
+    </div>
+
+    <!-- STATS ROW -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Total</p>
+            <p class="text-2xl font-black text-[#071A49]">{{ total }}</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Non lus</p>
+            <p class="text-2xl font-black text-rose-600">{{ non_lus }}</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">En cours</p>
+            <p class="text-2xl font-black text-amber-600">{{ en_cours }}</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Répondus</p>
+            <p class="text-2xl font-black text-emerald-600">{{ repondus }}</p>
+        </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 mb-6 flex flex-wrap items-center gap-2">
+        <span class="text-xs font-bold text-slate-600 mr-2">Filtrer :</span>
+        <a href="{% url 'contributors:admin_support_list' %}"
+           class="text-xs px-3 py-1.5 rounded-xl font-bold border transition-colors {% if not status_filter %}bg-[#071A49] text-white border-[#071A49]{% else %}bg-white text-slate-600 border-slate-200 hover:border-slate-400{% endif %}">
+            Tous
+        </a>
+        {% for key, label in status_choices %}
+            <a href="?status={{ key }}"
+               class="text-xs px-3 py-1.5 rounded-xl font-bold border transition-colors {% if status_filter == key %}bg-[#071A49] text-white border-[#071A49]{% else %}bg-white text-slate-600 border-slate-200 hover:border-slate-400{% endif %}">
+                {{ label }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <!-- REQUESTS TABLE -->
+    {% if support_requests %}
+        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            <table class="w-full text-xs">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wide text-[10px]">#</th>
+                        <th class="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wide text-[10px]">Étudiant</th>
+                        <th class="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wide text-[10px]">Motif</th>
+                        <th class="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wide text-[10px]">Date</th>
+                        <th class="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wide text-[10px]">Statut</th>
+                        <th class="px-4 py-3 text-right font-bold text-slate-600 uppercase tracking-wide text-[10px]">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for req in support_requests %}
+                        <tr class="hover:bg-slate-50/70 transition-colors">
+                            <td class="px-4 py-3.5 text-slate-400 font-mono text-[11px]">#{{ req.pk }}</td>
+                            <td class="px-4 py-3.5">
+                                <div>
+                                    <p class="font-bold text-[#071A49]">
+                                        {{ req.user.first_name }} {{ req.user.last_name|default:req.user.username }}
+                                    </p>
+                                    <p class="text-[10px] text-slate-400">{{ req.user.email }}</p>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3.5">
+                                <p class="font-semibold text-slate-700">{{ req.get_category_display }}</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5 max-w-[200px] truncate">{{ req.message|truncatechars:50 }}</p>
+                            </td>
+                            <td class="px-4 py-3.5 text-slate-500 whitespace-nowrap">
+                                {{ req.created_at|date:"d/m/Y" }}<br>
+                                <span class="text-[10px] text-slate-400">{{ req.created_at|date:"H\hi" }}</span>
+                            </td>
+                            <td class="px-4 py-3.5">
+                                {% if req.status == "non_lu" %}
+                                    <span class="inline-flex items-center px-2 py-1 rounded-lg text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-1.5"></span>Non lu
+                                    </span>
+                                {% elif req.status == "en_cours" %}
+                                    <span class="inline-flex items-center px-2 py-1 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>En cours
+                                    </span>
+                                {% elif req.status == "repondu" %}
+                                    <span class="inline-flex items-center px-2 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>Répondu
+                                    </span>
+                                {% elif req.status == "cloture" %}
+                                    <span class="inline-flex items-center px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-500 border border-slate-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-300 mr-1.5"></span>Clôturé
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3.5 text-right">
+                                <a href="{% url 'contributors:admin_support_detail' pk=req.pk %}"
+                                   class="inline-flex items-center space-x-1.5 text-[11px] font-bold text-[#2563EB] hover:underline">
+                                    <span>Ouvrir</span>
+                                    <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="bg-white border border-slate-200 rounded-2xl p-12 text-center">
+            <div class="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200 text-slate-300 flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-inbox text-2xl"></i>
+            </div>
+            <h3 class="text-sm font-bold text-[#071A49] mb-1">Aucune demande trouvée</h3>
+            <p class="text-xs text-slate-500">
+                {% if status_filter %}Aucune demande avec ce statut.{% else %}Aucune demande de support n'a encore été soumise.{% endif %}
+            </p>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

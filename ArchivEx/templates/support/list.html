@@ -1,0 +1,132 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Mes demandes de support — ArchivEx{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+
+    <!-- BREADCRUMB -->
+    <nav class="flex items-center space-x-2 text-xs text-slate-500 mb-6">
+        <a href="{% url 'accounts:dashboard' %}" class="hover:text-[#2563EB] font-medium">Tableau de bord</a>
+        <i class="fa-solid fa-chevron-right text-[9px]"></i>
+        <a href="{% url 'support:create' %}" class="hover:text-[#2563EB] font-medium">Notre Support</a>
+        <i class="fa-solid fa-chevron-right text-[9px]"></i>
+        <span class="font-semibold text-[#071A49]">Mes demandes</span>
+    </nav>
+
+    <!-- PAGE HEADER -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-black text-[#071A49]">Mes demandes de support</h1>
+            <p class="text-xs text-slate-500 font-medium mt-1">Suivez l'avancement de vos demandes d'assistance.</p>
+        </div>
+        <a href="{% url 'support:create' %}"
+           class="shrink-0 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-sm flex items-center space-x-2 transition-all self-start">
+            <i class="fa-solid fa-plus text-[10px]"></i>
+            <span>Nouvelle demande</span>
+        </a>
+    </div>
+
+    <!-- DJANGO MESSAGES -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="mb-5 p-3.5 rounded-xl border {% if message.tags == 'success' %}bg-emerald-50 border-emerald-200 text-emerald-800{% else %}bg-rose-50 border-rose-200 text-rose-800{% endif %} text-xs font-medium flex items-center space-x-2">
+                <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check text-emerald-500{% else %}fa-circle-exclamation text-rose-500{% endif %}"></i>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- REQUESTS LIST -->
+    {% if support_requests %}
+        <div class="space-y-3">
+            {% for req in support_requests %}
+                <a href="{% url 'support:detail' pk=req.pk %}"
+                   class="block bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 hover:border-[#2563EB]/40 hover:shadow-sm transition-all group">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex items-start space-x-3 min-w-0">
+                            <!-- Icon -->
+                            <div class="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 flex items-center justify-center shrink-0 group-hover:bg-blue-50 group-hover:text-[#2563EB] group-hover:border-blue-100 transition-colors">
+                                {% if req.category == "question" %}
+                                    <i class="fa-solid fa-circle-question text-sm"></i>
+                                {% elif req.category == "probleme_epreuve" %}
+                                    <i class="fa-solid fa-book-open text-sm"></i>
+                                {% elif req.category == "probleme_compte" %}
+                                    <i class="fa-solid fa-user-gear text-sm"></i>
+                                {% elif req.category == "paiement" %}
+                                    <i class="fa-solid fa-credit-card text-sm"></i>
+                                {% elif req.category == "suggestion" %}
+                                    <i class="fa-solid fa-lightbulb text-sm"></i>
+                                {% elif req.category == "signaler_erreur" %}
+                                    <i class="fa-solid fa-triangle-exclamation text-sm"></i>
+                                {% else %}
+                                    <i class="fa-solid fa-comment-dots text-sm"></i>
+                                {% endif %}
+                            </div>
+
+                            <!-- Content -->
+                            <div class="min-w-0">
+                                <p class="text-sm font-bold text-[#071A49] group-hover:text-[#2563EB] transition-colors truncate">
+                                    {{ req.get_category_display }}
+                                </p>
+                                <p class="text-xs text-slate-500 mt-0.5 line-clamp-1">
+                                    {{ req.message|truncatechars:80 }}
+                                </p>
+                                <p class="text-[10px] text-slate-400 mt-1 font-medium">
+                                    <i class="fa-regular fa-clock mr-1"></i>{{ req.created_at|date:"d/m/Y à H\hi" }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Status Badge -->
+                        <div class="shrink-0">
+                            {% if req.status == "non_lu" %}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400 mr-1.5"></span>Non lu
+                                </span>
+                            {% elif req.status == "en_cours" %}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>En cours
+                                </span>
+                            {% elif req.status == "repondu" %}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>Répondu
+                                </span>
+                            {% elif req.status == "cloture" %}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-50 text-slate-500 border border-slate-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 mr-1.5"></span>Clôturé
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Reply indicator -->
+                    {% if req.has_reply %}
+                        <div class="mt-3 pt-3 border-t border-slate-100 flex items-center space-x-1.5">
+                            <i class="fa-solid fa-reply text-[#2563EB] text-[10px]"></i>
+                            <span class="text-[11px] text-[#2563EB] font-semibold">L'équipe ArchivEx a répondu à votre demande</span>
+                        </div>
+                    {% endif %}
+                </a>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <!-- EMPTY STATE -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-10 text-center">
+            <div class="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200 text-slate-300 flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-inbox text-2xl"></i>
+            </div>
+            <h3 class="text-sm font-bold text-[#071A49] mb-1">Aucune demande pour le moment</h3>
+            <p class="text-xs text-slate-500 mb-5">Vous n'avez encore soumis aucune demande de support.</p>
+            <a href="{% url 'support:create' %}"
+               class="inline-flex items-center space-x-2 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-sm shadow-blue-500/20">
+                <i class="fa-solid fa-plus text-[10px]"></i>
+                <span>Soumettre ma première demande</span>
+            </a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

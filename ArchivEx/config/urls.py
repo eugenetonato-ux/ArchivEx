@@ -14,6 +14,7 @@ urlpatterns = [
     path("webhook/sebpay/", sebpay_webhook_view, name="root_sebpay_webhook"),
     path("ressources/", include("content.urls")),
     path("notifications/", include("notifications.urls")),
+    path("support/", include("support.urls")),
 ]
 
 handler403 = "academics.views.custom_403_view"

@@ -1293,3 +1293,15 @@ def library_download_original_view(request, pk, file_type):
     return response
 
 
+# ======================================================
+# SUPPORT ÉTUDIANT — Délégation vers support.views
+# Ces wrappers permettent de router via contributors.urls
+# tout en maintenant la logique dans le module support.
+# ======================================================
+
+from support.views import admin_support_list_view, admin_support_detail_view
+
+__all__ = [
+    "admin_support_list_view",
+    "admin_support_detail_view",
+]

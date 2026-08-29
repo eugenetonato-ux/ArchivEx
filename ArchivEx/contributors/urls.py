@@ -58,4 +58,8 @@ urlpatterns = [
     path("etudiants/", views.student_list_view, name="student_list"),
     path("paiements/", views.payment_list_view, name="payment_list"),
     path("notifications/", views.notification_create_view, name="notification_create"),
+
+    # Support étudiant
+    path("support/", views.admin_support_list_view, name="admin_support_list"),
+    path("support/<int:pk>/", views.admin_support_detail_view, name="admin_support_detail"),
 ]
