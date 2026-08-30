@@ -81,11 +81,6 @@
                             <i class="fa-solid fa-eye text-xs" aria-hidden="true"></i>
                             <span>Consulter l'Épreuve</span>
                         </a>
-                        {% if exam.is_free %}
-                            <a href="{% url 'exams:stream_pdf' pk=exam.id %}?download=1" class="btn-secondary text-xs px-6 py-2.5 font-bold">
-                                Télécharger
-                            </a>
-                        {% endif %}
                     </div>
                 {% endif %}
             </div>
