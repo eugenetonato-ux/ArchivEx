@@ -1,0 +1,119 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Résultat du Paiement — Pass Semestre | ArchivEx{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-12 sm:py-16">
+
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-xl text-center">
+
+        {% if is_approved %}
+            <!-- STATE 1: APPROVED / CONFIRMÉ -->
+            <div class="w-20 h-20 rounded-3xl bg-emerald-50 border-2 border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto mb-6 text-3xl shadow-sm">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            </div>
+
+            <span class="px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-black uppercase tracking-wider inline-flex items-center space-x-1.5 mb-3">
+                <i class="fa-solid fa-check text-emerald-600" aria-hidden="true"></i>
+                <span>Paiement confirmé</span>
+            </span>
+
+            <h1 class="text-2xl sm:text-3xl font-black text-[#071A49] mb-3">
+                Votre Pass Semestre est maintenant actif !
+            </h1>
+
+            <p class="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed max-w-md mx-auto mb-8">
+                Votre paiement pour <strong>{{ semester.label }} ({{ semester.filiere.name }})</strong> a été validé avec succès. Vous disposez désormais d'un accès illimité à l'intégralité des épreuves et résumés.
+            </p>
+
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left text-xs space-y-2 max-w-md mx-auto mb-8 font-medium text-slate-600">
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Référence transaction :</span>
+                    <span class="font-mono font-bold text-[#071A49]">{{ payment.external_reference }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Montant réglé :</span>
+                    <span class="font-bold text-[#071A49]">{{ payment.amount }} FCFA</span>
+                </div>
+            </div>
+
+            <a href="{% url 'academics:matieres' semester_id=semester.id %}" class="btn-primary inline-flex items-center justify-center space-x-2 text-xs sm:text-sm px-8 py-4 font-black rounded-2xl shadow-lg shadow-blue-600/30">
+                <span>Accéder immédiatement à mes cours</span>
+                <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
+            </a>
+
+        {% elif is_pending %}
+            <!-- STATE 2: PENDING / EN ATTENTE -->
+            <div class="w-20 h-20 rounded-3xl bg-amber-50 border-2 border-amber-200 text-amber-600 flex items-center justify-center mx-auto mb-6 text-3xl shadow-sm">
+                <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+            </div>
+
+            <span class="px-3.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-200 text-xs font-black uppercase tracking-wider inline-flex items-center space-x-1.5 mb-3">
+                <i class="fa-solid fa-clock text-amber-600" aria-hidden="true"></i>
+                <span>Paiement en cours</span>
+            </span>
+
+            <h1 class="text-2xl sm:text-3xl font-black text-[#071A49] mb-3">
+                Nous attendons encore la confirmation de SEBPay
+            </h1>
+
+            <p class="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed max-w-md mx-auto mb-8">
+                Si vous avez effectué le paiement sur la plateforme SEBPay, la confirmation parvient généralement sous quelques instants.
+            </p>
+
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left text-xs space-y-2 max-w-md mx-auto mb-8 font-medium text-slate-600">
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Référence :</span>
+                    <span class="font-mono font-bold text-[#071A49]">{{ payment.external_reference }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Statut :</span>
+                    <span class="font-bold text-amber-600">En attente de validation</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <a href="" class="btn-primary text-xs px-6 py-3.5 font-bold rounded-2xl inline-flex items-center space-x-1.5">
+                    <i class="fa-solid fa-rotate-right text-xs" aria-hidden="true"></i>
+                    <span>Actualiser le statut</span>
+                </a>
+                <a href="{% url 'accounts:dashboard' %}" class="text-xs text-slate-500 hover:text-[#071A49] font-bold py-2">
+                    Retour au tableau de bord
+                </a>
+            </div>
+
+        {% else %}
+            <!-- STATE 3: REJECTED / ÉCHOUÉ -->
+            <div class="w-20 h-20 rounded-3xl bg-rose-50 border-2 border-rose-200 text-rose-600 flex items-center justify-center mx-auto mb-6 text-3xl shadow-sm">
+                <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+            </div>
+
+            <span class="px-3.5 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-200 text-xs font-black uppercase tracking-wider inline-flex items-center space-x-1.5 mb-3">
+                <i class="fa-solid fa-xmark text-rose-600" aria-hidden="true"></i>
+                <span>Paiement non confirmé</span>
+            </span>
+
+            <h1 class="text-2xl sm:text-3xl font-black text-[#071A49] mb-3">
+                Votre Pass Semestre n'a pas été activé
+            </h1>
+
+            <p class="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed max-w-md mx-auto mb-8">
+                Le transfert n'a pas pu être confirmé par SEBPay. Aucun débit n'a été retenu pour ce Pass.
+            </p>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <a href="{% url 'payments:pass_semestre' semester_id=semester.id %}" class="btn-gold text-xs px-6 py-3.5 font-bold rounded-2xl inline-flex items-center space-x-1.5">
+                    <i class="fa-solid fa-rotate-right text-xs" aria-hidden="true"></i>
+                    <span>Réessayer le paiement (4 500 FCFA)</span>
+                </a>
+                <a href="{% url 'accounts:dashboard' %}" class="text-xs text-slate-500 hover:text-[#071A49] font-bold py-2">
+                    Retour au tableau de bord
+                </a>
+            </div>
+        {% endif %}
+
+    </div>
+
+</div>
+{% endblock %}

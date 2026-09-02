@@ -105,12 +105,12 @@ Pour répondre à cette demande, veuillez vous connecter à l'espace d'administr
 @login_required
 def support_list_view(request):
     """
-    Affiche l'historique des demandes de support de l'étudiant connecté.
-    Seules ses propres demandes sont visibles.
+    Affiche l'historique des demandes de support de l'étudiant connecté (par compte ou par email).
     """
+    user_email = getattr(request.user, "email", "") or ""
     support_requests = SupportRequest.objects.filter(
-        user=request.user
-    ).prefetch_related("replies")
+        Q(user=request.user) | Q(guest_email__iexact=user_email)
+    ).prefetch_related("replies").order_by("-created_at")
 
     context = {
         "support_requests": support_requests,
@@ -123,12 +123,14 @@ def support_list_view(request):
 def support_detail_view(request, pk):
     """
     Affiche le détail d'une demande de support de l'étudiant.
-    Seul l'auteur de la demande peut y accéder.
     """
     support_request = get_object_or_404(SupportRequest, pk=pk)
 
-    # Sécurité : seul l'auteur peut voir sa demande
-    if support_request.user != request.user:
+    # Sécurité : l'étudiant auteur ou avec le même email peut consulter sa demande
+    is_owner = (support_request.user == request.user) or (
+        support_request.guest_email and request.user.email and support_request.guest_email.lower() == request.user.email.lower()
+    )
+    if not is_owner:
         raise PermissionDenied("Vous n'êtes pas autorisé à consulter cette demande.")
 
     # Marquer les notifications liées comme lues
@@ -156,7 +158,7 @@ def admin_support_list_view(request):
     Vue administration : liste de toutes les demandes de support étudiants.
     """
     status_filter = request.GET.get("status", "")
-    support_requests = SupportRequest.objects.select_related("user").prefetch_related("replies")
+    support_requests = SupportRequest.objects.select_related("user").prefetch_related("replies").order_by("-created_at")
 
     if status_filter:
         support_requests = support_requests.filter(status=status_filter)
@@ -184,10 +186,16 @@ def admin_support_list_view(request):
 def admin_support_detail_view(request, pk):
     """
     Vue administration : détail d'une demande + formulaire de réponse.
-    La réponse est visible uniquement par l'étudiant concerné.
-    Après réponse : status → 'repondu', notification créée pour l'étudiant.
     """
     support_request = get_object_or_404(SupportRequest, pk=pk)
+
+    # Marquer les notifications liées comme lues pour cet administrateur
+    Notification.objects.filter(
+        recipient=request.user,
+        link__contains=f"/administration/support/{pk}/",
+        is_read=False,
+    ).update(is_read=True)
+
     form = SupportReplyForm()
 
     if request.method == "POST":

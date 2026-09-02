@@ -59,6 +59,9 @@
         <a href="{% url 'notifications:list' %}?filter=PAYMENT" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors {% if selected_filter == 'PAYMENT' %}bg-[#071A49] text-white{% else %}bg-white border border-slate-200 text-slate-600 hover:border-slate-300{% endif %}">
             Paiements
         </a>
+        <a href="{% url 'notifications:list' %}?filter=NEW_SUPPORT" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors {% if selected_filter == 'NEW_SUPPORT' %}bg-[#071A49] text-white{% else %}bg-white border border-slate-200 text-slate-600 hover:border-slate-300{% endif %}">
+            Support
+        </a>
         <a href="{% url 'notifications:list' %}?filter=SYSTEM" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors {% if selected_filter == 'SYSTEM' %}bg-[#071A49] text-white{% else %}bg-white border border-slate-200 text-slate-600 hover:border-slate-300{% endif %}">
             Système
         </a>

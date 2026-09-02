@@ -51,7 +51,8 @@ def apply_student_watermark(pdf_source, user):
             c = canvas.Canvas(wm_buf, pagesize=(width, height))
             c.saveState()
             c.setFont("Helvetica-Bold", 9)
-            c.setFillColorRGB(0.5, 0.5, 0.5, 0.28)  # Subtle semi-transparent gray
+            from reportlab.lib import colors
+            c.setFillColor(colors.Color(0.5, 0.5, 0.5, alpha=0.28))
             c.rotate(32)
 
             step_x = 240

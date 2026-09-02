@@ -90,22 +90,20 @@ def initier_paiement(request, semester_id):
 
     operator = request.POST.get("operator", "mtn").strip().lower()
     if operator not in ["mtn", "moov", "celtiis"]:
-        messages.error(request, "Veuillez sélectionner un opérateur Mobile Money valide (MTN, Moov ou Celtiis).")
-        return redirect("payments:pass_semestre", semester_id=semester.id)
+        operator = "mtn"
 
     raw_phone = request.POST.get("phone_number", "").strip()
     try:
-        normalized_phone = normalize_benin_phone(raw_phone)
+        normalized_phone = normalize_benin_phone(raw_phone) if raw_phone else ""
     except ValueError as e:
-        messages.error(request, str(e))
-        return redirect("payments:pass_semestre", semester_id=semester.id)
+        normalized_phone = ""
 
     ext_ref = generate_external_reference()
 
     payment = Payment.objects.create(
         user=request.user,
         semester=semester,
-        amount=price,  # Montant déterminé STRICTEMENT par le serveur
+        amount=price,  # Montant déterminé STRICTEMENT par le serveur (ex: 4500 FCFA)
         currency=getattr(settings, "SEBPAY_CURRENCY", "XOF"),
         operator=operator,
         phone_number=normalized_phone,
@@ -113,17 +111,22 @@ def initier_paiement(request, semester_id):
         status=Payment.STATUS_PENDING,
     )
 
-    # Lancer l'encaissement SebPay
+    # 1. Si un SEBPAY_PAYMENT_URL officiel est configuré dans l'environnement
+    payment_url = getattr(settings, "SEBPAY_PAYMENT_URL", "").strip()
+    if payment_url:
+        separator = "&" if "?" in payment_url else "?"
+        redirect_url = f"{payment_url}{separator}external_reference={payment.external_reference}&amount={payment.amount}"
+        return redirect(redirect_url)
+
+    # 2. Sinon, solliciter l'API d'encaissement SEBPay
     sebpay_res = create_sebpay_collection(payment)
+    if sebpay_res.get("success"):
+        res_data = sebpay_res.get("data", {})
+        provider_link = res_data.get("provider_link") or res_data.get("payment_url") or res_data.get("url")
+        if provider_link:
+            return redirect(provider_link)
 
-    if not sebpay_res.get("success"):
-        messages.warning(
-            request,
-            f"La demande de paiement n'a pas pu être transmise automatiquement. "
-            f"Veuillez valider sur votre téléphone si le SMS apparaît ou réessayer."
-        )
-
-    return redirect("payments:payment_pending", reference=payment.external_reference)
+    return redirect("payments:payment_return", reference=payment.external_reference)
 
 
 @login_required
@@ -132,7 +135,7 @@ def payment_pending_view(request, reference):
     payment = get_object_or_404(Payment.objects.select_related("semester", "semester__filiere"), external_reference=reference, user=request.user)
 
     if payment.is_approved:
-        messages.success(request, f"🎉 Félicitations ! Votre Pass Semestre pour {payment.semester.label} est actif !")
+        messages.success(request, f"Félicitations ! Votre Pass Semestre pour {payment.semester.label} est actif !")
         return redirect("academics:matieres", semester_id=payment.semester.id)
 
     context = {
@@ -140,6 +143,50 @@ def payment_pending_view(request, reference):
         "semester": payment.semester,
     }
     return render(request, "payments/pending.html", context)
+
+
+@login_required
+def payment_return_view(request, reference=None):
+    """
+    Page de retour après la redirection ou le traitement du paiement SEBPay.
+    - Affiche l'état réel de la transaction sans jamais forcer l'activation manuelle côté client.
+    - Si le paiement est PENDING, effectue une vérification serveur complémentaire auprès de SEBPay.
+    - Si SEBPay confirme APPROVED, active le Pass Semestre de façon autonome et transparente.
+    """
+    ref = reference or request.GET.get("external_reference") or request.GET.get("reference")
+    payment = None
+    if ref:
+        payment = Payment.objects.filter(external_reference=ref, user=request.user).select_related("semester", "semester__filiere").first()
+
+    if not payment:
+        payment = Payment.objects.filter(user=request.user).select_related("semester", "semester__filiere").first()
+
+    if not payment:
+        raise Http404("Aucune transaction de paiement trouvée.")
+
+    # Synchronisation complémentaire auprès de SEBPay si encore PENDING
+    if payment.is_pending:
+        remote_res = verify_sebpay_transaction(payment.external_reference)
+        if remote_res.get("success"):
+            data = remote_res.get("data", {})
+            remote_status = str(data.get("status", "")).lower()
+            if remote_status in ["approved", "success", "completed"]:
+                payment.status = Payment.STATUS_APPROVED
+                payment.sebpay_transaction_id = str(data.get("id") or data.get("reference") or payment.sebpay_transaction_id)
+                activate_pass_for_payment(payment)
+            elif remote_status in ["rejected", "failed", "cancelled"]:
+                payment.status = Payment.STATUS_REJECTED
+                payment.save()
+
+    context = {
+        "payment": payment,
+        "semester": payment.semester,
+        "status": payment.status,
+        "is_approved": payment.is_approved,
+        "is_pending": payment.is_pending,
+        "is_rejected": payment.is_rejected,
+    }
+    return render(request, "payments/return.html", context)
 
 
 @login_required

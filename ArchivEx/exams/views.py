@@ -143,13 +143,18 @@ def exam_detail(request, pk):
 
 
 def _get_safe_file_path(field_file):
-    """Retourne le chemin système du fichier s'il existe physiquement, sinon None."""
+    """Retourne le chemin système du fichier ou son objet s'il existe."""
     if not field_file or not bool(field_file):
         return None
     try:
         path = field_file.path
         if os.path.exists(path):
             return path
+    except Exception:
+        pass
+    try:
+        if hasattr(field_file, "url") and field_file.url:
+            return field_file
     except Exception:
         pass
     return None
@@ -167,19 +172,23 @@ def stream_exam_pdf(request, pk):
             request,
             "Cette épreuve est réservée aux étudiants disposant du Pass actif pour ce semestre."
         )
-        return redirect("payments:pass_semestre", semester_id=exam.semester.id)
+        sem_id = exam.semester.id if exam.semester else (exam.subject.semester.id if exam.subject and exam.subject.semester else 1)
+        return redirect("payments:pass_semestre", semester_id=sem_id)
 
-    file_path = _get_safe_file_path(exam.file)
-    if not file_path:
-        raise Http404("Le fichier de l'épreuve est introuvable sur le serveur.")
+    file_obj = _get_safe_file_path(exam.file)
+    if not file_obj:
+        messages.error(request, "Le fichier de cette épreuve n'est pas encore disponible sur le serveur.")
+        return redirect("exams:detail", pk=exam.pk)
 
-    response = FileResponse(
-        open(file_path, "rb"),
-        content_type="application/pdf"
-    )
+    if isinstance(file_obj, str):
+        response = FileResponse(open(file_obj, "rb"), content_type="application/pdf")
+    else:
+        return redirect(file_obj.url)
+
     is_download = request.GET.get("download") == "1"
     disposition = "attachment" if is_download else "inline"
-    safe_filename = f"ArchivEx_{exam.subject.name}_{exam.year}.pdf".replace(" ", "_")
+    subj_name = exam.subject.name if exam.subject else "Epreuve"
+    safe_filename = f"ArchivEx_{subj_name}_{exam.year}.pdf".replace(" ", "_")
     response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
     return response
 
@@ -190,7 +199,8 @@ def stream_correction_pdf(request, pk):
     exam = get_object_or_404(Exam, pk=pk, is_published=True)
 
     if not exam.correction_file:
-        raise Http404("Aucune correction PDF n'est associée à cette épreuve.")
+        messages.error(request, "Aucune correction PDF n'est associée à cette épreuve.")
+        return redirect("exams:detail", pk=exam.pk)
 
     has_access = can_user_access_correction(request.user, exam)
     if not has_access:
@@ -198,19 +208,23 @@ def stream_correction_pdf(request, pk):
             request,
             "Les corrections sont des ressources Premium réservées aux étudiants disposant du Pass actif pour ce semestre."
         )
-        return redirect("payments:pass_semestre", semester_id=exam.semester.id)
+        sem_id = exam.semester.id if exam.semester else (exam.subject.semester.id if exam.subject and exam.subject.semester else 1)
+        return redirect("payments:pass_semestre", semester_id=sem_id)
 
-    file_path = _get_safe_file_path(exam.correction_file)
-    if not file_path:
-        raise Http404("Le fichier de correction est introuvable sur le serveur.")
+    file_obj = _get_safe_file_path(exam.correction_file)
+    if not file_obj:
+        messages.error(request, "Le fichier de correction n'est pas encore disponible sur le serveur.")
+        return redirect("exams:detail", pk=exam.pk)
 
-    response = FileResponse(
-        open(file_path, "rb"),
-        content_type="application/pdf"
-    )
+    if isinstance(file_obj, str):
+        response = FileResponse(open(file_obj, "rb"), content_type="application/pdf")
+    else:
+        return redirect(file_obj.url)
+
     is_download = request.GET.get("download") == "1"
     disposition = "attachment" if is_download else "inline"
-    safe_filename = f"ArchivEx_Correction_{exam.subject.name}_{exam.year}.pdf".replace(" ", "_")
+    subj_name = exam.subject.name if exam.subject else "Correction"
+    safe_filename = f"ArchivEx_Correction_{subj_name}_{exam.year}.pdf".replace(" ", "_")
     response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
     return response
 
@@ -227,7 +241,8 @@ def stream_summary_pdf(request, pk):
         target_file = exam.summary.file
 
     if not target_file:
-        raise Http404("Aucun résumé PDF n'est associé à cette épreuve.")
+        messages.error(request, "Aucun résumé PDF n'est associé à cette épreuve.")
+        return redirect("exams:detail", pk=exam.pk)
 
     has_access = can_user_access_summary(request.user, exam)
     if not has_access:
@@ -235,19 +250,23 @@ def stream_summary_pdf(request, pk):
             request,
             "Les résumés de cours sont des ressources Premium réservées aux étudiants disposant du Pass actif pour ce semestre."
         )
-        return redirect("payments:pass_semestre", semester_id=exam.semester.id)
+        sem_id = exam.semester.id if exam.semester else (exam.subject.semester.id if exam.subject and exam.subject.semester else 1)
+        return redirect("payments:pass_semestre", semester_id=sem_id)
 
-    file_path = _get_safe_file_path(target_file)
-    if not file_path:
-        raise Http404("Le fichier du résumé est introuvable sur le serveur.")
+    file_obj = _get_safe_file_path(target_file)
+    if not file_obj:
+        messages.error(request, "Le fichier du résumé n'est pas encore disponible sur le serveur.")
+        return redirect("exams:detail", pk=exam.pk)
 
-    response = FileResponse(
-        open(file_path, "rb"),
-        content_type="application/pdf"
-    )
+    if isinstance(file_obj, str):
+        response = FileResponse(open(file_obj, "rb"), content_type="application/pdf")
+    else:
+        return redirect(file_obj.url)
+
     is_download = request.GET.get("download") == "1"
     disposition = "attachment" if is_download else "inline"
-    safe_filename = f"ArchivEx_Resume_{exam.subject.name}_{exam.year}.pdf".replace(" ", "_")
+    subj_name = exam.subject.name if exam.subject else "Resume"
+    safe_filename = f"ArchivEx_Resume_{subj_name}_{exam.year}.pdf".replace(" ", "_")
     response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
     return response
 
@@ -292,24 +311,28 @@ def student_viewer_view(request, pk):
         has_access = can_user_access_correction(request.user, exam)
         resource_label = "Correction Détaillée"
         if not _get_safe_file_path(exam.correction_file):
-            raise Http404("Aucune correction n'est disponible pour cette épreuve.")
+            messages.error(request, "Aucune correction n'est disponible pour cette épreuve.")
+            return redirect("exams:detail", pk=exam.pk)
     elif res_type == "summary":
         has_access = can_user_access_summary(request.user, exam)
         resource_label = "Fiche Résumé"
         summary_target = exam.summary_file or (exam.summary.file if exam.summary else None)
         if not _get_safe_file_path(summary_target):
-            raise Http404("Aucun résumé n'est disponible pour cette épreuve.")
+            messages.error(request, "Aucun résumé n'est disponible pour cette épreuve.")
+            return redirect("exams:detail", pk=exam.pk)
     else:
         has_access = can_user_access_exam_pdf(request.user, exam)
         if not _get_safe_file_path(exam.file):
-            raise Http404("Le fichier de l'épreuve est introuvable.")
+            messages.error(request, "Le fichier PDF de cette épreuve est en cours d'importation.")
+            return redirect("exams:detail", pk=exam.pk)
 
     if not has_access:
         messages.warning(
             request,
             "Cette ressource est réservée aux étudiants disposant du Pass actif pour ce semestre."
         )
-        return redirect("payments:pass_semestre", semester_id=exam.semester.id)
+        sem_id = exam.semester.id if exam.semester else (exam.subject.semester.id if exam.subject and exam.subject.semester else 1)
+        return redirect("payments:pass_semestre", semester_id=sem_id)
 
     stream_url = reverse("exams:stream_watermarked_pdf", kwargs={"pk": exam.id}) + f"?type={res_type}"
 
@@ -348,21 +371,27 @@ def stream_watermarked_pdf_view(request, pk):
             request,
             "Accès refusé. Le Pass Semestre actif est requis pour consulter ce document."
         )
-        return redirect("payments:pass_semestre", semester_id=exam.semester.id)
+        sem_id = exam.semester.id if exam.semester else (exam.subject.semester.id if exam.subject and exam.subject.semester else 1)
+        return redirect("payments:pass_semestre", semester_id=sem_id)
 
-    file_path = _get_safe_file_path(target_file)
-    if not file_path:
-        raise Http404("Le fichier demandé est introuvable sur le serveur.")
+    file_obj = _get_safe_file_path(target_file)
+    if not file_obj:
+        messages.error(request, "Le fichier demandé est introuvable sur le serveur.")
+        return redirect("exams:detail", pk=exam.pk)
 
-    try:
-        watermarked_io = apply_student_watermark(file_path, request.user)
-    except Exception:
-        watermarked_io = open(file_path, "rb")
+    if isinstance(file_obj, str):
+        try:
+            watermarked_io = apply_student_watermark(file_obj, request.user)
+        except Exception:
+            watermarked_io = open(file_obj, "rb")
 
-    response = FileResponse(
-        watermarked_io,
-        content_type="application/pdf"
-    )
-    safe_filename = f"ArchivEx_{res_type}_{exam.subject.name}_{exam.year}.pdf".replace(" ", "_")
-    response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
-    return response
+        response = FileResponse(
+            watermarked_io,
+            content_type="application/pdf"
+        )
+        subj_name = exam.subject.name if exam.subject else "Document"
+        safe_filename = f"ArchivEx_{res_type}_{subj_name}_{exam.year}.pdf".replace(" ", "_")
+        response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
+        return response
+    else:
+        return redirect(file_obj.url)

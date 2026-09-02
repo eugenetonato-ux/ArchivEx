@@ -219,6 +219,7 @@ SEBPAY_BASE_URL = config("SEBPAY_BASE_URL", default="https://newapi.sebpay.bj/ap
 SEBPAY_COUNTRY = config("SEBPAY_COUNTRY", default="BJ")
 SEBPAY_CURRENCY = config("SEBPAY_CURRENCY", default="XOF")
 SEBPAY_CALLBACK_URL = config("SEBPAY_CALLBACK_URL", default="https://archivex.bj/webhook/sebpay/")
+SEBPAY_PAYMENT_URL = config("SEBPAY_PAYMENT_URL", default="https://redsandro.pythonanywhere.com/pay/pass-semestre-archivex-7hvUb1")
 
 # Patch de compatibilité Python 3.14 pour les tests Django (duplication de Context)
 import sys

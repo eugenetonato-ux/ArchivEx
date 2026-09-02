@@ -12,7 +12,7 @@ def notification_list(request):
     filter_type = request.GET.get("filter", "")
     if filter_type == "unread":
         notifications = notifications.filter(is_read=False)
-    elif filter_type in ["NEW_EXAM", "NEW_CORRECTION", "NEW_SUMMARY", "NEW_GUIDE", "NEW_ADVICE", "PAYMENT", "SYSTEM"]:
+    elif filter_type in ["NEW_EXAM", "NEW_CORRECTION", "NEW_SUMMARY", "NEW_GUIDE", "NEW_ADVICE", "PAYMENT", "SYSTEM", "NEW_SUPPORT", "SUPPORT_REPLY"]:
         notifications = notifications.filter(notification_type=filter_type)
 
     unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()

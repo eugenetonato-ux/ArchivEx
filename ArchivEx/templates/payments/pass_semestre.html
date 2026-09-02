@@ -155,7 +155,7 @@
                 <div class="mb-6">
                     <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block mb-1">Tarif unique du semestre</span>
                     <div class="flex items-baseline space-x-2">
-                        <span class="text-4xl sm:text-5xl font-black text-[#071A49] tracking-tight">4 500</span>
+                        <span class="text-4xl sm:text-5xl font-black text-[#071A49] tracking-tight">{{ price }}</span>
                         <span class="text-lg font-black text-[#2563EB]">FCFA</span>
                     </div>
                     <p class="text-[11px] text-slate-400 font-medium mt-1">Paiement unique sans abonnement ni renouvellement automatique.</p>
@@ -258,7 +258,7 @@
 
                         <button type="submit" class="btn-gold w-full text-xs sm:text-sm py-4 font-black shadow-lg shadow-amber-500/30 hover:scale-[1.02] transition-all rounded-2xl block text-center cursor-pointer flex items-center justify-center space-x-2">
                             <i class="fa-solid fa-[#071A49] fa-lock text-xs" aria-hidden="true"></i>
-                            <span>Payer maintenant (4 500 FCFA)</span>
+                            <span>Payer maintenant ({{ price }} FCFA)</span>
                         </button>
                     </form>
                 {% endif %}
