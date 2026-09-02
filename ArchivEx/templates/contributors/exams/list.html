@@ -82,26 +82,36 @@
                                 {% endif %}
                             </td>
                             <td class="py-3.5 px-3 text-right">
-                                <div class="flex items-center justify-end space-x-2">
-                                    <form method="post" action="{% url 'contributors:exam_toggle_status' ex.pk %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="text-[11px] font-bold px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors">
-                                            {% if ex.is_published %}Dépublier{% else %}Publier{% endif %}
-                                        </button>
-                                    </form>
-                                    <a href="{% url 'contributors:exam_edit' ex.pk %}" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-[#2563EB] hover:bg-blue-100 transition-colors inline-flex items-center space-x-1">
-                                        <i class="fa-solid fa-pen text-[10px]" aria-hidden="true"></i>
-                                        <span>Modifier / Renommer</span>
-                                    </a>
-                                    <button type="button" onclick="openDeleteModal('{% url 'contributors:exam_delete' ex.pk %}', '{{ ex.subject.name|escapejs }} — {{ ex.academic_year.label|default:ex.year|escapejs }}')" class="text-[11px] font-bold px-2 py-1 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors">
-                                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
-                                    </button>
-                                </div>
+                                 <div class="flex items-center justify-end space-x-2">
+                                     <form method="post" action="{% url 'contributors:exam_toggle_status' ex.pk %}">
+                                         {% csrf_token %}
+                                         <button type="submit" class="text-[11px] font-bold px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors">
+                                             {% if ex.is_published %}Dépublier{% else %}Publier{% endif %}
+                                         </button>
+                                     </form>
+                                     <a href="{% url 'contributors:exam_edit' ex.pk %}" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-[#2563EB] hover:bg-blue-100 transition-colors inline-flex items-center space-x-1">
+                                         <i class="fa-solid fa-pen text-[10px]" aria-hidden="true"></i>
+                                         <span>Modifier</span>
+                                     </a>
+                                     <button type="button" onclick="openDeleteModal('{% url 'contributors:exam_delete' ex.pk %}', '{{ ex.subject.name|escapejs }} — {{ ex.academic_year.label|default:ex.year|escapejs }}')" class="text-[11px] font-bold px-2 py-1 rounded-lg text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors" title="Supprimer uniquement cette épreuve">
+                                         <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                     </button>
+
+                                     <form method="post" action="{% url 'contributors:delete_cloud_folder' %}" onsubmit="return confirm('Attention ! Souhaitez-vous vraiment supprimer définitivement l\'UE « {{ ex.subject.name|escapejs }} », TOUTES ses épreuves publiées sur le site public, ses corrigés et ses fichiers Cloud sans laisser de trace ?');" class="inline-block">
+                                         {% csrf_token %}
+                                         <input type="hidden" name="subject_id" value="{{ ex.subject.id }}">
+                                         <input type="hidden" name="ue_name" value="{{ ex.subject.name }}">
+                                         <button type="submit" class="text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white transition-colors inline-flex items-center space-x-1 shadow-sm" title="Tout supprimer : Supprime définitivement l'UE complète et toutes ses épreuves du site public et de l'admin">
+                                             <i class="fa-solid fa-trash-can text-[10px]" aria-hidden="true"></i>
+                                             <span>Tout supprimer (UE)</span>
+                                         </button>
+                                     </form>
+                                 </div>
                             </td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="6" class="py-8 text-center text-slate-400 font-medium">
+                            <td colspan="7" class="py-8 text-center text-slate-400 font-medium">
                                 Aucune épreuve trouvée dans ce contexte.
                             </td>
                         </tr>
