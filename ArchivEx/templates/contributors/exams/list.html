@@ -11,10 +11,19 @@
             <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">Gestion des Épreuves</h1>
             <p class="text-xs text-slate-500 font-medium">Consultez, recherchez, dépubliez ou ajoutez des épreuves d'examens.</p>
         </div>
-        <a href="{% url 'contributors:exam_create' %}" class="btn-primary text-xs px-5 py-2.5 font-extrabold rounded-xl shadow-sm flex items-center justify-center space-x-2 shrink-0">
-            <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i>
-            <span>Ajouter une épreuve</span>
-        </a>
+        <div class="flex items-center space-x-3 shrink-0">
+            <form method="post" action="{% url 'contributors:exam_bulk_delete_published' %}" onsubmit="return confirm('Attention ! Souhaitez-vous vraiment supprimer TOUTES les épreuves actuellement publiées de la plateforme ?\n\n- Les épreuves disparaîtront du site public.\n- Tous les fichiers originaux du Cloud Storage resteront 100% INTACTS et préservés.');" class="inline-block">
+                {% csrf_token %}
+                <button type="submit" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl transition-colors shadow-sm inline-flex items-center space-x-2">
+                    <i class="fa-solid fa-trash-can text-xs" aria-hidden="true"></i>
+                    <span>Tout supprimer</span>
+                </button>
+            </form>
+            <a href="{% url 'contributors:exam_create' %}" class="btn-primary text-xs px-5 py-2.5 font-extrabold rounded-xl shadow-sm flex items-center justify-center space-x-2 shrink-0">
+                <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i>
+                <span>Ajouter une épreuve</span>
+            </a>
+        </div>
     </div>
 
     <!-- SEARCH & FILTER FORM -->
@@ -93,19 +102,10 @@
                                          <i class="fa-solid fa-pen text-[10px]" aria-hidden="true"></i>
                                          <span>Modifier</span>
                                      </a>
-                                     <button type="button" onclick="openDeleteModal('{% url 'contributors:exam_delete' ex.pk %}', '{{ ex.subject.name|escapejs }} — {{ ex.academic_year.label|default:ex.year|escapejs }}')" class="text-[11px] font-bold px-2 py-1 rounded-lg text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors" title="Supprimer uniquement cette épreuve">
-                                         <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                     <button type="button" onclick="openDeleteModal('{% url 'contributors:exam_delete' ex.pk %}', '{{ ex.title|escapejs }}')" class="text-[11px] font-bold px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] transition-colors inline-flex items-center space-x-1" title="Supprimer la publication de cette épreuve (le Cloud Storage reste intact)">
+                                         <i class="fa-solid fa-trash text-[10px]" aria-hidden="true"></i>
+                                         <span>Supprimer</span>
                                      </button>
-
-                                     <form method="post" action="{% url 'contributors:delete_cloud_folder' %}" onsubmit="return confirm('Attention ! Souhaitez-vous vraiment supprimer définitivement l\'UE « {{ ex.subject.name|escapejs }} », TOUTES ses épreuves publiées sur le site public, ses corrigés et ses fichiers Cloud sans laisser de trace ?');" class="inline-block">
-                                         {% csrf_token %}
-                                         <input type="hidden" name="subject_id" value="{{ ex.subject.id }}">
-                                         <input type="hidden" name="ue_name" value="{{ ex.subject.name }}">
-                                         <button type="submit" class="text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white transition-colors inline-flex items-center space-x-1 shadow-sm" title="Tout supprimer : Supprime définitivement l'UE complète et toutes ses épreuves du site public et de l'admin">
-                                             <i class="fa-solid fa-trash-can text-[10px]" aria-hidden="true"></i>
-                                             <span>Tout supprimer (UE)</span>
-                                         </button>
-                                     </form>
                                  </div>
                             </td>
                         </tr>

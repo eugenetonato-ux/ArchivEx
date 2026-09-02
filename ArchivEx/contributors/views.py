@@ -1511,73 +1511,33 @@ def publish_cloud_folder_view(request):
 
 
 @contributor_required
-def delete_cloud_folder_view(request):
+def exam_bulk_delete_published_view(request):
     """
-    Supprime entièrement une UE (Matière), tous ses fichiers Cloud Storage,
-    toutes ses épreuves publiées (sur le site public et l'admin), corrigés et résumés
-    pour ne laisser AUCUNE trace.
+    Supprime TOUTES les épreuves actuellement publiées sur le site ArchivEx (dans le contexte actif).
+    PROTECTION ABSOLUE DU CLOUD STORAGE : Aucun fichier Cloud, aucun dossier, aucun fichier PDF physique
+    ni aucune matière (Subject) n'est supprimé du Cloud Storage.
+    Le Cloud Storage reste 100% intact et permanent.
     """
-    if request.method != "POST":
-        return redirect("contributors:library_index")
+    if request.method == "POST":
+        active_school, active_filiere, active_semester = get_active_academic_context(request)
+        qs = Exam.objects.all()
+        if active_school:
+            qs = qs.filter(filiere__school=active_school)
+        if active_filiere:
+            qs = qs.filter(filiere=active_filiere)
+        if active_semester:
+            qs = qs.filter(semester=active_semester)
 
-    active_school, active_filiere, active_semester = get_active_academic_context(request)
-    subject_id = request.POST.get("subject_id")
-    ue_name = request.POST.get("ue_name", "").strip()
+        count = qs.count()
+        # Supprimer uniquement les publications (enregistrements Exam)
+        # Les fichiers Cloud Storage restent 100% intacts (on_delete=SET_NULL)
+        qs.delete()
 
-    subject = None
-    if subject_id:
-        subject = Subject.objects.filter(pk=subject_id).first()
-
-    if not subject and ue_name:
-        subject = Subject.objects.filter(name__iexact=ue_name).first()
-
-    target_name = subject.name if subject else ue_name
-    if not target_name:
-        messages.error(request, "Impossible d'identifier l'UE à supprimer.")
-        return redirect("contributors:library_index")
-
-    from content.models import Summary, Guide
-
-    # 1. Supprimer l'ensemble des épreuves (publiques et admin)
-    deleted_exams_count = 0
-    if subject:
-        deleted_exams_count, _ = Exam.objects.filter(subject=subject).delete()
-    else:
-        deleted_exams_count, _ = Exam.objects.filter(Q(title__icontains=target_name) | Q(subject__name__icontains=target_name)).delete()
-
-    # 2. Supprimer les résumés et guides associés
-    if subject:
-        Summary.objects.filter(subject=subject).delete()
-        Guide.objects.filter(subject=subject).delete()
-
-    # 3. Supprimer tous les fichiers Cloud associés à cette UE
-    cloud_qs = CloudFile.objects.all()
-    if active_school:
-        cloud_qs = cloud_qs.filter(Q(school=active_school) | Q(school__isnull=True))
-    if active_filiere:
-        cloud_qs = cloud_qs.filter(Q(filiere=active_filiere) | Q(filiere__isnull=True))
-
-    matching_ids = []
-    available_subjects = Subject.objects.filter(semester__filiere=active_filiere) if active_filiere else Subject.objects.all()
-    for cf in cloud_qs:
-        parsed = parse_exam_filename(cf.title, available_subjects=available_subjects)
-        cf_ue = parsed["matched_subject"].name if parsed["matched_subject"] else (parsed["subject_candidate"] or "")
-        if (parsed["matched_subject"] and subject and parsed["matched_subject"].id == subject.id) or (cf_ue.strip().lower() == target_name.lower()) or (target_name.lower() in cf.title.lower()):
-            matching_ids.append(cf.id)
-
-    deleted_cloud_count = 0
-    if matching_ids:
-        deleted_cloud_count, _ = CloudFile.objects.filter(id__in=matching_ids).delete()
-
-    # 4. Supprimer la matière elle-même (plus aucune trace en base)
-    if subject:
-        subject.delete()
-
-    messages.success(
-        request,
-        f"L'UE « {target_name} » ainsi que toutes ses épreuves ({deleted_exams_count}), corrigés, résumés et fichiers Cloud ({deleted_cloud_count}) ont été entièrement supprimés du site public et de l'administration sans laisser de trace."
-    )
-    return redirect("contributors:library_index")
+        messages.success(
+            request,
+            f"Toutes les épreuves publiées ({count}) ont été supprimées du site public. Tous les fichiers originaux du Cloud Storage restent 100% conservés et intacts."
+        )
+    return redirect("contributors:exam_list")
 
 
 @contributor_required
