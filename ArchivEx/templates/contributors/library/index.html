@@ -78,7 +78,7 @@
 
     <!-- LIBRARY CLOUD FILES GROUPED BY UE -->
     <div class="space-y-6">
-        {% for ue_name, files in grouped_cloud_files.items %}
+        {% for ue_name, group in grouped_cloud_files.items %}
             <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
                 <!-- UE HEADER DOSSIER -->
                 <div class="bg-slate-900 text-white p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -88,22 +88,67 @@
                         </div>
                         <div>
                             <h2 class="text-sm font-black tracking-tight text-white uppercase">{{ ue_name }}</h2>
-                            <span class="text-[10px] text-slate-300 font-semibold">{{ files|length }} fichier(s) répertorié(s)</span>
+                            <span class="text-[10px] text-slate-300 font-semibold">{{ group.files|length }} fichier(s) répertorié(s)</span>
                         </div>
                     </div>
 
                     {% if ue_name != "Noms non conformes / Non classés" %}
-                        <form method="post" action="{% url 'contributors:publish_cloud_folder' %}" class="inline-block self-start sm:self-auto">
-                            {% csrf_token %}
-                            <input type="hidden" name="ue_name" value="{{ ue_name }}">
-                            {% if files.0.parsed_info.matched_subject %}
-                                <input type="hidden" name="subject_id" value="{{ files.0.parsed_info.matched_subject.id }}">
-                            {% endif %}
-                            <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm">
-                                <i class="fa-solid fa-bolt text-xs"></i>
-                                <span>Publier l'UE complète (Sujets + Corrigés)</span>
-                            </button>
-                        </form>
+                        <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                            <!-- BOUTON 1 : STATUT PREMIUM ÉPREUVES -->
+                            <form method="post" action="{% url 'contributors:toggle_ue_premium' %}" class="inline-block">
+                                {% csrf_token %}
+                                <input type="hidden" name="ue_name" value="{{ ue_name }}">
+                                <input type="hidden" name="target_type" value="exam">
+                                {% if group.matched_subject %}
+                                    <input type="hidden" name="subject_id" value="{{ group.matched_subject.id }}">
+                                {% endif %}
+                                {% if group.is_free %}
+                                    <button type="submit" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm" title="Cliquez pour passer les épreuves de cette UE en mode Premium">
+                                        <i class="fa-solid fa-gift text-xs"></i>
+                                        <span>Épreuves : Gratuit</span>
+                                    </button>
+                                {% else %}
+                                    <button type="submit" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm" title="Cliquez pour passer les épreuves de cette UE en mode Gratuit">
+                                        <i class="fa-solid fa-lock text-xs"></i>
+                                        <span>Épreuves : Premium</span>
+                                    </button>
+                                {% endif %}
+                            </form>
+
+                            <!-- BOUTON 2 : STATUT PREMIUM CORRIGÉS & RÉSUMÉS -->
+                            <form method="post" action="{% url 'contributors:toggle_ue_premium' %}" class="inline-block">
+                                {% csrf_token %}
+                                <input type="hidden" name="ue_name" value="{{ ue_name }}">
+                                <input type="hidden" name="target_type" value="correction">
+                                {% if group.matched_subject %}
+                                    <input type="hidden" name="subject_id" value="{{ group.matched_subject.id }}">
+                                {% endif %}
+                                {% if group.is_free_correction %}
+                                    <button type="submit" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm" title="Cliquez pour passer les corrigés de cette UE en mode Premium">
+                                        <i class="fa-solid fa-circle-check text-xs"></i>
+                                        <span>Corrigés : Gratuit</span>
+                                    </button>
+                                {% else %}
+                                    <button type="submit" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm" title="Cliquez pour passer les corrigés de cette UE en mode Gratuit">
+                                        <i class="fa-solid fa-lock text-xs"></i>
+                                        <span>Corrigés : Premium</span>
+                                    </button>
+                                {% endif %}
+                            </form>
+
+                            <!-- BOUTON PUBLIER L'UE COMPLÈTE -->
+                            <form method="post" action="{% url 'contributors:publish_cloud_folder' %}" class="inline-block">
+                                {% csrf_token %}
+                                <input type="hidden" name="ue_name" value="{{ ue_name }}">
+                                {% if group.matched_subject %}
+                                    <input type="hidden" name="subject_id" value="{{ group.matched_subject.id }}">
+                                {% endif %}
+                                <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm">
+                                    <i class="fa-solid fa-bolt text-xs"></i>
+                                    <span>Publier l'UE complète</span>
+                                </button>
+                            </form>
+                        </div>
                     {% endif %}
                 </div>
 
@@ -119,7 +164,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-                            {% for cloud_file in files %}
+                            {% for cloud_file in group.files %}
                                 <tr class="hover:bg-slate-50/60 transition-colors">
                                     <td class="py-3.5 px-4">
                                         <div class="font-extrabold text-[#071A49] text-xs mb-0.5 flex items-center space-x-2">

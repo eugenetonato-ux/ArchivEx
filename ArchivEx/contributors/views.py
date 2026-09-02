@@ -1158,10 +1158,19 @@ def library_index_view(request):
     for cf in cloud_files:
         parsed = parse_exam_filename(cf.title, available_subjects=available_subjects)
         cf.parsed_info = parsed
-        ue_name = parsed["matched_subject"].name if parsed["matched_subject"] else (parsed["subject_candidate"] or "Noms non conformes / Non classés")
+        matched_subj = parsed["matched_subject"]
+        ue_name = matched_subj.name if matched_subj else (parsed["subject_candidate"] or "Noms non conformes / Non classés")
+        
         if ue_name not in grouped_cloud_files:
-            grouped_cloud_files[ue_name] = []
-        grouped_cloud_files[ue_name].append(cf)
+            if not matched_subj and ue_name != "Noms non conformes / Non classés":
+                matched_subj = Subject.objects.filter(name__iexact=ue_name.strip()).first()
+            grouped_cloud_files[ue_name] = {
+                "files": [],
+                "matched_subject": matched_subj,
+                "is_free": matched_subj.is_free if matched_subj else False,
+                "is_free_correction": matched_subj.is_free_correction if matched_subj else False,
+            }
+        grouped_cloud_files[ue_name]["files"].append(cf)
 
     context = {
         "active_school": active_school,
@@ -1496,7 +1505,8 @@ def publish_cloud_folder_view(request):
             file=cf.file if cf.file else None,
             cloud_correction_file=corr_cf,
             correction_file=corr_cf.file if (corr_cf and corr_cf.file) else None,
-            is_free=False,
+            is_free=subject.is_free,
+            is_free_correction=subject.is_free_correction,
             is_published=True,
         )
         published_count += 1
@@ -1507,6 +1517,52 @@ def publish_cloud_folder_view(request):
         request,
         f"{published_count} épreuve(s) pour l'UE « {subject.name} » ont été publiées sur le site public ({with_corr_count} avec corrigé rattaché)."
     )
+    return redirect("contributors:library_index")
+
+
+@contributor_required
+def toggle_ue_premium_view(request):
+    """
+    Bascule l'état Premium / Gratuit d'une UE dans le Cloud Storage (Bouton Épreuves ou Bouton Corrigés & Résumés).
+    """
+    if request.method == "POST":
+        subject_id = request.POST.get("subject_id")
+        ue_name = request.POST.get("ue_name", "").strip()
+        target_type = request.POST.get("target_type", "exam")
+
+        active_school, active_filiere, active_semester = get_active_academic_context(request)
+        subject = None
+        if subject_id:
+            subject = Subject.objects.filter(pk=subject_id).first()
+
+        if not subject and ue_name:
+            target_semester = active_semester
+            if not target_semester and active_filiere:
+                target_semester = Semester.objects.filter(filiere=active_filiere).first()
+            if not target_semester:
+                target_semester = Semester.objects.first()
+
+            subject, _ = Subject.objects.get_or_create(
+                name=ue_name,
+                semester=target_semester,
+                defaults={"is_active": True}
+            )
+
+        if subject:
+            if target_type == "exam":
+                subject.is_free = not subject.is_free
+                subject.save()
+                Exam.objects.filter(subject=subject).update(is_free=subject.is_free)
+                status_txt = "Gratuit (Accès libre)" if subject.is_free else "Premium (Pass Semestre requis)"
+                messages.success(request, f"Épreuves de l'UE « {subject.name} » basculées en mode : {status_txt}")
+
+            elif target_type == "correction":
+                subject.is_free_correction = not subject.is_free_correction
+                subject.save()
+                Exam.objects.filter(subject=subject).update(is_free_correction=subject.is_free_correction)
+                status_txt = "Gratuit (Accès libre)" if subject.is_free_correction else "Premium (Pass Semestre requis)"
+                messages.success(request, f"Corrigés & résumés de l'UE « {subject.name} » basculés en mode : {status_txt}")
+
     return redirect("contributors:library_index")
 
 

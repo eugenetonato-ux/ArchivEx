@@ -32,6 +32,7 @@ class Exam(models.Model):
     cloud_summary_file = models.ForeignKey("content.CloudFile", on_delete=models.SET_NULL, blank=True, null=True, related_name="exams_as_summary", help_text="Fichier Cloud du résumé")
 
     is_free = models.BooleanField(default=False, db_index=True)
+    is_free_correction = models.BooleanField(default=False, db_index=True)
     is_published = models.BooleanField(default=False, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)

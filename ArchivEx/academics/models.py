@@ -102,6 +102,7 @@ class Subject(models.Model):
     code = models.CharField(max_length=50, blank=True, default="")  # ex. UE-MATH101
     description = models.TextField(blank=True, default="")
     is_free = models.BooleanField(default=False)
+    is_free_correction = models.BooleanField(default=False, help_text="Si vrai, les corrigés et résumés de cette UE sont gratuits pour tous les étudiants.")
     is_active = models.BooleanField(default=True)
 
     class Meta:

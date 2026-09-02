@@ -96,20 +96,27 @@ def can_user_access_exam_pdf(user, exam):
 
 def can_user_access_correction(user, exam):
     """
-    Accès à la correction PDF : TOUJOURS PREMIUM.
-    Même si l'épreuve parente est gratuite, la correction requiert un Pass valide.
+    Accès à la correction PDF : Gratuit si is_free_correction est True, sinon Pass valide requis.
     """
     if not exam:
         return False
+    if getattr(exam, "is_free_correction", False):
+        return True
+    if exam.subject and getattr(exam.subject, "is_free_correction", False):
+        return True
     return has_user_valid_pass(user, exam)
 
 
 def can_user_access_summary(user, resource):
     """
-    Accès au résumé / fiche PDF : TOUJOURS PREMIUM.
-    Même si l'épreuve parente est gratuite, le résumé requiert un Pass valide.
+    Accès au résumé / fiche PDF : Gratuit si is_free_correction est True, sinon Pass valide requis.
     """
     if not resource:
         return False
+    if getattr(resource, "is_free_correction", False):
+        return True
+    res_subj = getattr(resource, "subject", None)
+    if res_subj and getattr(res_subj, "is_free_correction", False):
+        return True
     return has_user_valid_pass(user, resource)
 
