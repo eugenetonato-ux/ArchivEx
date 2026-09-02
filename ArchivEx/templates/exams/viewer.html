@@ -64,49 +64,6 @@
         </div>
     </div>
 
-    <!-- SECURITY RULES ACTIVE BADGES BAR -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center space-x-2.5">
-            <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-600 flex items-center justify-center font-bold text-xs">
-                <i class="fa-solid fa-fingerprint" aria-hidden="true"></i>
-            </div>
-            <div>
-                <p class="text-[11px] font-black text-slate-800 leading-tight">Filigrane Numérique</p>
-                <p class="text-[10px] font-medium text-slate-500">{{ request.user.get_full_name|default:request.user.username }}</p>
-            </div>
-        </div>
-
-        <div class="p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center space-x-2.5">
-            <div class="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-600 flex items-center justify-center font-bold text-xs">
-                <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
-            </div>
-            <div>
-                <p class="text-[11px] font-black text-slate-800 leading-tight">Anti-Téléchargement</p>
-                <p class="text-[10px] font-medium text-slate-500">Flux PDF protégé</p>
-            </div>
-        </div>
-
-        <div class="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center space-x-2.5">
-            <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-600 flex items-center justify-center font-bold text-xs">
-                <i class="fa-solid fa-lock" aria-hidden="true"></i>
-            </div>
-            <div>
-                <p class="text-[11px] font-black text-slate-800 leading-tight">Raccourcis Bloqués</p>
-                <p class="text-[10px] font-medium text-slate-500">Ctrl+P, Ctrl+S, F12</p>
-            </div>
-        </div>
-
-        <div class="p-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center space-x-2.5">
-            <div class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-600 flex items-center justify-center font-bold text-xs">
-                <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
-            </div>
-            <div>
-                <p class="text-[11px] font-black text-slate-800 leading-tight">Floutage Hors-Onglet</p>
-                <p class="text-[10px] font-medium text-slate-500">Masqué si changement d'onglet</p>
-            </div>
-        </div>
-    </div>
-
     <!-- PROTECTED PDF EMBEDDED CANVAS / IFRAME VIEWER WITH ACTIVE SECURITY OVERLAY -->
     <div id="viewer-container" class="w-full h-[750px] rounded-3xl overflow-hidden bg-slate-100 border border-slate-300 shadow-xl relative transition-all duration-200">
         

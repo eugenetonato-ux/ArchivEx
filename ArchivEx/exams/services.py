@@ -65,25 +65,29 @@ def apply_student_watermark(pdf_source, user):
             wm_buf = BytesIO()
             c = canvas.Canvas(wm_buf, pagesize=(width, height))
             c.saveState()
-            c.setFont("Helvetica-Bold", 9)
-            c.setFillColor(colors.Color(0.5, 0.5, 0.5, alpha=0.28))
+            c.setFont("Helvetica-Bold", 10)
+            c.setFillColor(colors.Color(0.75, 0.2, 0.2, alpha=0.32))
             c.rotate(32)
 
-            step_x = 240
-            step_y = 140
+            step_x = 260
+            step_y = 150
             for x in range(-250, int(width + 450), step_x):
                 for y in range(-250, int(height + 450), step_y):
                     curr_y = y
                     for line in text_lines:
                         c.drawString(x, curr_y, line)
-                        curr_y -= 11
+                        curr_y -= 12
 
             c.restoreState()
             c.save()
             wm_buf.seek(0)
 
             wm_page = PdfReader(wm_buf).pages[0]
-            page.merge_page(wm_page)
+            try:
+                page.merge_page(wm_page, over=True)
+            except Exception:
+                wm_page.merge_page(page)
+                page = wm_page
             writer.add_page(page)
 
         output_buf = BytesIO()
