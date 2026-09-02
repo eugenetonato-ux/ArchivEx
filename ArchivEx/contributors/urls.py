@@ -14,6 +14,7 @@ urlpatterns = [
     path("library/", views.library_index_view, name="library_index"),
     path("library/deposer/", views.cloud_file_create_view, name="cloud_file_create"),
     path("library/<int:pk>/", views.library_exam_detail_view, name="library_detail"),
+    path("library/<int:pk>/modifier/", views.cloud_file_edit_view, name="cloud_file_edit"),
     path("library/<int:pk>/supprimer/", views.cloud_file_delete_view, name="cloud_file_delete"),
     path("library/<int:pk>/publier/", views.publish_from_cloud_view, name="publish_from_cloud"),
     path("library/publish-folder/", views.publish_cloud_folder_view, name="publish_cloud_folder"),

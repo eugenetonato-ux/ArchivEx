@@ -12,10 +12,10 @@
             <nav class="flex items-center space-x-2 text-xs font-bold text-slate-400 mb-1">
                 <a href="{% url 'contributors:library_index' %}" class="hover:text-blue-600">Bibliothèque Cloud</a>
                 <span>/</span>
-                <span class="text-[#071A49]">Nouveau dépôt de stockage</span>
+                <span class="text-[#071A49]">{% if is_edit %}Modification du fichier{% else %}Nouveau dépôt de stockage{% endif %}</span>
             </nav>
             <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">
-                Déposer un Fichier sur le Cloud Storage
+                {% if is_edit %}Modifier / Renommer le Fichier Cloud{% else %}Déposer un Fichier sur le Cloud Storage{% endif %}
             </h1>
             <p class="text-xs text-slate-500 font-medium mt-1">
                 Archivage centralisé de documents PDF (Stocké uniquement, non visible sur le site public des étudiants).

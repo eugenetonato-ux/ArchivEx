@@ -181,15 +181,19 @@
                                         {% endif %}
                                     </td>
                                     <td class="py-3.5 px-4 text-right">
-                                        <div class="flex items-center justify-end space-x-2">
-                                            <a href="{% url 'contributors:publish_from_cloud' pk=cloud_file.id %}" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold transition-colors inline-flex items-center space-x-1 shadow-sm">
-                                                <i class="fa-solid fa-paper-plane text-[10px]" aria-hidden="true"></i>
-                                                <span>Publier</span>
-                                            </a>
-                                            <button type="button" onclick="openDeleteModal('{% url 'contributors:cloud_file_delete' pk=cloud_file.id %}', '{{ cloud_file.title|escapejs }}')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-bold transition-colors inline-flex items-center space-x-1">
-                                                <i class="fa-solid fa-trash text-[10px]" aria-hidden="true"></i>
-                                            </button>
-                                        </div>
+                                         <div class="flex items-center justify-end space-x-2">
+                                             <a href="{% url 'contributors:publish_from_cloud' pk=cloud_file.id %}" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold transition-colors inline-flex items-center space-x-1 shadow-sm">
+                                                 <i class="fa-solid fa-paper-plane text-[10px]" aria-hidden="true"></i>
+                                                 <span>Publier</span>
+                                             </a>
+                                             <a href="{% url 'contributors:cloud_file_edit' pk=cloud_file.id %}" class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 text-[11px] font-bold transition-colors inline-flex items-center space-x-1" title="Modifier / Renommer l'épreuve">
+                                                 <i class="fa-solid fa-pen text-[10px]" aria-hidden="true"></i>
+                                                 <span>Modifier</span>
+                                             </a>
+                                             <button type="button" onclick="openDeleteModal('{% url 'contributors:cloud_file_delete' pk=cloud_file.id %}', '{{ cloud_file.title|escapejs }}')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-bold transition-colors inline-flex items-center space-x-1" title="Supprimer l'épreuve">
+                                                 <i class="fa-solid fa-trash text-[10px]" aria-hidden="true"></i>
+                                             </button>
+                                         </div>
                                     </td>
                                 </tr>
                             {% endfor %}

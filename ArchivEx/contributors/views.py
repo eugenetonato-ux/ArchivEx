@@ -1232,6 +1232,38 @@ def cloud_file_delete_view(request, pk):
 
 
 @contributor_required
+def cloud_file_edit_view(request, pk):
+    """Permet de modifier ou renommer un fichier dans le Cloud Storage (Titre, Type, Filière, Semestre)."""
+    cloud_file = get_object_or_404(CloudFile, pk=pk)
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
+
+    if cloud_file.school and not check_school_permission(request.user, cloud_file.school):
+        raise PermissionDenied("Vous n'êtes pas autorisé à modifier ce fichier.")
+
+    if request.method == "POST":
+        form = CloudFileAdminForm(request.POST, request.FILES, instance=cloud_file, active_filiere=active_filiere, active_semester=active_semester)
+        if form.is_valid():
+            cf = form.save(commit=False)
+            if not cf.school and active_school:
+                cf.school = active_school
+            cf.save()
+            messages.success(request, f"Fichier Cloud « {cf.title} » mis à jour et renommé avec succès.")
+            return redirect("contributors:library_index")
+    else:
+        form = CloudFileAdminForm(instance=cloud_file, active_filiere=active_filiere, active_semester=active_semester)
+
+    context = {
+        "active_school": active_school,
+        "active_filiere": active_filiere,
+        "active_semester": active_semester,
+        "form": form,
+        "cloud_file": cloud_file,
+        "is_edit": True,
+    }
+    return render(request, "contributors/library/form.html", context)
+
+
+@contributor_required
 def publish_from_cloud_view(request, pk):
     """Pré-remplit le formulaire de publication d'épreuve avec un fichier Cloud sélectionné et recherche auto du corrigé/résumé."""
     cloud_file = get_object_or_404(CloudFile, pk=pk)
@@ -1388,25 +1420,53 @@ def publish_cloud_folder_view(request):
     target_semester = subject.semester
     target_filiere = target_semester.filiere
 
-    cloud_files = CloudFile.objects.filter(file_type="EXAM").filter(
-        Q(semester=target_semester) | Q(filiere=target_filiere) | Q(title__icontains=subject.name)
-    )
+    # Récupérer les fichiers Cloud du contexte académique
+    all_cloud = CloudFile.objects.select_related("school", "filiere", "semester").order_by("-created_at")
+    if active_school:
+        all_cloud = all_cloud.filter(Q(school=active_school) | Q(school__isnull=True))
+    if active_filiere:
+        all_cloud = all_cloud.filter(Q(filiere=active_filiere) | Q(filiere__isnull=True))
+    if active_semester:
+        all_cloud = all_cloud.filter(Q(semester=active_semester) | Q(semester__isnull=True))
 
-    if not cloud_files.exists():
-        cloud_files = CloudFile.objects.filter(file_type="EXAM", title__icontains=subject.name)
+    available_subjects = Subject.objects.filter(semester__filiere=target_filiere) if target_filiere else Subject.objects.all()
+
+    # Isoler UNIQUEMENT les épreuves et corrigés appartenant réellement à cette UE
+    matching_cloud_exams = []
+    matching_cloud_corrections = []
+
+    for cf in all_cloud:
+        parsed = parse_exam_filename(cf.title, available_subjects=available_subjects)
+        cf_ue = parsed["matched_subject"].name if parsed["matched_subject"] else (parsed["subject_candidate"] or "")
+        
+        # Correspondance exacte avec le nom de l'UE
+        is_same_ue = (
+            (parsed["matched_subject"] and parsed["matched_subject"].id == subject.id) or
+            (cf_ue.strip().lower() == subject.name.strip().lower()) or
+            (cf_ue.strip().lower() == ue_name.strip().lower()) or
+            (subject.name.strip().lower() in cf.title.strip().lower())
+        )
+        if is_same_ue:
+            if cf.file_type == "EXAM":
+                matching_cloud_exams.append((cf, parsed))
+            elif cf.file_type == "CORRECTION":
+                matching_cloud_corrections.append((cf, parsed))
 
     published_count = 0
     with_corr_count = 0
 
-    for cf in list(cloud_files):
-        existing_exam = Exam.objects.filter(Q(cloud_file=cf) | Q(file=cf.file), subject=subject).first()
+    for cf, parsed in matching_cloud_exams:
+        if cf.file:
+            existing_exam = Exam.objects.filter(Q(cloud_file=cf) | Q(file=cf.file)).first()
+        else:
+            existing_exam = Exam.objects.filter(cloud_file=cf).first()
+
         if existing_exam:
             existing_exam.is_published = True
             existing_exam.save()
             published_count += 1
             continue
 
-        parsed = parse_exam_filename(cf.title, available_subjects=[subject])
         yr_label = parsed["detected_academic_year"] or "2025-2026"
         if "-" in yr_label:
             ay_obj, _ = AcademicYear.objects.get_or_create(label=yr_label)
@@ -1415,14 +1475,16 @@ def publish_cloud_folder_view(request):
             yr_int = 2025
             ay_obj = target_semester.academic_year or AcademicYear.objects.first()
 
-        corr_cf = CloudFile.objects.filter(
-            file_type="CORRECTION"
-        ).filter(
-            Q(semester=target_semester) | Q(filiere=target_filiere) | Q(title__icontains=subject.name)
-        ).first()
+        # Recherche du corrigé correspondant parmi les fichiers de cette même UE
+        corr_cf = None
+        for c_cf, c_parsed in matching_cloud_corrections:
+            if c_parsed["clean_title"] == parsed["clean_title"] or cf.title in c_cf.title or subject.name in c_cf.title:
+                corr_cf = c_cf
+                break
 
+        exam_title = cf.title.replace("Épreuve — ", "").replace(".pdf", "").strip()
         exam = Exam.objects.create(
-            title=parsed["clean_title"] or cf.title.replace(".pdf", ""),
+            title=exam_title,
             subject=subject,
             semester=target_semester,
             filiere=target_filiere,

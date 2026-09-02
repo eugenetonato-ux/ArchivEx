@@ -443,3 +443,31 @@ class NotificationAdminForm(forms.Form):
         label="Destinataires",
         widget=forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"})
     )
+
+
+class CloudFileAdminForm(forms.ModelForm):
+    """Formulaire de dépôt/édition d'un fichier dans la Bibliothèque Cloud."""
+    class Meta:
+        model = CloudFile
+        fields = ["title", "file_type", "school", "filiere", "semester", "file"]
+        labels = {
+            "title": "Nom du fichier / Libellé de l'épreuve",
+            "file_type": "Type de document (Épreuve, Corrigé, Résumé)",
+            "school": "Établissement / Université",
+            "filiere": "Filière / Spécialité",
+            "semester": "Semestre d'études",
+            "file": "Fichier PDF",
+        }
+        widgets = {
+            "title": forms.TextInput(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]", "placeholder": "Ex: Épreuve — Analyse Mathématique 2025-2026.pdf"}),
+            "file_type": forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"}),
+            "school": forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"}),
+            "filiere": forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"}),
+            "semester": forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"}),
+            "file": forms.FileInput(attrs={"class": "w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"}),
+        }
+
+    def __init__(self, *args, active_filiere=None, active_semester=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields["file"].required = False
