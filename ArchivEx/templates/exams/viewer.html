@@ -73,8 +73,14 @@
     </div>
 
     <!-- PROTECTED PDF EMBEDDED CANVAS / IFRAME VIEWER WITH ACTIVE SECURITY OVERLAY -->
-    <div id="viewer-container" class="w-full h-[750px] rounded-3xl overflow-hidden bg-slate-900 border border-slate-300 shadow-xl relative transition-all duration-200">
+    <div id="viewer-container" class="w-full h-[750px] rounded-3xl overflow-hidden bg-slate-100 border border-slate-300 shadow-xl relative transition-all duration-200">
         
+        <!-- LOADING SPINNER (DISPLAYED UNTIL IFRAME IS FULLY LOADED) -->
+        <div id="pdf-loader-spinner" class="absolute inset-0 z-10 bg-slate-50 flex flex-col items-center justify-center space-y-3 p-6 text-center">
+            <div class="w-10 h-10 border-4 border-blue-200 border-t-[#2563EB] rounded-full animate-spin"></div>
+            <p class="text-xs font-bold text-[#071A49]">Chargement sécurisé du document PDF...</p>
+        </div>
+
         <!-- FLOATING DYNAMIC HTML WATERMARK OVERLAY (BURNS USER IDENTITY INTO SCREENSHOTS & PHOTOS) -->
         <div class="absolute inset-0 z-20 pointer-events-none overflow-hidden select-none opacity-20 flex flex-wrap content-start p-4 gap-12" aria-hidden="true">
             {% for i in "123456789012" %}
@@ -84,7 +90,7 @@
             {% endfor %}
         </div>
 
-        <iframe id="pdf-frame" src="{{ stream_url }}" class="w-full h-full border-0 no-select" title="Lecteur de document académique sécurisé"></iframe>
+        <iframe id="pdf-frame" src="{{ stream_url }}" onload="const s=document.getElementById('pdf-loader-spinner'); if(s) s.classList.add('hidden');" class="w-full h-full border-0 no-select relative z-30" title="Lecteur de document académique sécurisé"></iframe>
     </div>
 
 </div>

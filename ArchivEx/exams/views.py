@@ -1,4 +1,5 @@
 import os
+import unicodedata
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
@@ -142,6 +143,15 @@ def exam_detail(request, pk):
     return render(request, "exams/detail.html", context)
 
 
+def _sanitize_header_filename(name):
+    """Convertit tout nom de fichier en ASCII pur sans accents ni caractères spéciaux pour les en-têtes HTTP."""
+    if not name:
+        return "document.pdf"
+    normalized = unicodedata.normalize('NFKD', str(name)).encode('ASCII', 'ignore').decode('utf-8')
+    clean = "".join(c if c.isalnum() or c in "._-" else "_" for c in normalized)
+    return clean or "document.pdf"
+
+
 def _get_safe_file_path(field_file):
     """Retourne le chemin système du fichier ou son objet s'il existe."""
     if not field_file or not bool(field_file):
@@ -188,7 +198,7 @@ def stream_exam_pdf(request, pk):
     is_download = request.GET.get("download") == "1"
     disposition = "attachment" if is_download else "inline"
     subj_name = exam.subject.name if exam.subject else "Epreuve"
-    safe_filename = f"ArchivEx_{subj_name}_{exam.year}.pdf".replace(" ", "_")
+    safe_filename = _sanitize_header_filename(f"ArchivEx_{subj_name}_{exam.year}") + ".pdf"
     response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
     return response
 
@@ -224,7 +234,7 @@ def stream_correction_pdf(request, pk):
     is_download = request.GET.get("download") == "1"
     disposition = "attachment" if is_download else "inline"
     subj_name = exam.subject.name if exam.subject else "Correction"
-    safe_filename = f"ArchivEx_Correction_{subj_name}_{exam.year}.pdf".replace(" ", "_")
+    safe_filename = _sanitize_header_filename(f"ArchivEx_Correction_{subj_name}_{exam.year}") + ".pdf"
     response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
     return response
 
@@ -266,7 +276,7 @@ def stream_summary_pdf(request, pk):
     is_download = request.GET.get("download") == "1"
     disposition = "attachment" if is_download else "inline"
     subj_name = exam.subject.name if exam.subject else "Resume"
-    safe_filename = f"ArchivEx_Resume_{subj_name}_{exam.year}.pdf".replace(" ", "_")
+    safe_filename = _sanitize_header_filename(f"ArchivEx_Resume_{subj_name}_{exam.year}") + ".pdf"
     response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
     return response
 
@@ -279,33 +289,12 @@ def toggle_favorite(request, pk):
 
     if not created:
         favorite.delete()
-        is_favorited = False
-        messages.info(request, f"« {exam.title} » retiré de tes favoris.")
+        messages.info(request, f"« {exam.title} » a été retirée de vos favoris.")
     else:
-        is_favorited = True
-        messages.success(request, f"« {exam.title} » ajouté à tes favoris ❤")
+        messages.success(request, f"« {exam.title} » a été ajoutée à vos favoris.")
 
-    if request.headers.get("x-requested-with") == "XMLHttpRequest":
-        return JsonResponse({"status": "ok", "is_favorited": is_favorited})
+    return redirect("exams:detail", pk=exam.pk)
 
-    next_url = request.META.get("HTTP_REFERER") or "exams:detail"
-    return redirect(next_url if next_url != request.build_absolute_uri() else "exams:liste")
-
-
-@login_required
-def student_viewer_view(request, pk):
-    """Lecteur académique sécurisé avec filigrane dynamique et protections anti-copie."""
-    exam = get_object_or_404(
-        Exam.objects.select_related(
-            "subject", "semester", "filiere", "level", "academic_year", "filiere__school"
-        ),
-        pk=pk,
-        is_published=True
-    )
-
-    res_type = request.GET.get("type", "exam")  # 'exam', 'correction', 'summary'
-    has_access = False
-    resource_label = "Épreuve d'Examen"
 
 def _render_pdf_error_response(message="Ce fichier PDF n'est pas encore disponible sur le serveur."):
     """Retourne une réponse HTML propre à afficher à l'intérieur du lecteur PDF / Iframe sans erreur 500 ni boucle."""
@@ -462,7 +451,7 @@ def stream_watermarked_pdf_view(request, pk):
             content_type="application/pdf"
         )
         subj_name = exam.subject.name if exam.subject else "Document"
-        safe_filename = f"ArchivEx_{res_type}_{subj_name}_{exam.year}.pdf".replace(" ", "_")
+        safe_filename = _sanitize_header_filename(f"ArchivEx_{res_type}_{subj_name}_{exam.year}") + ".pdf"
         response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
         return response
     except Exception:
@@ -479,7 +468,7 @@ def stream_watermarked_pdf_view(request, pk):
                 content_type="application/pdf"
             )
             subj_name = exam.subject.name if exam.subject else "Document"
-            safe_filename = f"ArchivEx_{res_type}_{subj_name}_{exam.year}.pdf".replace(" ", "_")
+            safe_filename = _sanitize_header_filename(f"ArchivEx_{res_type}_{subj_name}_{exam.year}") + ".pdf"
             response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
             return response
         except Exception:
