@@ -22,22 +22,27 @@ User = get_user_model()
 # STUDENT SIDE — Support request creation & history
 # ======================================================
 
-@login_required
 def support_create_view(request):
     """
-    Permet à un étudiant authentifié de soumettre une demande de support.
-    Son identité est automatiquement associée à la demande.
+    Permet à un étudiant connecté ou un visiteur anonyme de soumettre une demande de support.
     Une notification d'administration et un email sont automatiquement envoyés.
     """
-    form = SupportRequestForm(request.POST or None)
+    is_auth = request.user.is_authenticated
+    form = SupportRequestForm(request.POST or None, is_authenticated=is_auth)
 
     if request.method == "POST" and form.is_valid():
         support_req = form.save(commit=False)
-        support_req.user = request.user
+        if is_auth:
+            support_req.user = request.user
+            student_identity = request.user.get_full_name() or request.user.username
+            student_email = request.user.email
+        else:
+            support_req.user = None
+            student_identity = support_req.guest_name or "Visiteur"
+            student_email = support_req.guest_email or "Non renseigné"
+
         support_req.status = "non_lu"
         support_req.save()
-
-        student_identity = request.user.get_full_name() or request.user.username
 
         # 1. Notification interne pour les administrateurs
         try:
@@ -60,9 +65,9 @@ def support_create_view(request):
             subject = f"[ArchivEx Support] Nouveau message de {student_identity}"
             body_message = f"""Bonjour l'équipe support ArchivEx,
 
-Un nouveau message de support a été soumis par un étudiant.
+Un nouveau message de support a été soumis.
 
-Étudiant : {student_identity} ({request.user.email})
+Expéditeur : {student_identity} ({student_email})
 Catégorie / Motif : {support_req.get_category_display()}
 
 Message :
@@ -86,7 +91,9 @@ Pour répondre à cette demande, veuillez vous connecter à l'espace d'administr
             request,
             "✅ Votre demande a bien été envoyée. Notre équipe vous répondra dans les plus brefs délais."
         )
-        return redirect("support:list")
+        if is_auth:
+            return redirect("support:list")
+        return redirect("academics:home")
 
     context = {
         "form": form,

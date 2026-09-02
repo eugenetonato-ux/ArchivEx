@@ -138,6 +138,12 @@
                             </a>
                         </div>
                     </div>
+
+                    <!-- SUPPORT -->
+                    <a href="{% url 'support:create' %}" class="px-3 py-2 rounded-xl hover:bg-white/10 hover:text-white transition-colors flex items-center space-x-1.5 {% if 'support' in request.path %}text-white font-bold bg-white/10{% else %}text-slate-200{% endif %}">
+                        <i class="fa-solid fa-headset text-xs" aria-hidden="true"></i>
+                        <span>Support</span>
+                    </a>
                 </nav>
 
                 <!-- RIGHT ACTION BUTTONS / SEARCH / NOTIFICATIONS / PROFILE MENU (AUTHENTICATED ONLY) -->
@@ -266,6 +272,10 @@
                 <!-- CLEAN MINIMAL PUBLIC NAVBAR ACTIONS (ANONYMOUS USER) -->
                 {% if request.resolver_match.url_name != 'home' %}
                     <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
+                        <a href="{% url 'support:create' %}" class="text-xs sm:text-sm font-semibold text-slate-200 hover:text-white px-2.5 sm:px-3 py-1.5 rounded-xl hover:bg-white/10 transition-colors flex items-center space-x-1">
+                            <i class="fa-solid fa-headset text-xs"></i>
+                            <span>Support</span>
+                        </a>
                         <a href="{% url 'accounts:login' %}" class="btn-primary text-xs sm:text-sm px-3.5 sm:px-4 py-1.5 font-bold rounded-xl shadow-md shrink-0">
                             Se connecter
                         </a>
@@ -554,6 +564,13 @@
             }
         });
     </script>
+    <!-- FLOATING SUPPORT BUTTON (PUBLIC & RESPONSIVE) -->
+    <a href="{% url 'support:create' %}" id="floating-support-btn" aria-label="Contacter le support" class="fixed bottom-20 md:bottom-6 right-6 z-40 bg-[#2563EB] hover:bg-blue-700 text-white font-extrabold text-xs px-4 py-3 rounded-full shadow-xl shadow-blue-600/30 flex items-center space-x-2 transition-all hover:scale-105 group border border-white/20">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+        <i class="fa-solid fa-comments text-sm group-hover:rotate-6 transition-transform"></i>
+        <span class="font-extrabold">💬 Support</span>
+    </a>
+
     <script src="{% static 'js/drag_drop.js' %}"></script>
 
 </body>

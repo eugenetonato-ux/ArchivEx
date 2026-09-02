@@ -25,8 +25,21 @@ class SupportRequest(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
         related_name="support_requests",
         verbose_name="Étudiant",
+    )
+    guest_name = models.CharField(
+        max_length=150,
+        blank=True,
+        default="",
+        verbose_name="Nom complet (invité)",
+    )
+    guest_email = models.EmailField(
+        blank=True,
+        default="",
+        verbose_name="Adresse email (invité)",
     )
     category = models.CharField(
         max_length=30,
@@ -50,7 +63,8 @@ class SupportRequest(models.Model):
         verbose_name_plural = "Demandes de support"
 
     def __str__(self):
-        return f"[{self.get_status_display()}] {self.get_category_display()} — {self.user.get_full_name() or self.user.username}"
+        sender = (self.user.get_full_name() or self.user.username) if self.user else (self.guest_name or self.guest_email or "Visiteur invité")
+        return f"[{self.get_status_display()}] {self.get_category_display()} — {sender}"
 
     @property
     def has_reply(self):

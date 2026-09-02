@@ -3,8 +3,26 @@ from .models import SupportRequest, SupportReply
 
 
 class SupportRequestForm(forms.ModelForm):
-    """Formulaire de soumission d'une demande de support étudiant."""
+    """Formulaire de soumission d'une demande de support étudiant ou invité."""
 
+    guest_name = forms.CharField(
+        required=False,
+        label="Votre nom complet",
+        widget=forms.TextInput(attrs={
+            "class": "w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#2563EB]",
+            "placeholder": "Ex: Jean Dupont",
+            "id": "support-guest-name",
+        }),
+    )
+    guest_email = forms.EmailField(
+        required=False,
+        label="Votre adresse email",
+        widget=forms.EmailInput(attrs={
+            "class": "w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#2563EB]",
+            "placeholder": "Ex: jean.dupont@gmail.com",
+            "id": "support-guest-email",
+        }),
+    )
     category = forms.ChoiceField(
         choices=SupportRequest.CATEGORY_CHOICES,
         label="Motif / Objet",
@@ -25,7 +43,16 @@ class SupportRequestForm(forms.ModelForm):
 
     class Meta:
         model = SupportRequest
-        fields = ["category", "message"]
+        fields = ["guest_name", "guest_email", "category", "message"]
+
+    def __init__(self, *args, is_authenticated=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        if is_authenticated:
+            self.fields["guest_name"].required = False
+            self.fields["guest_email"].required = False
+        else:
+            self.fields["guest_name"].required = True
+            self.fields["guest_email"].required = True
 
 
 class SupportReplyForm(forms.ModelForm):

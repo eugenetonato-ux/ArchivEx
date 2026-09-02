@@ -427,17 +427,52 @@ class ArchivExV2RefactoringTests(TestCase):
             "message": "Bonjour, comment télécharger mon épreuve d'analyse ?",
         })
 
-        self.assertRedirects(response, reverse("support:list"))
+    def test_anonymous_support_access_and_submission(self):
+        """Vérifie que la page /support/ est accessible aux visiteurs anonymes et permet l'envoi invité sans erreur 500."""
+        from support.models import SupportRequest
+        from notifications.models import Notification
 
-        # Support request stored in DB
-        sup_req = SupportRequest.objects.filter(user=self.student).first()
-        self.assertIsNotNone(sup_req)
-        self.assertEqual(sup_req.status, "non_lu")
+        # 1. Access page anonymously
+        res = self.client.get(reverse("support:create"))
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "Votre nom complet")
+        self.assertContains(res, "Votre adresse email")
 
-        # Admin notification created
+        # 2. Submit support request as guest
+        response = self.client.post(reverse("support:create"), {
+            "guest_name": "Marc Visiteur",
+            "guest_email": "marc.visiteur@gmail.com",
+            "category": "question",
+            "message": "Bonjour, je voudrais des informations sur l'inscription.",
+        })
+        self.assertRedirects(response, reverse("academics:home"))
+
+        # 3. Check BDD storage & admin notification
+        req = SupportRequest.objects.filter(guest_email="marc.visiteur@gmail.com").first()
+        self.assertIsNotNone(req)
+        self.assertIsNone(req.user)
+        self.assertEqual(req.guest_name, "Marc Visiteur")
+
         notif = Notification.objects.filter(recipient=self.admin, notification_type="NEW_SUPPORT").first()
         self.assertIsNotNone(notif)
-        self.assertIn("Nouveau message support", notif.title)
+        self.assertIn("Marc Visiteur", notif.message)
+
+    def test_student_login_automatic_redirection(self):
+        """Vérifie qu'un étudiant connecté est automatiquement redirigé vers son Dashboard."""
+        # 1. Direct login without next -> Redirects to accounts:dashboard
+        res_login = self.client.post(reverse("accounts:login"), {
+            "username": "student_support@univ.edu",
+            "password": "Password123!",
+        })
+        self.assertRedirects(res_login, reverse("accounts:dashboard"))
+
+        # 2. Login with next param -> Redirects to next URL
+        self.client.logout()
+        res_next = self.client.post(reverse("accounts:login") + "?next=" + reverse("support:create"), {
+            "username": "student_support@univ.edu",
+            "password": "Password123!",
+        })
+        self.assertRedirects(res_next, reverse("support:create"))
 
 
 
