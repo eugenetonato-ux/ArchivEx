@@ -12,7 +12,7 @@
             <p class="text-xs text-slate-500 font-medium">Consultez, recherchez, dépubliez ou ajoutez des épreuves d'examens.</p>
         </div>
         <div class="flex items-center space-x-3 shrink-0">
-            <button type="button" onclick="openDeleteModal('{% url \'contributors:exam_bulk_delete_published\' %}', 'Toutes les épreuves actuellement publiées', 'Tout supprimer les épreuves publiées ?', 'Toutes les épreuves publiées seront retirées du site public. Les fichiers originaux du Cloud Storage resteront 100% INTACTS et conservés.')" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl transition-colors shadow-sm inline-flex items-center space-x-2">
+            <button type="button" onclick='openDeleteModal("{% url "contributors:exam_bulk_delete_published" %}", "Toutes les épreuves actuellement publiées", "Tout supprimer les épreuves publiées ?", "Toutes les épreuves publiées seront retirées du site public. Les fichiers originaux du Cloud Storage resteront 100% INTACTS et conservés.")' class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl transition-colors shadow-sm inline-flex items-center space-x-2">
                 <i class="fa-solid fa-trash-can text-xs" aria-hidden="true"></i>
                 <span>Tout supprimer</span>
             </button>
@@ -99,7 +99,7 @@
                                          <i class="fa-solid fa-pen text-[10px]" aria-hidden="true"></i>
                                          <span>Modifier</span>
                                      </a>
-                                     <button type="button" onclick="openDeleteModal('{% url \'contributors:exam_delete\' ex.pk %}', '{{ ex.title|escapejs }}', 'Supprimer l\'épreuve publiée ?', 'Cette épreuve sera retirée du site public. Le fichier original PDF reste 100% conservé intact sur le Cloud Storage.')" class="text-[11px] font-bold px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] transition-colors inline-flex items-center space-x-1" title="Supprimer la publication de cette épreuve (le Cloud Storage reste intact)">
+                                     <button type="button" onclick='openDeleteModal("{% url "contributors:exam_delete" ex.pk %}", "{{ ex.title|escapejs }}", "Supprimer l&apos;épreuve publiée ?", "Cette épreuve sera retirée du site public. Le fichier original PDF reste 100% conservé intact sur le Cloud Storage.")' class="text-[11px] font-bold px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] transition-colors inline-flex items-center space-x-1" title="Supprimer la publication de cette épreuve (le Cloud Storage reste intact)">
                                          <i class="fa-solid fa-trash text-[10px]" aria-hidden="true"></i>
                                          <span>Supprimer</span>
                                      </button>

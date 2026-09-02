@@ -76,7 +76,7 @@
                                     <a href="{% url 'contributors:summary_edit' sm.pk %}" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-[#2563EB] hover:bg-blue-100 transition-colors">
                                         Modifier
                                     </a>
-                                     <button type="button" onclick="openDeleteModal('{% url \'contributors:summary_delete\' sm.pk %}', '{{ sm.title|escapejs }}', 'Supprimer le résumé ?', 'Ce résumé de cours sera supprimé définitivement de la plateforme.')" class="text-[11px] font-bold px-2 py-1 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors" title="Supprimer ce résumé">
+                                     <button type="button" onclick='openDeleteModal("{% url "contributors:summary_delete" sm.pk %}", "{{ sm.title|escapejs }}", "Supprimer le résumé ?", "Ce résumé de cours sera supprimé définitivement de la plateforme.")' class="text-[11px] font-bold px-2 py-1 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors" title="Supprimer ce résumé">
                                          <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
                                      </button>
                                 </div>
