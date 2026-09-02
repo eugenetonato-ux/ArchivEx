@@ -358,12 +358,20 @@ def stream_watermarked_pdf_view(request, pk):
 
     if res_type == "correction":
         target_file = exam.correction_file
+        if not bool(target_file) and exam.cloud_correction_file:
+            target_file = exam.cloud_correction_file.file
         has_access = can_user_access_correction(request.user, exam)
+
     elif res_type == "summary":
         target_file = exam.summary_file or (exam.summary.file if exam.summary else None)
+        if not bool(target_file) and exam.cloud_summary_file:
+            target_file = exam.cloud_summary_file.file
         has_access = can_user_access_summary(request.user, exam)
+
     else:
         target_file = exam.file
+        if not bool(target_file) and exam.cloud_file:
+            target_file = exam.cloud_file.file
         has_access = can_user_access_exam_pdf(request.user, exam)
 
     if not has_access:
@@ -376,24 +384,36 @@ def stream_watermarked_pdf_view(request, pk):
 
     file_obj = _get_safe_file_path(target_file)
     if not file_obj:
-        messages.error(request, "Le fichier demandé est introuvable sur le serveur.")
+        messages.error(request, "Le fichier demandé n'est pas encore disponible sur le serveur.")
         return redirect("exams:detail", pk=exam.pk)
 
     try:
         watermarked_io = apply_student_watermark(file_obj, request.user)
+        response = FileResponse(
+            watermarked_io,
+            content_type="application/pdf"
+        )
+        subj_name = exam.subject.name if exam.subject else "Document"
+        safe_filename = f"ArchivEx_{res_type}_{subj_name}_{exam.year}.pdf".replace(" ", "_")
+        response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
+        return response
     except Exception:
-        if isinstance(file_obj, str):
-            watermarked_io = open(file_obj, "rb")
-        elif hasattr(file_obj, "open"):
-            watermarked_io = file_obj.open("rb")
-        else:
-            return redirect(getattr(file_obj, "url", "/"))
-
-    response = FileResponse(
-        watermarked_io,
-        content_type="application/pdf"
-    )
-    subj_name = exam.subject.name if exam.subject else "Document"
-    safe_filename = f"ArchivEx_{res_type}_{subj_name}_{exam.year}.pdf".replace(" ", "_")
-    response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
-    return response
+        try:
+            if isinstance(file_obj, str) and os.path.exists(file_obj):
+                watermarked_io = open(file_obj, "rb")
+            elif hasattr(file_obj, "open"):
+                watermarked_io = file_obj.open("rb")
+            else:
+                return redirect(getattr(file_obj, "url", "/"))
+            
+            response = FileResponse(
+                watermarked_io,
+                content_type="application/pdf"
+            )
+            subj_name = exam.subject.name if exam.subject else "Document"
+            safe_filename = f"ArchivEx_{res_type}_{subj_name}_{exam.year}.pdf".replace(" ", "_")
+            response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
+            return response
+        except Exception:
+            messages.error(request, "Le fichier PDF ne peut pas être lu actuellement sur le serveur.")
+            return redirect("exams:detail", pk=exam.pk)
