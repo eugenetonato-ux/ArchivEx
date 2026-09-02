@@ -205,17 +205,38 @@ def admin_support_detail_view(request, pk):
                 support_request.status = "repondu"
                 support_request.save(update_fields=["status"])
 
-                # Créer une notification pour l'étudiant concerné uniquement
-                student_url = reverse("support:detail", kwargs={"pk": support_request.pk})
-                Notification.objects.create(
-                    recipient=support_request.user,
-                    notification_type="SUPPORT_REPLY",
-                    title="Réponse à votre demande de support",
-                    message=f"L'équipe ArchivEx a répondu à votre demande : « {support_request.get_category_display()} ».",
-                    link=student_url,
-                )
+                # Créer une notification pour l'étudiant connecté si présent
+                if support_request.user:
+                    student_url = reverse("support:detail", kwargs={"pk": support_request.pk})
+                    Notification.objects.create(
+                        recipient=support_request.user,
+                        notification_type="SUPPORT_REPLY",
+                        title="Réponse à votre demande de support",
+                        message=f"L'équipe ArchivEx a répondu à votre demande : « {support_request.get_category_display()} ».",
+                        link=student_url,
+                    )
+                elif support_request.guest_email:
+                    try:
+                        send_mail(
+                            subject=f"[ArchivEx Support] Réponse à votre demande : {support_request.get_category_display()}",
+                            message=f"""Bonjour {support_request.guest_name or 'Visiteur'},
 
-                messages.success(request, "✅ Réponse envoyée à l'étudiant avec succès.")
+L'équipe ArchivEx a répondu à votre demande de support :
+
+--------------------------------------------------
+{reply.message}
+--------------------------------------------------
+
+Merci d'utiliser ArchivEx !
+""",
+                            from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "support@archivex.bj"),
+                            recipient_list=[support_request.guest_email],
+                            fail_silently=True,
+                        )
+                    except Exception as err:
+                        logger.error(f"Erreur d'envoi d'email de réponse invité : {err}")
+
+                messages.success(request, "✅ Réponse enregistrée et envoyée avec succès.")
                 return redirect("contributors:admin_support_detail", pk=pk)
 
         elif action == "set_status":

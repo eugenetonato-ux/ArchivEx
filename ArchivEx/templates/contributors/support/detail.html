@@ -52,14 +52,24 @@
     <!-- STUDENT IDENTITY CARD -->
     <div class="bg-white border border-slate-200 rounded-2xl p-4 mb-5 flex items-center space-x-4 shadow-sm">
         <div class="w-10 h-10 rounded-xl bg-[#071A49] text-white flex items-center justify-center font-bold text-base shrink-0">
-            {{ support_request.user.first_name|default:support_request.user.username|slice:":1"|upper }}
+            {% if support_request.user %}
+                {{ support_request.user.first_name|default:support_request.user.username|slice:":1"|upper }}
+            {% else %}
+                {{ support_request.guest_name|default:"V"|slice:":1"|upper }}
+            {% endif %}
         </div>
         <div class="min-w-0">
             <p class="text-sm font-bold text-[#071A49]">
-                {{ support_request.user.first_name }} {{ support_request.user.last_name|default:support_request.user.username }}
+                {% if support_request.user %}
+                    {{ support_request.user.get_full_name|default:support_request.user.username }}
+                {% else %}
+                    {{ support_request.guest_name|default:"Visiteur invité" }} <span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-normal">Invité</span>
+                {% endif %}
             </p>
-            <p class="text-xs text-slate-500">{{ support_request.user.email }}</p>
-            {% if support_request.user.profile %}
+            <p class="text-xs text-slate-500">
+                {% if support_request.user %}{{ support_request.user.email }}{% else %}{{ support_request.guest_email }}{% endif %}
+            </p>
+            {% if support_request.user and support_request.user.profile %}
                 <p class="text-[10px] text-slate-400 mt-0.5">
                     {{ support_request.user.profile.school.name }} ·
                     {{ support_request.user.profile.filiere.name }} ·
@@ -146,8 +156,7 @@
                     {% endif %}
                     <p class="text-[11px] text-slate-400 mt-1">
                         <i class="fa-solid fa-lock text-[9px] mr-1"></i>
-                        Cette réponse sera visible uniquement par {{ support_request.user.first_name|default:support_request.user.username }}.
-                        Une notification lui sera automatiquement envoyée.
+                        Cette réponse sera adressée à {% if support_request.user %}{{ support_request.user.get_full_name|default:support_request.user.username }}{% else %}{{ support_request.guest_name|default:support_request.guest_email }}{% endif %}.
                     </p>
                 </div>
 

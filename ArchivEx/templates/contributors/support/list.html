@@ -70,9 +70,15 @@
                             <td class="px-4 py-3.5">
                                 <div>
                                     <p class="font-bold text-[#071A49]">
-                                        {{ req.user.first_name }} {{ req.user.last_name|default:req.user.username }}
+                                        {% if req.user %}
+                                            {{ req.user.get_full_name|default:req.user.username }}
+                                        {% else %}
+                                            {{ req.guest_name|default:"Visiteur invité" }} <span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-normal">Invité</span>
+                                        {% endif %}
                                     </p>
-                                    <p class="text-[10px] text-slate-400">{{ req.user.email }}</p>
+                                    <p class="text-[10px] text-slate-400">
+                                        {% if req.user %}{{ req.user.email }}{% else %}{{ req.guest_email }}{% endif %}
+                                    </p>
                                 </div>
                             </td>
                             <td class="px-4 py-3.5">
