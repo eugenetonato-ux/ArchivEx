@@ -1,13 +1,12 @@
 from io import BytesIO
 from django.utils import timezone
-from pypdf import PdfReader, PdfWriter
-from reportlab.pdfgen import canvas
 
 
 def apply_student_watermark(pdf_source, user):
     """
     Incruste un filigrane numérique personnalisé sur chaque page d'un document PDF.
     Gère sereinement tous les types de fichiers (FieldFile, path str, BytesIO, bytes).
+    SI pypdf ou reportlab n'est pas installé sur le serveur, renvoie le PDF d'origine sans erreur 500.
     """
     pdf_bytes = None
 
@@ -36,8 +35,12 @@ def apply_student_watermark(pdf_source, user):
     if not pdf_bytes or len(pdf_bytes) < 20 or not pdf_bytes.startswith(b"%PDF"):
         raise ValueError("Le fichier PDF est inexistant, incomplet ou corrompu.")
 
-    # 2. Application du filigrane avec pypdf et reportlab
+    # 2. Application du filigrane avec pypdf et reportlab (lazy import sécurisé)
     try:
+        from pypdf import PdfReader, PdfWriter
+        from reportlab.pdfgen import canvas
+        from reportlab.lib import colors
+
         reader = PdfReader(BytesIO(pdf_bytes))
         writer = PdfWriter()
 
@@ -63,7 +66,6 @@ def apply_student_watermark(pdf_source, user):
             c = canvas.Canvas(wm_buf, pagesize=(width, height))
             c.saveState()
             c.setFont("Helvetica-Bold", 9)
-            from reportlab.lib import colors
             c.setFillColor(colors.Color(0.5, 0.5, 0.5, alpha=0.28))
             c.rotate(32)
 
@@ -90,7 +92,7 @@ def apply_student_watermark(pdf_source, user):
         return output_buf
 
     except Exception:
-        # Repli de secours : renvoyer le flux PDF brut d'origine sans tatouage si la structure PDF empêche le merge
+        # Repli de secours : renvoyer le flux PDF brut d'origine sans tatouage si pypdf/reportlab est absent ou plante
         buf = BytesIO(pdf_bytes)
         buf.seek(0)
         return buf
