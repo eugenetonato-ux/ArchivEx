@@ -84,43 +84,15 @@
             {% endfor %}
         </div>
 
-        <!-- SECURITY BLUR OVERLAY (TRIGGERED ON WINDOW BLUR / SCREEN CAPTURE FOCUS LOSS) -->
-        <div id="security-blur-mask" class="absolute inset-0 z-30 bg-slate-900/95 backdrop-blur-md hidden flex-col items-center justify-center text-center p-6 transition-all duration-150">
-            <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-amber-300 flex items-center justify-center text-xl mb-3">
-                <i class="fa-solid fa-shield-halved"></i>
-            </div>
-            <h3 class="text-white font-extrabold text-base mb-1">Consultation suspendue</h3>
-            <p class="text-slate-300 text-xs max-w-md">Le document est masqué automatiquement lorsque la fenêtre perd le focus afin de protéger le contenu académique.</p>
-        </div>
-
         <iframe id="pdf-frame" src="{{ stream_url }}" class="w-full h-full border-0 no-select" title="Lecteur de document académique sécurisé"></iframe>
     </div>
 
 </div>
 
 <script>
-    // 1. BLUR CONTENT ON WINDOW BLUR / TAB SWITCH / CAPTURE TOOL FOCUS LOSS
-    const blurMask = document.getElementById('security-blur-mask');
-    
-    window.addEventListener('blur', () => {
-        if (blurMask) blurMask.classList.remove('hidden');
-    });
-    
-    window.addEventListener('focus', () => {
-        if (blurMask) blurMask.classList.add('hidden');
-    });
-
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            if (blurMask) blurMask.classList.remove('hidden');
-        } else {
-            if (blurMask) blurMask.classList.add('hidden');
-        }
-    });
-
-    // 2. BLOCK SENSITIVE KEYBOARD SHORTCUTS (PRINT, SAVE, INSPECT)
+    // BLOCK SENSITIVE KEYBOARD SHORTCUTS (PRINT, SAVE, INSPECT)
     document.addEventListener('keydown', (e) => {
-        // Ctrl+P (Print), Ctrl+S (Save), F12, Ctrl+Shift+I (Inspect), PrintScreen
+        // Ctrl+P (Print), Ctrl+S (Save), F12, Ctrl+Shift+I (Inspect)
         if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S' || e.key === 'u' || e.key === 'U')) {
             e.preventDefault();
             return false;
@@ -128,12 +100,6 @@
         if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c'))) {
             e.preventDefault();
             return false;
-        }
-        if (e.key === 'PrintScreen') {
-            if (blurMask) blurMask.classList.remove('hidden');
-            setTimeout(() => {
-                if (blurMask) blurMask.classList.add('hidden');
-            }, 3000);
         }
     });
 </script>
