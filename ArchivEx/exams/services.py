@@ -6,24 +6,38 @@ from reportlab.pdfgen import canvas
 
 def apply_student_watermark(pdf_source, user):
     """
-    Overlays a dynamic, personalized watermark on every page of a PDF document.
-    Watermark lines:
-    1. Student Full Name (or username/email)
-    2. "ArchivEx — Consultation personnelle"
-    3. Date & Time (DD/MM/YYYY • HH:MM)
+    Incruste un filigrane numérique personnalisé sur chaque page d'un document PDF.
+    Gère sereinement tous les types de fichiers (FieldFile, path str, BytesIO, bytes).
     """
+    pdf_bytes = None
+
+    # 1. Extraction sécurisée des octets bruts du PDF
     try:
-        if hasattr(pdf_source, "read"):
-            pdf_bytes = pdf_source.read()
-        elif isinstance(pdf_source, bytes):
+        if isinstance(pdf_source, bytes):
             pdf_bytes = pdf_source
-        else:
-            with open(str(pdf_source), "rb") as f:
+        elif isinstance(pdf_source, str) and os.path.exists(pdf_source):
+            with open(pdf_source, "rb") as f:
                 pdf_bytes = f.read()
+        elif hasattr(pdf_source, "open"):
+            try:
+                pdf_source.open("rb")
+            except Exception:
+                pass
+            pdf_bytes = pdf_source.read()
+            try:
+                pdf_source.close()
+            except Exception:
+                pass
+        elif hasattr(pdf_source, "read"):
+            pdf_bytes = pdf_source.read()
+    except Exception:
+        pdf_bytes = None
 
-        if not pdf_bytes:
-            raise ValueError("Fichier PDF vide ou illisible")
+    if not pdf_bytes or len(pdf_bytes) < 20 or not pdf_bytes.startswith(b"%PDF"):
+        raise ValueError("Le fichier PDF est inexistant, incomplet ou corrompu.")
 
+    # 2. Application du filigrane avec pypdf et reportlab
+    try:
         reader = PdfReader(BytesIO(pdf_bytes))
         writer = PdfWriter()
 
@@ -36,15 +50,10 @@ def apply_student_watermark(pdf_source, user):
         email = getattr(user, "email", "")
         now_str = timezone.now().strftime("%d/%m/%Y • %H:%M")
 
-        text_lines = [
-            full_name,
-        ]
+        text_lines = [full_name]
         if email:
             text_lines.append(email)
-        text_lines.extend([
-            "ArchivEx — Consultation personnelle",
-            now_str,
-        ])
+        text_lines.extend(["ArchivEx — Consultation personnelle", now_str])
 
         for page in reader.pages:
             width = float(page.mediabox.width)
@@ -79,8 +88,9 @@ def apply_student_watermark(pdf_source, user):
         writer.write(output_buf)
         output_buf.seek(0)
         return output_buf
+
     except Exception:
-        # Graceful fallback for non-standard or raw PDF streams
+        # Repli de secours : renvoyer le flux PDF brut d'origine sans tatouage si la structure PDF empêche le merge
         buf = BytesIO(pdf_bytes)
         buf.seek(0)
         return buf
