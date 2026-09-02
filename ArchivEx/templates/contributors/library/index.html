@@ -11,13 +11,13 @@
         <div>
             <div class="flex items-center space-x-2 text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">
                 <i class="fa-solid fa-cloud" aria-hidden="true"></i>
-                <span>Bibliothèque Cloud Integrated — Espace de Stockage</span>
+                <span>Bibliothèque Cloud Integrated — Stockage par UE</span>
             </div>
             <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">
-                Dépôt Central & Stockage Cloud
+                Dépôt Central Organisé par UE
             </h1>
             <p class="text-xs text-slate-500 font-medium mt-1">
-                Stockage sécurisé des fichiers PDF bruts. Les éléments versés ici restent archivés sur le Cloud et ne sont pas publiés sur le site public tant que vous ne les avez pas associés à une épreuve.
+                Stockage des épreuves regroupées par UE. Cliquez sur <strong>Publier</strong> pour transmettre automatiquement l'UE et l'année académique détectées.
             </p>
         </div>
         <div class="flex items-center space-x-3 shrink-0">
@@ -63,7 +63,7 @@
     <form method="get" class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row gap-3">
         <input type="hidden" name="filter" value="{{ type_filter }}">
         <div class="relative flex-grow">
-            <input type="text" name="q" value="{{ q }}" placeholder="Rechercher un document dans la Bibliothèque Cloud..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#071A49] placeholder-slate-400 focus:ring-2 focus:ring-blue-600 outline-none">
+            <input type="text" name="q" value="{{ q }}" placeholder="Rechercher une UE ou un document dans le Cloud..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#071A49] placeholder-slate-400 focus:ring-2 focus:ring-blue-600 outline-none">
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs" aria-hidden="true"></i>
         </div>
         <div class="flex items-center space-x-2">
@@ -76,87 +76,118 @@
         </div>
     </form>
 
-    <!-- LIBRARY CLOUD FILES TABLE -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-50/80 border-b border-slate-200 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
-                        <th class="py-3.5 px-4">Titre du Fichier Cloud</th>
-                        <th class="py-3.5 px-4 text-center">Type</th>
-                        <th class="py-3.5 px-4">Contexte Académique</th>
-                        <th class="py-3.5 px-4">Date de dépôt</th>
-                        <th class="py-3.5 px-4 text-right">Actions de publication / Stockage</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-                    {% for cloud_file in cloud_files %}
-                        <tr class="hover:bg-slate-50/60 transition-colors">
-                            <td class="py-3.5 px-4">
-                                <div class="font-extrabold text-[#071A49] text-xs mb-0.5 flex items-center space-x-2">
-                                    <i class="fa-solid fa-file-pdf text-rose-500 text-sm"></i>
-                                    <span>{{ cloud_file.title }}</span>
-                                </div>
-                                {% if cloud_file.file %}
-                                    <a href="{{ cloud_file.file.url }}" target="_blank" class="text-[10px] text-blue-600 font-bold hover:underline">
-                                        <i class="fa-solid fa-arrow-up-right-from-square text-[9px] mr-1"></i>Aperçu PDF direct
-                                    </a>
-                                {% endif %}
-                            </td>
-                            <td class="py-3.5 px-4 text-center">
-                                {% if cloud_file.file_type == 'EXAM' %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800">
-                                        Épreuve / Sujet
-                                    </span>
-                                {% elif cloud_file.file_type == 'CORRECTION' %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
-                                        Correction
-                                    </span>
-                                {% elif cloud_file.file_type == 'SUMMARY' %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800">
-                                        Fiche Résumé
-                                    </span>
-                                {% else %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700">
-                                        Autre Document
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="py-3.5 px-4">
-                                <div class="text-slate-800 font-bold">{{ cloud_file.school.name|default:"Non spécifié" }}</div>
-                                <div class="text-[10px] text-slate-400 font-semibold">
-                                    {{ cloud_file.filiere.name|default:"Toutes filières" }}
-                                    {% if cloud_file.semester %} ({{ cloud_file.semester.label }}){% endif %}
-                                </div>
-                            </td>
-                            <td class="py-3.5 px-4 text-slate-500 font-medium">
-                                {{ cloud_file.created_at|date:"d/m/Y H:i" }}
-                            </td>
-                            <td class="py-3.5 px-4 text-right">
-                                <div class="flex items-center justify-end space-x-2">
-                                    <a href="{% url 'contributors:publish_from_cloud' pk=cloud_file.id %}" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold transition-colors inline-flex items-center space-x-1 shadow-sm">
-                                        <i class="fa-solid fa-paper-plane text-[10px]" aria-hidden="true"></i>
-                                        <span>Publier sur le site</span>
-                                    </a>
-                                    <form method="post" action="{% url 'contributors:cloud_file_delete' pk=cloud_file.id %}" onsubmit="return confirm('Supprimer définitivement ce fichier du stockage Cloud ?');" class="inline">
-                                        {% csrf_token %}
-                                        <button type="submit" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-bold transition-colors inline-flex items-center space-x-1">
-                                            <i class="fa-solid fa-trash text-[10px]" aria-hidden="true"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="5" class="py-12 text-center text-slate-400 font-medium">
-                                Aucun fichier trouvé dans la Bibliothèque Cloud Integrated.
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    <!-- LIBRARY CLOUD FILES GROUPED BY UE -->
+    <div class="space-y-6">
+        {% for ue_name, files in grouped_cloud_files.items %}
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                <!-- UE HEADER DOSSIER -->
+                <div class="bg-slate-900 text-white p-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white text-xs font-black">
+                            <i class="fa-solid fa-folder-open"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-black tracking-tight text-white uppercase">{{ ue_name }}</h2>
+                            <span class="text-[10px] text-slate-300 font-semibold">{{ files|length }} fichier(s) répertorié(s)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/80 border-b border-slate-200 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                                <th class="py-3 px-4">Nom du Fichier</th>
+                                <th class="py-3 px-4 text-center">Type</th>
+                                <th class="py-3 px-4 text-center">Année académique détectée</th>
+                                <th class="py-3 px-4">Conformité du Nom</th>
+                                <th class="py-3 px-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                            {% for cloud_file in files %}
+                                <tr class="hover:bg-slate-50/60 transition-colors">
+                                    <td class="py-3.5 px-4">
+                                        <div class="font-extrabold text-[#071A49] text-xs mb-0.5 flex items-center space-x-2">
+                                            <i class="fa-solid fa-file-pdf text-rose-500 text-sm"></i>
+                                            <span>{{ cloud_file.title }}</span>
+                                        </div>
+                                        {% if cloud_file.file %}
+                                            <a href="{{ cloud_file.file.url }}" target="_blank" class="text-[10px] text-blue-600 font-bold hover:underline">
+                                                <i class="fa-solid fa-arrow-up-right-from-square text-[9px] mr-1"></i>Aperçu PDF direct
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-3.5 px-4 text-center">
+                                        {% if cloud_file.file_type == 'EXAM' %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800">
+                                                Épreuve / Sujet
+                                            </span>
+                                        {% elif cloud_file.file_type == 'CORRECTION' %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                                                Correction
+                                            </span>
+                                        {% elif cloud_file.file_type == 'SUMMARY' %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800">
+                                                Fiche Résumé
+                                            </span>
+                                        {% else %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700">
+                                                Autre Document
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-3.5 px-4 text-center">
+                                        {% if cloud_file.parsed_info.detected_academic_year %}
+                                            <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-black border border-blue-200/60 inline-flex items-center space-x-1">
+                                                <i class="fa-regular fa-calendar-check text-[10px]"></i>
+                                                <span>{{ cloud_file.parsed_info.detected_academic_year }}</span>
+                                            </span>
+                                        {% else %}
+                                            <span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 text-[10px] font-bold border border-amber-200/60 inline-flex items-center space-x-1">
+                                                <i class="fa-solid fa-triangle-exclamation text-[10px]"></i>
+                                                <span>Non détectée</span>
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-3.5 px-4">
+                                        {% if cloud_file.parsed_info.is_valid %}
+                                            <span class="text-emerald-600 font-bold text-[11px] flex items-center space-x-1">
+                                                <i class="fa-solid fa-circle-check"></i>
+                                                <span>Nom conforme ([UE] [Année].pdf)</span>
+                                            </span>
+                                        {% else %}
+                                            <div class="text-amber-600 font-bold text-[10px]">
+                                                <span class="flex items-center space-x-1">
+                                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                                    <span>Format non conforme</span>
+                                                </span>
+                                                <span class="text-[9px] text-slate-400 font-medium block">Saisie/Correction manuelle requise lors de la publication</span>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-3.5 px-4 text-right">
+                                        <div class="flex items-center justify-end space-x-2">
+                                            <a href="{% url 'contributors:publish_from_cloud' pk=cloud_file.id %}" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold transition-colors inline-flex items-center space-x-1 shadow-sm">
+                                                <i class="fa-solid fa-paper-plane text-[10px]" aria-hidden="true"></i>
+                                                <span>Publier</span>
+                                            </a>
+                                            <button type="button" onclick="openDeleteModal('{% url 'contributors:cloud_file_delete' pk=cloud_file.id %}', '{{ cloud_file.title|escapejs }}')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-bold transition-colors inline-flex items-center space-x-1">
+                                                <i class="fa-solid fa-trash text-[10px]" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% empty %}
+            <div class="bg-white rounded-2xl p-12 text-center text-slate-400 font-medium border border-slate-200/80">
+                Aucun fichier trouvé dans la Bibliothèque Cloud Integrated.
+            </div>
+        {% endfor %}
     </div>
 
 </div>

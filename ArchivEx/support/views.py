@@ -1,3 +1,8 @@
+import logging
+from django.conf import settings
+from django.core.mail import send_mail
+from django.db.models import Q
+from django.contrib.auth import get_user_model
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -9,6 +14,9 @@ from .forms import SupportRequestForm, SupportReplyForm
 from contributors.decorators import contributor_required
 from notifications.models import Notification
 
+logger = logging.getLogger("django")
+User = get_user_model()
+
 
 # ======================================================
 # STUDENT SIDE — Support request creation & history
@@ -19,6 +27,7 @@ def support_create_view(request):
     """
     Permet à un étudiant authentifié de soumettre une demande de support.
     Son identité est automatiquement associée à la demande.
+    Une notification d'administration et un email sont automatiquement envoyés.
     """
     form = SupportRequestForm(request.POST or None)
 
@@ -27,6 +36,52 @@ def support_create_view(request):
         support_req.user = request.user
         support_req.status = "non_lu"
         support_req.save()
+
+        student_identity = request.user.get_full_name() or request.user.username
+
+        # 1. Notification interne pour les administrateurs
+        try:
+            admin_users = User.objects.filter(Q(is_staff=True) | Q(is_superuser=True)).distinct()
+            admin_url = reverse("contributors:admin_support_detail", kwargs={"pk": support_req.pk})
+            for admin_u in admin_users:
+                Notification.objects.create(
+                    recipient=admin_u,
+                    notification_type="NEW_SUPPORT",
+                    title="Nouveau message support",
+                    message=f"Demande support de {student_identity} : « {support_req.get_category_display()} ».",
+                    link=admin_url,
+                )
+        except Exception as err:
+            logger.error(f"Erreur lors de la création de la notification support admin : {err}")
+
+        # 2. Email administrateur (fail-safe)
+        try:
+            target_support_email = getattr(settings, "SUPPORT_EMAIL", None) or getattr(settings, "DEFAULT_FROM_EMAIL", "support@archivex.bj")
+            subject = f"[ArchivEx Support] Nouveau message de {student_identity}"
+            body_message = f"""Bonjour l'équipe support ArchivEx,
+
+Un nouveau message de support a été soumis par un étudiant.
+
+Étudiant : {student_identity} ({request.user.email})
+Catégorie / Motif : {support_req.get_category_display()}
+
+Message :
+--------------------------------------------------
+{support_req.message}
+--------------------------------------------------
+
+Pour répondre à cette demande, veuillez vous connecter à l'espace d'administration.
+"""
+            send_mail(
+                subject=subject,
+                message=body_message,
+                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "support@archivex.bj"),
+                recipient_list=[target_support_email],
+                fail_silently=True,
+            )
+        except Exception as err:
+            logger.error(f"Erreur lors de l'envoi de l'email de support : {err}")
+
         messages.success(
             request,
             "✅ Votre demande a bien été envoyée. Notre équipe vous répondra dans les plus brefs délais."

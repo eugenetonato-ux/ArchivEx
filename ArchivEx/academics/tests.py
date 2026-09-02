@@ -356,3 +356,88 @@ class Phase10PublicAndSearchTests(TestCase):
                 self.assertNotIn(emoji, content, f"Emoji {emoji} found in response for {endpoint}")
 
 
+class ArchivExV2RefactoringTests(TestCase):
+    """Suite de tests d'implémentation pour la refonte V2."""
+
+    def setUp(self):
+        self.client = Client()
+        self.school = School.objects.create(name="ENEAM", code="ENEAM", slug="eneam", is_active=True)
+        self.level = Level.objects.create(name="Licence 1", code="L1")
+        self.filiere = Filiere.objects.create(school=self.school, level=self.level, name="Informatique")
+        self.year = AcademicYear.objects.create(label="2025-2026")
+        self.semester = Semester.objects.create(filiere=self.filiere, academic_year=self.year, label="Semestre 1")
+        self.subject_analyse = Subject.objects.create(semester=self.semester, name="Analyse")
+        self.subject_algebre = Subject.objects.create(semester=self.semester, name="Algèbre")
+
+        # Staff user
+        self.admin = User.objects.create_superuser(username="admin_test", email="admin@archivex.bj", password="Password123!")
+
+        # Student user
+        self.student = User.objects.create_user(username="student_support@univ.edu", password="Password123!")
+        StudentProfile.objects.create(user=self.student, school=self.school, level=self.level, filiere=self.filiere)
+
+    def test_academic_year_validation(self):
+        """Vérifie que validate_academic_year_format valide 'YYYY-YYYY' et rejette les formats invalides."""
+        from academics.models import validate_academic_year_format
+        from django.core.exceptions import ValidationError
+
+        # Valid cases
+        validate_academic_year_format("2024-2025")
+        validate_academic_year_format("2025-2026")
+        validate_academic_year_format("2026-2027")
+
+        # Invalid cases
+        invalid_years = ["2026", "2024-2026", "2025/2026", "invalid"]
+        for yr in invalid_years:
+            with self.assertRaises(ValidationError):
+                validate_academic_year_format(yr)
+
+    def test_parse_exam_filename_valid_cases(self):
+        """Vérifie l'extraction automatique de l'UE et de l'année académique pour des noms conformes."""
+        from academics.parser import parse_exam_filename
+
+        res_analyse = parse_exam_filename("Analyse 2025-2026.pdf", available_subjects=Subject.objects.all())
+        self.assertTrue(res_analyse["is_valid"])
+        self.assertEqual(res_analyse["matched_subject"], self.subject_analyse)
+        self.assertEqual(res_analyse["detected_academic_year"], "2025-2026")
+
+        res_algebre = parse_exam_filename("Algèbre 2024-2025.pdf", available_subjects=Subject.objects.all())
+        self.assertEqual(res_algebre["matched_subject"], self.subject_algebre)
+        self.assertEqual(res_algebre["detected_academic_year"], "2024-2025")
+
+    def test_parse_exam_filename_invalid_cases(self):
+        """Vérifie le signalement d'erreur pour les noms de fichiers non conformes sans créer de fausses données."""
+        from academics.parser import parse_exam_filename
+
+        invalids = ["epreuve.pdf", "Analyse.pdf", "Analyse 2026.pdf", "Analyse_finale.pdf"]
+        for inv in invalids:
+            res = parse_exam_filename(inv, available_subjects=Subject.objects.all())
+            self.assertFalse(res["is_valid"])
+            self.assertTrue(len(res["errors"]) > 0)
+
+    def test_support_request_creation_notifications_and_email_fail_safe(self):
+        """Vérifie que la création d'un message support crée une notification admin et que l'envoi d'email est fail-safe."""
+        from notifications.models import Notification
+        from support.models import SupportRequest
+
+        self.client.login(username="student_support@univ.edu", password="Password123!")
+
+        response = self.client.post(reverse("support:create"), {
+            "category": "question",
+            "message": "Bonjour, comment télécharger mon épreuve d'analyse ?",
+        })
+
+        self.assertRedirects(response, reverse("support:list"))
+
+        # Support request stored in DB
+        sup_req = SupportRequest.objects.filter(user=self.student).first()
+        self.assertIsNotNone(sup_req)
+        self.assertEqual(sup_req.status, "non_lu")
+
+        # Admin notification created
+        notif = Notification.objects.filter(recipient=self.admin, notification_type="NEW_SUPPORT").first()
+        self.assertIsNotNone(notif)
+        self.assertIn("Nouveau message support", notif.title)
+
+
+

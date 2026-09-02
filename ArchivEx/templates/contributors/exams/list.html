@@ -50,7 +50,7 @@
                         <tr class="hover:bg-slate-50/80 transition-colors">
                             <td class="py-3.5 px-3">
                                 <p class="font-extrabold text-[#071A49] text-xs mb-0.5">{{ ex.title }}</p>
-                                <span class="text-[10px] text-slate-400 font-semibold">{{ ex.year }} · {{ ex.get_exam_type_display|default:"EXAM" }}</span>
+                                <span class="text-[10px] text-slate-400 font-semibold">Année académique : {{ ex.academic_year.label|default:ex.year }} · {{ ex.get_exam_type_display|default:"EXAM" }}</span>
                             </td>
                             <td class="py-3.5 px-3 font-semibold text-[#2563EB]">{{ ex.subject.name }}</td>
                             <td class="py-3.5 px-3 text-slate-600">
@@ -92,12 +92,9 @@
                                     <a href="{% url 'contributors:exam_edit' ex.pk %}" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-[#2563EB] hover:bg-blue-100 transition-colors">
                                         Modifier
                                     </a>
-                                    <form method="post" action="{% url 'contributors:exam_delete' ex.pk %}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer définitivement cette épreuve ?');">
-                                        {% csrf_token %}
-                                        <button type="submit" class="text-[11px] font-bold px-2 py-1 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors">
-                                            <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
-                                        </button>
-                                    </form>
+                                    <button type="button" onclick="openDeleteModal('{% url 'contributors:exam_delete' ex.pk %}', '{{ ex.subject.name|escapejs }} — {{ ex.academic_year.label|default:ex.year|escapejs }}')" class="text-[11px] font-bold px-2 py-1 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors">
+                                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>

@@ -148,13 +148,13 @@ class ExamAdminForm(forms.ModelForm):
         fields = ["title", "year", "exam_type", "cloud_file", "cloud_correction_file", "cloud_summary_file", "file", "correction_file", "summary_file", "description", "semester"]
         labels = {
             "title": "Titre de l'épreuve",
-            "year": "Année académique / Session",
+            "year": "Année académique",
             "exam_type": "Type d'épreuve",
             "description": "Description / Remarques optionnelles",
         }
         widgets = {
-            "title": forms.TextInput(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]", "placeholder": "Ex: Examen d'analyse S1 2025"}),
-            "year": forms.TextInput(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]", "placeholder": "2026"}),
+            "title": forms.TextInput(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]", "placeholder": "Ex: Examen d'analyse S1 2025-2026"}),
+            "year": forms.TextInput(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]", "placeholder": "Ex: 2025-2026"}),
             "exam_type": forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"}),
             "description": forms.Textarea(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-[#071A49]", "rows": 3}),
         }
@@ -168,6 +168,8 @@ class ExamAdminForm(forms.ModelForm):
                 self.fields["subject_name"].initial = self.instance.subject.name
             if self.instance.semester:
                 self.fields["semester"].initial = self.instance.semester
+            if self.instance.academic_year:
+                self.fields["year"].initial = self.instance.academic_year.label
 
         if active_filiere:
             self.fields["semester"].queryset = Semester.objects.filter(filiere=active_filiere)
@@ -177,6 +179,24 @@ class ExamAdminForm(forms.ModelForm):
 
         if active_semester and not self.fields["semester"].initial:
             self.fields["semester"].initial = active_semester
+
+    def clean_year(self):
+        import re
+        val = str(self.cleaned_data.get("year", "")).strip()
+        if not val:
+            raise forms.ValidationError("L'année académique est obligatoire.")
+        if "-" in val:
+            pattern = r"^\d{4}-\d{4}$"
+            if not re.match(pattern, val):
+                raise forms.ValidationError("L'année académique doit respecter le format YYYY-YYYY (ex: 2025-2026).")
+            start_yr, end_yr = map(int, val.split("-"))
+            if end_yr != start_yr + 1:
+                raise forms.ValidationError("L'année académique doit couvrir deux années consécutives (ex: 2025-2026).")
+            return start_yr
+        elif val.isdigit():
+            return int(val)
+        else:
+            raise forms.ValidationError("Veuillez saisir une année académique valide au format YYYY-YYYY (ex: 2025-2026).")
 
     def clean_file(self):
         file = self.cleaned_data.get("file")

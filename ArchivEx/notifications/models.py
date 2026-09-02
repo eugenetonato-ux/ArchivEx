@@ -11,6 +11,7 @@ class Notification(models.Model):
         ("NEW_ADVICE", "Nouveau Conseil"),
         ("PREMIUM", "Offre Premium"),
         ("PAYMENT", "Paiement & Accès"),
+        ("NEW_SUPPORT", "Nouveau Support"),
         ("SUPPORT_REPLY", "Réponse Support"),
         ("SYSTEM", "Information Système"),
     ]

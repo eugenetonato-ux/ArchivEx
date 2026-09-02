@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model, authenticate, login, logout
 from django.http import JsonResponse, HttpResponseForbidden, FileResponse, Http404
 
 from academics.models import School, Level, Filiere, AcademicYear, Semester, Subject
+from academics.parser import parse_exam_filename
 from exams.models import Exam
 from content.models import Summary, Guide, Article, CloudFile
 from accounts.models import StudentProfile
@@ -367,7 +368,19 @@ def exam_create_view(request):
                 )
             exam.subject = subject
 
-            if not getattr(exam, "academic_year_id", None):
+            raw_year_input = str(request.POST.get("year", "")).strip()
+            if raw_year_input:
+                if "-" in raw_year_input:
+                    ay_obj, _ = AcademicYear.objects.get_or_create(label=raw_year_input)
+                elif raw_year_input.isdigit():
+                    yr_i = int(raw_year_input)
+                    lbl = f"{yr_i-1}-{yr_i}"
+                    ay_obj, _ = AcademicYear.objects.get_or_create(label=lbl)
+                else:
+                    ay_obj = None
+                if ay_obj:
+                    exam.academic_year = ay_obj
+            elif not getattr(exam, "academic_year_id", None):
                 if target_semester and getattr(target_semester, "academic_year", None):
                     exam.academic_year = target_semester.academic_year
                 else:
@@ -428,6 +441,19 @@ def exam_edit_view(request, pk):
                     is_active=True
                 )
             exam.subject = subject
+
+            raw_year_input = str(request.POST.get("year", "")).strip()
+            if raw_year_input:
+                if "-" in raw_year_input:
+                    ay_obj, _ = AcademicYear.objects.get_or_create(label=raw_year_input)
+                elif raw_year_input.isdigit():
+                    yr_i = int(raw_year_input)
+                    lbl = f"{yr_i-1}-{yr_i}"
+                    ay_obj, _ = AcademicYear.objects.get_or_create(label=lbl)
+                else:
+                    ay_obj = None
+                if ay_obj:
+                    exam.academic_year = ay_obj
 
             exam.is_free = form.cleaned_data["is_free"]
             exam.is_published = form.cleaned_data["is_published"]
@@ -1100,7 +1126,7 @@ def notification_create_view(request):
 
 @contributor_required
 def library_index_view(request):
-    """Bibliothèque Cloud Integrated : Dépôt central de stockage des fichiers sans publication automatique."""
+    """Bibliothèque Cloud Integrated : Dépôt central de stockage des fichiers classé par UE."""
     active_school, active_filiere, active_semester = get_active_academic_context(request)
     q = request.GET.get("q", "").strip()
     type_filter = request.GET.get("filter", "all")
@@ -1126,11 +1152,23 @@ def library_index_view(request):
     correction_count = sum(1 for f in cloud_files if f.file_type == "CORRECTION")
     summary_count = sum(1 for f in cloud_files if f.file_type == "SUMMARY")
 
+    available_subjects = Subject.objects.filter(semester__filiere=active_filiere) if active_filiere else Subject.objects.all()
+
+    grouped_cloud_files = {}
+    for cf in cloud_files:
+        parsed = parse_exam_filename(cf.title, available_subjects=available_subjects)
+        cf.parsed_info = parsed
+        ue_name = parsed["matched_subject"].name if parsed["matched_subject"] else (parsed["subject_candidate"] or "Noms non conformes / Non classés")
+        if ue_name not in grouped_cloud_files:
+            grouped_cloud_files[ue_name] = []
+        grouped_cloud_files[ue_name].append(cf)
+
     context = {
         "active_school": active_school,
         "active_filiere": active_filiere,
         "active_semester": active_semester,
         "cloud_files": cloud_files,
+        "grouped_cloud_files": grouped_cloud_files,
         "q": q,
         "type_filter": type_filter,
         "total_count": total_count,
@@ -1199,17 +1237,24 @@ def publish_from_cloud_view(request, pk):
     cloud_file = get_object_or_404(CloudFile, pk=pk)
     active_school, active_filiere, active_semester = get_active_academic_context(request)
 
-    initial_title = cloud_file.title.replace("Épreuve — ", "").replace(".pdf", "").strip()
+    target_filiere = cloud_file.filiere or active_filiere
+    available_subjects = Subject.objects.filter(semester__filiere=target_filiere) if target_filiere else Subject.objects.all()
+
+    parsed = parse_exam_filename(cloud_file.title, available_subjects=available_subjects)
+
+    detected_subject_name = parsed["matched_subject"].name if parsed["matched_subject"] else (parsed["subject_candidate"] or "")
+    detected_academic_year = parsed["detected_academic_year"] or ""
+    initial_title = parsed["clean_title"] or cloud_file.title.replace("Épreuve — ", "").replace(".pdf", "").strip()
 
     form = ExamAdminForm(initial={
         "title": initial_title,
+        "subject_name": detected_subject_name,
+        "year": detected_academic_year,
         "cloud_file": cloud_file if cloud_file.file_type == "EXAM" else None,
         "cloud_correction_file": cloud_file if cloud_file.file_type == "CORRECTION" else None,
         "cloud_summary_file": cloud_file if cloud_file.file_type == "SUMMARY" else None,
         "semester": cloud_file.semester or active_semester,
-    }, active_filiere=cloud_file.filiere or active_filiere, active_semester=cloud_file.semester or active_semester)
-
-    available_subjects = Subject.objects.filter(semester__filiere=active_filiere) if active_filiere else Subject.objects.none()
+    }, active_filiere=target_filiere, active_semester=cloud_file.semester or active_semester)
 
     context = {
         "active_school": active_school,
@@ -1219,6 +1264,7 @@ def publish_from_cloud_view(request, pk):
         "form": form,
         "is_create": True,
         "selected_cloud_file": cloud_file,
+        "parsed_info": parsed,
     }
     return render(request, "contributors/exams/form.html", context)
 

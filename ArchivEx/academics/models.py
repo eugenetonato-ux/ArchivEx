@@ -1,4 +1,16 @@
+import re
+from django.core.exceptions import ValidationError
 from django.db import models
+
+
+def validate_academic_year_format(value):
+    val = str(value).strip()
+    pattern = r"^\d{4}-\d{4}$"
+    if not re.match(pattern, val):
+        raise ValidationError("L'année académique doit respecter le format YYYY-YYYY (ex: 2025-2026).")
+    start_year, end_year = map(int, val.split("-"))
+    if end_year != start_year + 1:
+        raise ValidationError("L'année académique doit couvrir deux années consécutives (ex: 2025-2026).")
 
 
 class School(models.Model):
@@ -51,10 +63,20 @@ class Filiere(models.Model):
 
 
 class AcademicYear(models.Model):
-    label = models.CharField(max_length=20, unique=True)  # ex. "2026-2027"
+    label = models.CharField(
+        max_length=20,
+        unique=True,
+        validators=[validate_academic_year_format],
+        help_text="Année académique au format YYYY-YYYY (ex: 2025-2026)",
+    )
 
     class Meta:
         ordering = ["-label"]
+
+    def clean(self):
+        super().clean()
+        if self.label:
+            validate_academic_year_format(self.label)
 
     def __str__(self):
         return self.label
