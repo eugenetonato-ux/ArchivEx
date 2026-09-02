@@ -12,15 +12,18 @@ def apply_student_watermark(pdf_source, user):
     2. "ArchivEx — Consultation personnelle"
     3. Date & Time (DD/MM/YYYY • HH:MM)
     """
-    if hasattr(pdf_source, "read"):
-        pdf_bytes = pdf_source.read()
-    elif isinstance(pdf_source, bytes):
-        pdf_bytes = pdf_source
-    else:
-        with open(pdf_source, "rb") as f:
-            pdf_bytes = f.read()
-
     try:
+        if hasattr(pdf_source, "read"):
+            pdf_bytes = pdf_source.read()
+        elif isinstance(pdf_source, bytes):
+            pdf_bytes = pdf_source
+        else:
+            with open(str(pdf_source), "rb") as f:
+                pdf_bytes = f.read()
+
+        if not pdf_bytes:
+            raise ValueError("Fichier PDF vide ou illisible")
+
         reader = PdfReader(BytesIO(pdf_bytes))
         writer = PdfWriter()
 

@@ -2,7 +2,7 @@ import os
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden, FileResponse, Http404, JsonResponse
+from django.http import HttpResponseForbidden, FileResponse, Http404, JsonResponse, HttpResponse
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.db.models import Q
@@ -307,22 +307,96 @@ def student_viewer_view(request, pk):
     has_access = False
     resource_label = "Épreuve d'Examen"
 
+def _render_pdf_error_response(message="Ce fichier PDF n'est pas encore disponible sur le serveur."):
+    """Retourne une réponse HTML propre à afficher à l'intérieur du lecteur PDF / Iframe sans erreur 500 ni boucle."""
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+        <meta charset="utf-8">
+        <style>
+            body {{
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+                background-color: #071a49;
+                color: #f8fafc;
+                text-align: center;
+            }}
+            .card {{
+                max-width: 420px;
+                padding: 32px;
+                background: #0f2766;
+                border: 1px solid #1e40af;
+                border-radius: 24px;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+            }}
+            .icon {{
+                font-size: 32px;
+                margin-bottom: 12px;
+            }}
+            h3 {{
+                margin: 0 0 8px;
+                font-size: 16px;
+                font-weight: 800;
+                color: #fbbf24;
+            }}
+            p {{
+                margin: 0;
+                font-size: 13px;
+                line-height: 1.5;
+                color: #93c5fd;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <div class="icon">⚠️</div>
+            <h3>Document Indisponible</h3>
+            <p>{message}</p>
+        </div>
+    </body>
+    </html>
+    """
+    return HttpResponse(html_content, content_type="text/html", status=200)
+
+
+@login_required
+def student_viewer_view(request, pk):
+    """Page dédiée du Lecteur Académique (Viewer sécurisé avec iframe et anti-copie)."""
+    exam = get_object_or_404(Exam, pk=pk, is_published=True)
+    res_type = request.GET.get("type", "exam")
+
+    resource_label = "Épreuve d'Examen"
     if res_type == "correction":
         has_access = can_user_access_correction(request.user, exam)
         resource_label = "Correction Détaillée"
-        if not _get_safe_file_path(exam.correction_file):
-            messages.error(request, "Aucune correction n'est disponible pour cette épreuve.")
+        corr_target = exam.correction_file
+        if not bool(corr_target) and exam.cloud_correction_file:
+            corr_target = exam.cloud_correction_file.file
+        if not _get_safe_file_path(corr_target):
+            messages.error(request, "Aucune correction n'est actuellement disponible pour cette épreuve.")
             return redirect("exams:detail", pk=exam.pk)
+
     elif res_type == "summary":
         has_access = can_user_access_summary(request.user, exam)
         resource_label = "Fiche Résumé"
         summary_target = exam.summary_file or (exam.summary.file if exam.summary else None)
+        if not bool(summary_target) and exam.cloud_summary_file:
+            summary_target = exam.cloud_summary_file.file
         if not _get_safe_file_path(summary_target):
-            messages.error(request, "Aucun résumé n'est disponible pour cette épreuve.")
+            messages.error(request, "Aucun résumé n'est actuellement disponible pour cette épreuve.")
             return redirect("exams:detail", pk=exam.pk)
+
     else:
         has_access = can_user_access_exam_pdf(request.user, exam)
-        if not _get_safe_file_path(exam.file):
+        exam_target = exam.file
+        if not bool(exam_target) and exam.cloud_file:
+            exam_target = exam.cloud_file.file
+        if not _get_safe_file_path(exam_target):
             messages.error(request, "Le fichier PDF de cette épreuve est en cours d'importation.")
             return redirect("exams:detail", pk=exam.pk)
 
@@ -375,17 +449,11 @@ def stream_watermarked_pdf_view(request, pk):
         has_access = can_user_access_exam_pdf(request.user, exam)
 
     if not has_access:
-        messages.warning(
-            request,
-            "Accès refusé. Le Pass Semestre actif est requis pour consulter ce document."
-        )
-        sem_id = exam.semester.id if exam.semester else (exam.subject.semester.id if exam.subject and exam.subject.semester else 1)
-        return redirect("payments:pass_semestre", semester_id=sem_id)
+        return _render_pdf_error_response("Accès refusé. Le Pass Semestre est requis pour consulter ce document.")
 
     file_obj = _get_safe_file_path(target_file)
     if not file_obj:
-        messages.error(request, "Le fichier demandé n'est pas encore disponible sur le serveur.")
-        return redirect("exams:detail", pk=exam.pk)
+        return _render_pdf_error_response("Le fichier PDF demandé n'est pas encore disponible sur le serveur.")
 
     try:
         watermarked_io = apply_student_watermark(file_obj, request.user)
@@ -415,5 +483,4 @@ def stream_watermarked_pdf_view(request, pk):
             response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
             return response
         except Exception:
-            messages.error(request, "Le fichier PDF ne peut pas être lu actuellement sur le serveur.")
-            return redirect("exams:detail", pk=exam.pk)
+            return _render_pdf_error_response("Le fichier PDF n'a pas pu être lu par le serveur.")
