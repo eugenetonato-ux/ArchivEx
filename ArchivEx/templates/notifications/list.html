@@ -126,6 +126,7 @@
                                 {% elif notif.notification_type == 'NEW_SUMMARY' %}Consulter le résumé
                                 {% elif notif.notification_type == 'NEW_GUIDE' %}Lire le guide
                                 {% elif notif.notification_type == 'PAYMENT' %}Accéder aux ressources
+                                {% elif notif.notification_type == 'NEW_SUPPORT' or notif.notification_type == 'SUPPORT_REPLY' %}Consulter le message support
                                 {% else %}Consulter{% endif %}
                             </span>
                             <i class="fa-solid fa-arrow-right text-xs"></i>

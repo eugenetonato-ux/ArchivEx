@@ -157,11 +157,14 @@ def admin_support_list_view(request):
     """
     Vue administration : liste de toutes les demandes de support étudiants.
     """
-    status_filter = request.GET.get("status", "")
+    status_filter = request.GET.get("status", "").strip()
     support_requests = SupportRequest.objects.select_related("user").prefetch_related("replies").order_by("-created_at")
 
-    if status_filter:
+    valid_statuses = [choice[0] for choice in SupportRequest.STATUS_CHOICES]
+    if status_filter and status_filter in valid_statuses:
         support_requests = support_requests.filter(status=status_filter)
+    else:
+        status_filter = ""
 
     # Stats rapides
     total = SupportRequest.objects.count()

@@ -1,5 +1,6 @@
 import os
 from django import forms
+from django.db.models import Q
 from academics.models import School, Level, Filiere, Semester, Subject
 from exams.models import Exam
 from content.models import Summary, Guide, Article, CloudFile, STATUS_CHOICES, ACCESS_CHOICES
@@ -161,7 +162,10 @@ class ExamAdminForm(forms.ModelForm):
 
     def __init__(self, *args, active_filiere=None, active_semester=None, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.instance and self.instance.pk:
+        if not self.instance or not self.instance.pk:
+            self.fields["exam_type"].initial = "examen"
+            self.fields["is_published"].initial = "True"
+        else:
             self.fields["is_free"].initial = "true" if self.instance.is_free else "false"
             self.fields["is_published"].initial = "true" if self.instance.is_published else "false"
             if self.instance.subject:
@@ -173,9 +177,9 @@ class ExamAdminForm(forms.ModelForm):
 
         if active_filiere:
             self.fields["semester"].queryset = Semester.objects.filter(filiere=active_filiere)
-            self.fields["cloud_file"].queryset = CloudFile.objects.filter(filiere=active_filiere)
-            self.fields["cloud_correction_file"].queryset = CloudFile.objects.filter(filiere=active_filiere)
-            self.fields["cloud_summary_file"].queryset = CloudFile.objects.filter(filiere=active_filiere)
+            self.fields["cloud_file"].queryset = CloudFile.objects.filter(Q(filiere=active_filiere) | Q(filiere__isnull=True))
+            self.fields["cloud_correction_file"].queryset = CloudFile.objects.filter(Q(filiere=active_filiere) | Q(filiere__isnull=True))
+            self.fields["cloud_summary_file"].queryset = CloudFile.objects.filter(Q(filiere=active_filiere) | Q(filiere__isnull=True))
 
         if active_semester and not self.fields["semester"].initial:
             self.fields["semester"].initial = active_semester

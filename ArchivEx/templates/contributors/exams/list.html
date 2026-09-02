@@ -89,8 +89,9 @@
                                             {% if ex.is_published %}Dépublier{% else %}Publier{% endif %}
                                         </button>
                                     </form>
-                                    <a href="{% url 'contributors:exam_edit' ex.pk %}" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-[#2563EB] hover:bg-blue-100 transition-colors">
-                                        Modifier
+                                    <a href="{% url 'contributors:exam_edit' ex.pk %}" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-[#2563EB] hover:bg-blue-100 transition-colors inline-flex items-center space-x-1">
+                                        <i class="fa-solid fa-pen text-[10px]" aria-hidden="true"></i>
+                                        <span>Modifier / Renommer</span>
                                     </a>
                                     <button type="button" onclick="openDeleteModal('{% url 'contributors:exam_delete' ex.pk %}', '{{ ex.subject.name|escapejs }} — {{ ex.academic_year.label|default:ex.year|escapejs }}')" class="text-[11px] font-bold px-2 py-1 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors">
                                         <i class="fa-solid fa-trash-can" aria-hidden="true"></i>

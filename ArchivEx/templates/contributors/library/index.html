@@ -81,7 +81,7 @@
         {% for ue_name, files in grouped_cloud_files.items %}
             <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
                 <!-- UE HEADER DOSSIER -->
-                <div class="bg-slate-900 text-white p-4 flex items-center justify-between">
+                <div class="bg-slate-900 text-white p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div class="flex items-center space-x-3">
                         <div class="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white text-xs font-black">
                             <i class="fa-solid fa-folder-open"></i>
@@ -91,6 +91,13 @@
                             <span class="text-[10px] text-slate-300 font-semibold">{{ files|length }} fichier(s) répertorié(s)</span>
                         </div>
                     </div>
+
+                    {% if files.0.parsed_info.matched_subject %}
+                        <a href="{% url 'contributors:publish_subject_cloud' subject_id=files.0.parsed_info.matched_subject.id %}" class="px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm self-start sm:self-auto">
+                            <i class="fa-solid fa-bolt text-xs"></i>
+                            <span>Publier l'UE complète (Sujets + Corrigés)</span>
+                        </a>
+                    {% endif %}
                 </div>
 
                 <div class="overflow-x-auto">

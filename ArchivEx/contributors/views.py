@@ -1233,7 +1233,7 @@ def cloud_file_delete_view(request, pk):
 
 @contributor_required
 def publish_from_cloud_view(request, pk):
-    """Pré-remplit le formulaire de publication d'épreuve avec un fichier Cloud sélectionné."""
+    """Pré-remplit le formulaire de publication d'épreuve avec un fichier Cloud sélectionné et recherche auto du corrigé/résumé."""
     cloud_file = get_object_or_404(CloudFile, pk=pk)
     active_school, active_filiere, active_semester = get_active_academic_context(request)
 
@@ -1246,15 +1246,39 @@ def publish_from_cloud_view(request, pk):
     detected_academic_year = parsed["detected_academic_year"] or ""
     initial_title = parsed["clean_title"] or cloud_file.title.replace("Épreuve — ", "").replace(".pdf", "").strip()
 
-    form = ExamAdminForm(initial={
+    # Recherche automatique du corrigé et du résumé associés dans le Cloud Storage
+    auto_corr_cloud = None
+    auto_sum_cloud = None
+
+    if detected_subject_name:
+        corr_qs = CloudFile.objects.filter(file_type="CORRECTION").filter(
+            Q(title__icontains=detected_subject_name) | Q(title__icontains=cloud_file.title)
+        )
+        if target_filiere:
+            corr_qs = corr_qs.filter(Q(filiere=target_filiere) | Q(filiere__isnull=True))
+        auto_corr_cloud = corr_qs.first()
+
+        sum_qs = CloudFile.objects.filter(file_type="SUMMARY").filter(
+            Q(title__icontains=detected_subject_name) | Q(title__icontains=cloud_file.title)
+        )
+        if target_filiere:
+            sum_qs = sum_qs.filter(Q(filiere=target_filiere) | Q(filiere__isnull=True))
+        auto_sum_cloud = sum_qs.first()
+
+    form_initial = {
         "title": initial_title,
         "subject_name": detected_subject_name,
-        "year": detected_academic_year,
+        "year": detected_academic_year or "2025-2026",
+        "exam_type": "examen",
+        "is_published": "True",
+        "is_free": "False",
         "cloud_file": cloud_file if cloud_file.file_type == "EXAM" else None,
-        "cloud_correction_file": cloud_file if cloud_file.file_type == "CORRECTION" else None,
-        "cloud_summary_file": cloud_file if cloud_file.file_type == "SUMMARY" else None,
+        "cloud_correction_file": cloud_file if cloud_file.file_type == "CORRECTION" else auto_corr_cloud,
+        "cloud_summary_file": cloud_file if cloud_file.file_type == "SUMMARY" else auto_sum_cloud,
         "semester": cloud_file.semester or active_semester,
-    }, active_filiere=target_filiere, active_semester=cloud_file.semester or active_semester)
+    }
+
+    form = ExamAdminForm(initial=form_initial, active_filiere=target_filiere, active_semester=cloud_file.semester or active_semester)
 
     context = {
         "active_school": active_school,
@@ -1264,9 +1288,83 @@ def publish_from_cloud_view(request, pk):
         "form": form,
         "is_create": True,
         "selected_cloud_file": cloud_file,
+        "auto_corr_cloud": auto_corr_cloud,
+        "auto_sum_cloud": auto_sum_cloud,
         "parsed_info": parsed,
     }
     return render(request, "contributors/exams/form.html", context)
+
+
+@contributor_required
+def publish_subject_cloud_exams_view(request, subject_id):
+    """
+    Publie directement sur le site public TOUTES les épreuves et corrigés d'une UE stockés sur le Cloud Storage.
+    """
+    subject = get_object_or_404(Subject.objects.select_related("semester", "semester__filiere", "semester__filiere__school"), pk=subject_id)
+    if not check_school_permission(request.user, subject.semester.filiere.school):
+        raise PermissionDenied("Vous n'êtes pas autorisé à publier le contenu de cette université.")
+
+    target_semester = subject.semester
+    target_filiere = target_semester.filiere
+
+    # Recherche des CloudFiles associés à cette UE ou correspondant au nom de la matière
+    cloud_files = CloudFile.objects.filter(file_type="EXAM").filter(
+        Q(semester=target_semester) | Q(filiere=target_filiere) | Q(title__icontains=subject.name)
+    )
+
+    published_count = 0
+    with_corr_count = 0
+
+    for cf in cloud_files:
+        # Vérifier si déjà publiée
+        existing_exam = Exam.objects.filter(Q(cloud_file=cf) | Q(file=cf.file), subject=subject).first()
+        if existing_exam:
+            existing_exam.is_published = True
+            existing_exam.save()
+            published_count += 1
+            continue
+
+        parsed = parse_exam_filename(cf.title, available_subjects=[subject])
+        yr_label = parsed["detected_academic_year"] or "2025-2026"
+        if "-" in yr_label:
+            ay_obj, _ = AcademicYear.objects.get_or_create(label=yr_label)
+            yr_int = int(yr_label.split("-")[1])
+        else:
+            yr_int = 2025
+            ay_obj = target_semester.academic_year or AcademicYear.objects.first()
+
+        # Recherche du corrigé automatique
+        corr_cf = CloudFile.objects.filter(
+            file_type="CORRECTION"
+        ).filter(
+            Q(semester=target_semester) | Q(filiere=target_filiere) | Q(title__icontains=subject.name)
+        ).first()
+
+        exam = Exam.objects.create(
+            title=parsed["clean_title"] or cf.title.replace(".pdf", ""),
+            subject=subject,
+            semester=target_semester,
+            filiere=target_filiere,
+            level=target_filiere.level,
+            academic_year=ay_obj,
+            year=yr_int,
+            exam_type="examen",
+            cloud_file=cf,
+            file=cf.file if cf.file else None,
+            cloud_correction_file=corr_cf,
+            correction_file=corr_cf.file if (corr_cf and corr_cf.file) else None,
+            is_free=False,
+            is_published=True,
+        )
+        published_count += 1
+        if corr_cf:
+            with_corr_count += 1
+
+    messages.success(
+        request,
+        f"✅ {published_count} épreuve(s) pour l'UE « {subject.name} » ont été publiées sur le site public ({with_corr_count} avec corrigé)."
+    )
+    return redirect("contributors:library_index")
 
 
 @contributor_required
