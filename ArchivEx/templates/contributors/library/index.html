@@ -93,17 +93,31 @@
                     </div>
 
                     {% if ue_name != "Noms non conformes / Non classés" %}
-                        <form method="post" action="{% url 'contributors:publish_cloud_folder' %}" class="inline-block self-start sm:self-auto">
-                            {% csrf_token %}
-                            <input type="hidden" name="ue_name" value="{{ ue_name }}">
-                            {% if files.0.parsed_info.matched_subject %}
-                                <input type="hidden" name="subject_id" value="{{ files.0.parsed_info.matched_subject.id }}">
-                            {% endif %}
-                            <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm">
-                                <i class="fa-solid fa-bolt text-xs"></i>
-                                <span>Publier l'UE complète (Sujets + Corrigés)</span>
-                            </button>
-                        </form>
+                        <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                            <form method="post" action="{% url 'contributors:publish_cloud_folder' %}" class="inline-block">
+                                {% csrf_token %}
+                                <input type="hidden" name="ue_name" value="{{ ue_name }}">
+                                {% if files.0.parsed_info.matched_subject %}
+                                    <input type="hidden" name="subject_id" value="{{ files.0.parsed_info.matched_subject.id }}">
+                                {% endif %}
+                                <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm">
+                                    <i class="fa-solid fa-bolt text-xs"></i>
+                                    <span>Publier l'UE complète</span>
+                                </button>
+                            </form>
+
+                            <form method="post" action="{% url 'contributors:delete_cloud_folder' %}" onsubmit="return confirm('Attention ! Souhaitez-vous vraiment supprimer définitivement l\'UE « {{ ue_name|escapejs }} », toutes ses épreuves publiées sur le site public, ses corrigés et ses fichiers Cloud sans laisser de trace ?');" class="inline-block">
+                                {% csrf_token %}
+                                <input type="hidden" name="ue_name" value="{{ ue_name }}">
+                                {% if files.0.parsed_info.matched_subject %}
+                                    <input type="hidden" name="subject_id" value="{{ files.0.parsed_info.matched_subject.id }}">
+                                {% endif %}
+                                <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                    <span>Tout supprimer (UE + Site public)</span>
+                                </button>
+                            </form>
+                        </div>
                     {% endif %}
                 </div>
 

@@ -18,6 +18,7 @@ urlpatterns = [
     path("library/<int:pk>/supprimer/", views.cloud_file_delete_view, name="cloud_file_delete"),
     path("library/<int:pk>/publier/", views.publish_from_cloud_view, name="publish_from_cloud"),
     path("library/publish-folder/", views.publish_cloud_folder_view, name="publish_cloud_folder"),
+    path("library/delete-folder/", views.delete_cloud_folder_view, name="delete_cloud_folder"),
     path("library/<int:pk>/download-original/<str:file_type>/", views.library_download_original_view, name="library_download_original"),
     path("epreuves/", views.exam_list_view, name="exam_list"),
     path("epreuves/ajouter/", views.exam_create_view, name="exam_create"),
