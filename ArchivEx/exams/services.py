@@ -59,8 +59,24 @@ def apply_student_watermark(pdf_source, user):
         text_lines.extend(["ArchivEx — Consultation personnelle", now_str])
 
         for page in reader.pages:
-            width = float(page.mediabox.width)
-            height = float(page.mediabox.height)
+            width = 595.27
+            height = 841.89
+            try:
+                if hasattr(page, "mediabox") and page.mediabox:
+                    width = float(page.mediabox.width)
+                    height = float(page.mediabox.height)
+            except Exception:
+                try:
+                    if hasattr(page, "cropbox") and page.cropbox:
+                        width = float(page.cropbox.width)
+                        height = float(page.cropbox.height)
+                except Exception:
+                    pass
+
+            if not width or width <= 0:
+                width = 595.27
+            if not height or height <= 0:
+                height = 841.89
 
             wm_buf = BytesIO()
             c = canvas.Canvas(wm_buf, pagesize=(width, height))
