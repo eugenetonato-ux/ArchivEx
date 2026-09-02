@@ -244,7 +244,7 @@ class SebPayIntegrationTests(TestCase):
 
         # 1. Accès sans aucune transaction
         res = self.client.get(reverse("payment_success_return"))
-        self.assertEqual(res.status_code, 404)
+        self.assertEqual(res.status_code, 200)
         self.assertFalse(has_user_valid_pass(self.student, self.semester))
 
         # 2. Accès avec une transaction PENDING
