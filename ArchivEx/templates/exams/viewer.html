@@ -64,11 +64,46 @@
         </div>
     </div>
 
-    <!-- WATERMARK NOTICE ALERT -->
-    <div class="p-3.5 sm:p-4 rounded-2xl bg-amber-50/90 border border-amber-200/70 text-amber-900 flex items-center justify-between text-xs font-semibold mb-6">
-        <div class="flex items-center space-x-2.5">
-            <i class="fa-solid fa-user-shield text-amber-600 text-sm" aria-hidden="true"></i>
-            <span>Document personnalisé au nom de <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>. Consultation personnelle exclusive.</span>
+    <!-- SECURITY RULES ACTIVE BADGES BAR -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-600 flex items-center justify-center font-bold text-xs">
+                <i class="fa-solid fa-fingerprint" aria-hidden="true"></i>
+            </div>
+            <div>
+                <p class="text-[11px] font-black text-slate-800 leading-tight">Filigrane Numérique</p>
+                <p class="text-[10px] font-medium text-slate-500">{{ request.user.get_full_name|default:request.user.username }}</p>
+            </div>
+        </div>
+
+        <div class="p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-600 flex items-center justify-center font-bold text-xs">
+                <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+            </div>
+            <div>
+                <p class="text-[11px] font-black text-slate-800 leading-tight">Anti-Téléchargement</p>
+                <p class="text-[10px] font-medium text-slate-500">Flux PDF protégé</p>
+            </div>
+        </div>
+
+        <div class="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-600 flex items-center justify-center font-bold text-xs">
+                <i class="fa-solid fa-lock" aria-hidden="true"></i>
+            </div>
+            <div>
+                <p class="text-[11px] font-black text-slate-800 leading-tight">Raccourcis Bloqués</p>
+                <p class="text-[10px] font-medium text-slate-500">Ctrl+P, Ctrl+S, F12</p>
+            </div>
+        </div>
+
+        <div class="p-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-600 flex items-center justify-center font-bold text-xs">
+                <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
+            </div>
+            <div>
+                <p class="text-[11px] font-black text-slate-800 leading-tight">Floutage Hors-Onglet</p>
+                <p class="text-[10px] font-medium text-slate-500">Masqué si changement d'onglet</p>
+            </div>
         </div>
     </div>
 
@@ -81,8 +116,17 @@
             <p class="text-xs font-bold text-[#071A49]">Chargement sécurisé du document PDF...</p>
         </div>
 
+        <!-- TAB SWITCH SECURITY BLUR MASK (ONLY SHOWN WHEN USER SWITCHES BROWSER TABS) -->
+        <div id="tab-blur-mask" class="absolute inset-0 z-40 bg-[#071a49]/95 backdrop-blur-md hidden flex-col items-center justify-center text-center p-6 transition-all duration-150">
+            <div class="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-amber-300 flex items-center justify-center text-2xl mb-3 shadow-lg">
+                <i class="fa-solid fa-user-shield" aria-hidden="true"></i>
+            </div>
+            <h3 class="text-white font-extrabold text-lg mb-1">Protection ArchivEx Active</h3>
+            <p class="text-blue-200 text-xs max-w-md">Le document est temporairement flouté pendant que vous consultez un autre onglet du navigateur.</p>
+        </div>
+
         <!-- FLOATING DYNAMIC HTML WATERMARK OVERLAY (BURNS USER IDENTITY INTO SCREENSHOTS & PHOTOS) -->
-        <div class="absolute inset-0 z-20 pointer-events-none overflow-hidden select-none opacity-20 flex flex-wrap content-start p-4 gap-12" aria-hidden="true">
+        <div class="absolute inset-0 z-20 pointer-events-none overflow-hidden select-none opacity-25 flex flex-wrap content-start p-4 gap-12" aria-hidden="true">
             {% for i in "123456789012" %}
                 <div class="transform -rotate-12 text-slate-400 text-xs font-black tracking-widest uppercase">
                     {{ request.user.get_full_name|default:request.user.username }} • {{ request.user.email }} • ArchivEx
@@ -96,7 +140,17 @@
 </div>
 
 <script>
-    // BLOCK SENSITIVE KEYBOARD SHORTCUTS (PRINT, SAVE, INSPECT)
+    // 1. SMART TAB SWITCH PROTECTION (FLOUTAGE SEULEMENT LORSQU'ON QUITTE L'ONGLET)
+    const tabBlurMask = document.getElementById('tab-blur-mask');
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            if (tabBlurMask) tabBlurMask.classList.remove('hidden');
+        } else {
+            if (tabBlurMask) tabBlurMask.classList.add('hidden');
+        }
+    });
+
+    // 2. BLOCK SENSITIVE KEYBOARD SHORTCUTS (PRINT, SAVE, INSPECT)
     document.addEventListener('keydown', (e) => {
         // Ctrl+P (Print), Ctrl+S (Save), F12, Ctrl+Shift+I (Inspect)
         if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S' || e.key === 'u' || e.key === 'U')) {
