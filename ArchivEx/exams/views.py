@@ -379,19 +379,21 @@ def stream_watermarked_pdf_view(request, pk):
         messages.error(request, "Le fichier demandé est introuvable sur le serveur.")
         return redirect("exams:detail", pk=exam.pk)
 
-    if isinstance(file_obj, str):
-        try:
-            watermarked_io = apply_student_watermark(file_obj, request.user)
-        except Exception:
+    try:
+        watermarked_io = apply_student_watermark(file_obj, request.user)
+    except Exception:
+        if isinstance(file_obj, str):
             watermarked_io = open(file_obj, "rb")
+        elif hasattr(file_obj, "open"):
+            watermarked_io = file_obj.open("rb")
+        else:
+            return redirect(getattr(file_obj, "url", "/"))
 
-        response = FileResponse(
-            watermarked_io,
-            content_type="application/pdf"
-        )
-        subj_name = exam.subject.name if exam.subject else "Document"
-        safe_filename = f"ArchivEx_{res_type}_{subj_name}_{exam.year}.pdf".replace(" ", "_")
-        response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
-        return response
-    else:
-        return redirect(file_obj.url)
+    response = FileResponse(
+        watermarked_io,
+        content_type="application/pdf"
+    )
+    subj_name = exam.subject.name if exam.subject else "Document"
+    safe_filename = f"ArchivEx_{res_type}_{subj_name}_{exam.year}.pdf".replace(" ", "_")
+    response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
+    return response
