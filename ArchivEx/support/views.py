@@ -247,7 +247,7 @@ Merci d'utiliser ArchivEx !
                     except Exception as err:
                         logger.error(f"Erreur d'envoi d'email de réponse invité : {err}")
 
-                messages.success(request, "✅ Réponse enregistrée et envoyée avec succès.")
+                messages.success(request, "Réponse enregistrée et envoyée avec succès.")
                 return redirect("contributors:admin_support_detail", pk=pk)
 
         elif action == "set_status":

@@ -395,7 +395,7 @@ def exam_create_view(request):
             exam.save()
 
             status_str = "publiée" if exam.is_published else "enregistrée en brouillon"
-            messages.success(request, f"Épreuve « {exam.title} » {status_str} avec succès pour {exam.subject.name}.")
+            messages.success(request, f"Épreuve « {exam.title} » publiée avec succès sur le site public pour {exam.subject.name}.")
             return redirect("contributors:exam_list")
     else:
         form = ExamAdminForm(active_filiere=active_filiere, active_semester=active_semester)
@@ -1265,20 +1265,71 @@ def publish_from_cloud_view(request, pk):
             sum_qs = sum_qs.filter(Q(filiere=target_filiere) | Q(filiere__isnull=True))
         auto_sum_cloud = sum_qs.first()
 
-    form_initial = {
-        "title": initial_title,
-        "subject_name": detected_subject_name,
-        "year": detected_academic_year or "2025-2026",
-        "exam_type": "examen",
-        "is_published": "True",
-        "is_free": "False",
-        "cloud_file": cloud_file if cloud_file.file_type == "EXAM" else None,
-        "cloud_correction_file": cloud_file if cloud_file.file_type == "CORRECTION" else auto_corr_cloud,
-        "cloud_summary_file": cloud_file if cloud_file.file_type == "SUMMARY" else auto_sum_cloud,
-        "semester": cloud_file.semester or active_semester,
-    }
+    if request.method == "POST":
+        form = ExamAdminForm(request.POST, request.FILES, active_filiere=target_filiere, active_semester=cloud_file.semester or active_semester)
+        if form.is_valid():
+            exam = form.save(commit=False)
 
-    form = ExamAdminForm(initial=form_initial, active_filiere=target_filiere, active_semester=cloud_file.semester or active_semester)
+            target_semester = form.cleaned_data.get("semester") or cloud_file.semester or active_semester
+            if not target_semester and target_filiere:
+                target_semester = Semester.objects.filter(filiere=target_filiere).first()
+            if not target_semester and target_filiere:
+                target_semester = Semester.objects.create(filiere=target_filiere, label="Semestre 1", number=1)
+
+            exam.semester = target_semester
+            exam.filiere = target_semester.filiere
+            exam.level = target_semester.filiere.level
+
+            subject_name = form.cleaned_data["subject_name"].strip()
+            subject = Subject.objects.filter(semester=target_semester, name__iexact=subject_name).first()
+            if not subject:
+                subject = Subject.objects.create(
+                    semester=target_semester,
+                    name=subject_name,
+                    is_active=True
+                )
+            exam.subject = subject
+
+            raw_year_input = str(request.POST.get("year", "")).strip()
+            if raw_year_input:
+                if "-" in raw_year_input:
+                    ay_obj, _ = AcademicYear.objects.get_or_create(label=raw_year_input)
+                elif raw_year_input.isdigit():
+                    yr_i = int(raw_year_input)
+                    lbl = f"{yr_i-1}-{yr_i}"
+                    ay_obj, _ = AcademicYear.objects.get_or_create(label=lbl)
+                else:
+                    ay_obj = None
+                if ay_obj:
+                    exam.academic_year = ay_obj
+            elif not getattr(exam, "academic_year_id", None):
+                exam.academic_year = AcademicYear.objects.first()
+
+            exam.is_free = form.cleaned_data["is_free"]
+            exam.is_published = form.cleaned_data["is_published"]
+
+            _process_exam_cloud_files(form, exam, target_semester, active_school, target_filiere, active_semester, request.user)
+
+            exam.save()
+
+            messages.success(request, f"Épreuve « {exam.title} » publiée avec succès sur le site public pour {exam.subject.name}.")
+            return redirect("contributors:exam_list")
+        else:
+            messages.error(request, "Veuillez corriger les erreurs du formulaire pour valider la publication.")
+    else:
+        form_initial = {
+            "title": initial_title,
+            "subject_name": detected_subject_name,
+            "year": detected_academic_year or "2025-2026",
+            "exam_type": "examen",
+            "is_published": "True",
+            "is_free": "False",
+            "cloud_file": cloud_file if cloud_file.file_type == "EXAM" else None,
+            "cloud_correction_file": cloud_file if cloud_file.file_type == "CORRECTION" else auto_corr_cloud,
+            "cloud_summary_file": cloud_file if cloud_file.file_type == "SUMMARY" else auto_sum_cloud,
+            "semester": cloud_file.semester or active_semester,
+        }
+        form = ExamAdminForm(initial=form_initial, active_filiere=target_filiere, active_semester=cloud_file.semester or active_semester)
 
     context = {
         "active_school": active_school,
@@ -1296,27 +1347,58 @@ def publish_from_cloud_view(request, pk):
 
 
 @contributor_required
-def publish_subject_cloud_exams_view(request, subject_id):
+def publish_cloud_folder_view(request):
     """
-    Publie directement sur le site public TOUTES les épreuves et corrigés d'une UE stockés sur le Cloud Storage.
+    Publie directement sur le site public TOUTES les épreuves et corrigés d'un dossier / d'une UE depuis la bibliothèque Cloud.
     """
-    subject = get_object_or_404(Subject.objects.select_related("semester", "semester__filiere", "semester__filiere__school"), pk=subject_id)
-    if not check_school_permission(request.user, subject.semester.filiere.school):
-        raise PermissionDenied("Vous n'êtes pas autorisé à publier le contenu de cette université.")
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
+    subject_id = request.POST.get("subject_id") or request.GET.get("subject_id")
+    ue_name = request.POST.get("ue_name") or request.GET.get("ue_name") or ""
+
+    if ue_name == "Noms non conformes / Non classés":
+        messages.warning(request, "Impossible de publier l'UE globale pour les fichiers non classés. Veuillez d'abord les renommer ou les publier individuellement.")
+        return redirect("contributors:library_index")
+
+    subject = None
+    if subject_id:
+        subject = Subject.objects.filter(pk=subject_id).first()
+
+    if not subject and ue_name:
+        target_semester = active_semester
+        if not target_semester and active_filiere:
+            target_semester = Semester.objects.filter(filiere=active_filiere).first()
+        if not target_semester and active_school:
+            target_filiere_obj = Filiere.objects.filter(school=active_school).first()
+            if target_filiere_obj:
+                target_semester = Semester.objects.filter(filiere=target_filiere_obj).first()
+
+        if not target_semester:
+            target_semester = Semester.objects.first()
+
+        subject, _ = Subject.objects.get_or_create(
+            name=ue_name.strip(),
+            semester=target_semester,
+            defaults={"is_active": True}
+        )
+
+    if not subject:
+        messages.error(request, "Impossible d'identifier ou de créer l'UE à publier.")
+        return redirect("contributors:library_index")
 
     target_semester = subject.semester
     target_filiere = target_semester.filiere
 
-    # Recherche des CloudFiles associés à cette UE ou correspondant au nom de la matière
     cloud_files = CloudFile.objects.filter(file_type="EXAM").filter(
         Q(semester=target_semester) | Q(filiere=target_filiere) | Q(title__icontains=subject.name)
     )
 
+    if not cloud_files.exists():
+        cloud_files = CloudFile.objects.filter(file_type="EXAM", title__icontains=subject.name)
+
     published_count = 0
     with_corr_count = 0
 
-    for cf in cloud_files:
-        # Vérifier si déjà publiée
+    for cf in list(cloud_files):
         existing_exam = Exam.objects.filter(Q(cloud_file=cf) | Q(file=cf.file), subject=subject).first()
         if existing_exam:
             existing_exam.is_published = True
@@ -1333,7 +1415,6 @@ def publish_subject_cloud_exams_view(request, subject_id):
             yr_int = 2025
             ay_obj = target_semester.academic_year or AcademicYear.objects.first()
 
-        # Recherche du corrigé automatique
         corr_cf = CloudFile.objects.filter(
             file_type="CORRECTION"
         ).filter(
@@ -1362,7 +1443,7 @@ def publish_subject_cloud_exams_view(request, subject_id):
 
     messages.success(
         request,
-        f"✅ {published_count} épreuve(s) pour l'UE « {subject.name} » ont été publiées sur le site public ({with_corr_count} avec corrigé)."
+        f"{published_count} épreuve(s) pour l'UE « {subject.name} » ont été publiées sur le site public ({with_corr_count} avec corrigé rattaché)."
     )
     return redirect("contributors:library_index")
 

@@ -2,8 +2,8 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 class User(AbstractUser):
-    """Utilisateur ArchivEx (étudiant ou administrateur)."""
-    pass
+ """Utilisateur ArchivEx (étudiant ou administrateur)."""
+ pass
 
 
 class StudentProfile(models.Model):
@@ -27,5 +27,5 @@ class Favorite(models.Model):
         unique_together = ("user", "exam")
 
     def __str__(self):
-        return f"{self.user.username} ❤ {self.exam.title}"
-    
+        return f"{self.user.username} {self.exam.title}"
+ 

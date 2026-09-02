@@ -89,6 +89,16 @@ class ExamAdminForm(forms.ModelForm):
         })
     )
 
+    year = forms.CharField(
+        max_length=20,
+        required=True,
+        label="Année académique",
+        widget=forms.TextInput(attrs={
+            "class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]",
+            "placeholder": "Ex: 2025-2026"
+        })
+    )
+
     is_free = forms.ChoiceField(
         choices=ACCESS_CHOICES,
         label="Niveau d'accès",

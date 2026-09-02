@@ -92,11 +92,18 @@
                         </div>
                     </div>
 
-                    {% if files.0.parsed_info.matched_subject %}
-                        <a href="{% url 'contributors:publish_subject_cloud' subject_id=files.0.parsed_info.matched_subject.id %}" class="px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm self-start sm:self-auto">
-                            <i class="fa-solid fa-bolt text-xs"></i>
-                            <span>Publier l'UE complète (Sujets + Corrigés)</span>
-                        </a>
+                    {% if ue_name != "Noms non conformes / Non classés" %}
+                        <form method="post" action="{% url 'contributors:publish_cloud_folder' %}" class="inline-block self-start sm:self-auto">
+                            {% csrf_token %}
+                            <input type="hidden" name="ue_name" value="{{ ue_name }}">
+                            {% if files.0.parsed_info.matched_subject %}
+                                <input type="hidden" name="subject_id" value="{{ files.0.parsed_info.matched_subject.id }}">
+                            {% endif %}
+                            <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm">
+                                <i class="fa-solid fa-bolt text-xs"></i>
+                                <span>Publier l'UE complète (Sujets + Corrigés)</span>
+                            </button>
+                        </form>
                     {% endif %}
                 </div>
 

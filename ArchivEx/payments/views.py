@@ -111,14 +111,7 @@ def initier_paiement(request, semester_id):
         status=Payment.STATUS_PENDING,
     )
 
-    # 1. Si un SEBPAY_PAYMENT_URL officiel est configuré dans l'environnement
-    payment_url = getattr(settings, "SEBPAY_PAYMENT_URL", "").strip()
-    if payment_url:
-        separator = "&" if "?" in payment_url else "?"
-        redirect_url = f"{payment_url}{separator}external_reference={payment.external_reference}&amount={payment.amount}"
-        return redirect(redirect_url)
-
-    # 2. Sinon, solliciter l'API d'encaissement SEBPay
+    # 1. Tenter la demande d'encaissement automatique auprès de SebPay API
     sebpay_res = create_sebpay_collection(payment)
     if sebpay_res.get("success"):
         res_data = sebpay_res.get("data", {})
@@ -126,7 +119,15 @@ def initier_paiement(request, semester_id):
         if provider_link:
             return redirect(provider_link)
 
-    return redirect("payments:payment_return", reference=payment.external_reference)
+    # 2. Si un SEBPAY_PAYMENT_URL externe actif et valide est configuré (hors URL 404)
+    payment_url = getattr(settings, "SEBPAY_PAYMENT_URL", "").strip()
+    if payment_url and "pass-semestre-archivex-7hvUb1" not in payment_url:
+        separator = "&" if "?" in payment_url else "?"
+        redirect_url = f"{payment_url}{separator}external_reference={payment.external_reference}&amount={payment.amount}"
+        return redirect(redirect_url)
+
+    # 3. Par défaut, diriger vers l'écran d'attente et de vérification Mobile Money ArchivEx
+    return redirect("payments:payment_pending", reference=payment.external_reference)
 
 
 @login_required
