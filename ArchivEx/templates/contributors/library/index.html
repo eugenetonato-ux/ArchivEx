@@ -190,7 +190,7 @@
                                                  <i class="fa-solid fa-pen text-[10px]" aria-hidden="true"></i>
                                                  <span>Modifier</span>
                                              </a>
-                                             <button type="button" onclick="openDeleteModal('{% url 'contributors:cloud_file_delete' pk=cloud_file.id %}', '{{ cloud_file.title|escapejs }}')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-bold transition-colors inline-flex items-center space-x-1" title="Supprimer l'épreuve">
+                                             <button type="button" onclick="openDeleteModal('{% url \'contributors:cloud_file_delete\' pk=cloud_file.id %}', '{{ cloud_file.title|escapejs }}', 'Supprimer du Cloud Storage ?', 'Ce fichier PDF original sera définitivement supprimé du stockage Cloud.')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-bold transition-colors inline-flex items-center space-x-1" title="Supprimer l'épreuve du Cloud Storage">
                                                  <i class="fa-solid fa-trash text-[10px]" aria-hidden="true"></i>
                                              </button>
                                          </div>

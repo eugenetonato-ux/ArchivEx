@@ -208,20 +208,21 @@
                 <i class="fa-solid fa-triangle-exclamation"></i>
             </div>
             <div>
-                <h3 class="text-lg font-black text-[#071A49]">Confirmer la suppression ?</h3>
-                <p class="text-xs text-slate-500 font-medium mt-1">Cette action est définitive et irréversible.</p>
-                <div id="delete-modal-item-label" class="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs font-black text-[#071A49] truncate">
+                <h3 id="delete-modal-title" class="text-lg font-black text-[#071A49]">Confirmer la suppression ?</h3>
+                <p id="delete-modal-warning" class="text-xs text-slate-500 font-medium mt-1">Cette action est définitive et irréversible.</p>
+                <div id="delete-modal-item-label" class="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs font-black text-[#071A49] break-words">
                     Élément sélectionné
                 </div>
             </div>
             <form id="delete-modal-form" method="post" action="">
                 {% csrf_token %}
                 <div class="flex items-center justify-center space-x-3 pt-2">
-                    <button type="button" onclick="closeDeleteModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors">
+                    <button type="button" onclick="closeDeleteModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors">
                         Annuler
                     </button>
-                    <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl transition-colors shadow-md shadow-rose-600/20">
-                        Supprimer définitivement
+                    <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl transition-colors shadow-md shadow-rose-600/20 inline-flex items-center space-x-1.5">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                        <span>Confirmer la suppression</span>
                     </button>
                 </div>
             </form>
@@ -263,14 +264,18 @@
             }
         }
 
-        function openDeleteModal(actionUrl, itemLabel) {
+        function openDeleteModal(actionUrl, itemLabel, customTitle, customWarning) {
             const modal = document.getElementById('archivex-delete-modal');
             const card = document.getElementById('archivex-delete-card');
             const form = document.getElementById('delete-modal-form');
             const labelElem = document.getElementById('delete-modal-item-label');
+            const titleElem = document.getElementById('delete-modal-title');
+            const warningElem = document.getElementById('delete-modal-warning');
             if (modal && form && labelElem) {
                 form.action = actionUrl;
                 labelElem.textContent = itemLabel || 'Élément sélectionné';
+                if (titleElem) titleElem.textContent = customTitle || 'Confirmer la suppression ?';
+                if (warningElem) warningElem.textContent = customWarning || 'Cette action est définitive et irréversible.';
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
                 setTimeout(() => {
