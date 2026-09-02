@@ -77,11 +77,8 @@
                     <input type="password" id="id_password_field" name="password" required placeholder="Votre mot de passe" class="w-full pl-10 pr-11 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-[#071A49] placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 transition-all font-medium">
 
                     <!-- EYE ICON TO TOGGLE SHOW/HIDE PASSWORD -->
-                    <button type="button" onclick="togglePasswordVisibility('id_password_field', 'eye-icon-svg')" class="absolute right-3.5 text-slate-400 hover:text-slate-600 focus:outline-none" title="Afficher/Masquer le mot de passe">
-                        <svg id="eye-icon-svg" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                        </svg>
+                    <button type="button" onclick="toggleStudentLoginPasswordVisibility()" class="absolute right-3.5 text-slate-400 hover:text-slate-600 focus:outline-none" title="Afficher/Masquer le mot de passe">
+                        <i id="student-login-eye-icon" class="fa-solid fa-eye text-sm"></i>
                     </button>
                 </div>
                 {% if form.password.errors %}
@@ -121,19 +118,19 @@
 
 <!-- JAVASCRIPT FOR EYE ICON PASSWORD SHOW/HIDE TOGGLE -->
 <script>
-    function togglePasswordVisibility(inputId, eyeIconId) {
-        const passwordInput = document.getElementById(inputId);
-        const eyeIcon = document.getElementById(eyeIconId);
+    function toggleStudentLoginPasswordVisibility() {
+        const passwordInput = document.getElementById("id_password_field");
+        const eyeIcon = document.getElementById("student-login-eye-icon");
         
         if (passwordInput && eyeIcon) {
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
-                // Eye slash SVG icon
-                eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858-5.908a10.04 10.04 0 013.122-.563c4.478 0 8.268 2.943 9.542 7a9.97 9.97 0 01-2.022 3.655M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"></path>';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
             } else {
                 passwordInput.type = 'password';
-                // Normal Eye SVG icon
-                eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
             }
         }
     }

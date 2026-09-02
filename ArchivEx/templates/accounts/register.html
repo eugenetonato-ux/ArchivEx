@@ -51,7 +51,12 @@
 
             <div>
                 <label class="block text-[11px] font-extrabold tracking-wider text-[#071A49] uppercase mb-1.5">Mot de passe</label>
-                {{ form.password }}
+                <div class="relative flex items-center">
+                    {{ form.password }}
+                    <button type="button" onclick="toggleRegisterPasswordVisibility()" class="absolute right-3.5 text-slate-400 hover:text-slate-600 focus:outline-none" title="Afficher/Masquer le mot de passe">
+                        <i id="register-eye-icon" class="fa-solid fa-eye text-sm"></i>
+                    </button>
+                </div>
                 {% if form.password.errors %}
                     <p class="text-xs text-rose-600 font-semibold mt-1">{{ form.password.errors.0 }}</p>
                 {% endif %}
@@ -104,6 +109,22 @@
 </div>
 
 <script>
+    function toggleRegisterPasswordVisibility() {
+        const pwdInput = document.getElementById("id_password");
+        const eyeIcon = document.getElementById("register-eye-icon");
+        if (pwdInput && eyeIcon) {
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            } else {
+                pwdInput.type = 'password';
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
+        }
+    }
+
 document.addEventListener("DOMContentLoaded", function() {
     const schoolSelect = document.getElementById("id_school");
     const levelSelect = document.getElementById("id_level");
