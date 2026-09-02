@@ -19,8 +19,8 @@ class Exam(models.Model):
 
     level = models.ForeignKey("academics.Level", on_delete=models.PROTECT)
     academic_year = models.ForeignKey("academics.AcademicYear", on_delete=models.PROTECT)
-    exam_type = models.CharField(max_length=20, choices=EXAM_TYPE_CHOICES)
-    year = models.PositiveIntegerField()
+    exam_type = models.CharField(max_length=20, choices=EXAM_TYPE_CHOICES, db_index=True)
+    year = models.PositiveIntegerField(db_index=True)
     description = models.TextField(blank=True)
     file = models.FileField(upload_to="exams/", help_text="Fichier PDF de l'épreuve")
     correction_file = models.FileField(upload_to="corrections/", blank=True, null=True, help_text="Fichier PDF de la correction (optionnel)")
@@ -31,9 +31,9 @@ class Exam(models.Model):
     cloud_correction_file = models.ForeignKey("content.CloudFile", on_delete=models.SET_NULL, blank=True, null=True, related_name="exams_as_correction", help_text="Fichier Cloud de la correction")
     cloud_summary_file = models.ForeignKey("content.CloudFile", on_delete=models.SET_NULL, blank=True, null=True, related_name="exams_as_summary", help_text="Fichier Cloud du résumé")
 
-    is_free = models.BooleanField(default=False)
-    is_published = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    is_free = models.BooleanField(default=False, db_index=True)
+    is_published = models.BooleanField(default=False, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):

@@ -163,7 +163,14 @@ def payment_return_view(request, reference=None):
         payment = Payment.objects.filter(user=request.user).select_related("semester", "semester__filiere").first()
 
     if not payment:
-        raise Http404("Aucune transaction de paiement trouvée.")
+        first_sem = Semester.objects.first()
+        return render(request, "payments/return.html", {
+            "payment": None,
+            "semester": first_sem,
+            "is_approved": False,
+            "is_pending": False,
+            "is_rejected": True,
+        })
 
     # Synchronisation complémentaire auprès de SEBPay si encore PENDING
     if payment.is_pending:

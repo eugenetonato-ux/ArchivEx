@@ -56,9 +56,9 @@ class Payment(models.Model):
     external_reference = models.CharField(max_length=64, unique=True, null=True, blank=True)
     sebpay_transaction_id = models.CharField(max_length=100, blank=True)
     
-    status = models.CharField(max_length=20, choices=STATUT_CHOICES, default=STATUS_PENDING)
+    status = models.CharField(max_length=20, choices=STATUT_CHOICES, default=STATUS_PENDING, db_index=True)
     paid_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
