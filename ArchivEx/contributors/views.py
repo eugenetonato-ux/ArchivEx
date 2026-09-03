@@ -872,7 +872,7 @@ def subject_create_view(request):
     active_school, active_filiere, active_semester = get_active_academic_context(request)
 
     if request.method == "POST":
-        form = SubjectAdminForm(request.POST, active_filiere=active_filiere)
+        form = SubjectAdminForm(request.POST, request.FILES, active_filiere=active_filiere)
         if form.is_valid():
             sb = form.save()
             messages.success(request, f"Matière « {sb.name} » créée avec succès.")
@@ -899,7 +899,7 @@ def subject_edit_view(request, pk):
     active_school, active_filiere, active_semester = get_active_academic_context(request)
 
     if request.method == "POST":
-        form = SubjectAdminForm(request.POST, instance=sb, active_filiere=sb.semester.filiere)
+        form = SubjectAdminForm(request.POST, request.FILES, instance=sb, active_filiere=sb.semester.filiere)
         if form.is_valid():
             form.save()
             messages.success(request, f"Matière « {sb.name} » mise à jour.")

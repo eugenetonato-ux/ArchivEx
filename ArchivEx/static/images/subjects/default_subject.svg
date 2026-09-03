@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#071A49" />
+      <stop offset="50%" stop-color="#0F2C6E" />
+      <stop offset="100%" stop-color="#1E3A8A" />
+    </linearGradient>
+
+    <!-- Accent Glow Gradient -->
+    <radialGradient id="glowGrad" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.35" />
+      <stop offset="50%" stop-color="#2563EB" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#071A49" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Gold Accent Gradient -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE68A" />
+      <stop offset="50%" stop-color="#FBBF24" />
+      <stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+
+    <!-- Soft Glass Gradient -->
+    <linearGradient id="glassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.04" />
+    </linearGradient>
+
+    <!-- Filter for soft shadow -->
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.35" />
+    </filter>
+
+    <filter id="badgeShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#071A49" flood-opacity="0.5" />
+    </filter>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="600" height="600" fill="url(#bgGrad)" />
+
+  <!-- Radial Ambient Light -->
+  <rect width="600" height="600" fill="url(#glowGrad)" />
+
+  <!-- Decorative Pattern Grid -->
+  <g opacity="0.08" stroke="#FFFFFF" stroke-width="1.2" stroke-dasharray="4 8">
+    <line x1="100" y1="0" x2="100" y2="600" />
+    <line x1="200" y1="0" x2="200" y2="600" />
+    <line x1="300" y1="0" x2="300" y2="600" />
+    <line x1="400" y1="0" x2="400" y2="600" />
+    <line x1="500" y1="0" x2="500" y2="600" />
+    <line x1="0" y1="100" x2="600" y2="100" />
+    <line x1="0" y1="200" x2="600" y2="200" />
+    <line x1="0" y1="300" x2="600" y2="300" />
+    <line x1="0" y1="400" x2="600" y2="400" />
+    <line x1="0" y1="500" x2="600" y2="500" />
+  </g>
+
+  <!-- Abstract Geometric Concentric Circles -->
+  <circle cx="300" cy="270" r="220" fill="none" stroke="url(#goldGrad)" stroke-width="1" opacity="0.15" />
+  <circle cx="300" cy="270" r="170" fill="none" stroke="#60A5FA" stroke-width="1.5" stroke-dasharray="8 12" opacity="0.25" />
+  <circle cx="300" cy="270" r="120" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.1" />
+
+  <!-- Ambient Light Orbs -->
+  <circle cx="480" cy="140" r="90" fill="#3B82F6" opacity="0.12" />
+  <circle cx="120" cy="420" r="110" fill="#F59E0B" opacity="0.08" />
+
+  <!-- Center Card Badge Container -->
+  <g filter="url(#badgeShadow)">
+    <rect x="180" y="150" width="240" height="240" rx="36" fill="url(#glassGrad)" stroke="#FFFFFF" stroke-width="1.5" stroke-opacity="0.3" />
+    
+    <!-- Inner Accent Ring -->
+    <rect x="195" y="165" width="210" height="210" rx="28" fill="#071A49" fill-opacity="0.4" stroke="#3B82F6" stroke-opacity="0.3" stroke-width="1" />
+  </g>
+
+  <!-- Central Academic Emblem (Book & Quill / Sparkle) -->
+  <g filter="url(#softShadow)" transform="translate(300, 270)">
+    <!-- Book Base Silhouette -->
+    <path d="M-55,-15 C-30,-28 -5,-25 0,-10 C5,-25 30,-28 55,-15 L55,35 C30,22 5,24 0,38 C-5,24 -30,22 -55,35 Z" fill="#FFFFFF" opacity="0.95" />
+    <path d="M-50,-8 C-28,-20 -4,-18 0,-4 C4,-18 28,-20 50,-8 L50,30 C28,18 4,20 0,32 C-4,20 -28,18 -50,30 Z" fill="#F8FAFC" />
+    
+    <!-- Spine Center Line -->
+    <line x1="0" y1="-7" x2="0" y2="35" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" />
+
+    <!-- Page Content Lines Left -->
+    <line x1="-40" y1="0" x2="-12" y2="-6" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" />
+    <line x1="-40" y1="10" x2="-12" y2="4" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" />
+    <line x1="-40" y1="20" x2="-18" y2="15" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" />
+
+    <!-- Page Content Lines Right -->
+    <line x1="12" y1="-6" x2="40" y2="0" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" />
+    <line x1="12" y1="4" x2="40" y2="10" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" />
+    <line x1="12" y1="15" x2="35" y2="20" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" />
+
+    <!-- Floating Star / Sparkle of Knowledge (Gold) -->
+    <g transform="translate(0, -50)">
+      <path d="M0,-24 C0,-7 7,0 24,0 C7,0 0,7 0,24 C0,7 -7,0 -24,0 C-7,0 0,-7 0,-24 Z" fill="url(#goldGrad)" />
+      <circle cx="0" cy="0" r="4" fill="#FFFBEB" />
+    </g>
+    
+    <!-- Mini Gold Accent Dots -->
+    <circle cx="-32" cy="-42" r="3" fill="#FDE68A" opacity="0.85" />
+    <circle cx="34" cy="-38" r="2.5" fill="#FDE68A" opacity="0.85" />
+  </g>
+
+  <!-- ArchivEx Minimal Branding Footer in Banner -->
+  <g transform="translate(300, 470)" text-anchor="middle">
+    <!-- Subtle pill badge -->
+    <rect x="-70" y="-18" width="140" height="34" rx="17" fill="#071A49" fill-opacity="0.75" stroke="#3B82F6" stroke-opacity="0.4" stroke-width="1.2" />
+    <text x="0" y="4" font-family="'Plus Jakarta Sans', 'Inter', sans-serif" font-size="12" font-weight="800" fill="#93C5FD" letter-spacing="2">ARCHIVEX</text>
+  </g>
+</svg>

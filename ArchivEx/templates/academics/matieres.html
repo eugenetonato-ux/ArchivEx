@@ -4,37 +4,42 @@
 {% block title %}{% if semester %}{{ semester.label }} — {{ filiere.name }}{% else %}Mes UE{% endif %} | ArchivEx{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
 
     <!-- DESKTOP BREADCRUMB -->
     <nav class="hidden sm:flex items-center text-xs font-medium text-slate-500 space-x-2 mb-6" aria-label="Fil d'ariane">
-        <a href="{% url 'academics:home' %}" class="hover:text-[#2563EB]">Accueil</a>
-        <span>/</span>
+        <a href="{% url 'academics:home' %}" class="hover:text-[#2563EB] transition-colors">Accueil</a>
+        <span class="text-slate-300">/</span>
         <span class="text-slate-400">{% if profile and profile.school %}{{ profile.school.name }}{% else %}{{ filiere.school.name|default:"Université" }}{% endif %}</span>
-        <span>/</span>
+        <span class="text-slate-300">/</span>
         <span class="text-slate-400">{% if profile and profile.level %}{{ profile.level.name }}{% else %}{{ filiere.level.name|default:"Licence 1" }}{% endif %}</span>
-        <span>/</span>
-        <a href="{% url 'academics:semestres' filiere_id=filiere.id %}" class="hover:text-[#2563EB]">{% if profile and profile.filiere %}{{ profile.filiere.name }}{% else %}{{ filiere.name }}{% endif %}</a>
-        <span>/</span>
+        <span class="text-slate-300">/</span>
+        {% if filiere %}
+            <a href="{% url 'academics:semestres' filiere_id=filiere.id %}" class="hover:text-[#2563EB] transition-colors">{% if profile and profile.filiere %}{{ profile.filiere.name }}{% else %}{{ filiere.name }}{% endif %}</a>
+            <span class="text-slate-300">/</span>
+        {% endif %}
         <span class="text-[#071A49] font-bold">{% if semester %}{{ semester.label }}{% else %}Matières (UE){% endif %}</span>
     </nav>
 
-    <!-- MOBILE BREADCRUMB -->
+    <!-- MOBILE BACK LINK -->
     <div class="sm:hidden mb-4">
         {% if filiere %}
-        <a href="{% url 'academics:semestres' filiere_id=filiere.id %}" class="inline-flex items-center text-xs font-bold text-[#2563EB] space-x-1.5">
-            <i class="fa-solid fa-arrow-left text-xs"></i>
+        <a href="{% url 'academics:semestres' filiere_id=filiere.id %}" class="inline-flex items-center text-xs font-bold text-[#2563EB] space-x-1.5 py-1 px-2.5 rounded-lg bg-blue-50/80 active:bg-blue-100 transition-colors">
+            <i class="fa-solid fa-arrow-left text-[11px]" aria-hidden="true"></i>
             <span>Retour aux semestres</span>
         </a>
         {% endif %}
     </div>
 
-
     <!-- CONTEXTUAL ACADEMIC HEADER -->
-    <div class="p-6 sm:p-8 rounded-3xl bg-[#071A49] text-white border border-blue-900/40 mb-8 shadow-xl">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+    <div class="relative overflow-hidden p-6 sm:p-8 rounded-3xl bg-[#071A49] text-white border border-blue-900/40 mb-8 shadow-xl">
+        <!-- Ambient Decorative Glow -->
+        <div class="absolute -right-20 -top-20 w-72 h-72 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" aria-hidden="true"></div>
+        <div class="absolute -left-20 -bottom-20 w-60 h-60 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" aria-hidden="true"></div>
+
+        <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <div class="flex flex-wrap items-center gap-2 mb-2">
+                <div class="flex flex-wrap items-center gap-2 mb-2.5">
                     <span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-black uppercase tracking-wider">
                         {% if profile and profile.school %}{{ profile.school.name }}{% else %}{{ filiere.school.name|default:"UNIVERSITÉ" }}{% endif %}
                     </span>
@@ -46,86 +51,114 @@
                     </span>
                 </div>
 
-                <h1 class="text-2xl sm:text-3xl font-black text-white">
-                    Matières (UE) — {% if profile and profile.filiere %}{{ profile.filiere.name }}{% else %}{{ filiere.name }}{% endif %}
+                <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                    Matières & Unités d'Enseignement
                 </h1>
-                <p class="text-xs sm:text-sm text-slate-300 font-medium mt-1">
-                    Sélectionne une matière pour accéder aux épreuves, résumés et guides associés.
+                <p class="text-xs sm:text-sm text-slate-300 font-medium mt-1 max-w-2xl">
+                    {% if profile and profile.filiere %}{{ profile.filiere.name }}{% else %}{{ filiere.name }}{% endif %} · Sélectionne une matière pour explorer les épreuves et annales disponibles.
                 </p>
             </div>
 
             {% if semester and not has_semester_access %}
-                <a href="{% url 'payments:pass_semestre' semester_id=semester.id %}" class="btn-gold text-xs px-5 py-3 font-black rounded-xl shadow-lg shadow-amber-500/30 flex-shrink-0 flex items-center space-x-1.5">
-                    <i class="fa-solid fa-lock text-xs"></i>
+                <a href="{% url 'payments:pass_semestre' semester_id=semester.id %}" class="btn-gold text-xs px-5 py-3 font-black rounded-xl shadow-lg shadow-amber-500/25 flex-shrink-0 flex items-center space-x-2 transition-transform hover:scale-[1.02] active:scale-[0.98]">
+                    <i class="fa-solid fa-lock text-xs" aria-hidden="true"></i>
                     <span>Débloquer le Pass (4 500 FCFA)</span>
                 </a>
             {% endif %}
         </div>
     </div>
 
-    <!-- SUBJECTS CARDS GRID WITH RESOURCE SHORTCUT TABS -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {% for item in subjects_data %}
-            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
-                <div>
-                    <!-- SUBJECT BADGE & NAME -->
-                    <div class="flex items-center space-x-3 mb-3">
-                        <div class="w-10 h-10 rounded-2xl bg-blue-50 text-[#2563EB] font-black text-xs flex items-center justify-center flex-shrink-0 border border-blue-100">
+    <!-- SECTION TITLE & COUNT -->
+    <div class="flex items-center justify-between mb-5">
+        <div class="flex items-center space-x-2">
+            <span class="w-2 h-5 bg-[#2563EB] rounded-full inline-block"></span>
+            <h2 class="text-sm sm:text-base font-black text-[#071A49] tracking-tight">
+                Toutes les matières
+            </h2>
+            <span class="px-2 py-0.5 rounded-full bg-slate-200/70 text-[#071A49] text-[11px] font-extrabold">
+                {{ subjects_data|default:subjects|length }}
+            </span>
+        </div>
+        <span class="text-xs text-slate-400 font-medium hidden sm:inline-block">
+            Clique sur une matière pour voir ses épreuves
+        </span>
+    </div>
+
+    <!-- MODERN SQUARE COMPACT SUBJECTS GRID -->
+    <!-- Mobile: 2 cols | Tablet: 3 cols | Desktop: 4 cols -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4 lg:gap-5">
+        {% for item in subjects_data|default:subjects %}
+            {% with subj=item.subject|default:item exams_cnt=item.exams_count|default:item.exams_count %}
+            <a href="{% url 'exams:liste' %}?subject={{ subj.id }}"
+               class="group relative flex flex-col bg-white rounded-2xl border border-slate-200/90 hover:border-blue-400/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden text-left focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40"
+               aria-label="Accéder aux épreuves de {{ subj.name }}">
+                
+                <!-- TOP IMAGE CONTAINER (Aspect ~ 4:3) -->
+                <div class="relative w-full aspect-[4/3] overflow-hidden bg-slate-100 shrink-0">
+                    <img src="{% if subj.image %}{{ subj.image.url }}{% else %}{% static 'images/subjects/default_subject.svg' %}{% endif %}"
+                         alt="{{ subj.name }}"
+                         loading="lazy"
+                         onerror="this.onerror=null; this.src='{% static 'images/subjects/default_subject.svg' %}';"
+                         class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out" />
+
+                    <!-- Subtle bottom gradient for contrast and smooth transition -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#071A49]/35 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" aria-hidden="true"></div>
+
+                    <!-- Subtle UE Code Badge in Top-Left -->
+                    {% if subj.code %}
+                        <span class="absolute top-2 left-2 sm:top-2.5 sm:left-2.5 px-2 py-0.5 rounded-md bg-[#071A49]/80 backdrop-blur-md text-[9px] sm:text-[10px] font-black text-white tracking-wider border border-white/10 shadow-sm">
+                            {{ subj.code }}
+                        </span>
+                    {% else %}
+                        <span class="absolute top-2 left-2 sm:top-2.5 sm:left-2.5 px-2 py-0.5 rounded-md bg-[#071A49]/80 backdrop-blur-md text-[9px] sm:text-[10px] font-black text-blue-200 tracking-wider border border-white/10 shadow-sm">
                             UE
-                        </div>
-                        <h2 class="text-base font-black text-[#071A49] group-hover:text-[#2563EB] transition-colors leading-snug">
-                            {{ item.subject.name }}
-                        </h2>
-                    </div>
+                        </span>
+                    {% endif %}
 
-                    <p class="text-xs text-slate-500 font-medium mb-6">
-                        Ressources académiques disponibles pour révision :
-                    </p>
+                    <!-- Free Badge in Top-Right if applicable -->
+                    {% if subj.is_free %}
+                        <span class="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-emerald-500/90 backdrop-blur-md text-[9px] sm:text-[10px] font-black text-white shadow-sm flex items-center space-x-1">
+                            <i class="fa-solid fa-gift text-[8px] sm:text-[9px]" aria-hidden="true"></i>
+                            <span class="hidden xs:inline">Gratuit</span>
+                        </span>
+                    {% endif %}
+                </div>
 
-                    <!-- RESOURCE BUTTONS / TABS GRID -->
-                    <div class="grid grid-cols-3 gap-2 mb-6">
-                        <!-- EXAMS -->
-                        <a href="{% url 'exams:liste' %}?subject={{ item.subject.id }}" class="p-2.5 rounded-2xl bg-blue-50/70 hover:bg-blue-100/70 border border-blue-100 text-center transition-colors">
-                            <i class="fa-solid fa-file-lines text-[#2563EB] text-sm block mb-1"></i>
-                            <span class="text-xs font-black text-[#2563EB] block leading-none mb-0.5">{{ item.exams_count }}</span>
-                            <span class="text-[9px] font-bold text-slate-600 uppercase tracking-wider block">Épreuves</span>
-                        </a>
+                <!-- BOTTOM CONTENT CONTAINER -->
+                <div class="p-3 sm:p-4 flex flex-col justify-between flex-1 bg-white">
+                    <!-- SUBJECT NAME (line-clamp-2 ensures uniform card heights) -->
+                    <h3 class="font-extrabold text-xs sm:text-[14px] text-[#071A49] group-hover:text-[#2563EB] transition-colors leading-snug line-clamp-2 mb-2.5" title="{{ subj.name }}">
+                        {{ subj.name }}
+                    </h3>
 
-                        <!-- SUMMARIES -->
-                        <a href="{% url 'content:summary_list' %}?subject={{ item.subject.id }}" class="p-2.5 rounded-2xl bg-amber-50/70 hover:bg-amber-100/70 border border-amber-100 text-center transition-colors">
-                            <i class="fa-solid fa-book text-amber-600 text-sm block mb-1"></i>
-                            <span class="text-xs font-black text-amber-800 block leading-none mb-0.5">{{ item.summaries_count }}</span>
-                            <span class="text-[9px] font-bold text-slate-600 uppercase tracking-wider block">Résumés</span>
-                        </a>
+                    <!-- SECONDARY INFO: EXAMS COUNT & SUBTLE CLICKABLE INDICATOR -->
+                    <div class="pt-2 sm:pt-2.5 border-t border-slate-100 flex items-center justify-between mt-auto">
+                        <span class="inline-flex items-center space-x-1.5 text-[11px] sm:text-xs font-semibold text-slate-500">
+                            <i class="fa-regular fa-file-lines text-slate-400 text-[10px] sm:text-xs" aria-hidden="true"></i>
+                            <span>{{ exams_cnt|default:"0" }} épreuve{{ exams_cnt|pluralize }}</span>
+                        </span>
 
-                        <!-- GUIDES -->
-                        <a href="{% url 'content:guide_list' %}?subject={{ item.subject.id }}" class="p-2.5 rounded-2xl bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-100 text-center transition-colors">
-                            <i class="fa-solid fa-compass text-emerald-600 text-sm block mb-1"></i>
-                            <span class="text-xs font-black text-emerald-800 block leading-none mb-0.5">{{ item.guides_count }}</span>
-                            <span class="text-[9px] font-bold text-slate-600 uppercase tracking-wider block">Guides</span>
-                        </a>
+                        <!-- Subtle Arrow Indicator that moves on hover -->
+                        <span class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-50 group-hover:bg-blue-50 text-slate-400 group-hover:text-[#2563EB] flex items-center justify-center transition-colors text-[9px] sm:text-[10px] shrink-0" aria-hidden="true">
+                            <i class="fa-solid fa-arrow-right group-hover:translate-x-0.5 transition-transform duration-200"></i>
+                        </span>
                     </div>
                 </div>
 
-                <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
-                    <span class="text-[11px] font-bold text-slate-400">UE Académique</span>
-                    <a href="{% url 'exams:liste' %}?subject={{ item.subject.id }}" class="text-xs font-extrabold text-[#2563EB] hover:underline flex items-center space-x-1">
-                        <span>Explorer les épreuves</span>
-                        <i class="fa-solid fa-arrow-right text-xs"></i>
-                    </a>
-                </div>
-            </div>
+            </a>
+            {% endwith %}
         {% empty %}
             <!-- EMPTY STATE -->
-            <div class="col-span-full bg-white border border-slate-200 rounded-3xl p-10 text-center">
-                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-[#2563EB] flex items-center justify-center mx-auto mb-3 text-xl">
-                    <i class="fa-solid fa-book-open"></i>
+            <div class="col-span-full bg-white border border-slate-200 rounded-3xl p-10 sm:p-12 text-center shadow-sm">
+                <div class="w-14 h-14 rounded-2xl bg-blue-50 text-[#2563EB] flex items-center justify-center mx-auto mb-4 text-2xl border border-blue-100">
+                    <i class="fa-solid fa-book-open" aria-hidden="true"></i>
                 </div>
-                <h3 class="text-base font-black text-[#071A49] mb-1">Les ressources de ce semestre seront bientôt disponibles.</h3>
-                <p class="text-xs text-slate-500 mb-6">Les UE et épreuves de ton parcours sont en cours de mise en ligne.</p>
-                {% if semester %}
-                <a href="{% url 'academics:semestres' filiere_id=semester.filiere.id %}" class="btn-primary text-xs px-5 py-2.5 font-bold rounded-xl inline-block">
-                    Retour aux semestres
+                <h3 class="text-base sm:text-lg font-black text-[#071A49] mb-1.5">Les matières de ce semestre seront bientôt disponibles</h3>
+                <p class="text-xs sm:text-sm text-slate-500 mb-6 max-w-md mx-auto">Les UE et épreuves de ton parcours sont actuellement en cours de mise en ligne par l'équipe académique.</p>
+                {% if filiere %}
+                <a href="{% url 'academics:semestres' filiere_id=filiere.id %}" class="btn-primary text-xs px-5 py-2.5 font-bold rounded-xl inline-flex items-center space-x-2">
+                    <i class="fa-solid fa-arrow-left text-xs" aria-hidden="true"></i>
+                    <span>Retour aux semestres</span>
                 </a>
                 {% endif %}
             </div>

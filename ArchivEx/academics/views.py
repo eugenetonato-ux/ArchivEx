@@ -82,10 +82,15 @@ def filiere_list_view(request):
     if not semester and filiere:
         semester = Semester.objects.filter(filiere=filiere).first()
 
+    subjects_data = []
     if semester:
-        subjects = Subject.objects.filter(semester=semester).annotate(
-            exams_num=Count("exams")
-        )
+        subjects = Subject.objects.filter(semester=semester)
+        for subj in subjects:
+            e_count = Exam.objects.filter(subject=subj, is_published=True).count()
+            subjects_data.append({
+                "subject": subj,
+                "exams_count": e_count,
+            })
         has_semester_access = can_user_access(request.user, semester)
 
         total_exams_count = Exam.objects.filter(semester=semester, is_published=True).count()
@@ -96,6 +101,7 @@ def filiere_list_view(request):
         "filiere": filiere,
         "semester": semester,
         "subjects": subjects,
+        "subjects_data": subjects_data,
         "has_semester_access": has_semester_access,
         "total_exams_count": total_exams_count,
         "premium_exams_count": premium_exams_count,

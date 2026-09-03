@@ -101,6 +101,13 @@ class Subject(models.Model):
     name = models.CharField(max_length=150)
     code = models.CharField(max_length=50, blank=True, default="")  # ex. UE-MATH101
     description = models.TextField(blank=True, default="")
+    image = models.ImageField(
+        upload_to="subjects/",
+        blank=True,
+        null=True,
+        verbose_name="Image de couverture",
+        help_text="Image représentative de la matière / UE (format carré ou paysage recommandé)."
+    )
     is_free = models.BooleanField(default=False)
     is_free_correction = models.BooleanField(default=False, help_text="Si vrai, les corrigés et résumés de cette UE sont gratuits pour tous les étudiants.")
     is_active = models.BooleanField(default=True)
@@ -109,4 +116,14 @@ class Subject(models.Model):
         ordering = ["semester", "name"]
 
     def __str__(self):
-        return f"{self.code} - {self.name}" if self.code else self.name
+        return f"{self.code} - {self.name}" if self.code else self.name
+
+    @property
+    def exams_count(self):
+        if hasattr(self, "_exams_count"):
+            return self._exams_count
+        return self.exams.filter(is_published=True).count()
+
+    @exams_count.setter
+    def exams_count(self, value):
+        self._exams_count = value

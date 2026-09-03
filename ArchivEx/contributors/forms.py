@@ -405,20 +405,23 @@ class SubjectAdminForm(forms.ModelForm):
     """Formulaire de création/édition d'une Matière / Unité d'Enseignement."""
     class Meta:
         model = Subject
-        fields = ["name", "semester"]
+        fields = ["name", "semester", "image"]
         labels = {
             "name": "Nom de la matière / UE",
             "semester": "Semestre d'études",
+            "image": "Image de la matière (couverture)",
         }
         widgets = {
             "name": forms.TextInput(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]", "placeholder": "Ex: Algorithmique & Programmation"}),
             "semester": forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"}),
+            "image": forms.FileInput(attrs={"class": "w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-[#071A49]", "accept": "image/*"}),
         }
 
     def __init__(self, *args, active_filiere=None, **kwargs):
         super().__init__(*args, **kwargs)
         if active_filiere:
             self.fields["semester"].queryset = Semester.objects.filter(filiere=active_filiere)
+        self.fields["image"].required = False
 
 
 class NotificationAdminForm(forms.Form):
