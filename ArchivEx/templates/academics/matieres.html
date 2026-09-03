@@ -95,13 +95,18 @@
                 
                 <!-- TOP IMAGE CONTAINER (Aspect ~ 4:3) -->
                 <div class="relative w-full aspect-[4/3] overflow-hidden bg-slate-100 shrink-0">
-                    <img src="{% if subj.image %}{{ subj.image.url }}{% else %}{% static 'images/subjects/default_subject.svg' %}{% endif %}"
-                         alt="{{ subj.name }}"
-                         loading="lazy"
-                         onerror="this.onerror=null; this.src='{% static 'images/subjects/default_subject.svg' %}';"
-                         class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out" />
-
-                    <!-- Subtle bottom gradient for contrast and smooth transition -->
+                    {% if subj.image %}
+                        <img src="{{ subj.image.url }}"
+                             alt="{{ subj.name }}"
+                             loading="lazy"
+                             class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out" />
+                    {% else %}
+                        <div class="w-full h-full bg-gradient-to-br from-[#071A49] via-[#0F2C6E] to-[#1E3A8A] flex items-center justify-center p-4 text-center">
+                            <div class="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-blue-200">
+                                <i class="fa-solid fa-graduation-cap text-xl"></i>
+                            </div>
+                        </div>
+                    {% endif %}
                     <div class="absolute inset-0 bg-gradient-to-t from-[#071A49]/35 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" aria-hidden="true"></div>
 
                     <!-- Subtle UE Code Badge in Top-Left -->
