@@ -216,5 +216,82 @@ def custom_500_view(request):
     return render(request, "500.html", status=500)
 
 
+def service_worker_view(request):
+    """Sert service-worker.js avec l'en-tête Service-Worker-Allowed pour couvrir tout le domaine."""
+    import os
+    from django.conf import settings
+    from django.http import HttpResponse, Http404
+
+    sw_path = settings.BASE_DIR / "static" / "js" / "service-worker.js"
+    if not os.path.exists(sw_path):
+        sw_path = settings.BASE_DIR / "staticfiles" / "js" / "service-worker.js"
+    if not os.path.exists(sw_path):
+        raise Http404("Service worker non trouvé")
+
+    with open(sw_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    response = HttpResponse(content, content_type="application/javascript; charset=utf-8")
+    response["Service-Worker-Allowed"] = "/"
+    response["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    return response
+
+
+def manifest_view(request):
+    """Sert manifest.json à la racine."""
+    import os
+    from django.conf import settings
+    from django.http import HttpResponse, Http404
+
+    manifest_path = settings.BASE_DIR / "static" / "manifest.json"
+    if not os.path.exists(manifest_path):
+        manifest_path = settings.BASE_DIR / "staticfiles" / "manifest.json"
+    if not os.path.exists(manifest_path):
+        raise Http404("Manifest non trouvé")
+
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    response = HttpResponse(content, content_type="application/manifest+json; charset=utf-8")
+    response["Cache-Control"] = "public, max-age=3600"
+    return response
+
+
+def icon_192_view(request):
+    """Sert l'icône 192x192."""
+    import os
+    from django.conf import settings
+    from django.http import FileResponse, Http404
+
+    path = settings.BASE_DIR / "static" / "icons" / "icon-192.png"
+    if not os.path.exists(path):
+        path = settings.BASE_DIR / "staticfiles" / "icons" / "icon-192.png"
+    if not os.path.exists(path):
+        raise Http404("Icon non trouvée")
+
+    response = FileResponse(open(path, "rb"), content_type="image/png")
+    response["Cache-Control"] = "public, max-age=86400"
+    return response
+
+
+def icon_512_view(request):
+    """Sert l'icône 512x512."""
+    import os
+    from django.conf import settings
+    from django.http import FileResponse, Http404
+
+    path = settings.BASE_DIR / "static" / "icons" / "icon-512.png"
+    if not os.path.exists(path):
+        path = settings.BASE_DIR / "staticfiles" / "icons" / "icon-512.png"
+    if not os.path.exists(path):
+        raise Http404("Icon non trouvée")
+
+    response = FileResponse(open(path, "rb"), content_type="image/png")
+    response["Cache-Control"] = "public, max-age=86400"
+    return response
+
+
+
+
 
 

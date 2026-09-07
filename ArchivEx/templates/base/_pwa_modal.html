@@ -1,0 +1,174 @@
+{% load static %}
+<!-- PWA 20-SECOND POPUP & INSTALLATION CONTROLLER -->
+<div id="pwa-install-popup" class="hidden fixed bottom-5 right-4 sm:right-6 max-w-md w-[calc(100%-2rem)] z-50 transform translate-y-10 opacity-0 transition-all duration-500 ease-out">
+    <div class="bg-white/95 backdrop-blur-md border border-blue-200/80 rounded-3xl p-5 sm:p-6 shadow-2xl shadow-blue-900/20 relative overflow-hidden">
+        <!-- Top decorative gradient line -->
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-500"></div>
+
+        <!-- Close button (cross) -->
+        <button type="button" onclick="dismissPwaPopup()" aria-label="Fermer la proposition d'installation" class="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors">
+            <i class="fa-solid fa-xmark text-sm" aria-hidden="true"></i>
+        </button>
+
+        <div class="flex items-start space-x-3.5 sm:space-x-4">
+            <!-- App Icon with glow -->
+            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden shadow-lg border border-blue-100 bg-[#071A49] flex-shrink-0 p-1 flex items-center justify-center">
+                <img src="{% static 'icons/icon-192.png' %}" alt="ArchivEx" class="w-full h-full object-cover rounded-xl">
+            </div>
+
+            <!-- Content -->
+            <div class="flex-grow pr-6 sm:pr-4">
+                <div class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 text-[#2563EB] text-[10px] font-extrabold uppercase tracking-wide mb-1">
+                    <i class="fa-solid fa-bolt text-[9px]" aria-hidden="true"></i>
+                    <span>Application Web Mobile & PC</span>
+                </div>
+                <h3 class="text-base sm:text-lg font-black text-[#071A49] leading-snug">
+                    Installez <span class="text-[#2563EB]">ArchivEx</span>
+                </h3>
+                <p class="text-xs text-slate-600 font-medium mt-1 leading-relaxed">
+                    Téléchargez l'application pour réviser plus vite, sans store et accessible même hors-connexion.
+                </p>
+            </div>
+        </div>
+
+        <!-- Benefits micro-badges (ZERO EMOJI POLICY) -->
+        <div class="grid grid-cols-3 gap-2 my-4 pt-3 border-t border-slate-100 text-center">
+            <div class="bg-slate-50 rounded-xl py-1.5 px-1 border border-slate-100">
+                <p class="text-[11px] font-black text-[#071A49] flex items-center justify-center space-x-1">
+                    <i class="fa-solid fa-bolt text-amber-500 text-[10px]" aria-hidden="true"></i>
+                    <span>1-Clic</span>
+                </p>
+                <p class="text-[9px] text-slate-500">Accès direct</p>
+            </div>
+            <div class="bg-slate-50 rounded-xl py-1.5 px-1 border border-slate-100">
+                <p class="text-[11px] font-black text-[#071A49] flex items-center justify-center space-x-1">
+                    <i class="fa-solid fa-wifi text-emerald-500 text-[10px]" aria-hidden="true"></i>
+                    <span>Hors-ligne</span>
+                </p>
+                <p class="text-[9px] text-slate-500">Toujours dispo</p>
+            </div>
+            <div class="bg-slate-50 rounded-xl py-1.5 px-1 border border-slate-100">
+                <p class="text-[11px] font-black text-[#071A49] flex items-center justify-center space-x-1">
+                    <i class="fa-solid fa-feather text-blue-500 text-[10px]" aria-hidden="true"></i>
+                    <span>Léger</span>
+                </p>
+                <p class="text-[9px] text-slate-500">&lt; 2 Mo</p>
+            </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="flex items-center space-x-2.5">
+            <button type="button" id="pwa-popup-install-btn" class="pwa-install-trigger flex-1 bg-[#2563EB] hover:bg-blue-700 active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm py-3 px-4 rounded-xl shadow-lg shadow-blue-600/25 flex items-center justify-center space-x-2 transition-all">
+                <i class="fa-solid fa-cloud-arrow-down text-sm" aria-hidden="true"></i>
+                <span>Télécharger l'application</span>
+            </button>
+            <button type="button" onclick="dismissPwaPopup()" class="px-3.5 py-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold transition-colors">
+                Plus tard
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- UNIVERSAL PWA INSTALLATION GUIDE MODAL (MOBILE & DESKTOP) -->
+<div id="pwa-install-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-100 text-left relative max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+        
+        <!-- Close button -->
+        <button type="button" onclick="closePwaInstallModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors">
+            <i class="fa-solid fa-xmark text-sm" aria-hidden="true"></i>
+        </button>
+
+        <!-- Header -->
+        <div class="flex items-center space-x-3.5 mb-5">
+            <div class="w-12 h-12 rounded-2xl bg-[#071A49] p-1.5 flex items-center justify-center shadow-md flex-shrink-0">
+                <img src="{% static 'icons/icon-192.png' %}" alt="ArchivEx" class="w-full h-full object-cover rounded-xl">
+            </div>
+            <div>
+                <h3 class="text-base sm:text-lg font-black text-[#071A49]">Installer l'application ArchivEx</h3>
+                <p class="text-xs text-slate-500 font-medium">Accès instantané sans passer par les stores</p>
+            </div>
+        </div>
+
+        <!-- Direct Action Button (if prompt is available) -->
+        <div id="pwa-modal-prompt-box" class="hidden mb-4 p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
+            <p class="text-xs font-bold text-emerald-900 mb-2">Votre navigateur est prêt pour l'installation directe en 1 clic !</p>
+            <button type="button" onclick="executeNativePwaPrompt()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm py-3 px-4 rounded-xl shadow-md flex items-center justify-center space-x-2 transition-all">
+                <i class="fa-solid fa-download" aria-hidden="true"></i>
+                <span>Installer maintenant sur cet appareil</span>
+            </button>
+        </div>
+
+        <!-- Device Tabs Switcher -->
+        <div class="flex rounded-xl bg-slate-100 p-1 mb-4 text-xs font-bold">
+            <button type="button" id="tab-btn-mobile" onclick="switchPwaTab('mobile')" class="flex-1 py-2 rounded-lg transition-all text-center bg-white shadow-xs text-[#071A49]">
+                <i class="fa-solid fa-mobile-screen mr-1.5" aria-hidden="true"></i>
+                Sur Téléphone
+            </button>
+            <button type="button" id="tab-btn-desktop" onclick="switchPwaTab('desktop')" class="flex-1 py-2 rounded-lg transition-all text-center text-slate-500 hover:text-slate-900">
+                <i class="fa-solid fa-laptop mr-1.5" aria-hidden="true"></i>
+                Sur Ordinateur
+            </button>
+        </div>
+
+        <!-- TAB CONTENT: MOBILE -->
+        <div id="tab-content-mobile" class="space-y-3 text-xs text-slate-700">
+            <!-- Android Guide -->
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <div class="flex items-center space-x-2 mb-2 font-black text-[#071A49]">
+                    <i class="fa-brands fa-android text-emerald-600 text-base" aria-hidden="true"></i>
+                    <span>Sur Android (Chrome, Samsung Internet, Edge)</span>
+                </div>
+                <ol class="space-y-1.5 text-[11px] text-slate-600 pl-1 list-decimal list-inside font-medium">
+                    <li>Touchez le menu <strong>(les 3 points verticaux ⋮)</strong> en haut à droite.</li>
+                    <li>Sélectionnez <strong>« Installer l'application »</strong> ou <strong>« Ajouter à l'écran d'accueil »</strong>.</li>
+                    <li>Confirmez pour installer ArchivEx comme une vraie application.</li>
+                </ol>
+            </div>
+
+            <!-- iOS / iPhone Guide -->
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <div class="flex items-center space-x-2 mb-2 font-black text-[#071A49]">
+                    <i class="fa-brands fa-apple text-slate-900 text-base" aria-hidden="true"></i>
+                    <span>Sur iPhone & iPad (Safari)</span>
+                </div>
+                <ol class="space-y-1.5 text-[11px] text-slate-600 pl-1 list-decimal list-inside font-medium">
+                    <li>Touchez l'icône de partage <strong>Partager</strong> <i class="fa-solid fa-arrow-up-from-bracket text-[#2563EB] mx-1" aria-hidden="true"></i> en bas de votre écran.</li>
+                    <li>Faites défiler vers le bas et touchez <strong>« Sur l'écran d'accueil »</strong> <i class="fa-regular fa-square-plus text-[#2563EB] mx-1" aria-hidden="true"></i>.</li>
+                    <li>Touchez <strong>« Ajouter »</strong> en haut à droite pour valider.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- TAB CONTENT: DESKTOP -->
+        <div id="tab-content-desktop" class="hidden space-y-3 text-xs text-slate-700">
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <div class="flex items-center space-x-2 mb-2 font-black text-[#071A49]">
+                    <i class="fa-brands fa-chrome text-blue-600 text-base" aria-hidden="true"></i>
+                    <span>Sur Google Chrome & Microsoft Edge (PC / Mac)</span>
+                </div>
+                <ol class="space-y-2 text-[11px] text-slate-600 pl-1 list-decimal list-inside font-medium">
+                    <li>Dans la <strong>barre d'adresse</strong> (en haut à droite, à côté de l'étoile), cliquez sur l'icône <strong>Installer l'application</strong> <i class="fa-solid fa-circle-down text-[#2563EB] mx-1" aria-hidden="true"></i>.</li>
+                    <li>Ou cliquez sur le menu <strong>⋮</strong> puis sur <strong>« Installer ArchivEx... »</strong>.</li>
+                    <li>L'application s'ouvrira dans sa propre fenêtre logicielle indépendante.</li>
+                </ol>
+            </div>
+            <div class="p-3 rounded-xl bg-blue-50/60 border border-blue-100 text-[11px] text-blue-900 font-medium">
+                <i class="fa-solid fa-circle-info mr-1 text-[#2563EB]" aria-hidden="true"></i>
+                Sur ordinateur, ArchivEx fonctionne comme un logiciel complet, avec raccourci sur le Bureau et dans le menu Démarrer.
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-end">
+            <button type="button" onclick="closePwaInstallModal()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#071A49] hover:bg-navy-light text-white font-extrabold text-xs transition-all">
+                Fermer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST FEEDBACK NOTIFICATION -->
+<div id="pwa-toast" class="hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-[#071A49] text-white text-xs font-bold px-5 py-3 rounded-2xl shadow-xl border border-blue-500/30 items-center space-x-2.5 transition-all">
+    <i class="fa-solid fa-circle-info text-blue-400" aria-hidden="true"></i>
+    <span id="pwa-toast-message">Notification</span>
+</div>

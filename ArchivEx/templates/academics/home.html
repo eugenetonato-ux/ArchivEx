@@ -21,10 +21,16 @@
                 </p>
             </div>
         </div>
-        <a href="{% url 'accounts:dashboard' %}" class="btn-primary text-xs px-4 py-2 font-bold rounded-xl flex items-center space-x-2 shadow-sm shrink-0">
-            <i class="fa-solid fa-gauge text-xs" aria-hidden="true"></i>
-            <span>Accéder à mon tableau de bord</span>
-        </a>
+        <div class="flex items-center space-x-2.5 shrink-0">
+            <button type="button" class="pwa-install-trigger text-xs px-3.5 py-2 font-bold rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 flex items-center space-x-1.5 transition-all shadow-xs">
+                <i class="fa-solid fa-cloud-arrow-down text-emerald-600"></i>
+                <span>Installer l'app</span>
+            </button>
+            <a href="{% url 'accounts:dashboard' %}" class="btn-primary text-xs px-4 py-2 font-bold rounded-xl flex items-center space-x-2 shadow-sm">
+                <i class="fa-solid fa-gauge text-xs" aria-hidden="true"></i>
+                <span>Accéder à mon tableau de bord</span>
+            </a>
+        </div>
     </div>
 </section>
 {% endif %}
@@ -109,6 +115,12 @@
                     </div>
                     <span>Découvrir la plateforme</span>
                 </a>
+
+                <!-- BOUTON DE TÉLÉCHARGEMENT PWA HERO -->
+                <button type="button" class="pwa-install-trigger w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-sm px-6 py-3.5 rounded-2xl shadow-lg shadow-emerald-600/25 flex items-center justify-center space-x-2.5 transition-all hover:scale-[1.02]">
+                    <i class="fa-solid fa-cloud-arrow-down text-base"></i>
+                    <span>Télécharger l'application</span>
+                </button>
             </div>
         </div>
 
@@ -489,6 +501,70 @@
                 <i class="fa-solid fa-graduation-cap text-blue-600" aria-hidden="true"></i>
                 <span>Consulter le Guide Étudiant</span>
             </a>
+        </div>
+    </div>
+</section>
+
+<!-- 7.5. PWA APPLICATION DOWNLOAD SECTION -->
+<section class="py-16 bg-gradient-to-br from-slate-900 via-[#071A49] to-blue-950 text-white relative overflow-hidden border-y border-blue-800/50">
+    <div class="absolute -top-24 -left-24 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            <div class="lg:col-span-7 space-y-5">
+                <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                    <span>Application Web Progressive (PWA)</span>
+                </div>
+                <h2 class="text-3xl sm:text-4xl font-black tracking-tight leading-tight">
+                    Emportez <span class="text-[#3B82F6]">ArchivEx</span> partout avec vous, même hors-ligne
+                </h2>
+                <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+                    Installez l'application directement sur votre smartphone (Android, iPhone) ou votre ordinateur (Windows, Mac) en 1 clic. Aucun téléchargement lourd depuis les stores : l'application pèse moins de 2 Mo et se lance instantanément.
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                    <div class="bg-white/10 backdrop-blur border border-white/10 rounded-2xl p-3.5">
+                        <i class="fa-solid fa-bolt text-[#FBBF24] text-lg mb-2"></i>
+                        <h4 class="text-xs font-black">Accès instantané</h4>
+                        <p class="text-[11px] text-slate-300">Lancement direct depuis l'écran d'accueil</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur border border-white/10 rounded-2xl p-3.5">
+                        <i class="fa-solid fa-wifi-slash text-emerald-400 text-lg mb-2"></i>
+                        <h4 class="text-xs font-black">Mode hors-ligne</h4>
+                        <p class="text-[11px] text-slate-300">Vos révisions accessibles partout</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur border border-white/10 rounded-2xl p-3.5">
+                        <i class="fa-solid fa-shield-halved text-blue-400 text-lg mb-2"></i>
+                        <h4 class="text-xs font-black">100% Sécurisé</h4>
+                        <p class="text-[11px] text-slate-300">Mises à jour automatiques transparentes</p>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex flex-col sm:flex-row items-center gap-3">
+                    <button type="button" class="pwa-install-trigger w-full sm:w-auto bg-[#2563EB] hover:bg-blue-600 active:scale-95 text-white font-black text-sm px-8 py-4 rounded-2xl shadow-xl shadow-blue-600/30 flex items-center justify-center space-x-3 transition-all">
+                        <i class="fa-solid fa-cloud-arrow-down text-lg"></i>
+                        <span>Télécharger l'application ArchivEx</span>
+                    </button>
+                    <span class="text-xs text-slate-400 font-medium">Compatible Android • iOS • Windows • Mac</span>
+                </div>
+            </div>
+
+            <div class="lg:col-span-5 flex justify-center">
+                <div class="relative bg-gradient-to-b from-blue-900/60 to-slate-900/80 border border-blue-500/30 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl text-center backdrop-blur-xl">
+                    <div class="w-24 h-24 mx-auto rounded-3xl bg-[#071A49] border-2 border-blue-400/40 p-2 shadow-2xl mb-4 flex items-center justify-center">
+                        <img src="{% static 'icons/icon-192.png' %}" alt="ArchivEx PWA" class="w-full h-full object-cover rounded-2xl">
+                    </div>
+                    <h3 class="text-lg font-black text-white mb-1">ArchivEx Mobile & Desktop</h3>
+                    <p class="text-xs text-slate-300 mb-5">Prêt à être installé sur votre appareil</p>
+                    <button type="button" class="pwa-install-trigger w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm py-3 px-4 rounded-xl shadow-lg flex items-center justify-center space-x-2 transition-all">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Installer maintenant</span>
+                    </button>
+                    <p class="text-[10px] text-slate-400 mt-3">Gratuit • Sans passer par le Play Store / App Store</p>
+                </div>
+            </div>
         </div>
     </div>
 </section>
