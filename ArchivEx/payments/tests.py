@@ -1,6 +1,7 @@
 import hmac
 import hashlib
 import json
+from unittest.mock import patch
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.conf import settings
@@ -39,14 +40,24 @@ class SebPayIntegrationTests(TestCase):
         self.assertEqual(settings.SEBPAY_CURRENCY, "XOF")
 
     def test_phone_number_normalization(self):
-        """Valid Beninese phone numbers are normalized to 229XXXXXXXX format."""
-        self.assertEqual(normalize_benin_phone("97000000"), "22997000000")
-        self.assertEqual(normalize_benin_phone("+229 97 00 00 00"), "22997000000")
-        self.assertEqual(normalize_benin_phone("0197000000"), "2290197000000")
-        self.assertEqual(normalize_benin_phone("22997000000"), "22997000000")
+        """Valid Beninese phone numbers are normalized to 22901XXXXXXXX (13 digits) format."""
+        self.assertEqual(normalize_benin_phone("0150196407"), "2290150196407")
+        self.assertEqual(normalize_benin_phone("50196407"), "2290150196407")
+        self.assertEqual(normalize_benin_phone("+229 01 50 19 64 07"), "2290150196407")
+        self.assertEqual(normalize_benin_phone("2290150196407"), "2290150196407")
+        self.assertEqual(normalize_benin_phone("97000000"), "2290197000000")
 
         with self.assertRaises(ValueError):
             normalize_benin_phone("123")
+
+    def test_operator_detection_mtn_and_moov(self):
+        """Operator detection correctly identifies MTN and Moov prefixes, and rejects others."""
+        from payments.services import detect_operator
+        self.assertEqual(detect_operator("0150196407"), "mtn")
+        self.assertEqual(detect_operator("53000000"), "mtn")
+        self.assertEqual(detect_operator("0195000000"), "moov")
+        self.assertEqual(detect_operator("60000000"), "moov")
+        self.assertIsNone(detect_operator("0140000000"))  # SBIN / non-supporté
 
     def test_unique_external_reference_generation(self):
         """Unique external references follow ARCHIVEX-PASS-YYYY-XXXXXX format."""
@@ -62,18 +73,40 @@ class SebPayIntegrationTests(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertContains(res, "Pass Semestre")
 
-    def test_02_payment_button_initiates_payment_and_creates_pending(self):
+    @patch("payments.views.create_sebpay_collection")
+    def test_02_payment_button_initiates_payment_and_creates_pending(self, mock_create_collection):
         """Test 2 : Le bouton de paiement initie le paiement et crée un enregistrement PENDING avec référence unique."""
+        mock_create_collection.return_value = {"success": True, "data": {"id": "SEBPAY-12345"}}
         self.client.login(username="student_sebpay@univ.edu", password="Password123!")
         res = self.client.post(
             reverse("payments:initier_paiement", kwargs={"semester_id": self.semester.id}),
-            {"operator": "mtn", "phone_number": "97000000"}
+            {"operator": "mtn", "phone_number": "0150196407"}
         )
         payment = Payment.objects.filter(user=self.student, semester=self.semester).first()
         self.assertIsNotNone(payment)
         self.assertEqual(payment.amount, getattr(settings, "PASS_SEMESTRE_PRIX_DEFAUT", 4500))
         self.assertEqual(payment.status, Payment.STATUS_PENDING)
         self.assertTrue(payment.external_reference.startswith("ARCHIVEX-PASS-"))
+        self.assertEqual(payment.phone_number, "2290150196407")
+        self.assertRedirects(res, reverse("payments:payment_pending", kwargs={"reference": payment.external_reference}))
+
+    @patch("payments.views.create_sebpay_collection")
+    def test_sebpay_error_response_rejects_and_redirects(self, mock_create_collection):
+        """Si SebPay renvoie une erreur (ex: IP non autorisée), le paiement est marqué REJECTED et l'utilisateur est averti."""
+        mock_create_collection.return_value = {
+            "success": False,
+            "error": "Cette adresse IP n'est pas autorisée à utiliser cette clé API.",
+            "data": {"errors": {"code": "IP_NOT_ALLOWED"}}
+        }
+        self.client.login(username="student_sebpay@univ.edu", password="Password123!")
+        res = self.client.post(
+            reverse("payments:initier_paiement", kwargs={"semester_id": self.semester.id}),
+            {"operator": "mtn", "phone_number": "0150196407"},
+            follow=True
+        )
+        payment = Payment.objects.filter(user=self.student, semester=self.semester).first()
+        self.assertEqual(payment.status, Payment.STATUS_REJECTED)
+        self.assertContains(res, "IP non autorisée")
 
     def test_03_payment_return_page_renders_correctly(self):
         """Test 3 : L'URL de retour fonctionne et affiche le statut réel du paiement."""

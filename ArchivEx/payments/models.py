@@ -39,9 +39,8 @@ class Payment(models.Model):
     ]
 
     OPERATOR_CHOICES = [
-        ("mtn", "MTN Money"),
+        ("mtn", "MTN Mobile Money"),
         ("moov", "Moov Money"),
-        ("celtiis", "Celtiis Money"),
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="payments")

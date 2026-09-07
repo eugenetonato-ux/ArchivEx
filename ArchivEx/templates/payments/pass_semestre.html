@@ -205,39 +205,31 @@
                     <form method="post" action="{% url 'payments:initier_paiement' semester_id=semester.id %}" class="space-y-4">
                         {% csrf_token %}
 
-                        <!-- OPERATOR SELECTION RADIO CARDS -->
+                        <!-- OPERATOR SELECTION RADIO CARDS (MTN & MOOV ONLY) -->
                         <div>
                             <label class="text-xs font-extrabold text-[#071A49] block mb-2">
                                 Choisissez votre opérateur Mobile Money :
                             </label>
-                            <div class="grid grid-cols-3 gap-2">
+                            <div class="grid grid-cols-2 gap-3">
                                 <label class="cursor-pointer">
-                                    <input type="radio" name="operator" value="mtn" checked class="peer sr-only">
-                                    <div class="p-3 rounded-2xl border border-slate-200 peer-checked:border-amber-500 peer-checked:bg-amber-50/70 text-center transition-all">
-                                        <div class="w-8 h-8 mx-auto rounded-xl bg-amber-400 text-amber-950 font-black text-[10px] flex items-center justify-center mb-1">
+                                    <input type="radio" name="operator" id="operator_mtn" value="mtn" checked class="peer sr-only">
+                                    <div class="p-3.5 rounded-2xl border-2 border-slate-200 peer-checked:border-amber-500 peer-checked:bg-amber-50/70 text-center transition-all">
+                                        <div class="w-10 h-10 mx-auto rounded-xl bg-amber-400 text-amber-950 font-black text-xs flex items-center justify-center mb-1.5 shadow-sm">
                                             MTN
                                         </div>
-                                        <span class="text-[11px] font-extrabold text-[#071A49] block">MTN MoMo</span>
+                                        <span class="text-xs font-extrabold text-[#071A49] block">MTN MoMo</span>
+                                        <span class="text-[10px] text-slate-500 block font-medium">01 50, 53, 97...</span>
                                     </div>
                                 </label>
 
                                 <label class="cursor-pointer">
-                                    <input type="radio" name="operator" value="moov" class="peer sr-only">
-                                    <div class="p-3 rounded-2xl border border-slate-200 peer-checked:border-blue-500 peer-checked:bg-blue-50/70 text-center transition-all">
-                                        <div class="w-8 h-8 mx-auto rounded-xl bg-blue-600 text-white font-black text-[10px] flex items-center justify-center mb-1">
+                                    <input type="radio" name="operator" id="operator_moov" value="moov" class="peer sr-only">
+                                    <div class="p-3.5 rounded-2xl border-2 border-slate-200 peer-checked:border-blue-500 peer-checked:bg-blue-50/70 text-center transition-all">
+                                        <div class="w-10 h-10 mx-auto rounded-xl bg-blue-600 text-white font-black text-xs flex items-center justify-center mb-1.5 shadow-sm">
                                             MOOV
                                         </div>
-                                        <span class="text-[11px] font-extrabold text-[#071A49] block">Moov Money</span>
-                                    </div>
-                                </label>
-
-                                <label class="cursor-pointer">
-                                    <input type="radio" name="operator" value="celtiis" class="peer sr-only">
-                                    <div class="p-3 rounded-2xl border border-slate-200 peer-checked:border-cyan-500 peer-checked:bg-cyan-50/70 text-center transition-all">
-                                        <div class="w-8 h-8 mx-auto rounded-xl bg-cyan-600 text-white font-black text-[10px] flex items-center justify-center mb-1">
-                                            CEL
-                                        </div>
-                                        <span class="text-[11px] font-extrabold text-[#071A49] block">Celtiis Cash</span>
+                                        <span class="text-xs font-extrabold text-[#071A49] block">Moov Money</span>
+                                        <span class="text-[10px] text-slate-500 block font-medium">01 95, 94, 60...</span>
                                     </div>
                                 </label>
                             </div>
@@ -245,19 +237,39 @@
 
                         <!-- PHONE NUMBER INPUT -->
                         <div>
-                            <label for="phone_number" class="text-xs font-extrabold text-[#071A49] block mb-1">
-                                Numéro Mobile Money (Bénin) :
-                            </label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-xs font-black text-slate-400">
-                                    +229
-                                </div>
-                                <input type="tel" id="phone_number" name="phone_number" required placeholder="Ex: 97 00 00 00" class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-black text-[#071A49] placeholder-slate-400 focus:ring-2 focus:ring-blue-600 outline-none">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label for="phone_number" class="text-xs font-extrabold text-[#071A49] block">
+                                    Numéro Mobile Money (Bénin) :
+                                </label>
+                                <span id="detected_operator_badge" class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 hidden">
+                                    <span id="detected_operator_name">-</span>
+                                </span>
                             </div>
+                            
+                            <!-- Input group with permanent +229 prefix -->
+                            <div class="flex rounded-2xl border-2 border-slate-200 bg-white overflow-hidden focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-sm">
+                                <div class="px-3.5 py-3 bg-slate-100 border-r border-slate-200 flex items-center select-none shrink-0">
+                                    <span class="text-xs font-black text-[#071A49] tracking-wider">+229</span>
+                                </div>
+                                <input type="tel" 
+                                       id="phone_number" 
+                                       name="phone_number" 
+                                       required 
+                                       maxlength="10" 
+                                       pattern="01[0-9]{8}"
+                                       placeholder="01XXXXXXXX" 
+                                       autocomplete="tel-national"
+                                       oninput="handlePhoneInput(this.value)" 
+                                       class="w-full px-3.5 py-3 bg-transparent text-sm font-black text-[#071A49] placeholder-slate-400 outline-none tracking-widest">
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-1.5 font-medium flex items-center justify-between">
+                                <span>Saisissez vos 10 chiffres (ex : <strong class="text-slate-700 font-bold">0150196407</strong>)</span>
+                                <span class="text-slate-400 text-[10px]">+229 inclus</span>
+                            </p>
                         </div>
 
                         <button type="submit" class="btn-gold w-full text-xs sm:text-sm py-4 font-black shadow-lg shadow-amber-500/30 hover:scale-[1.02] transition-all rounded-2xl block text-center cursor-pointer flex items-center justify-center space-x-2">
-                            <i class="fa-solid fa-[#071A49] fa-lock text-xs" aria-hidden="true"></i>
+                            <i class="fa-solid fa-lock text-xs" aria-hidden="true"></i>
                             <span>Payer maintenant ({{ price }} FCFA)</span>
                         </button>
                     </form>
@@ -266,10 +278,15 @@
                 <!-- PAYMENT CHANNELS & SECURITY -->
                 <div class="mt-6 pt-4 border-t border-slate-100 text-center space-y-3">
                     <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Moyens de paiement acceptés</p>
-                    <div class="flex items-center justify-center space-x-2 text-[10px] font-extrabold text-slate-600">
-                        <span class="px-2 py-1 bg-amber-50 border border-amber-200 rounded-lg text-amber-800">MTN Money</span>
-                        <span class="px-2.5 py-1 bg-blue-50 border border-blue-200 rounded-lg text-blue-800">Moov Money</span>
-                        <span class="px-2.5 py-1 bg-cyan-50 border border-cyan-200 rounded-lg text-cyan-800">Celtiis Cash</span>
+                    <div class="flex items-center justify-center space-x-3 text-[11px] font-extrabold text-slate-700">
+                        <span class="px-3 py-1 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 flex items-center space-x-1">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                            <span>MTN MoMo</span>
+                        </span>
+                        <span class="px-3 py-1 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 flex items-center space-x-1">
+                            <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                            <span>Moov Money</span>
+                        </span>
                     </div>
                     <div class="flex items-center justify-center space-x-1.5 text-[11px] text-slate-400 font-medium">
                         <i class="fa-solid fa-shield-halved text-emerald-500 text-xs" aria-hidden="true"></i>
@@ -302,7 +319,7 @@
                     <span>Quels sont les moyens de paiement acceptés ?</span>
                 </h4>
                 <p class="text-slate-600 font-medium leading-relaxed pt-1">
-                    Le règlement est 100% sécurisé et s'effectue directement via Mobile Money : <strong>MTN Mobile Money</strong>, <strong>Moov Money</strong> et <strong>Celtiis Cash</strong>.
+                    Le règlement est 100% sécurisé et s'effectue directement via Mobile Money : <strong>MTN Mobile Money</strong> et <strong>Moov Money</strong>.
                 </p>
             </div>
 
@@ -359,4 +376,59 @@
     </div>
 
 </div>
+
+<script>
+    const MTN_PREFIXES = ["42", "46", "50", "51", "52", "53", "54", "56", "57", "59", "61", "62", "66", "67", "69", "90", "91", "96", "97"];
+    const MOOV_PREFIXES = ["45", "55", "58", "60", "63", "64", "65", "68", "94", "95", "98", "99"];
+
+    function handlePhoneInput(value) {
+        const input = document.getElementById('phone_number');
+        if (!input) return;
+
+        // Nettoie tout sauf les chiffres
+        let raw = value.replace(/\D/g, '');
+        // Si l'utilisateur colle par mégarde +229 ou 229, on le retire
+        if (raw.startsWith('229')) raw = raw.slice(3);
+        if (raw.startsWith('00229')) raw = raw.slice(5);
+
+        // Tronquer à 10 chiffres max
+        if (raw.length > 10) {
+            raw = raw.slice(0, 10);
+        }
+
+        if (input.value !== raw) {
+            input.value = raw;
+        }
+
+        let prefix = null;
+        if (raw.length >= 4 && raw.startsWith('01')) {
+            prefix = raw.slice(2, 4);
+        } else if (raw.length >= 2 && !raw.startsWith('01')) {
+            prefix = raw.slice(0, 2);
+        }
+
+        const badge = document.getElementById('detected_operator_badge');
+        const badgeName = document.getElementById('detected_operator_name');
+        const radioMtn = document.getElementById('operator_mtn');
+        const radioMoov = document.getElementById('operator_moov');
+
+        if (prefix && MTN_PREFIXES.includes(prefix)) {
+            if (radioMtn) radioMtn.checked = true;
+            if (badge && badgeName) {
+                badgeName.textContent = "MTN MoMo";
+                badge.className = "text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300";
+                badge.classList.remove('hidden');
+            }
+        } else if (prefix && MOOV_PREFIXES.includes(prefix)) {
+            if (radioMoov) radioMoov.checked = true;
+            if (badge && badgeName) {
+                badgeName.textContent = "Moov Money";
+                badge.className = "text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900 border border-blue-300";
+                badge.classList.remove('hidden');
+            }
+        } else {
+            if (badge) badge.classList.add('hidden');
+        }
+    }
+</script>
 {% endblock %}

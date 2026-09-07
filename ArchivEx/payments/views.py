@@ -89,14 +89,21 @@ def initier_paiement(request, semester_id):
         return redirect("academics:matieres", semester_id=semester.id)
 
     operator = request.POST.get("operator", "mtn").strip().lower()
-    if operator not in ["mtn", "moov", "celtiis"]:
-        operator = "mtn"
-
     raw_phone = request.POST.get("phone_number", "").strip()
+
     try:
-        normalized_phone = normalize_benin_phone(raw_phone) if raw_phone else ""
+        normalized_phone = normalize_benin_phone(raw_phone)
     except ValueError as e:
-        normalized_phone = ""
+        messages.error(request, str(e))
+        return redirect("payments:pass_semestre", semester_id=semester.id)
+
+    # Détection automatique de l'opérateur (MTN ou Moov) selon l'indicatif ARCEP Bénin
+    from .services import detect_operator
+    detected_op = detect_operator(normalized_phone)
+    if detected_op in ["mtn", "moov"]:
+        operator = detected_op
+    elif operator not in ["mtn", "moov"]:
+        operator = "mtn"
 
     ext_ref = generate_external_reference()
 
@@ -111,23 +118,37 @@ def initier_paiement(request, semester_id):
         status=Payment.STATUS_PENDING,
     )
 
-    # 1. Tenter la demande d'encaissement automatique auprès de SebPay API
+    # Envoi de la demande d'encaissement Mobile Money à SebPay API
     sebpay_res = create_sebpay_collection(payment)
     if sebpay_res.get("success"):
         res_data = sebpay_res.get("data", {})
-        provider_link = res_data.get("provider_link") or res_data.get("payment_url") or res_data.get("url")
+        data_body = res_data.get("data", res_data) if isinstance(res_data, dict) else {}
+        provider_link = data_body.get("provider_link") or data_body.get("payment_url") or data_body.get("url")
         if provider_link:
             return redirect(provider_link)
+        return redirect("payments:payment_pending", reference=payment.external_reference)
+    else:
+        # Échec de l'envoi vers SebPay (ex: IP non autorisée, etc.)
+        error_raw = sebpay_res.get("error", "Erreur lors de l'envoi de la demande de paiement.")
+        data = sebpay_res.get("data", {})
+        error_code = ""
+        if isinstance(data, dict):
+            errors = data.get("errors", {})
+            if isinstance(errors, dict):
+                error_code = errors.get("code", "")
+        
+        payment.status = Payment.STATUS_REJECTED
+        payment.save(update_fields=["status"])
 
-    # 2. Si un SEBPAY_PAYMENT_URL externe actif et valide est configuré (hors URL 404)
-    payment_url = getattr(settings, "SEBPAY_PAYMENT_URL", "").strip()
-    if payment_url and "pass-semestre-archivex-7hvUb1" not in payment_url:
-        separator = "&" if "?" in payment_url else "?"
-        redirect_url = f"{payment_url}{separator}external_reference={payment.external_reference}&amount={payment.amount}"
-        return redirect(redirect_url)
+        if error_code == "IP_NOT_ALLOWED":
+            messages.error(
+                request,
+                f"SebPay (IP non autorisée) : {error_raw} Veuillez ajouter votre adresse IP à la liste blanche dans le tableau de bord SebPay."
+            )
+        else:
+            messages.error(request, f"SebPay : {error_raw}")
 
-    # 3. Par défaut, diriger vers l'écran d'attente et de vérification Mobile Money ArchivEx
-    return redirect("payments:payment_pending", reference=payment.external_reference)
+        return redirect("payments:pass_semestre", semester_id=semester.id)
 
 
 @login_required
