@@ -611,34 +611,60 @@ document.addEventListener('DOMContentLoaded', function() {
         <!-- TAB CONTENT 1: EXAMS -->
         <div id="showcase-exams" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {% for exam in latest_exams %}
-            <div class="bg-gradient-to-br from-slate-50/50 to-white hover:from-blue-50/30 hover:to-white dark:from-[#0f172a] dark:to-[#0f172a] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-blue-300 dark:hover:border-blue-500 transition-all flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg {% if exam.is_free %}bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300{% else %}bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300{% endif %}">
-                            {% if exam.is_free %}Gratuit{% else %}Pass Semestre{% endif %}
-                        </span>
-                        <span class="text-xs font-bold text-slate-400 dark:text-slate-500">
-                            {{ exam.year|default:exam.created_at|date:"Y" }}
-                        </span>
-                    </div>
+            <div class="bg-white dark:bg-[#0f172a] border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-xs hover:shadow-md hover:border-blue-300 dark:hover:border-blue-500 transition-all flex flex-col overflow-hidden group">
+                <!-- TOP VIGNETTE / SUBJECT COVER IMAGE -->
+                <div class="relative w-full h-28 sm:h-32 bg-slate-100 overflow-hidden shrink-0">
+                    <a href="{% url 'exams:detail' exam.pk %}" class="block w-full h-full" aria-label="{{ exam.subject.name }}">
+                        {% if exam.subject.image %}
+                            <img src="{{ exam.subject.image.url }}"
+                                 alt="{{ exam.subject.name }}"
+                                 loading="lazy"
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        {% else %}
+                            <div class="w-full h-full bg-gradient-to-br from-[#071A49] via-[#0F2C6E] to-[#1E3A8A] flex items-center justify-center p-3 text-center">
+                                <div class="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-blue-200">
+                                    <i class="fa-solid fa-graduation-cap text-sm"></i>
+                                </div>
+                            </div>
+                        {% endif %}
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+                    </a>
 
-                    <h3 class="text-sm font-extrabold text-[#071A49] dark:text-slate-100 mb-1 line-clamp-2">
-                        {{ exam.title }}
-                    </h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mb-3">
-                        {{ exam.subject.name|default:"UE" }} • {{ exam.filiere.name|default:"" }}
-                    </p>
+                    <!-- EXAM TYPE BADGE -->
+                    <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-[#071A49]/85 backdrop-blur-md text-white text-[9px] sm:text-[10px] font-bold border border-white/10 shadow-sm pointer-events-none">
+                        {{ exam.get_exam_type_display|default:"Session Normale" }}
+                    </span>
                 </div>
 
-                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                    <span class="text-[11px] text-slate-400 dark:text-slate-500 font-semibold truncate max-w-[170px]">
-                        <i class="fa-solid fa-university text-slate-300 dark:text-slate-600 mr-1"></i>
-                        {{ exam.filiere.school.code|default:exam.filiere.school.name|default:"Université" }}
-                    </span>
-                    <a href="{% url 'exams:detail' exam.pk %}" class="text-xs font-extrabold text-[#2563EB] dark:text-blue-400 hover:underline flex items-center space-x-1 shrink-0">
-                        <span>Consulter</span>
-                        <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                    </a>
+                <div class="p-5 flex flex-col justify-between flex-grow">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg {% if exam.is_free %}bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300{% else %}bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300{% endif %}">
+                                {% if exam.is_free %}Gratuit{% else %}Pass Semestre{% endif %}
+                            </span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-500">
+                                {{ exam.year|default:exam.created_at|date:"Y" }}
+                            </span>
+                        </div>
+
+                        <h3 class="text-sm font-extrabold text-[#071A49] dark:text-slate-100 mb-1 line-clamp-2">
+                            {{ exam.title }}
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mb-3">
+                            {{ exam.subject.name|default:"UE" }} • {{ exam.filiere.name|default:"" }}
+                        </p>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                        <span class="text-[11px] text-slate-400 dark:text-slate-500 font-semibold truncate max-w-[170px]">
+                            <i class="fa-solid fa-university text-slate-300 dark:text-slate-600 mr-1"></i>
+                            {{ exam.filiere.school.code|default:exam.filiere.school.name|default:"Université" }}
+                        </span>
+                        <a href="{% url 'exams:detail' exam.pk %}" class="text-xs font-extrabold text-[#2563EB] dark:text-blue-400 hover:underline flex items-center space-x-1 shrink-0">
+                            <span>Consulter</span>
+                            <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
             {% empty %}
