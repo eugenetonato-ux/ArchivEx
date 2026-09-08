@@ -1868,7 +1868,11 @@ from django.core.paginator import Paginator
 @contributor_required
 def site_logs_list_view(request):
     """Affiche le journal d'activité complet du site, filtrable par type d'action."""
-    active_school, active_filiere, active_semester = get_active_academic_context(request)
+    active_school, active_filiere, active_semester = None, None, None
+    try:
+        active_school, active_filiere, active_semester = get_active_academic_context(request)
+    except Exception:
+        pass
     
     # Récupération des filtres
     action_filter = request.GET.get("action_type", "")
@@ -1900,13 +1904,14 @@ def site_logs_list_view(request):
         clicks_count = SiteLog.objects.filter(action_type="CLICK").count()
         views_count = SiteLog.objects.filter(action_type="PAGE_VIEW").count()
     except Exception as e:
-        page_obj = []
+        empty_paginator = Paginator([], 50)
+        page_obj = empty_paginator.get_page(1)
         total_logs = 0
         connections_count = 0
         modifications_count = 0
         clicks_count = 0
         views_count = 0
-        messages.warning(request, f"Note: Une erreur est survenue lors de la lecture du journal des actions ({str(e)}).")
+        messages.warning(request, f"Note: Le journal d'activité n'est pas encore initialisé ou une migration est requise ({str(e)}).")
 
     context = {
         "active_school": active_school,
@@ -1928,210 +1933,214 @@ def site_logs_list_view(request):
 @contributor_required
 def export_logs_pdf_view(request):
     """Génère un export PDF professionnel du journal des activités avec filtres appliqués."""
-    import io
-    from django.http import HttpResponse
-    from django.utils import timezone
-    from django.db.models import Q
-    from reportlab.lib.pagesizes import A4, landscape
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib import colors
-    from reportlab.pdfgen import canvas
-    
-    # Récupération des mêmes filtres que la vue de liste
-    action_filter = request.GET.get("action_type", "")
-    search_q = request.GET.get("q", "").strip()
-    
-    logs_qs = SiteLog.objects.select_related("user").order_by("-created_at")
-    
-    if action_filter:
-        logs_qs = logs_qs.filter(action_type=action_filter)
+    try:
+        import io
+        from django.http import HttpResponse
+        from django.utils import timezone
+        from django.db.models import Q
+        from reportlab.lib.pagesizes import A4, landscape
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib import colors
+        from reportlab.pdfgen import canvas
         
-    if search_q:
-        logs_qs = logs_qs.filter(
-            Q(description__icontains=search_q) |
-            Q(user__username__icontains=search_q) |
-            Q(path__icontains=search_q) |
-            Q(ip_address__icontains=search_q)
+        # Récupération des mêmes filtres que la vue de liste
+        action_filter = request.GET.get("action_type", "")
+        search_q = request.GET.get("q", "").strip()
+        
+        logs_qs = SiteLog.objects.select_related("user").order_by("-created_at")
+        
+        if action_filter:
+            logs_qs = logs_qs.filter(action_type=action_filter)
+            
+        if search_q:
+            logs_qs = logs_qs.filter(
+                Q(description__icontains=search_q) |
+                Q(user__username__icontains=search_q) |
+                Q(path__icontains=search_q) |
+                Q(ip_address__icontains=search_q)
+            )
+            
+        # Limiter à un nombre raisonnable de logs (par exemple, les 1000 derniers) pour éviter le dépassement de mémoire
+        logs_qs = logs_qs[:1000]
+        
+        # Création du flux PDF en mémoire
+        buffer = io.BytesIO()
+        
+        # Document A4 Paysage
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=landscape(A4),
+            leftMargin=54,
+            rightMargin=54,
+            topMargin=72,
+            bottomMargin=72
         )
         
-    # Limiter à un nombre raisonnable de logs (par exemple, les 1000 derniers) pour éviter le dépassement de mémoire
-    logs_qs = logs_qs[:1000]
-    
-    # Création du flux PDF en mémoire
-    buffer = io.BytesIO()
-    
-    # Document A4 Paysage
-    doc = SimpleDocTemplate(
-        buffer,
-        pagesize=landscape(A4),
-        leftMargin=54,
-        rightMargin=54,
-        topMargin=72,
-        bottomMargin=72
-    )
-    
-    styles = getSampleStyleSheet()
-    
-    # Custom styles
-    title_style = ParagraphStyle(
-        'DocTitle',
-        parent=styles['Heading1'],
-        fontName='Helvetica-Bold',
-        fontSize=20,
-        leading=24,
-        textColor=colors.HexColor("#071A49"),
-        spaceAfter=6
-    )
-    
-    subtitle_style = ParagraphStyle(
-        'DocSubtitle',
-        parent=styles['Normal'],
-        fontName='Helvetica',
-        fontSize=10,
-        leading=14,
-        textColor=colors.HexColor("#475569"),
-        spaceAfter=15
-    )
-    
-    cell_style = ParagraphStyle(
-        'TableCell',
-        parent=styles['Normal'],
-        fontName='Helvetica',
-        fontSize=8,
-        leading=11,
-        textColor=colors.HexColor("#1e293b")
-    )
-    
-    header_cell_style = ParagraphStyle(
-        'TableHeaderCell',
-        parent=styles['Normal'],
-        fontName='Helvetica-Bold',
-        fontSize=9,
-        leading=12,
-        textColor=colors.white
-    )
-    
-    story = []
-    
-    # Titre principal
-    story.append(Paragraph("ArchivEx — Journal d'Activité et d'Audit", title_style))
-    
-    # Infos de métadonnées
-    now_str = timezone.now().strftime("%d/%m/%Y %H:%M:%S")
-    filters_desc = "Aucun"
-    if action_filter or search_q:
-        filters_desc = f"Action: {action_filter or 'Tous'} | Recherche: '{search_q or ''}'"
-    
-    sub_text = (
-        f"Généré le : {now_str} par l'administrateur @{request.user.username}<br/>"
-        f"Filtres appliqués : {filters_desc} · (Affichage limité aux 1 000 dernières entrées)"
-    )
-    story.append(Paragraph(sub_text, subtitle_style))
-    story.append(Spacer(1, 10))
-    
-    # Table des logs
-    table_data = [[
-        Paragraph("Horodatage", header_cell_style),
-        Paragraph("Type d'action", header_cell_style),
-        Paragraph("Utilisateur", header_cell_style),
-        Paragraph("Description / Détails de l'action", header_cell_style),
-        Paragraph("Adresse IP", header_cell_style)
-    ]]
-    
-    for log in logs_qs:
-        log_time = log.created_at.strftime("%d/%m/%Y %H:%M:%S")
-        username = log.user.username if log.user else "Visiteur Public"
+        styles = getSampleStyleSheet()
         
-        # Color coding text for action type
-        if log.action_type == 'CONNECTION':
-            action_html = f"<font color='#2563eb'><b>CONNEXION</b></font>"
-        elif log.action_type == 'MODIFICATION':
-            action_html = f"<font color='#10b981'><b>MODIFICATION</b></font>"
-        elif log.action_type == 'CLICK':
-            action_html = f"<font color='#d97706'><b>CLIC D'ICÔNE</b></font>"
-        else:
-            action_html = f"<font color='#7c3aed'><b>PAGE LUE</b></font>"
-            
-        desc_text = log.description
-        if log.path:
-            desc_text += f"<br/><font color='#64748b' size='7'><b>Ressource :</b> {log.path}</font>"
-            
-        table_data.append([
-            Paragraph(log_time, cell_style),
-            Paragraph(action_html, cell_style),
-            Paragraph(username, cell_style),
-            Paragraph(desc_text, cell_style),
-            Paragraph(log.ip_address or "127.0.0.1", cell_style)
-        ])
+        # Custom styles
+        title_style = ParagraphStyle(
+            'DocTitle',
+            parent=styles['Heading1'],
+            fontName='Helvetica-Bold',
+            fontSize=20,
+            leading=24,
+            textColor=colors.HexColor("#071A49"),
+            spaceAfter=6
+        )
         
-    # Table widths
-    col_widths = [110, 85, 100, 340, 98]
-    
-    # Table styling
-    logs_table = Table(table_data, colWidths=col_widths, repeatRows=1)
-    logs_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#071A49")),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-        ('TOPPADDING', (0, 0), (-1, 0), 8),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor("#f8fafc")]),
-        ('TOPPADDING', (0, 1), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
-    ]))
-    
-    story.append(logs_table)
-    
-    # Custom NumberedCanvas local class definition to draw headers/footers
-    class NumberedCanvas(canvas.Canvas):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self._saved_page_states = []
+        subtitle_style = ParagraphStyle(
+            'DocSubtitle',
+            parent=styles['Normal'],
+            fontName='Helvetica',
+            fontSize=10,
+            leading=14,
+            textColor=colors.HexColor("#475569"),
+            spaceAfter=15
+        )
+        
+        cell_style = ParagraphStyle(
+            'TableCell',
+            parent=styles['Normal'],
+            fontName='Helvetica',
+            fontSize=8,
+            leading=11,
+            textColor=colors.HexColor("#1e293b")
+        )
+        
+        header_cell_style = ParagraphStyle(
+            'TableHeaderCell',
+            parent=styles['Normal'],
+            fontName='Helvetica-Bold',
+            fontSize=9,
+            leading=12,
+            textColor=colors.white
+        )
+        
+        story = []
+        
+        # Titre principal
+        story.append(Paragraph("ArchivEx — Journal d'Activité et d'Audit", title_style))
+        
+        # Infos de métadonnées
+        now_str = timezone.now().strftime("%d/%m/%Y %H:%M:%S")
+        filters_desc = "Aucun"
+        if action_filter or search_q:
+            filters_desc = f"Action: {action_filter or 'Tous'} | Recherche: '{search_q or ''}'"
+        
+        sub_text = (
+            f"Généré le : {now_str} par l'administrateur @{request.user.username}<br/>"
+            f"Filtres appliqués : {filters_desc} · (Affichage limité aux 1 000 dernières entrées)"
+        )
+        story.append(Paragraph(sub_text, subtitle_style))
+        story.append(Spacer(1, 10))
+        
+        # Table des logs
+        table_data = [[
+            Paragraph("Horodatage", header_cell_style),
+            Paragraph("Type d'action", header_cell_style),
+            Paragraph("Utilisateur", header_cell_style),
+            Paragraph("Description / Détails de l'action", header_cell_style),
+            Paragraph("Adresse IP", header_cell_style)
+        ]]
+        
+        for log in logs_qs:
+            log_time = log.created_at.strftime("%d/%m/%Y %H:%M:%S")
+            username = log.user.username if log.user else "Visiteur Public"
+            
+            # Color coding text for action type
+            if log.action_type == 'CONNECTION':
+                action_html = "<font color='#2563eb'><b>CONNEXION</b></font>"
+            elif log.action_type == 'MODIFICATION':
+                action_html = "<font color='#10b981'><b>MODIFICATION</b></font>"
+            elif log.action_type == 'CLICK':
+                action_html = "<font color='#d97706'><b>CLIC D'ICÔNE</b></font>"
+            else:
+                action_html = "<font color='#7c3aed'><b>PAGE LUE</b></font>"
+                
+            desc_text = log.description
+            if log.path:
+                desc_text += f"<br/><font color='#64748b' size='7'><b>Ressource :</b> {log.path}</font>"
+                
+            table_data.append([
+                Paragraph(log_time, cell_style),
+                Paragraph(action_html, cell_style),
+                Paragraph(username, cell_style),
+                Paragraph(desc_text, cell_style),
+                Paragraph(log.ip_address or "127.0.0.1", cell_style)
+            ])
+            
+        # Table widths
+        col_widths = [110, 85, 100, 340, 98]
+        
+        # Table styling
+        logs_table = Table(table_data, colWidths=col_widths, repeatRows=1)
+        logs_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#071A49")),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+            ('TOPPADDING', (0, 0), (-1, 0), 8),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor("#f8fafc")]),
+            ('TOPPADDING', (0, 1), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ]))
+        
+        story.append(logs_table)
+        
+        # Custom NumberedCanvas local class definition to draw headers/footers
+        class NumberedCanvas(canvas.Canvas):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self._saved_page_states = []
 
-        def showPage(self):
-            self._saved_page_states.append(dict(self.__dict__))
-            self._startPage()
+            def showPage(self):
+                self._saved_page_states.append(dict(self.__dict__))
+                self._startPage()
 
-        def save(self):
-            num_pages = len(self._saved_page_states)
-            for state in self._saved_page_states:
-                self.__dict__.update(state)
-                self.draw_page_decorations(num_pages)
-                super().showPage()
-            super().save()
+            def save(self):
+                num_pages = len(self._saved_page_states)
+                for state in self._saved_page_states:
+                    self.__dict__.update(state)
+                    self.draw_page_decorations(num_pages)
+                    super().showPage()
+                super().save()
 
-        def draw_page_decorations(self, page_count):
-            self.saveState()
-            self.setFont("Helvetica-Bold", 8)
-            self.setFillColor(colors.HexColor("#071A49"))
-            
-            # Header
-            self.drawString(54, 555, "ArchivEx — Rapport d'Audit & Journal de Télémétrie")
-            self.setFont("Helvetica", 8)
-            self.setFillColor(colors.HexColor("#64748b"))
-            self.drawRightString(788, 555, f"Filtres : {action_filter or 'Tous'}")
-            
-            self.setStrokeColor(colors.HexColor("#e2e8f0"))
-            self.setLineWidth(0.5)
-            self.line(54, 547, 788, 547)
-            
-            # Footer
-            self.line(54, 45, 788, 45)
-            page_text = f"Page {self._pageNumber} sur {page_count}"
-            self.drawRightString(788, 30, page_text)
-            self.drawString(54, 30, "Document officiel confidentiel réservé aux administrateurs ArchivEx")
-            self.restoreState()
-            
-    doc.build(story, canvasmaker=NumberedCanvas)
-    
-    # Récupération du PDF
-    buffer.seek(0)
-    response = HttpResponse(buffer, content_type='application/pdf')
-    filename = f"Journal_Audit_ArchivEx_{timezone.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    return response
+            def draw_page_decorations(self, page_count):
+                self.saveState()
+                self.setFont("Helvetica-Bold", 8)
+                self.setFillColor(colors.HexColor("#071A49"))
+                
+                # Header
+                self.drawString(54, 555, "ArchivEx — Rapport d'Audit & Journal de Télémétrie")
+                self.setFont("Helvetica", 8)
+                self.setFillColor(colors.HexColor("#64748b"))
+                self.drawRightString(788, 555, f"Filtres : {action_filter or 'Tous'}")
+                
+                self.setStrokeColor(colors.HexColor("#e2e8f0"))
+                self.setLineWidth(0.5)
+                self.line(54, 547, 788, 547)
+                
+                # Footer
+                self.line(54, 45, 788, 45)
+                page_text = f"Page {self._pageNumber} sur {page_count}"
+                self.drawRightString(788, 30, page_text)
+                self.drawString(54, 30, "Document officiel confidentiel réservé aux administrateurs ArchivEx")
+                self.restoreState()
+                
+        doc.build(story, canvasmaker=NumberedCanvas)
+        
+        # Récupération du PDF
+        buffer.seek(0)
+        response = HttpResponse(buffer, content_type='application/pdf')
+        filename = f"Journal_Audit_ArchivEx_{timezone.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+    except Exception as e:
+        messages.error(request, f"Impossible de générer l'export PDF du journal : {str(e)}")
+        return redirect("contributors:site_logs_list")
 
 
 @contributor_required

@@ -5,17 +5,7 @@
  <meta charset="UTF-8">
  <script>
   (function() {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    function applyTheme() {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark' || (!savedTheme && mediaQuery.matches)) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-    }
-    applyTheme();
-    mediaQuery.addEventListener('change', applyTheme);
+    document.documentElement.classList.remove('dark');
   })();
  </script>
   <!-- Inline Accent Palette Logic (archivex-accent-palette) for Public Site -->
@@ -415,14 +405,6 @@
  </a>
  {% endif %}
 
- <!-- MANUAL THEME TOGGLE SWITCH -->
- <div class="flex items-center space-x-1.5 shrink-0 bg-white/10 dark:bg-slate-950/40 px-2 py-1 rounded-full border border-white/15 select-none transition-all duration-200" title="Forcer manuellement le thème clair ou sombre">
- <i class="fa-solid fa-sun text-[10px] text-amber-400 animate-pulse"></i>
- <button type="button" id="header-theme-toggle" onclick="togglePublicTheme()" class="w-9 h-5 rounded-full bg-slate-400/60 dark:bg-blue-600 relative p-0.5 transition-colors focus:outline-none" aria-label="Basculer le thème">
- <div id="header-theme-knob" class="w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 ease-out translate-x-0"></div>
- </button>
- <i class="fa-solid fa-moon text-[10px] text-indigo-200"></i>
- </div>
 
  <!-- PROFILE MENU DROPDOWN -->
  <div class="relative group" id="profile-dropdown-wrapper">
@@ -462,10 +444,6 @@
  <i class="fa-solid fa-star text-amber-400 w-4" aria-hidden="true"></i>
  <span>Mes favoris</span>
  </a>
- <button type="button" onclick="togglePublicTheme()" class="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/80 flex items-center space-x-3 text-xs font-bold text-[#071A49] dark:text-slate-200 transition-colors" role="menuitem">
- <i id="theme-toggle-icon" class="fa-solid fa-moon text-slate-400 w-4" aria-hidden="true"></i>
- <span id="theme-toggle-text">Mode Sombre</span>
- </button>
  </div>
  <div class="pt-1 border-t border-slate-100 dark:border-slate-800">
  <a href="{% url 'accounts:logout' %}" class="px-4 py-2 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center space-x-3 text-xs font-bold text-rose-600 dark:text-rose-400 transition-colors" role="menuitem">
@@ -491,14 +469,6 @@
  <a href="{% url 'accounts:login' %}" class="btn-primary text-xs sm:text-sm px-3.5 sm:px-4 py-1.5 font-bold rounded-xl shadow-md shrink-0">
  Se connecter
  </a>
- <!-- MANUAL THEME TOGGLE SWITCH -->
- <div class="flex items-center space-x-1.5 shrink-0 bg-white/10 dark:bg-slate-950/40 px-2 py-1 rounded-full border border-white/15 select-none transition-all duration-200" title="Forcer manuellement le thème clair ou sombre">
- <i class="fa-solid fa-sun text-[10px] text-amber-400"></i>
- <button type="button" onclick="togglePublicTheme()" class="w-9 h-5 rounded-full bg-slate-400/60 dark:bg-blue-600 relative p-0.5 transition-colors focus:outline-none" aria-label="Basculer le thème">
- <div class="header-theme-knob w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 ease-out translate-x-0"></div>
- </button>
- <i class="fa-solid fa-moon text-[10px] text-indigo-200"></i>
- </div>
  {% if request.resolver_match.url_name != 'about' and request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' %}
  <a href="{% url 'accounts:register' %}" class="hidden sm:inline-block text-xs sm:text-sm font-semibold text-slate-200 hover:text-white px-2.5 sm:px-3.5 py-1.5 rounded-xl hover:bg-white/10 transition-colors">
  Créer un compte
@@ -1012,52 +982,6 @@
       }
   });
 
-  // Theme toggle helper functions for public interface
-  function updateThemeToggleUI() {
-      const icon = document.getElementById('theme-toggle-icon');
-      const text = document.getElementById('theme-toggle-text');
-      const knobs = document.querySelectorAll('#header-theme-knob, .header-theme-knob');
-      const isDark = document.documentElement.classList.contains('dark');
-
-      if (icon && text) {
-          if (isDark) {
-              icon.className = 'fa-solid fa-sun text-amber-400 w-4';
-              text.textContent = 'Mode Clair';
-          } else {
-              icon.className = 'fa-solid fa-moon text-slate-400 w-4';
-              text.textContent = 'Mode Sombre';
-          }
-      }
-
-      knobs.forEach(knob => {
-          if (isDark) {
-              knob.classList.remove('translate-x-0');
-              knob.classList.add('translate-x-4');
-          } else {
-              knob.classList.remove('translate-x-4');
-              knob.classList.add('translate-x-0');
-          }
-      });
-  }
-
-  function togglePublicTheme() {
-      if (document.documentElement.classList.contains('dark')) {
-          document.documentElement.classList.remove('dark');
-          localStorage.setItem('theme', 'light');
-      } else {
-          document.documentElement.classList.add('dark');
-          localStorage.setItem('theme', 'dark');
-      }
-      updateThemeToggleUI();
-  }
-
-  // Initialize Theme UI on DOMContentLoaded and listen to live OS preference changes
-  document.addEventListener('DOMContentLoaded', function() {
-      updateThemeToggleUI();
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
-          setTimeout(updateThemeToggleUI, 50);
-      });
-  });
   </script>
 
  <script src="{% static 'js/drag_drop.js' %}"></script>
