@@ -1,4 +1,5 @@
 import os
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
@@ -8,6 +9,7 @@ from django.http import JsonResponse, HttpResponseForbidden, FileResponse, Http4
 
 from academics.models import School, Level, Filiere, AcademicYear, Semester, Subject
 from academics.parser import parse_exam_filename
+from academics.ocr_utils import generate_pdf_summary_and_metadata
 from exams.models import Exam
 from content.models import Summary, Guide, Article, CloudFile
 from accounts.models import StudentProfile
@@ -139,6 +141,35 @@ def admin_dashboard_view(request):
     available_filieres = Filiere.objects.filter(school=active_school) if active_school else Filiere.objects.none()
     available_semesters = Semester.objects.filter(filiere=active_filiere) if active_filiere else Semester.objects.none()
 
+    # Chart data: Distribution des documents par filière (spécialité académique)
+    filieres_qs = Filiere.objects.filter(school=active_school) if active_school else Filiere.objects.all()
+    filieres_qs = filieres_qs.annotate(
+        exams_cnt=Count('exams', distinct=True),
+        summaries_cnt=Count('semesters__subjects__summaries', distinct=True),
+        guides_cnt=Count('semesters__subjects__guides', distinct=True)
+    )
+
+    chart_labels = []
+    chart_exams = []
+    chart_summaries = []
+    chart_guides = []
+    chart_totals = []
+
+    for f in filieres_qs:
+        chart_labels.append(f.name)
+        chart_exams.append(f.exams_cnt)
+        chart_summaries.append(f.summaries_cnt)
+        chart_guides.append(f.guides_cnt)
+        chart_totals.append(f.exams_cnt + f.summaries_cnt + f.guides_cnt)
+
+    filiere_chart_json = json.dumps({
+        "labels": chart_labels,
+        "exams": chart_exams,
+        "summaries": chart_summaries,
+        "guides": chart_guides,
+        "totals": chart_totals,
+    })
+
     context = {
         "active_school": active_school,
         "active_filiere": active_filiere,
@@ -155,6 +186,7 @@ def admin_dashboard_view(request):
         "active_pass_count": active_pass_count,
         "recent_exams": recent_exams,
         "recent_summaries": recent_summaries,
+        "filiere_chart_json": filiere_chart_json,
     }
     return render(request, "contributors/dashboard.html", context)
 
@@ -389,14 +421,25 @@ def exam_create_view(request):
             exam.is_free = form.cleaned_data["is_free"]
             exam.is_published = form.cleaned_data["is_published"]
 
-            # Traitement des fichiers Cloud et téléversements directs
-            _process_exam_cloud_files(form, exam, target_semester, active_school, active_filiere, active_semester, request.user)
+            # Vérification des doublons
+            duplicate_exists = Exam.objects.filter(
+                title__iexact=exam.title,
+                subject=exam.subject,
+                academic_year=exam.academic_year,
+                semester=exam.semester
+            ).exists()
 
-            exam.save()
-
-            status_str = "publiée" if exam.is_published else "enregistrée en brouillon"
-            messages.success(request, f"Épreuve « {exam.title} » publiée avec succès sur le site public pour {exam.subject.name}.")
-            return redirect("contributors:exam_list")
+            if duplicate_exists:
+                form.add_error("title", f"Une épreuve nommée « {exam.title} » existe déjà pour cette matière.")
+            else:
+                # Traitement des fichiers Cloud et téléversements directs
+                _process_exam_cloud_files(form, exam, target_semester, active_school, active_filiere, active_semester, request.user)
+    
+                exam.save()
+    
+                status_str = "publiée" if exam.is_published else "enregistrée en brouillon"
+                messages.success(request, f"Épreuve « {exam.title} » {status_str} avec succès pour {exam.subject.name}.")
+                return redirect("contributors:exam_list")
     else:
         form = ExamAdminForm(active_filiere=active_filiere, active_semester=active_semester)
 
@@ -458,12 +501,23 @@ def exam_edit_view(request, pk):
             exam.is_free = form.cleaned_data["is_free"]
             exam.is_published = form.cleaned_data["is_published"]
 
-            _process_exam_cloud_files(form, exam, target_semester, active_school, active_filiere, active_semester, request.user)
+            # Vérification des doublons (en excluant l'épreuve courante)
+            duplicate_exists = Exam.objects.filter(
+                title__iexact=exam.title,
+                subject=exam.subject,
+                academic_year=exam.academic_year,
+                semester=exam.semester
+            ).exclude(pk=exam.pk).exists()
 
-            exam.save()
-
-            messages.success(request, f"Épreuve « {exam.title} » mise à jour avec succès.")
-            return redirect("contributors:exam_list")
+            if duplicate_exists:
+                form.add_error("title", f"Une autre épreuve nommée « {exam.title} » existe déjà pour cette matière.")
+            else:
+                _process_exam_cloud_files(form, exam, target_semester, active_school, active_filiere, active_semester, request.user)
+    
+                exam.save()
+    
+                messages.success(request, f"Épreuve « {exam.title} » mise à jour avec succès.")
+                return redirect("contributors:exam_list")
     else:
         form = ExamAdminForm(instance=exam, active_filiere=exam.filiere, active_semester=exam.semester)
 
@@ -1172,6 +1226,25 @@ def library_index_view(request):
             }
         grouped_cloud_files[ue_name]["files"].append(cf)
 
+    total_size_bytes = 0
+    for cf in CloudFile.objects.all():
+        if cf.file:
+            try:
+                total_size_bytes += cf.file.size
+            except Exception:
+                total_size_bytes += 1200000
+        else:
+            total_size_bytes += 1200000
+
+    LIMIT_BYTES = 100 * 1024 * 1024  # 100 MB limit
+    total_size_mb = round(total_size_bytes / (1024 * 1024), 1)
+    limit_mb = round(LIMIT_BYTES / (1024 * 1024), 1)
+    fill_percentage = min(100.0, round((total_size_bytes / LIMIT_BYTES) * 100, 1))
+
+    # Retrieve lists for bulk displacement options
+    filieres_list = Filiere.objects.filter(school=active_school) if active_school else Filiere.objects.all()
+    semesters_list = Semester.objects.filter(filiere__school=active_school) if active_school else Semester.objects.all()
+
     context = {
         "active_school": active_school,
         "active_filiere": active_filiere,
@@ -1184,6 +1257,11 @@ def library_index_view(request):
         "exam_count": exam_count,
         "correction_count": correction_count,
         "summary_count": summary_count,
+        "total_size_mb": total_size_mb,
+        "limit_mb": limit_mb,
+        "fill_percentage": fill_percentage,
+        "filieres_list": filieres_list,
+        "semesters_list": semesters_list,
     }
     return render(request, "contributors/library/index.html", context)
 
@@ -1287,6 +1365,29 @@ def publish_from_cloud_view(request, pk):
     detected_academic_year = parsed["detected_academic_year"] or ""
     initial_title = parsed["clean_title"] or cloud_file.title.replace("Épreuve — ", "").replace(".pdf", "").strip()
 
+    # Extraire automatiquement le texte et générer un résumé via OCR Python si aucune méta-donnée n'est détectée
+    ocr_result = None
+    auto_ocr_summary = ""
+    force_ocr_flag = request.GET.get("force_ocr") == "1"
+
+    if (not parsed.get("is_valid") or not detected_subject_name or not detected_academic_year or force_ocr_flag) and cloud_file.file:
+        try:
+            ocr_result = generate_pdf_summary_and_metadata(
+                cloud_file.file,
+                filename=cloud_file.title,
+                available_subjects=available_subjects,
+                force_ocr=force_ocr_flag
+            )
+            auto_ocr_summary = ocr_result.get("summary", "")
+
+            # Si la matière ou l'année manque, utiliser le résultat OCR s'il est disponible
+            if not detected_subject_name and ocr_result.get("detected_subject_name"):
+                detected_subject_name = ocr_result["detected_subject_name"]
+            if not detected_academic_year and ocr_result.get("detected_year"):
+                detected_academic_year = ocr_result["detected_year"]
+        except Exception as ocr_err:
+            logger.warning(f"Erreur d'extraction OCR dans publish_from_cloud_view: {ocr_err}")
+
     # Recherche automatique du corrigé et du résumé associés dans le Cloud Storage
     auto_corr_cloud = None
     auto_sum_cloud = None
@@ -1362,7 +1463,8 @@ def publish_from_cloud_view(request, pk):
             "title": initial_title,
             "subject_name": detected_subject_name,
             "year": detected_academic_year or "2025-2026",
-            "exam_type": "examen",
+            "exam_type": (ocr_result.get("detected_exam_type") if ocr_result else "examen") or "examen",
+            "description": auto_ocr_summary or "",
             "is_published": "True",
             "is_free": "False",
             "cloud_file": cloud_file if cloud_file.file_type == "EXAM" else None,
@@ -1383,6 +1485,9 @@ def publish_from_cloud_view(request, pk):
         "auto_corr_cloud": auto_corr_cloud,
         "auto_sum_cloud": auto_sum_cloud,
         "parsed_info": parsed,
+        "ocr_result": ocr_result,
+        "auto_ocr_summary": auto_ocr_summary,
+        "no_metadata_detected": not parsed.get("is_valid", False),
     }
     return render(request, "contributors/exams/form.html", context)
 
@@ -1673,8 +1778,587 @@ def library_download_original_view(request, pk, file_type):
 # ======================================================
 
 from support.views import admin_support_list_view, admin_support_detail_view
+from accounts.models import SiteLog
+from django.core.paginator import Paginator
+
+@contributor_required
+def site_logs_list_view(request):
+    """Affiche le journal d'activité complet du site, filtrable par type d'action."""
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
+    
+    # Récupération des filtres
+    action_filter = request.GET.get("action_type", "")
+    search_q = request.GET.get("q", "").strip()
+    
+    logs_qs = SiteLog.objects.select_related("user").order_by("-created_at")
+    
+    if action_filter:
+        logs_qs = logs_qs.filter(action_type=action_filter)
+        
+    if search_q:
+        logs_qs = logs_qs.filter(
+            Q(description__icontains=search_q) |
+            Q(user__username__icontains=search_q) |
+            Q(path__icontains=search_q) |
+            Q(ip_address__icontains=search_q)
+        )
+        
+    # Pagination (50 logs par page)
+    paginator = Paginator(logs_qs, 50)
+    page_number = request.GET.get("page", 1)
+    page_obj = paginator.get_page(page_number)
+    
+    # Statistiques pour les KPI du journal
+    total_logs = SiteLog.objects.count()
+    connections_count = SiteLog.objects.filter(action_type="CONNECTION").count()
+    modifications_count = SiteLog.objects.filter(action_type="MODIFICATION").count()
+    clicks_count = SiteLog.objects.filter(action_type="CLICK").count()
+    views_count = SiteLog.objects.filter(action_type="PAGE_VIEW").count()
+    
+    context = {
+        "active_school": active_school,
+        "active_filiere": active_filiere,
+        "active_semester": active_semester,
+        "page_obj": page_obj,
+        "action_filter": action_filter,
+        "search_q": search_q,
+        "total_logs": total_logs,
+        "connections_count": connections_count,
+        "modifications_count": modifications_count,
+        "clicks_count": clicks_count,
+        "views_count": views_count,
+        "action_choices": SiteLog.ACTION_CHOICES,
+    }
+    return render(request, "contributors/logs/list.html", context)
+
+
+@contributor_required
+def export_logs_pdf_view(request):
+    """Génère un export PDF professionnel du journal des activités avec filtres appliqués."""
+    import io
+    from django.http import HttpResponse
+    from django.utils import timezone
+    from django.db.models import Q
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib import colors
+    from reportlab.pdfgen import canvas
+    
+    # Récupération des mêmes filtres que la vue de liste
+    action_filter = request.GET.get("action_type", "")
+    search_q = request.GET.get("q", "").strip()
+    
+    logs_qs = SiteLog.objects.select_related("user").order_by("-created_at")
+    
+    if action_filter:
+        logs_qs = logs_qs.filter(action_type=action_filter)
+        
+    if search_q:
+        logs_qs = logs_qs.filter(
+            Q(description__icontains=search_q) |
+            Q(user__username__icontains=search_q) |
+            Q(path__icontains=search_q) |
+            Q(ip_address__icontains=search_q)
+        )
+        
+    # Limiter à un nombre raisonnable de logs (par exemple, les 1000 derniers) pour éviter le dépassement de mémoire
+    logs_qs = logs_qs[:1000]
+    
+    # Création du flux PDF en mémoire
+    buffer = io.BytesIO()
+    
+    # Document A4 Paysage
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=landscape(A4),
+        leftMargin=54,
+        rightMargin=54,
+        topMargin=72,
+        bottomMargin=72
+    )
+    
+    styles = getSampleStyleSheet()
+    
+    # Custom styles
+    title_style = ParagraphStyle(
+        'DocTitle',
+        parent=styles['Heading1'],
+        fontName='Helvetica-Bold',
+        fontSize=20,
+        leading=24,
+        textColor=colors.HexColor("#071A49"),
+        spaceAfter=6
+    )
+    
+    subtitle_style = ParagraphStyle(
+        'DocSubtitle',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=10,
+        leading=14,
+        textColor=colors.HexColor("#475569"),
+        spaceAfter=15
+    )
+    
+    cell_style = ParagraphStyle(
+        'TableCell',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=8,
+        leading=11,
+        textColor=colors.HexColor("#1e293b")
+    )
+    
+    header_cell_style = ParagraphStyle(
+        'TableHeaderCell',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=9,
+        leading=12,
+        textColor=colors.white
+    )
+    
+    story = []
+    
+    # Titre principal
+    story.append(Paragraph("ArchivEx — Journal d'Activité et d'Audit", title_style))
+    
+    # Infos de métadonnées
+    now_str = timezone.now().strftime("%d/%m/%Y %H:%M:%S")
+    filters_desc = "Aucun"
+    if action_filter or search_q:
+        filters_desc = f"Action: {action_filter or 'Tous'} | Recherche: '{search_q or ''}'"
+    
+    sub_text = (
+        f"Généré le : {now_str} par l'administrateur @{request.user.username}<br/>"
+        f"Filtres appliqués : {filters_desc} · (Affichage limité aux 1 000 dernières entrées)"
+    )
+    story.append(Paragraph(sub_text, subtitle_style))
+    story.append(Spacer(1, 10))
+    
+    # Table des logs
+    table_data = [[
+        Paragraph("Horodatage", header_cell_style),
+        Paragraph("Type d'action", header_cell_style),
+        Paragraph("Utilisateur", header_cell_style),
+        Paragraph("Description / Détails de l'action", header_cell_style),
+        Paragraph("Adresse IP", header_cell_style)
+    ]]
+    
+    for log in logs_qs:
+        log_time = log.created_at.strftime("%d/%m/%Y %H:%M:%S")
+        username = log.user.username if log.user else "Visiteur Public"
+        
+        # Color coding text for action type
+        if log.action_type == 'CONNECTION':
+            action_html = f"<font color='#2563eb'><b>CONNEXION</b></font>"
+        elif log.action_type == 'MODIFICATION':
+            action_html = f"<font color='#10b981'><b>MODIFICATION</b></font>"
+        elif log.action_type == 'CLICK':
+            action_html = f"<font color='#d97706'><b>CLIC D'ICÔNE</b></font>"
+        else:
+            action_html = f"<font color='#7c3aed'><b>PAGE LUE</b></font>"
+            
+        desc_text = log.description
+        if log.path:
+            desc_text += f"<br/><font color='#64748b' size='7'><b>Ressource :</b> {log.path}</font>"
+            
+        table_data.append([
+            Paragraph(log_time, cell_style),
+            Paragraph(action_html, cell_style),
+            Paragraph(username, cell_style),
+            Paragraph(desc_text, cell_style),
+            Paragraph(log.ip_address or "127.0.0.1", cell_style)
+        ])
+        
+    # Table widths
+    col_widths = [110, 85, 100, 340, 98]
+    
+    # Table styling
+    logs_table = Table(table_data, colWidths=col_widths, repeatRows=1)
+    logs_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#071A49")),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('TOPPADDING', (0, 0), (-1, 0), 8),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor("#f8fafc")]),
+        ('TOPPADDING', (0, 1), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+    ]))
+    
+    story.append(logs_table)
+    
+    # Custom NumberedCanvas local class definition to draw headers/footers
+    class NumberedCanvas(canvas.Canvas):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self._saved_page_states = []
+
+        def showPage(self):
+            self._saved_page_states.append(dict(self.__dict__))
+            self._startPage()
+
+        def save(self):
+            num_pages = len(self._saved_page_states)
+            for state in self._saved_page_states:
+                self.__dict__.update(state)
+                self.draw_page_decorations(num_pages)
+                super().showPage()
+            super().save()
+
+        def draw_page_decorations(self, page_count):
+            self.saveState()
+            self.setFont("Helvetica-Bold", 8)
+            self.setFillColor(colors.HexColor("#071A49"))
+            
+            # Header
+            self.drawString(54, 555, "ArchivEx — Rapport d'Audit & Journal de Télémétrie")
+            self.setFont("Helvetica", 8)
+            self.setFillColor(colors.HexColor("#64748b"))
+            self.drawRightString(788, 555, f"Filtres : {action_filter or 'Tous'}")
+            
+            self.setStrokeColor(colors.HexColor("#e2e8f0"))
+            self.setLineWidth(0.5)
+            self.line(54, 547, 788, 547)
+            
+            # Footer
+            self.line(54, 45, 788, 45)
+            page_text = f"Page {self._pageNumber} sur {page_count}"
+            self.drawRightString(788, 30, page_text)
+            self.drawString(54, 30, "Document officiel confidentiel réservé aux administrateurs ArchivEx")
+            self.restoreState()
+            
+    doc.build(story, canvasmaker=NumberedCanvas)
+    
+    # Récupération du PDF
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type='application/pdf')
+    filename = f"Journal_Audit_ArchivEx_{timezone.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+@contributor_required
+def bulk_operations_view(request):
+    """
+    Gère les actions groupées (publication, suppression, déplacement) pour une sélection de fichiers Cloud.
+    """
+    if request.method != "POST":
+        return redirect("contributors:library_index")
+
+    action = request.POST.get("action")
+    selected_ids = request.POST.getlist("selected_files")
+
+    if not selected_ids:
+        messages.warning(request, "Aucun fichier n'a été sélectionné.")
+        return redirect("contributors:library_index")
+
+    selected_files = CloudFile.objects.filter(pk__in=selected_ids)
+    count = selected_files.count()
+
+    if action == "delete":
+        # Suppression en masse (BD + fichiers physiques si existants)
+        for cf in selected_files:
+            if cf.file:
+                cf.file.delete(save=False)
+            cf.delete()
+        messages.success(request, f"{count} fichier(s) supprimé(s) avec succès de la bibliothèque Cloud.")
+
+    elif action == "move":
+        # Déplacement en masse (changement de filière et/ou semestre)
+        dest_filiere_id = request.POST.get("dest_filiere")
+        dest_semester_id = request.POST.get("dest_semester")
+
+        if not dest_filiere_id and not dest_semester_id:
+            messages.error(request, "Veuillez sélectionner au moins une filière ou un semestre de destination.")
+            return redirect("contributors:library_index")
+
+        filiere_obj = None
+        semester_obj = None
+
+        if dest_filiere_id:
+            filiere_obj = Filiere.objects.filter(pk=dest_filiere_id).first()
+        if dest_semester_id:
+            semester_obj = Semester.objects.filter(pk=dest_semester_id).first()
+
+        # Déduire la filière du semestre si nécessaire
+        if semester_obj and not filiere_obj:
+            filiere_obj = semester_obj.filiere
+
+        for cf in selected_files:
+            if filiere_obj:
+                cf.filiere = filiere_obj
+            if semester_obj:
+                cf.semester = semester_obj
+            cf.save()
+
+        dest_name = f"{filiere_obj.name if filiere_obj else ''} {f'({semester_obj.label})' if semester_obj else ''}".strip()
+        messages.success(request, f"{count} fichier(s) déplacé(s) vers « {dest_name} » avec succès.")
+
+    elif action == "publish":
+        # Publication en masse des fichiers sélectionnés
+        published_exams = 0
+        published_corrections = 0
+        published_summaries = 0
+        
+        # On fait une passe pour regrouper les épreuves et les corrigés rattachables
+        exams_to_process = []
+        corrections_to_process = []
+        summaries_to_process = []
+
+        for cf in selected_files:
+            if cf.file_type == "EXAM":
+                exams_to_process.append(cf)
+            elif cf.file_type == "CORRECTION":
+                corrections_to_process.append(cf)
+            elif cf.file_type == "SUMMARY":
+                summaries_to_process.append(cf)
+            else:
+                exams_to_process.append(cf)
+
+        # 1. Traitement des Résumés (SUMMARY)
+        for cf in summaries_to_process:
+            parsed = parse_exam_filename(cf.title)
+            ue_name = parsed["matched_subject"].name if parsed["matched_subject"] else (parsed["subject_candidate"] or "Autre UE")
+            
+            target_semester = cf.semester or Semester.objects.first()
+            subject, _ = Subject.objects.get_or_create(
+                name=ue_name.strip(),
+                semester=target_semester,
+                defaults={"is_active": True}
+            )
+            
+            clean_title = cf.title.replace("Résumé — ", "").replace(".pdf", "").strip()
+            Summary.objects.create(
+                title=clean_title,
+                subject=subject,
+                file=cf.file if cf.file else None,
+                introduction=f"Résumé de cours de l'UE {subject.name}.",
+                content=f"<p>Résumé PDF téléchargeable pour l'UE {subject.name}.</p>",
+                publication_status="PUBLISHED",
+                access_type="PREMIUM",
+            )
+            published_summaries += 1
+            cf.delete()
+
+        # 2. Traitement des Examens (EXAM)
+        for cf in exams_to_process:
+            parsed = parse_exam_filename(cf.title)
+            ue_name = parsed["matched_subject"].name if parsed["matched_subject"] else (parsed["subject_candidate"] or "Autre UE")
+            
+            target_semester = cf.semester or Semester.objects.first()
+            subject, _ = Subject.objects.get_or_create(
+                name=ue_name.strip(),
+                semester=target_semester,
+                defaults={"is_active": True}
+            )
+
+            yr_label = parsed["detected_academic_year"] or "2025-2026"
+            if "-" in yr_label:
+                ay_obj, _ = AcademicYear.objects.get_or_create(label=yr_label)
+                yr_int = int(yr_label.split("-")[1])
+            else:
+                yr_int = 2025
+                ay_obj = target_semester.academic_year or AcademicYear.objects.first()
+
+            # Est-ce qu'on a un corrigé correspondant sélectionné dans corrections_to_process ?
+            corr_cf = None
+            for ccf in corrections_to_process:
+                if subject.name.lower() in ccf.title.lower() or parsed["clean_title"] in ccf.title:
+                    corr_cf = ccf
+                    corrections_to_process.remove(ccf)
+                    break
+
+            exam_title = cf.title.replace("Épreuve — ", "").replace(".pdf", "").strip()
+            Exam.objects.create(
+                title=exam_title,
+                subject=subject,
+                semester=target_semester,
+                filiere=target_semester.filiere if target_semester else None,
+                level=target_semester.filiere.level if (target_semester and target_semester.filiere) else None,
+                academic_year=ay_obj,
+                year=yr_int,
+                exam_type="examen",
+                cloud_file=cf,
+                file=cf.file if cf.file else None,
+                cloud_correction_file=corr_cf,
+                correction_file=corr_cf.file if (corr_cf and corr_cf.file) else None,
+                is_free=subject.is_free,
+                is_free_correction=subject.is_free_correction,
+                is_published=True,
+            )
+            published_exams += 1
+
+        # 3. Traitement des Corrections orphelines
+        for cf in corrections_to_process:
+            parsed = parse_exam_filename(cf.title)
+            ue_name = parsed["matched_subject"].name if parsed["matched_subject"] else (parsed["subject_candidate"] or "Autre UE")
+            
+            target_semester = cf.semester or Semester.objects.first()
+            subject, _ = Subject.objects.get_or_create(
+                name=ue_name.strip(),
+                semester=target_semester,
+                defaults={"is_active": True}
+            )
+
+            existing_exam = Exam.objects.filter(subject=subject, correction_file__isnull=True).first()
+            if existing_exam:
+                existing_exam.cloud_correction_file = cf
+                existing_exam.correction_file = cf.file if cf.file else None
+                existing_exam.is_published = True
+                existing_exam.save()
+            else:
+                yr_label = parsed["detected_academic_year"] or "2025-2026"
+                if "-" in yr_label:
+                    ay_obj, _ = AcademicYear.objects.get_or_create(label=yr_label)
+                    yr_int = int(yr_label.split("-")[1])
+                else:
+                    yr_int = 2025
+                    ay_obj = target_semester.academic_year or AcademicYear.objects.first()
+
+                exam_title = cf.title.replace("Correction — ", "").replace(".pdf", "").strip()
+                Exam.objects.create(
+                    title=exam_title,
+                    subject=subject,
+                    semester=target_semester,
+                    filiere=target_semester.filiere if target_semester else None,
+                    level=target_semester.filiere.level if (target_semester and target_semester.filiere) else None,
+                    academic_year=ay_obj,
+                    year=yr_int,
+                    exam_type="correction",
+                    cloud_file=None,
+                    file=None,
+                    cloud_correction_file=cf,
+                    correction_file=cf.file if cf.file else None,
+                    is_free=subject.is_free,
+                    is_free_correction=subject.is_free_correction,
+                    is_published=True,
+                )
+            published_corrections += 1
+
+        messages.success(
+            request,
+            f"Publication groupée terminée : {published_exams} épreuve(s), {published_corrections} corrigé(s) et {published_summaries} résumé(s) ont été rattachés et publiés."
+        )
+
+    return redirect("contributors:library_index")
+
+
+@contributor_required
+def extract_pdf_ocr_view(request, pk):
+    """
+    Extrait le texte d'un fichier Cloud via PyPDF / OCR Python et génère un résumé automatique.
+    Retourne une réponse JSON (pour AJAX) ou effectue une redirection.
+    """
+    cloud_file = get_object_or_404(CloudFile, pk=pk)
+    force_ocr = request.GET.get("force_ocr") == "1" or request.POST.get("force_ocr") == "1"
+
+    target_filiere = cloud_file.filiere
+    available_subjects = Subject.objects.filter(semester__filiere=target_filiere) if target_filiere else Subject.objects.all()
+
+    if not cloud_file.file:
+        if request.headers.get("x-requested-with") == "XMLHttpRequest" or request.GET.get("format") == "json":
+            return JsonResponse({"success": False, "error": "Aucun fichier PDF rattaché à ce document Cloud."}, status=400)
+        messages.error(request, "Aucun fichier PDF rattaché à ce document Cloud.")
+        return redirect("contributors:library_detail", pk=pk)
+
+    try:
+        res = generate_pdf_summary_and_metadata(
+            cloud_file.file,
+            filename=cloud_file.title,
+            available_subjects=available_subjects,
+            force_ocr=force_ocr
+        )
+
+        if request.headers.get("x-requested-with") == "XMLHttpRequest" or request.GET.get("format") == "json":
+            return JsonResponse({
+                "success": True,
+                "file_id": cloud_file.id,
+                "title": cloud_file.title,
+                "summary": res["summary"],
+                "extracted_text": res["extracted_text"],
+                "used_ocr": res["used_ocr"],
+                "detected_subject": res["detected_subject_name"],
+                "detected_year": res["detected_year"],
+                "detected_exam_type": res["detected_exam_type"],
+                "detected_tags": res.get("detected_tags", []),
+                "tags_str": res.get("tags_str", ""),
+                "char_count": res["extracted_text_length"],
+            })
+
+        messages.success(
+            request,
+            f"Extraction PDF/OCR réussie pour « {cloud_file.title} » ({res['extracted_text_length']} caractères analysés, OCR={'Oui' if res['used_ocr'] else 'Non'})."
+        )
+        return redirect("contributors:publish_from_cloud", pk=pk)
+
+    except Exception as e:
+        if request.headers.get("x-requested-with") == "XMLHttpRequest" or request.GET.get("format") == "json":
+            return JsonResponse({"success": False, "error": f"Erreur d'extraction OCR : {str(e)}"}, status=500)
+        messages.error(request, f"Erreur lors de l'extraction OCR : {str(e)}")
+        return redirect("contributors:library_detail", pk=pk)
+
+
+@contributor_required
+def extract_uploaded_pdf_ocr_view(request):
+    """
+    Extrait le texte et génère un résumé court depuis un fichier PDF directement téléversé (AJAX).
+    """
+    if request.method != "POST" or "pdf_file" not in request.FILES:
+        return JsonResponse({"success": False, "error": "Veuillez fournir un fichier PDF valide."}, status=400)
+
+    pdf_file = request.FILES["pdf_file"]
+    force_ocr = request.POST.get("force_ocr") == "1"
+
+    try:
+        res = generate_pdf_summary_and_metadata(
+            pdf_file,
+            filename=pdf_file.name,
+            available_subjects=Subject.objects.all(),
+            force_ocr=force_ocr
+        )
+
+        return JsonResponse({
+            "success": True,
+            "filename": pdf_file.name,
+            "summary": res["summary"],
+            "extracted_text": res["extracted_text"],
+            "used_ocr": res["used_ocr"],
+            "detected_subject": res["detected_subject_name"],
+            "detected_year": res["detected_year"],
+            "detected_exam_type": res["detected_exam_type"],
+            "detected_tags": res.get("detected_tags", []),
+            "tags_str": res.get("tags_str", ""),
+            "char_count": res["extracted_text_length"],
+        })
+    except Exception as e:
+        return JsonResponse({"success": False, "error": f"Erreur lors de l'analyse du PDF : {str(e)}"}, status=500)
+
+
+@contributor_required
+def admin_settings_view(request):
+    """
+    Page des paramètres d'administration et sélection de la palette d'accentuation professionnelle.
+    """
+    school_ctx, filiere_ctx, semester_ctx = get_active_academic_context(request)
+    context = {
+        "active_school": school_ctx,
+        "active_filiere": filiere_ctx,
+        "active_semester": semester_ctx,
+    }
+    return render(request, "contributors/settings.html", context)
+
 
 __all__ = [
     "admin_support_list_view",
     "admin_support_detail_view",
+    "site_logs_list_view",
+    "export_logs_pdf_view",
+    "bulk_operations_view",
+    "extract_pdf_ocr_view",
+    "extract_uploaded_pdf_ocr_view",
+    "admin_settings_view",
 ]

@@ -28,4 +28,28 @@ class Favorite(models.Model):
 
     def __str__(self):
         return f"{self.user.username} {self.exam.title}"
+
+
+class SiteLog(models.Model):
+    ACTION_CHOICES = (
+        ("CONNECTION", "Connexion / Déconnexion"),
+        ("MODIFICATION", "Modification de contenu"),
+        ("CLICK", "Clic Bouton / Lien public"),
+        ("PAGE_VIEW", "Consultation de page"),
+    )
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="site_logs")
+    action_type = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    description = models.TextField()
+    path = models.CharField(max_length=255, blank=True, null=True)
+    ip_address = models.CharField(max_length=45, blank=True, null=True)
+    user_agent = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        user_str = self.user.username if self.user else "Anonyme"
+        return f"[{self.get_action_type_display()}] {user_str} - {self.description[:50]}"
+
  

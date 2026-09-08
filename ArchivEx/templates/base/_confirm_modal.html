@@ -1,0 +1,105 @@
+<!-- Global Custom Application Confirmation Modal -->
+<div id="app-confirm-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-200">
+    <div class="bg-white dark:bg-[#121824] border border-slate-200 dark:border-[#1e293b] rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl text-left relative transform transition-transform scale-95" id="app-confirm-modal-card" onclick="event.stopPropagation()">
+        
+        <!-- Icon & Title Header -->
+        <div class="flex items-start space-x-4 mb-4">
+            <div id="app-confirm-icon-wrap" class="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl shrink-0 shadow-inner">
+                <i id="app-confirm-icon" class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            </div>
+            <div class="flex-grow">
+                <h3 id="app-confirm-title" class="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-snug">Confirmation requise</h3>
+                <p id="app-confirm-message" class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium mt-1 leading-relaxed">
+                    Voulez-vous vraiment effectuer cette action ?
+                </p>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center justify-end space-x-3 mt-6 pt-4 border-t border-slate-100 dark:border-[#1e293b]">
+            <button type="button" id="app-confirm-cancel-btn" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#1e293b] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-extrabold transition-colors">
+                Annuler
+            </button>
+            <button type="button" id="app-confirm-ok-btn" class="px-5 py-2.5 rounded-xl bg-ax-accent hover:opacity-90 active:scale-95 text-white text-xs font-black shadow-lg transition-all flex items-center space-x-2">
+                <i class="fa-solid fa-check text-xs" aria-hidden="true"></i>
+                <span id="app-confirm-ok-text">Confirmer</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Global Custom Confirmation Modal Controller
+    window.showAppConfirm = function(options) {
+        const modal = document.getElementById('app-confirm-modal');
+        const card = document.getElementById('app-confirm-modal-card');
+        const titleEl = document.getElementById('app-confirm-title');
+        const msgEl = document.getElementById('app-confirm-message');
+        const okBtn = document.getElementById('app-confirm-ok-btn');
+        const cancelBtn = document.getElementById('app-confirm-cancel-btn');
+        const okTextEl = document.getElementById('app-confirm-ok-text');
+        const iconWrap = document.getElementById('app-confirm-icon-wrap');
+        const iconEl = document.getElementById('app-confirm-icon');
+
+        if (!modal) return;
+
+        titleEl.textContent = options.title || 'Confirmation';
+        msgEl.textContent = options.message || 'Êtes-vous sûr de vouloir continuer ?';
+        okTextEl.textContent = options.confirmText || 'Confirmer';
+
+        // Optional styling based on type (danger vs info)
+        if (options.type === 'danger') {
+            iconWrap.className = 'w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xl shrink-0 shadow-inner';
+            iconEl.className = 'fa-solid fa-triangle-exclamation';
+            okBtn.className = 'px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-xs font-black shadow-lg shadow-rose-600/30 transition-all flex items-center space-x-2';
+        } else {
+            iconWrap.className = 'w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/60 text-[#2563EB] dark:text-blue-400 flex items-center justify-center text-xl shrink-0 shadow-inner';
+            iconEl.className = 'fa-solid fa-circle-question';
+            okBtn.className = 'px-5 py-2.5 rounded-xl btn-ax-primary active:scale-95 text-white text-xs font-black shadow-lg transition-all flex items-center space-x-2';
+        }
+
+        modal.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            card.classList.remove('scale-95');
+            card.classList.add('scale-100');
+        });
+
+        // Clean up previous event listeners by cloning
+        const newOkBtn = okBtn.cloneNode(true);
+        okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+
+        const newCancelBtn = cancelBtn.cloneNode(true);
+        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+        const closeModal = () => {
+            card.classList.remove('scale-100');
+            card.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 150);
+        };
+
+        newOkBtn.addEventListener('click', () => {
+            closeModal();
+            if (typeof options.onConfirm === 'function') {
+                options.onConfirm();
+            }
+        });
+
+        newCancelBtn.addEventListener('click', () => {
+            closeModal();
+            if (typeof options.onCancel === 'function') {
+                options.onCancel();
+            }
+        });
+
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                closeModal();
+                if (typeof options.onCancel === 'function') {
+                    options.onCancel();
+                }
+            }
+        };
+    };
+</script>

@@ -31,63 +31,75 @@
 
     <!-- METRICS CARDS GRID -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-            <div class="w-8 h-8 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center text-sm font-bold mb-2">
+        <!-- Étudiants -->
+        <div class="group relative overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-600 dark:from-blue-600 dark:to-cyan-800 p-4 rounded-2xl border border-blue-400 dark:border-blue-500 shadow-lg hover:shadow-blue-500/30 transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] flex flex-col justify-between">
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-500"></div>
+            <div class="relative z-10 w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md text-white border border-white/30 flex items-center justify-center text-sm font-bold mb-2 shadow-inner">
                 <i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
             </div>
-            <div>
-                <p class="text-2xl font-black text-[#071A49]">{{ students_count }}</p>
-                <p class="text-[11px] font-bold text-slate-500">Étudiants</p>
+            <div class="relative z-10">
+                <p class="text-2xl font-black text-white drop-shadow-sm">{{ students_count }}</p>
+                <p class="text-[11px] font-bold text-blue-50">Étudiants</p>
             </div>
         </div>
 
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-            <div class="w-8 h-8 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center text-sm font-bold mb-2">
+        <!-- Épreuves -->
+        <div class="group relative overflow-hidden bg-gradient-to-br from-indigo-500 to-blue-600 dark:from-indigo-600 dark:to-blue-800 p-4 rounded-2xl border border-indigo-400 dark:border-indigo-500 shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] flex flex-col justify-between">
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-500"></div>
+            <div class="relative z-10 w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md text-white border border-white/30 flex items-center justify-center text-sm font-bold mb-2 shadow-inner">
                 <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
             </div>
-            <div>
-                <p class="text-2xl font-black text-[#071A49]">{{ published_exams }}<span class="text-xs font-semibold text-slate-400">/{{ exams_count }}</span></p>
-                <p class="text-[11px] font-bold text-slate-500">Épreuves (publiées)</p>
+            <div class="relative z-10">
+                <p class="text-2xl font-black text-white drop-shadow-sm">{{ published_exams }}<span class="text-xs font-semibold text-indigo-200">/{{ exams_count }}</span></p>
+                <p class="text-[11px] font-bold text-indigo-50">Épreuves (publiées)</p>
             </div>
         </div>
 
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-            <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold mb-2">
+        <!-- Résumés -->
+        <div class="group relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-800 p-4 rounded-2xl border border-emerald-400 dark:border-emerald-500 shadow-lg hover:shadow-emerald-500/30 transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] flex flex-col justify-between">
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-500"></div>
+            <div class="relative z-10 w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md text-white border border-white/30 flex items-center justify-center text-sm font-bold mb-2 shadow-inner">
                 <i class="fa-solid fa-book-open" aria-hidden="true"></i>
             </div>
-            <div>
-                <p class="text-2xl font-black text-[#071A49]">{{ summaries_count }}</p>
-                <p class="text-[11px] font-bold text-slate-500">Résumés</p>
+            <div class="relative z-10">
+                <p class="text-2xl font-black text-white drop-shadow-sm">{{ summaries_count }}</p>
+                <p class="text-[11px] font-bold text-emerald-50">Résumés</p>
             </div>
         </div>
 
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-            <div class="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-sm font-bold mb-2">
+        <!-- Guides -->
+        <div class="group relative overflow-hidden bg-gradient-to-br from-purple-500 to-fuchsia-600 dark:from-purple-600 dark:to-fuchsia-800 p-4 rounded-2xl border border-purple-400 dark:border-purple-500 shadow-lg hover:shadow-purple-500/30 transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] flex flex-col justify-between">
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-500"></div>
+            <div class="relative z-10 w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md text-white border border-white/30 flex items-center justify-center text-sm font-bold mb-2 shadow-inner">
                 <i class="fa-solid fa-compass" aria-hidden="true"></i>
             </div>
-            <div>
-                <p class="text-2xl font-black text-[#071A49]">{{ guides_count }}</p>
-                <p class="text-[11px] font-bold text-slate-500">Guides</p>
+            <div class="relative z-10">
+                <p class="text-2xl font-black text-white drop-shadow-sm">{{ guides_count }}</p>
+                <p class="text-[11px] font-bold text-purple-50">Guides</p>
             </div>
         </div>
 
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-            <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm font-bold mb-2">
+        <!-- Conseils -->
+        <div class="group relative overflow-hidden bg-gradient-to-br from-amber-500 to-orange-600 dark:from-amber-600 dark:to-orange-800 p-4 rounded-2xl border border-amber-400 dark:border-amber-500 shadow-lg hover:shadow-amber-500/30 transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] flex flex-col justify-between">
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-500"></div>
+            <div class="relative z-10 w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md text-white border border-white/30 flex items-center justify-center text-sm font-bold mb-2 shadow-inner">
                 <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
             </div>
-            <div>
-                <p class="text-2xl font-black text-[#071A49]">{{ articles_count }}</p>
-                <p class="text-[11px] font-bold text-slate-500">Conseils</p>
+            <div class="relative z-10">
+                <p class="text-2xl font-black text-white drop-shadow-sm">{{ articles_count }}</p>
+                <p class="text-[11px] font-bold text-amber-50">Conseils</p>
             </div>
         </div>
 
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-            <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold mb-2">
+        <!-- Pass Actifs -->
+        <div class="group relative overflow-hidden bg-gradient-to-br from-violet-500 to-purple-600 dark:from-violet-600 dark:to-purple-800 p-4 rounded-2xl border border-violet-400 dark:border-violet-500 shadow-lg hover:shadow-violet-500/30 transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] flex flex-col justify-between">
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-500"></div>
+            <div class="relative z-10 w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md text-white border border-white/30 flex items-center justify-center text-sm font-bold mb-2 shadow-inner">
                 <i class="fa-solid fa-credit-card" aria-hidden="true"></i>
             </div>
-            <div>
-                <p class="text-2xl font-black text-[#071A49]">{{ active_pass_count }}</p>
-                <p class="text-[11px] font-bold text-slate-500">Pass Actifs</p>
+            <div class="relative z-10">
+                <p class="text-2xl font-black text-white drop-shadow-sm">{{ active_pass_count }}</p>
+                <p class="text-[11px] font-bold text-violet-50">Pass Actifs</p>
             </div>
         </div>
     </div>
@@ -115,6 +127,26 @@
         </div>
     </div>
 
+    <!-- CHART SECTION: DISTRIBUTION DES DOCUMENTS PAR FILIÈRE -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <div>
+                <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600 block">Analyse d'Activité</span>
+                <h2 class="text-base font-black text-[#071A49] flex items-center space-x-2">
+                    <i class="fa-solid fa-chart-column text-indigo-500" aria-hidden="true"></i>
+                    <span>Distribution des documents par filière / spécialité</span>
+                </h2>
+            </div>
+            <p class="text-xs text-slate-500 font-medium">
+                Visualisation de la répartition du contenu académique disponible par filière d'études.
+            </p>
+        </div>
+
+        <div class="relative w-full h-72 sm:h-80">
+            <canvas id="filiereChart"></canvas>
+        </div>
+    </div>
+
     <!-- RECENT PUBLICATIONS TABLE -->
     <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
         <div class="flex items-center justify-between mb-4">
@@ -125,7 +157,7 @@
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
+            <table class="w-full text-left text-xs min-w-[600px]">
                 <thead>
                     <tr class="border-b border-slate-200 text-slate-400 font-bold uppercase text-[10px]">
                         <th class="py-2.5 px-3">Titre de l'épreuve</th>
@@ -175,4 +207,92 @@
     </div>
 
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const rawData = {{ filiere_chart_json|safe }};
+    const ctx = document.getElementById("filiereChart");
+    if (!ctx || !rawData) return;
+
+    const labels = rawData.labels || [];
+    const exams = rawData.exams || [];
+    const summaries = rawData.summaries || [];
+    const guides = rawData.guides || [];
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Épreuves',
+                    data: exams,
+                    backgroundColor: 'rgba(37, 99, 235, 0.85)',
+                    borderColor: 'rgb(37, 99, 235)',
+                    borderWidth: 1.5,
+                    borderRadius: 6,
+                },
+                {
+                    label: 'Résumés de cours',
+                    data: summaries,
+                    backgroundColor: 'rgba(16, 185, 129, 0.85)',
+                    borderColor: 'rgb(16, 185, 129)',
+                    borderWidth: 1.5,
+                    borderRadius: 6,
+                },
+                {
+                    label: 'Guides d\'étude',
+                    data: guides,
+                    backgroundColor: 'rgba(147, 51, 234, 0.85)',
+                    borderColor: 'rgb(147, 51, 234)',
+                    borderWidth: 1.5,
+                    borderRadius: 6,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        font: { family: 'Plus Jakarta Sans', size: 12, weight: '700' },
+                        usePointStyle: true,
+                        padding: 16
+                    }
+                },
+                tooltip: {
+                    backgroundColor: '#071A49',
+                    titleFont: { size: 13, weight: 'bold' },
+                    bodyFont: { size: 12 },
+                    padding: 12,
+                    cornerRadius: 10
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
+                        color: '#64748B'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        precision: 0,
+                        font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
+                        color: '#64748B'
+                    },
+                    grid: { color: '#F1F5F9' }
+                }
+            }
+        }
+    });
+});
+</script>
 {% endblock %}

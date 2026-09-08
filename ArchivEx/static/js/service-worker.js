@@ -4,7 +4,6 @@ const STATIC_ASSETS = [
     '/manifest.json',
     '/static/manifest.json',
     '/static/css/style.css',
-    '/static/images/logo.jpg',
     '/static/icons/icon-192.png',
     '/static/icons/icon-512.png',
     '/icons/icon-192.png',

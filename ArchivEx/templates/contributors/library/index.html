@@ -7,88 +7,196 @@
 <div class="space-y-6">
 
     <!-- PAGE HEADER -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-[#121824] p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-[#1e293b] shadow-sm transition-colors duration-200">
         <div>
-            <div class="flex items-center space-x-2 text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">
+            <div class="flex items-center space-x-2 text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
                 <i class="fa-solid fa-cloud" aria-hidden="true"></i>
                 <span>Bibliothèque Cloud Integrated — Stockage par UE</span>
             </div>
-            <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">
+            <h1 class="text-xl sm:text-2xl font-black text-[#071A49] dark:text-slate-100 tracking-tight">
                 Dépôt Central Organisé par UE
             </h1>
-            <p class="text-xs text-slate-500 font-medium mt-1">
+            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
                 Stockage des épreuves regroupées par UE. Cliquez sur <strong>Publier</strong> pour transmettre automatiquement l'UE et l'année académique détectées.
             </p>
         </div>
         <div class="flex items-center space-x-3 shrink-0">
-            <a href="{% url 'contributors:cloud_file_create' %}" class="inline-flex items-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-colors shadow-md shadow-blue-500/20">
+            <a href="{% url 'contributors:cloud_file_create' %}" class="inline-flex items-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 text-white font-bold text-xs rounded-xl transition-colors shadow-md shadow-blue-500/20">
                 <i class="fa-solid fa-cloud-arrow-up text-xs" aria-hidden="true"></i>
                 <span>Déposer un fichier sur le Cloud</span>
             </a>
         </div>
     </div>
 
-    <!-- METRICS STATS CARDS -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <!-- TOTAL -->
-        <a href="?filter=all" class="p-4 rounded-2xl border transition-all {% if type_filter == 'all' %}bg-[#071A49] text-white border-[#071A49] shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-blue-300{% endif %}">
-            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Stockage Total</div>
-            <div class="text-2xl font-black mt-1">{{ total_count }}</div>
-            <div class="text-[11px] font-semibold mt-2 opacity-90">Fichiers conservés</div>
-        </a>
+    <!-- METRICS & DONUT CHART ROW -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <!-- METRICS STATS CARDS (Spans 3 cols on lg) -->
+        <div class="lg:col-span-3 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <!-- TOTAL -->
+            <a href="?filter=all" class="p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between {% if type_filter == 'all' %}bg-[#071A49] dark:bg-blue-600/20 text-white dark:text-blue-400 border-[#071A49] dark:border-blue-500/40 shadow-md{% else %}bg-white dark:bg-[#121824] text-slate-800 dark:text-slate-200 border-slate-200/80 dark:border-[#1e293b] hover:border-blue-300 dark:hover:border-blue-500{% endif %}">
+                <div>
+                    <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Stockage Total</div>
+                    <div class="text-2xl font-black mt-1">{{ total_count }}</div>
+                </div>
+                <div class="text-[11px] font-semibold mt-2 opacity-90">Fichiers conservés</div>
+            </a>
 
-        <!-- EXAMS -->
-        <a href="?filter=EXAM" class="p-4 rounded-2xl border transition-all {% if type_filter == 'EXAM' %}bg-blue-600 text-white border-blue-600 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-blue-300{% endif %}">
-            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Sujets d'Épreuves</div>
-            <div class="text-2xl font-black mt-1 {% if type_filter == 'EXAM' %}text-white{% else %}text-blue-600{% endif %}">{{ exam_count }}</div>
-            <div class="text-[11px] font-semibold mt-2 opacity-90">Sujets d'examens</div>
-        </a>
+            <!-- EXAMS -->
+            <a href="?filter=EXAM" class="p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between {% if type_filter == 'EXAM' %}bg-blue-600 dark:bg-blue-600/25 text-white dark:text-blue-300 border-blue-600 dark:border-blue-500/40 shadow-md{% else %}bg-white dark:bg-[#121824] text-slate-800 dark:text-slate-200 border-slate-200/80 dark:border-[#1e293b] hover:border-blue-300 dark:hover:border-blue-500{% endif %}">
+                <div>
+                    <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Sujets d'Épreuves</div>
+                    <div class="text-2xl font-black mt-1 {% if type_filter == 'EXAM' %}text-white{% else %}text-blue-600 dark:text-blue-400{% endif %}">{{ exam_count }}</div>
+                </div>
+                <div class="text-[11px] font-semibold mt-2 opacity-90">Sujets d'examens</div>
+            </a>
 
-        <!-- CORRECTIONS -->
-        <a href="?filter=CORRECTION" class="p-4 rounded-2xl border transition-all {% if type_filter == 'CORRECTION' %}bg-emerald-600 text-white border-emerald-600 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-emerald-300{% endif %}">
-            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Corrigés & Corrections</div>
-            <div class="text-2xl font-black mt-1 {% if type_filter == 'CORRECTION' %}text-white{% else %}text-emerald-600{% endif %}">{{ correction_count }}</div>
-            <div class="text-[11px] font-semibold mt-2 opacity-90">Corrections répertoriées</div>
-        </a>
+            <!-- CORRECTIONS -->
+            <a href="?filter=CORRECTION" class="p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between {% if type_filter == 'CORRECTION' %}bg-emerald-600 dark:bg-emerald-600/25 text-white dark:text-emerald-300 border-emerald-600 dark:border-emerald-500/40 shadow-md{% else %}bg-white dark:bg-[#121824] text-slate-800 dark:text-slate-200 border-slate-200/80 dark:border-[#1e293b] hover:border-emerald-300 dark:hover:border-emerald-500{% endif %}">
+                <div>
+                    <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Corrigés & Corrections</div>
+                    <div class="text-2xl font-black mt-1 {% if type_filter == 'CORRECTION' %}text-white{% else %}text-emerald-600 dark:text-emerald-400{% endif %}">{{ correction_count }}</div>
+                </div>
+                <div class="text-[11px] font-semibold mt-2 opacity-90">Corrections répertoriées</div>
+            </a>
 
-        <!-- SUMMARIES -->
-        <a href="?filter=SUMMARY" class="p-4 rounded-2xl border transition-all {% if type_filter == 'SUMMARY' %}bg-purple-600 text-white border-purple-600 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-purple-300{% endif %}">
-            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Fiches & Résumés</div>
-            <div class="text-2xl font-black mt-1 {% if type_filter == 'SUMMARY' %}text-white{% else %}text-purple-600{% endif %}">{{ summary_count }}</div>
-            <div class="text-[11px] font-semibold mt-2 opacity-90">Fiches PDF de synthèse</div>
-        </a>
+            <!-- SUMMARIES -->
+            <a href="?filter=SUMMARY" class="p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between {% if type_filter == 'SUMMARY' %}bg-purple-600 dark:bg-purple-600/25 text-white dark:text-purple-300 border-purple-600 dark:border-purple-500/40 shadow-md{% else %}bg-white dark:bg-[#121824] text-slate-800 dark:text-slate-200 border-slate-200/80 dark:border-[#1e293b] hover:border-purple-300 dark:hover:border-purple-500{% endif %}">
+                <div>
+                    <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Fiches & Résumés</div>
+                    <div class="text-2xl font-black mt-1 {% if type_filter == 'SUMMARY' %}text-white{% else %}text-purple-600 dark:text-purple-400{% endif %}">{{ summary_count }}</div>
+                </div>
+                <div class="text-[11px] font-semibold mt-2 opacity-90">Fiches PDF de synthèse</div>
+            </a>
+        </div>
+
+        <!-- DONUT CHART (Spans 1 col on lg) -->
+        <div class="bg-white dark:bg-[#121824] p-4 rounded-2xl border border-slate-200/80 dark:border-[#1e293b] shadow-sm flex flex-col justify-center transition-all duration-200 lg:col-span-1">
+            <h3 class="text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3 text-center">
+                Répartition des Fichiers
+            </h3>
+            <div class="flex items-center space-x-4 w-full justify-center">
+                <!-- SVG Circle Chart -->
+                <div class="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 flex items-center justify-center">
+                    <svg class="w-full h-full transform -rotate-90 select-none" viewBox="0 0 42 42">
+                        <!-- BG circle -->
+                        <circle cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#f1f5f9" stroke-width="4.5" class="dark:stroke-slate-800/80"></circle>
+                        <!-- Segments -->
+                        <circle id="donut-segment-exam" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#2563eb" stroke-width="4.5" stroke-dasharray="0 100" stroke-dashoffset="0" class="transition-all duration-500 ease-out cursor-pointer hover:stroke-[5.5px]" onmouseenter="highlightSegment('exam')" onmouseleave="resetHighlight()"></circle>
+                        <circle id="donut-segment-correction" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#10b981" stroke-width="4.5" stroke-dasharray="0 100" stroke-dashoffset="0" class="transition-all duration-500 ease-out cursor-pointer hover:stroke-[5.5px]" onmouseenter="highlightSegment('correction')" onmouseleave="resetHighlight()"></circle>
+                        <circle id="donut-segment-summary" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#a855f7" stroke-width="4.5" stroke-dasharray="0 100" stroke-dashoffset="0" class="transition-all duration-500 ease-out cursor-pointer hover:stroke-[5.5px]" onmouseenter="highlightSegment('summary')" onmouseleave="resetHighlight()"></circle>
+                    </svg>
+                    <!-- Center overlay count -->
+                    <div class="absolute flex flex-col items-center justify-center text-center">
+                        <span id="donut-center-count" class="text-[13px] sm:text-sm font-black text-[#071A49] dark:text-slate-100 leading-none">{{ total_count }}</span>
+                        <span id="donut-center-label" class="text-[7px] font-black text-slate-400 dark:text-slate-500 mt-0.5 uppercase tracking-wider">Total</span>
+                    </div>
+                </div>
+
+                <!-- Legend labels -->
+                <div class="flex-grow space-y-1 text-[10px] select-none">
+                    <div class="flex items-center justify-between text-slate-600 dark:text-slate-400 font-bold cursor-pointer" onmouseenter="highlightSegment('exam')" onmouseleave="resetHighlight()">
+                        <div class="flex items-center space-x-1.5">
+                            <span class="w-2 h-2 rounded-full bg-blue-600 shrink-0"></span>
+                            <span>Sujets</span>
+                        </div>
+                        <span id="donut-legend-exam-pct" class="font-extrabold text-[#071A49] dark:text-slate-200">0%</span>
+                    </div>
+                    <div class="flex items-center justify-between text-slate-600 dark:text-slate-400 font-bold cursor-pointer" onmouseenter="highlightSegment('correction')" onmouseleave="resetHighlight()">
+                        <div class="flex items-center space-x-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                            <span>Corrigés</span>
+                        </div>
+                        <span id="donut-legend-correction-pct" class="font-extrabold text-[#071A49] dark:text-slate-200">0%</span>
+                    </div>
+                    <div class="flex items-center justify-between text-slate-600 dark:text-slate-400 font-bold cursor-pointer" onmouseenter="highlightSegment('summary')" onmouseleave="resetHighlight()">
+                        <div class="flex items-center space-x-1.5">
+                            <span class="w-2 h-2 rounded-full bg-purple-500 shrink-0"></span>
+                            <span>Résumés</span>
+                        </div>
+                        <span id="donut-legend-summary-pct" class="font-extrabold text-[#071A49] dark:text-slate-200">0%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CLOUD STORAGE OCCUPANCY PROGRESS BAR -->
+    <div class="bg-white dark:bg-[#121824] p-5 rounded-2xl border border-slate-200/80 dark:border-[#1e293b] shadow-sm transition-colors duration-200">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center">
+                <div class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3 shrink-0">
+                    <i class="fa-solid fa-hard-drive text-sm"></i>
+                </div>
+                <div>
+                    <h3 class="text-xs font-black text-[#071A49] dark:text-slate-200 uppercase tracking-wider">
+                        Espace de Stockage Alloué
+                    </h3>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                        Taux de remplissage de la bibliothèque Cloud par rapport à la limite système.
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center justify-between sm:justify-end gap-2.5">
+                <span class="text-xs font-extrabold text-[#071A49] dark:text-slate-200">
+                    {{ total_size_mb }} Mo utilisés / <span class="opacity-70">{{ limit_mb }} Mo max</span>
+                </span>
+                <span class="text-xs font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                    {{ fill_percentage }}%
+                </span>
+            </div>
+        </div>
+
+        <!-- Progress Bar Element -->
+        <div class="mt-4">
+            <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden border border-slate-200/40 dark:border-slate-700/50">
+                <div class="h-full rounded-full transition-all duration-500 {% if fill_percentage >= 90 %}bg-rose-500{% elif fill_percentage >= 75 %}bg-amber-500{% else %}bg-blue-600{% endif %}"
+                     style="width: {{ fill_percentage }}%;">
+                </div>
+            </div>
+            <div class="flex items-center justify-between mt-2 text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                <span>0% (Vide)</span>
+                <span>75% (Avertissement)</span>
+                <span>100% (Limite atteinte)</span>
+            </div>
+        </div>
     </div>
 
     <!-- SEARCH & FILTER BAR -->
-    <form method="get" class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row gap-3">
+    <form method="get" class="bg-white dark:bg-[#121824] p-4 rounded-2xl border border-slate-200/80 dark:border-[#1e293b] shadow-sm flex flex-col sm:flex-row gap-3 transition-colors duration-200">
         <input type="hidden" name="filter" value="{{ type_filter }}">
         <div class="relative flex-grow">
-            <input type="text" name="q" value="{{ q }}" placeholder="Rechercher une UE ou un document dans le Cloud..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#071A49] placeholder-slate-400 focus:ring-2 focus:ring-blue-600 outline-none">
-            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs" aria-hidden="true"></i>
+            <input type="text" name="q" value="{{ q }}" placeholder="Rechercher une UE ou un document dans le Cloud..." class="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-[#090d16] border border-slate-200 dark:border-[#1e293b] rounded-xl text-xs font-semibold text-[#071A49] dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-600 outline-none transition-colors duration-200">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 dark:text-slate-500 text-xs" aria-hidden="true"></i>
         </div>
         <div class="flex items-center space-x-2">
-            <button type="submit" class="px-4 py-2 bg-[#071A49] hover:bg-blue-900 text-white text-xs font-bold rounded-xl transition-colors shrink-0">
+            <button type="submit" class="px-4 py-2 bg-[#071A49] dark:bg-blue-600 hover:bg-blue-900 dark:hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-colors shrink-0">
                 Rechercher
             </button>
-            <a href="{% url 'contributors:library_index' %}" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-colors shrink-0">
+            <a href="{% url 'contributors:library_index' %}" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl transition-colors shrink-0">
                 Effacer
             </a>
         </div>
     </form>
 
     <!-- LIBRARY CLOUD FILES GROUPED BY UE -->
-    <div class="space-y-6">
-        {% for ue_name, group in grouped_cloud_files.items %}
-            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+    <form id="bulk-action-form" method="post" action="{% url 'contributors:bulk_operations' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" id="bulk-form-action" value="">
+        <input type="hidden" name="dest_filiere" id="bulk-form-dest-filiere" value="">
+        <input type="hidden" name="dest_semester" id="bulk-form-dest-semester" value="">
+
+        <div class="space-y-6">
+            {% for ue_name, group in grouped_cloud_files.items %}
+            <div class="bg-white dark:bg-[#121824] rounded-2xl border border-slate-200/80 dark:border-[#1e293b] shadow-sm overflow-hidden transition-colors duration-200">
                 <!-- UE HEADER DOSSIER -->
-                <div class="bg-slate-900 text-white p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="bg-slate-900 dark:bg-slate-800/80 text-white p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div class="flex items-center space-x-3">
                         <div class="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white text-xs font-black">
                             <i class="fa-solid fa-folder-open"></i>
                         </div>
                         <div>
                             <h2 class="text-sm font-black tracking-tight text-white uppercase">{{ ue_name }}</h2>
-                            <span class="text-[10px] text-slate-300 font-semibold">{{ group.files|length }} fichier(s) répertorié(s)</span>
+                            <span class="text-[10px] text-slate-300 dark:text-slate-400 font-semibold">{{ group.files|length }} fichier(s) répertorié(s)</span>
                         </div>
                     </div>
 
@@ -103,15 +211,31 @@
                                     <input type="hidden" name="subject_id" value="{{ group.matched_subject.id }}">
                                 {% endif %}
                                 {% if group.is_free %}
-                                    <button type="submit" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm" title="Cliquez pour passer les épreuves de cette UE en mode Premium">
-                                        <i class="fa-solid fa-gift text-xs"></i>
-                                        <span>Épreuves : Gratuit</span>
-                                    </button>
+                                    <div class="relative group/tooltip inline-block">
+                                        <button type="submit" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm" title="Accès Gratuit : Cliquez pour basculer les épreuves de cette UE en mode Premium payant">
+                                            <i class="fa-solid fa-gift text-xs"></i>
+                                            <span>Épreuves : Gratuit</span>
+                                        </button>
+                                        <!-- INFO-BULLE DESCRIPTIVE SURVOL -->
+                                        <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 bg-[#071A49] dark:bg-[#121824] text-white text-[11px] font-medium rounded-xl shadow-2xl border border-white/20 opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 z-50 text-center leading-snug">
+                                            <span class="font-extrabold text-emerald-400 block mb-0.5"><i class="fa-solid fa-gift mr-1"></i>Impact : Accès Gratuit</span>
+                                            Toutes les épreuves de cette UE sont accessibles librement. Cliquez pour les verrouiller en mode <strong>Premium</strong>.
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-[#071A49] dark:border-t-[#121824]"></div>
+                                        </div>
+                                    </div>
                                 {% else %}
-                                    <button type="submit" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm" title="Cliquez pour passer les épreuves de cette UE en mode Gratuit">
-                                        <i class="fa-solid fa-lock text-xs"></i>
-                                        <span>Épreuves : Premium</span>
-                                    </button>
+                                    <div class="relative group/tooltip inline-block">
+                                        <button type="submit" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm" title="Accès Premium : Cliquez pour rendre toutes les épreuves de cette UE gratuites pour les étudiants">
+                                            <i class="fa-solid fa-lock text-xs"></i>
+                                            <span>Épreuves : Premium</span>
+                                        </button>
+                                        <!-- INFO-BULLE DESCRIPTIVE SURVOL -->
+                                        <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 bg-[#071A49] dark:bg-[#121824] text-white text-[11px] font-medium rounded-xl shadow-2xl border border-white/20 opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 z-50 text-center leading-snug">
+                                            <span class="font-extrabold text-amber-400 block mb-0.5"><i class="fa-solid fa-lock mr-1"></i>Impact : Accès Premium</span>
+                                            Épreuves réservées aux abonnés Premium. Cliquez pour lever le verrou et passer en <strong>Gratuit</strong>.
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-[#071A49] dark:border-t-[#121824]"></div>
+                                        </div>
+                                    </div>
                                 {% endif %}
                             </form>
 
@@ -124,15 +248,31 @@
                                     <input type="hidden" name="subject_id" value="{{ group.matched_subject.id }}">
                                 {% endif %}
                                 {% if group.is_free_correction %}
-                                    <button type="submit" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm" title="Cliquez pour passer les corrigés de cette UE en mode Premium">
-                                        <i class="fa-solid fa-circle-check text-xs"></i>
-                                        <span>Corrigés : Gratuit</span>
-                                    </button>
+                                    <div class="relative group/tooltip inline-block">
+                                        <button type="submit" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm" title="Corrigés Gratuits : Cliquez pour restreindre l'accès aux abonnés Premium">
+                                            <i class="fa-solid fa-circle-check text-xs"></i>
+                                            <span>Corrigés : Gratuit</span>
+                                        </button>
+                                        <!-- INFO-BULLE DESCRIPTIVE SURVOL -->
+                                        <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 bg-[#071A49] dark:bg-[#121824] text-white text-[11px] font-medium rounded-xl shadow-2xl border border-white/20 opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 z-50 text-center leading-snug">
+                                            <span class="font-extrabold text-emerald-400 block mb-0.5"><i class="fa-solid fa-circle-check mr-1"></i>Impact : Corrigés Gratuits</span>
+                                            Corrigés et fiches de synthèse libres d'accès. Cliquez pour réserver la consultation au mode <strong>Premium</strong>.
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-[#071A49] dark:border-t-[#121824]"></div>
+                                        </div>
+                                    </div>
                                 {% else %}
-                                    <button type="submit" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm" title="Cliquez pour passer les corrigés de cette UE en mode Gratuit">
-                                        <i class="fa-solid fa-lock text-xs"></i>
-                                        <span>Corrigés : Premium</span>
-                                    </button>
+                                    <div class="relative group/tooltip inline-block">
+                                        <button type="submit" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm" title="Corrigés Premium : Cliquez pour basculer tous les corrigés de cette UE en accès Gratuit">
+                                            <i class="fa-solid fa-lock text-xs"></i>
+                                            <span>Corrigés : Premium</span>
+                                        </button>
+                                        <!-- INFO-BULLE DESCRIPTIVE SURVOL -->
+                                        <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 bg-[#071A49] dark:bg-[#121824] text-white text-[11px] font-medium rounded-xl shadow-2xl border border-white/20 opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 z-50 text-center leading-snug">
+                                            <span class="font-extrabold text-amber-400 block mb-0.5"><i class="fa-solid fa-lock mr-1"></i>Impact : Corrigés Premium</span>
+                                            Corrigés verrouillés pour les abonnés Premium. Cliquez pour lever la restriction et offrir un accès <strong>Gratuit</strong>.
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-[#071A49] dark:border-t-[#121824]"></div>
+                                        </div>
+                                    </div>
                                 {% endif %}
                             </form>
 
@@ -143,10 +283,18 @@
                                 {% if group.matched_subject %}
                                     <input type="hidden" name="subject_id" value="{{ group.matched_subject.id }}">
                                 {% endif %}
-                                <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm">
-                                    <i class="fa-solid fa-bolt text-xs"></i>
-                                    <span>Publier l'UE complète</span>
-                                </button>
+                                <div class="relative group/tooltip inline-block">
+                                    <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm" title="Publie automatiquement toutes les épreuves et sujets conformes de cette UE sur le site public">
+                                        <i class="fa-solid fa-bolt text-xs"></i>
+                                        <span>Publier l'UE complète</span>
+                                    </button>
+                                    <!-- INFO-BULLE DESCRIPTIVE SURVOL -->
+                                    <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 bg-[#071A49] dark:bg-[#121824] text-white text-[11px] font-medium rounded-xl shadow-2xl border border-white/20 opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 z-50 text-center leading-snug">
+                                        <span class="font-extrabold text-blue-400 block mb-0.5"><i class="fa-solid fa-bolt mr-1"></i>Impact : Publication Globale UE</span>
+                                        Analyse, extrait les métadonnées et déploie instantanément l'ensemble des épreuves conformes de ce dossier vers le catalogue étudiant.
+                                        <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-[#071A49] dark:border-t-[#121824]"></div>
+                                    </div>
+                                </div>
                             </form>
                         </div>
                     {% endif %}
@@ -155,7 +303,10 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-slate-50/80 border-b border-slate-200 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                            <tr class="bg-slate-50/80 dark:bg-slate-800/40 border-b border-slate-200 dark:border-[#1e293b] text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider transition-colors duration-200 select-none">
+                                <th class="py-3 px-4 w-10 text-center">
+                                    <input type="checkbox" class="select-all-ue-files rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-[#121824] text-blue-600 focus:ring-blue-500 transition-all cursor-pointer h-4 w-4" title="Tout sélectionner dans cette UE" onclick="toggleSelectAllInUe(this)">
+                                </th>
                                 <th class="py-3 px-4">Nom du Fichier</th>
                                 <th class="py-3 px-4 text-center">Type</th>
                                 <th class="py-3 px-4 text-center">Année académique détectée</th>
@@ -163,47 +314,58 @@
                                 <th class="py-3 px-4 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors duration-200">
                             {% for cloud_file in group.files %}
-                                <tr class="hover:bg-slate-50/60 transition-colors">
+                                <tr id="cloud-file-row-{{ cloud_file.id }}" class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors duration-200">
+                                    <td class="py-3.5 px-4 text-center select-none w-10">
+                                        <input type="checkbox" name="selected_files" value="{{ cloud_file.id }}" class="file-checkbox rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-[#121824] text-blue-600 focus:ring-blue-500 transition-all cursor-pointer h-4 w-4" onchange="updateBulkActionBar()">
+                                    </td>
                                     <td class="py-3.5 px-4">
-                                        <div class="font-extrabold text-[#071A49] text-xs mb-0.5 flex items-center space-x-2">
+                                        <div class="font-extrabold text-[#071A49] dark:text-slate-200 text-xs mb-0.5 flex items-center space-x-2">
                                             <i class="fa-solid fa-file-pdf text-rose-500 text-sm"></i>
                                             <span>{{ cloud_file.title }}</span>
                                         </div>
                                         {% if cloud_file.file %}
-                                            <a href="{{ cloud_file.file.url }}" target="_blank" class="text-[10px] text-blue-600 font-bold hover:underline">
-                                                <i class="fa-solid fa-arrow-up-right-from-square text-[9px] mr-1"></i>Aperçu PDF direct
-                                            </a>
+                                            <div class="flex items-center space-x-2.5 mt-1 select-none">
+                                                <a href="{{ cloud_file.file.url }}" target="_blank" class="text-[10px] text-blue-600 dark:text-blue-400 font-bold hover:underline inline-flex items-center space-x-1">
+                                                    <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                                    <span>Aperçu direct</span>
+                                                </a>
+                                                <span class="text-slate-300 dark:text-slate-700 text-[10px]">|</span>
+                                                <button type="button" onclick="openPdfPreview('{{ cloud_file.file.url|escapejs }}', '{{ cloud_file.title|escapejs }}')" class="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold hover:underline inline-flex items-center space-x-1 focus:outline-none">
+                                                    <i class="fa-solid fa-eye text-[9px]"></i>
+                                                    <span>Aperçu rapide</span>
+                                                </button>
+                                            </div>
                                         {% endif %}
                                     </td>
                                     <td class="py-3.5 px-4 text-center">
                                         {% if cloud_file.file_type == 'EXAM' %}
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
                                                 Épreuve / Sujet
                                             </span>
                                         {% elif cloud_file.file_type == 'CORRECTION' %}
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300">
                                                 Correction
                                             </span>
                                         {% elif cloud_file.file_type == 'SUMMARY' %}
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
                                                 Fiche Résumé
                                             </span>
                                         {% else %}
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                                                 Autre Document
                                             </span>
                                         {% endif %}
                                     </td>
                                     <td class="py-3.5 px-4 text-center">
                                         {% if cloud_file.parsed_info.detected_academic_year %}
-                                            <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-black border border-blue-200/60 inline-flex items-center space-x-1">
+                                            <span class="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 text-xs font-black border border-blue-200/60 dark:border-blue-900/40 inline-flex items-center space-x-1">
                                                 <i class="fa-regular fa-calendar-check text-[10px]"></i>
                                                 <span>{{ cloud_file.parsed_info.detected_academic_year }}</span>
                                             </span>
                                         {% else %}
-                                            <span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 text-[10px] font-bold border border-amber-200/60 inline-flex items-center space-x-1">
+                                            <span class="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/10 text-amber-700 dark:text-amber-400 text-[10px] font-bold border border-amber-200/60 dark:border-amber-900/30 inline-flex items-center space-x-1">
                                                 <i class="fa-solid fa-triangle-exclamation text-[10px]"></i>
                                                 <span>Non détectée</span>
                                             </span>
@@ -211,31 +373,37 @@
                                     </td>
                                     <td class="py-3.5 px-4">
                                         {% if cloud_file.parsed_info.is_valid %}
-                                            <span class="text-emerald-600 font-bold text-[11px] flex items-center space-x-1">
+                                            <span class="text-emerald-600 dark:text-emerald-400 font-bold text-[11px] flex items-center space-x-1">
                                                 <i class="fa-solid fa-circle-check"></i>
                                                 <span>Nom conforme ([UE] [Année].pdf)</span>
                                             </span>
                                         {% else %}
-                                            <div class="text-amber-600 font-bold text-[10px]">
+                                            <div class="text-amber-600 dark:text-amber-400 font-bold text-[10px]">
                                                 <span class="flex items-center space-x-1">
                                                     <i class="fa-solid fa-triangle-exclamation"></i>
                                                     <span>Format non conforme</span>
                                                 </span>
-                                                <span class="text-[9px] text-slate-400 font-medium block">Saisie/Correction manuelle requise lors de la publication</span>
+                                                <span class="text-[9px] text-slate-400 dark:text-slate-500 font-medium block">Saisie/Correction manuelle requise lors de la publication</span>
                                             </div>
                                         {% endif %}
                                     </td>
                                     <td class="py-3.5 px-4 text-right">
                                          <div class="flex items-center justify-end space-x-2">
+                                             {% if cloud_file.file %}
+                                                 <button type="button" onclick="openPdfPreview('{{ cloud_file.file.url|escapejs }}', '{{ cloud_file.title|escapejs }}')" class="px-2.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[11px] font-bold transition-colors inline-flex items-center space-x-1" title="Aperçu rapide dans le lecteur intégré">
+                                                     <i class="fa-solid fa-eye text-[10px]"></i>
+                                                     <span>Aperçu</span>
+                                                 </button>
+                                             {% endif %}
                                              <a href="{% url 'contributors:publish_from_cloud' pk=cloud_file.id %}" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold transition-colors inline-flex items-center space-x-1 shadow-sm">
                                                  <i class="fa-solid fa-paper-plane text-[10px]" aria-hidden="true"></i>
                                                  <span>Publier</span>
                                              </a>
-                                             <a href="{% url 'contributors:cloud_file_edit' pk=cloud_file.id %}" class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 text-[11px] font-bold transition-colors inline-flex items-center space-x-1" title="Modifier / Renommer l'épreuve">
+                                             <a href="{% url 'contributors:cloud_file_edit' pk=cloud_file.id %}" class="px-2.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[11px] font-bold transition-colors inline-flex items-center space-x-1" title="Modifier / Renommer l'épreuve">
                                                  <i class="fa-solid fa-pen text-[10px]" aria-hidden="true"></i>
                                                  <span>Modifier</span>
                                              </a>
-                                             <button type="button" onclick='openDeleteModal("{% url "contributors:cloud_file_delete" pk=cloud_file.id %}", "{{ cloud_file.title|escapejs }}", "Supprimer du Cloud Storage ?", "Ce fichier PDF original sera définitivement supprimé du stockage Cloud.")' class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-bold transition-colors inline-flex items-center space-x-1" title="Supprimer l'épreuve du Cloud Storage">
+                                             <button type="button" onclick='openDeleteModal("{% url "contributors:cloud_file_delete" pk=cloud_file.id %}", "{{ cloud_file.title|escapejs }}", "Supprimer du Cloud Storage ?", "Ce fichier PDF original sera définitivement supprimé du stockage Cloud.")' class="px-2.5 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 text-[11px] font-bold transition-colors inline-flex items-center space-x-1" title="Supprimer l'épreuve du Cloud Storage">
                                                  <i class="fa-solid fa-trash text-[10px]" aria-hidden="true"></i>
                                              </button>
                                          </div>
@@ -247,11 +415,408 @@
                 </div>
             </div>
         {% empty %}
-            <div class="bg-white rounded-2xl p-12 text-center text-slate-400 font-medium border border-slate-200/80">
+            <div class="bg-white dark:bg-[#121824] rounded-2xl p-12 text-center text-slate-400 dark:text-slate-500 font-medium border border-slate-200/80 dark:border-[#1e293b]">
                 Aucun fichier trouvé dans la Bibliothèque Cloud Integrated.
             </div>
         {% endfor %}
+        </div>
+    </form>
+
+    <!-- FLOATING ACTIONS BAR FOR BULK OPERATIONS -->
+    <div id="bulk-actions-bar" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-[#071A49] dark:bg-[#121824] border border-slate-200/20 dark:border-[#1e293b]/80 shadow-2xl rounded-2xl px-6 py-4 flex items-center justify-between z-[90] hidden transition-all duration-300 ease-out translate-y-10 opacity-0 max-w-2xl w-[90%] md:w-full">
+        <div class="flex items-center space-x-3 text-white text-xs font-bold">
+            <span class="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-black" id="bulk-selected-count">0</span>
+            <span class="hidden sm:inline">fichiers sélectionnés</span>
+            <span class="sm:hidden">sél.</span>
+        </div>
+        
+        <div class="h-6 w-px bg-slate-700/50 mx-4"></div>
+        
+        <div class="flex items-center space-x-2">
+            <!-- PUBLISH BUTTON -->
+            <button type="button" onclick="submitBulkAction('publish')" class="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold transition-all flex items-center space-x-1.5 shadow-md shadow-blue-500/20 active:scale-95">
+                <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                <span>Publier</span>
+            </button>
+
+            <!-- MOVE BUTTON -->
+            <button type="button" onclick="openBulkMoveModal()" class="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-bold transition-all flex items-center space-x-1.5 shadow-md shadow-amber-500/20 active:scale-95">
+                <i class="fa-solid fa-folder-open text-[10px]"></i>
+                <span>Déplacer</span>
+            </button>
+
+            <!-- DELETE BUTTON -->
+            <button type="button" onclick="confirmBulkDelete()" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold transition-all flex items-center space-x-1.5 shadow-md shadow-rose-500/20 active:scale-95">
+                <i class="fa-solid fa-trash text-[10px]"></i>
+                <span>Supprimer</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- BULK MOVE MODAL -->
+    <div id="bulk-move-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center z-[110] hidden transition-opacity duration-200">
+        <div class="bg-white dark:bg-[#121824] rounded-2xl p-6 max-w-md w-full border border-slate-200/80 dark:border-[#1e293b] shadow-2xl mx-4 transform transition-all scale-95 opacity-0 duration-200" id="bulk-move-modal-card">
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+                <div>
+                    <h3 class="text-xs font-black text-[#071A49] dark:text-slate-100 uppercase tracking-tight">Déplacer la Sélection</h3>
+                    <p class="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">Réassigner la filière / semestre de destination</p>
+                </div>
+            </div>
+
+            <div class="space-y-4 text-xs font-semibold">
+                <!-- Dest Filiere -->
+                <div>
+                    <label class="block text-slate-600 dark:text-slate-400 mb-1 text-[11px]">Filière de destination</label>
+                    <select id="modal-dest-filiere" class="w-full rounded-xl border border-slate-200/80 dark:border-[#1e293b] bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 p-2.5 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none">
+                        <option value="">-- Ne pas modifier la filière --</option>
+                        {% for f in filieres_list %}
+                            <option value="{{ f.id }}">{{ f.name }} ({{ f.level.school.name }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Dest Semester -->
+                <div>
+                    <label class="block text-slate-600 dark:text-slate-400 mb-1 text-[11px]">Semestre de destination</label>
+                    <select id="modal-dest-semester" class="w-full rounded-xl border border-slate-200/80 dark:border-[#1e293b] bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 p-2.5 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none">
+                        <option value="">-- Ne pas modifier le semestre --</option>
+                        {% for s in semesters_list %}
+                            <option value="{{ s.id }}">{{ s.label }} ({{ s.filiere.name }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end space-x-2 mt-6">
+                <button type="button" onclick="closeBulkMoveModal()" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition-all">
+                    Annuler
+                </button>
+                <button type="button" onclick="submitBulkMove()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black transition-all">
+                    Déplacer les fichiers
+                </button>
+            </div>
+        </div>
     </div>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const exams = parseInt("{{ exam_count|default:0 }}") || 0;
+    const corrections = parseInt("{{ correction_count|default:0 }}") || 0;
+    const summaries = parseInt("{{ summary_count|default:0 }}") || 0;
+    
+    const total = exams + corrections + summaries;
+    
+    if (total > 0) {
+        const pctE = (exams / total) * 100;
+        const pctC = (corrections / total) * 100;
+        const pctS = (summaries / total) * 100;
+        
+        // Render segments
+        const segE = document.getElementById('donut-segment-exam');
+        const segC = document.getElementById('donut-segment-correction');
+        const segS = document.getElementById('donut-segment-summary');
+        
+        if (segE) {
+            segE.setAttribute('stroke-dasharray', `${pctE} ${100 - pctE}`);
+            segE.setAttribute('stroke-dashoffset', '0');
+        }
+        if (segC) {
+            segC.setAttribute('stroke-dasharray', `${pctC} ${100 - pctC}`);
+            segC.setAttribute('stroke-dashoffset', `-${pctE}`);
+        }
+        if (segS) {
+            segS.setAttribute('stroke-dasharray', `${pctS} ${100 - pctS}`);
+            segS.setAttribute('stroke-dashoffset', `-${pctE + pctC}`);
+        }
+        
+        // Update Legend
+        const legE = document.getElementById('donut-legend-exam-pct');
+        const legC = document.getElementById('donut-legend-correction-pct');
+        const legS = document.getElementById('donut-legend-summary-pct');
+        
+        if (legE) legE.textContent = `${Math.round(pctE)}%`;
+        if (legC) legC.textContent = `${Math.round(pctC)}%`;
+        if (legS) legS.textContent = `${Math.round(pctS)}%`;
+    }
+});
+
+const originalTotal = "{{ total_count }}";
+const counts = {
+    exam: { count: "{{ exam_count }}", label: "Sujets" },
+    correction: { count: "{{ correction_count }}", label: "Corrigés" },
+    summary: { count: "{{ summary_count }}", label: "Résumés" }
+};
+
+function highlightSegment(type) {
+    const centerCount = document.getElementById('donut-center-count');
+    const centerLabel = document.getElementById('donut-center-label');
+    if (centerCount && centerLabel && counts[type]) {
+        centerCount.textContent = counts[type].count;
+        centerLabel.textContent = counts[type].label;
+        
+        ['exam', 'correction', 'summary'].forEach(t => {
+            const el = document.getElementById(`donut-segment-${t}`);
+            if (el) {
+                if (t === type) {
+                    el.style.strokeWidth = '6';
+                } else {
+                    el.style.opacity = '0.35';
+                }
+            }
+        });
+    }
+}
+
+function resetHighlight() {
+    const centerCount = document.getElementById('donut-center-count');
+    const centerLabel = document.getElementById('donut-center-label');
+    if (centerCount && centerLabel) {
+        centerCount.textContent = originalTotal;
+        centerLabel.textContent = "Total";
+        
+        ['exam', 'correction', 'summary'].forEach(t => {
+            const el = document.getElementById(`donut-segment-${t}`);
+            if (el) {
+                el.style.strokeWidth = '4.5';
+                el.style.opacity = '1';
+            }
+        });
+    }
+}
+
+// Bulk Actions Handling logic
+function toggleSelectAllInUe(masterCheckbox) {
+    const table = masterCheckbox.closest('table');
+    if (table) {
+        const checkboxes = table.querySelectorAll('.file-checkbox');
+        checkboxes.forEach(cb => {
+            cb.checked = masterCheckbox.checked;
+        });
+    }
+    updateBulkActionBar();
+}
+
+function updateBulkActionBar() {
+    const checkedCheckboxes = document.querySelectorAll('.file-checkbox:checked');
+    const bar = document.getElementById('bulk-actions-bar');
+    const selectedCountSpan = document.getElementById('bulk-selected-count');
+    
+    if (bar && selectedCountSpan) {
+        const count = checkedCheckboxes.length;
+        selectedCountSpan.textContent = count;
+        
+        if (count > 0) {
+            bar.classList.remove('hidden');
+            // Allow animation to trigger smoothly
+            setTimeout(() => {
+                bar.classList.remove('opacity-0', 'translate-y-10');
+                bar.classList.add('opacity-100', 'translate-y-0');
+            }, 50);
+        } else {
+            bar.classList.add('opacity-0', 'translate-y-10');
+            bar.classList.remove('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                bar.classList.add('hidden');
+            }, 300);
+            
+            // Uncheck any master checkboxes
+            document.querySelectorAll('.select-all-ue-files').forEach(mcb => {
+                mcb.checked = false;
+            });
+        }
+    }
+}
+
+function submitBulkAction(actionName) {
+    const actionInput = document.getElementById('bulk-form-action');
+    const form = document.getElementById('bulk-action-form');
+    if (actionInput && form) {
+        actionInput.value = actionName;
+        form.submit();
+    }
+}
+
+function confirmBulkDelete() {
+    window.showAppConfirm({
+        title: "Suppression définitive",
+        message: "Êtes-vous sûr de vouloir supprimer définitivement ces fichiers de la bibliothèque Cloud ? Cette action est irréversible et supprimera les fichiers physiques.",
+        confirmText: "Supprimer",
+        type: "danger",
+        onConfirm: () => {
+            const form = document.getElementById('bulk-action-form');
+            document.getElementById('bulk-form-action').value = 'delete';
+            const formData = new FormData(form);
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(() => {
+                const selectedBoxes = document.querySelectorAll('.file-checkbox:checked');
+                selectedBoxes.forEach(box => {
+                    const row = box.closest('tr');
+                    if (row) animateRowDelete(row);
+                    box.checked = false;
+                });
+                updateBulkActionBar();
+            });
+        }
+    });
+}
+
+function openBulkMoveModal() {
+    const modal = document.getElementById('bulk-move-modal');
+    const card = document.getElementById('bulk-move-modal-card');
+    if (modal && card) {
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            card.classList.remove('scale-95', 'opacity-0');
+            card.classList.add('scale-100', 'opacity-100');
+        }, 50);
+    }
+}
+
+function closeBulkMoveModal() {
+    const modal = document.getElementById('bulk-move-modal');
+    const card = document.getElementById('bulk-move-modal-card');
+    if (modal && card) {
+        card.classList.add('scale-95', 'opacity-0');
+        card.classList.remove('scale-100', 'opacity-100');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 200);
+    }
+}
+
+function submitBulkMove() {
+    const destFiliereVal = document.getElementById('modal-dest-filiere').value;
+    const destSemesterVal = document.getElementById('modal-dest-semester').value;
+    
+    if (!destFiliereVal && !destSemesterVal) {
+        alert("Veuillez choisir au moins une filière ou un semestre de destination.");
+        return;
+    }
+    
+    const hiddenFiliere = document.getElementById('bulk-form-dest-filiere');
+    const hiddenSemester = document.getElementById('bulk-form-dest-semester');
+    const actionInput = document.getElementById('bulk-form-action');
+    const form = document.getElementById('bulk-action-form');
+    
+    if (hiddenFiliere && hiddenSemester && actionInput && form) {
+        hiddenFiliere.value = destFiliereVal;
+        hiddenSemester.value = destSemesterVal;
+        actionInput.value = 'move';
+        form.submit();
+    }
+}
+
+// --- Animation de disparition fluide (Fade-out & Collapse) ---
+function animateRowDelete(row) {
+    // 1. Fade out et léger décalage (scale & translation)
+    row.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+    row.style.opacity = '0';
+    row.style.transform = 'scale(0.95) translateX(-10px)';
+    row.style.backgroundColor = 'rgba(225, 29, 72, 0.1)'; // Teinte rouge (rose-600)
+    
+    // 2. Collapse (réduction de la hauteur)
+    setTimeout(() => {
+        const children = Array.from(row.children);
+        children.forEach(td => {
+            td.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+            td.style.paddingTop = '0';
+            td.style.paddingBottom = '0';
+            td.style.border = 'none';
+            // Envelopper le contenu pour animer le max-height
+            const content = td.innerHTML;
+            td.innerHTML = `<div style="transition: max-height 0.4s ease; max-height: ${td.offsetHeight}px; overflow: hidden;">${content}</div>`;
+        });
+        
+        requestAnimationFrame(() => {
+            children.forEach(td => {
+                if (td.firstChild && td.firstChild.style) {
+                    td.firstChild.style.maxHeight = '0';
+                }
+            });
+        });
+
+        // 3. Retrait final du DOM
+        setTimeout(() => row.remove(), 400);
+    }, 400);
+}
+
+// Interception de la suppression individuelle (Modal Global)
+document.addEventListener('DOMContentLoaded', () => {
+    const deleteForm = document.getElementById('delete-modal-form');
+    if (deleteForm) {
+        deleteForm.addEventListener('submit', function(e) {
+            // Vérifier si c'est bien la suppression d'un fichier de la bibliothèque Cloud
+            if (this.action.includes('/library/') && this.action.includes('/supprimer/')) {
+                e.preventDefault();
+                const match = this.action.match(/\/library\/(\d+)\/supprimer\//);
+                if (match) {
+                    const pk = match[1];
+                    const row = document.getElementById(`cloud-file-row-${pk}`);
+                    
+                    const formData = new FormData(this);
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    }).then(() => {
+                        closeDeleteModal(); // Fermer la modale
+                        if (row) animateRowDelete(row); // Jouer l'animation
+                    });
+                } else {
+                    this.submit(); // fallback
+                }
+            }
+        });
+    }
+
+    // Keyboard Shortcuts for Bulk Actions
+    document.addEventListener('keydown', function(e) {
+        // Ignorer si l'utilisateur est dans un champ de texte ou modal ouverte
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+        const bulkBar = document.getElementById('bulk-actions-bar');
+        const isBulkBarVisible = bulkBar && !bulkBar.classList.contains('hidden');
+
+        // 'S' - Sélectionner/Désélectionner tout
+        if (e.key.toLowerCase() === 's') {
+            const masterCheckboxes = document.querySelectorAll('.select-all-ue-files');
+            // Toggle the first one's state and apply to all
+            if (masterCheckboxes.length > 0) {
+                const newState = !masterCheckboxes[0].checked;
+                masterCheckboxes.forEach(cb => {
+                    cb.checked = newState;
+                    toggleSelectAllInUe(cb);
+                });
+            }
+        }
+
+        // Si la barre d'action de masse est visible, activer les autres raccourcis
+        if (isBulkBarVisible) {
+            // 'P' - Publier
+            if (e.key.toLowerCase() === 'p') {
+                e.preventDefault();
+                submitBulkAction('publish');
+            }
+            // 'M' - Déplacer
+            else if (e.key.toLowerCase() === 'm') {
+                e.preventDefault();
+                openBulkMoveModal();
+            }
+            // 'Suppr' ou 'Backspace' - Supprimer
+            else if (e.key === 'Delete' || e.key === 'Backspace') {
+                e.preventDefault();
+                confirmBulkDelete();
+            }
+        }
+    });
+});
+</script>
 {% endblock %}

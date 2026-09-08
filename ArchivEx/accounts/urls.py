@@ -12,5 +12,6 @@ urlpatterns = [
     path("profil/", views.profile_view, name="profile"),
     path("api/levels/", views.api_levels_view, name="api_levels"),
     path("api/filieres/", views.api_filieres_view, name="api_filieres"),
+    path("api/log-click/", views.api_log_click_view, name="api_log_click"),
 ]
 

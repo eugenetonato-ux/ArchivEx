@@ -66,3 +66,9 @@ class SubjectAdmin(admin.ModelAdmin):
         count = obj.exams_count
         return f"{count} épreuve{'s' if count > 1 else ''}"
     exams_count_display.short_description = "Épreuves publiées"
+from .models import SiteConfiguration
+
+@admin.register(SiteConfiguration)
+class SiteConfigurationAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        return not SiteConfiguration.objects.exists()

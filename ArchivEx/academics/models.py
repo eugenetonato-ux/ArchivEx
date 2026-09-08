@@ -126,4 +126,23 @@ class Subject(models.Model):
 
     @exams_count.setter
     def exams_count(self, value):
-        self._exams_count = value
+        self._exams_count = value
+class SiteConfiguration(models.Model):
+    # Offsets virtuels pour afficher des statistiques plus intéressantes quand la plateforme débute
+    base_students_count = models.PositiveIntegerField(default=5000, help_text="Valeur de base pour Étudiants inscrits")
+    base_exams_count = models.PositiveIntegerField(default=1200, help_text="Valeur de base pour Épreuves disponibles")
+    base_summaries_count = models.PositiveIntegerField(default=450, help_text="Valeur de base pour Résumés de cours")
+    base_schools_count = models.PositiveIntegerField(default=15, help_text="Valeur de base pour Écoles & Universités")
+    base_subjects_count = models.PositiveIntegerField(default=300, help_text="Valeur de base pour Matières clés")
+
+    class Meta:
+        verbose_name = "Configuration Globale (Statistiques)"
+        verbose_name_plural = "Configuration Globale (Statistiques)"
+
+    def __str__(self):
+        return "Configuration des statistiques (bande passante)"
+
+    def save(self, *args, **kwargs):
+        if not self.pk and SiteConfiguration.objects.exists():
+            return
+        return super(SiteConfiguration, self).save(*args, **kwargs)

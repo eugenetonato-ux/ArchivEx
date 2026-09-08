@@ -412,7 +412,7 @@ class Phase11AdministrationTests(TestCase):
 
     def test_zero_emoji_policy_in_administration_portal(self):
         """Verify zero Unicode emojis appear in custom administration templates."""
-        emojis = ["📚", "📄", "🎯", "💡", "🔒", "⚡", "✓", "⭐", "🚀", "👋", "❤️", "🔔"]
+        emojis = ["fa-book", "fa-file", "fa-bullseye", "fa-lightbulb", "fa-lock", "fa-bolt", "fa-check", "fa-star", "fa-rocket", "fa-hand-sparkles", "fa-heart", "fa-bell"]
         self.client.login(username="admin_boss", password="Password123!")
         for route_name in [
             "contributors:admin_dashboard",

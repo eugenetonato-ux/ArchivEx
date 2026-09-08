@@ -4,160 +4,192 @@
 {% block title %}Tableau de bord — Espace Étudiant | ArchivEx{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
 
-    <!-- WELCOME BANNER (CLEAN MASTER SAAS DESIGN SYSTEM) -->
-    <div class="card-academic bg-white border border-slate-200 p-6 sm:p-8 mb-8 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div class="flex items-center space-x-4">
-            <div class="w-14 h-14 rounded-2xl bg-blue-50 text-[#2563EB] border border-blue-100 flex items-center justify-center font-extrabold text-2xl shadow-sm">
-                {{ user.first_name|default:user.username|slice:":1"|upper }}
-            </div>
-            <div>
+    <!-- ELEGANT WELCOME BANNER -->
+    <div class="relative overflow-hidden rounded-3xl p-6 sm:p-10 mb-10 shadow-lg border border-blue-200 dark:border-indigo-900/40 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-[#0b1120] dark:to-[#1e1b4b]/40 group transition-all duration-500 hover:shadow-xl">
+        <!-- Background decorative elements -->
+        <div class="absolute -top-24 -right-24 w-64 h-64 bg-blue-400/20 dark:bg-blue-600/10 rounded-full blur-3xl group-hover:bg-blue-400/30 dark:group-hover:bg-blue-600/20 transition-all duration-700"></div>
+        <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-400/20 dark:bg-indigo-600/10 rounded-full blur-3xl group-hover:bg-indigo-400/30 dark:group-hover:bg-indigo-600/20 transition-all duration-700"></div>
+        
+        <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div class="flex items-center space-x-5">
+                <div class="w-16 h-16 rounded-2xl bg-white dark:bg-[#151f38] text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-indigo-900/50 flex items-center justify-center font-black text-3xl shadow-sm transform group-hover:scale-105 transition-transform duration-300">
+                    {{ user.first_name|default:user.username|slice:":1"|upper }}
                 </div>
-                <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0B122B]">Bonjour, {{ user.first_name|default:user.username }}</h1>
-
-                <p class="text-xs sm:text-sm text-slate-500">
-                    {% if profile and profile.filiere %}
-                        {{ profile.school.name|default:"Université" }} · {{ profile.filiere.name }} (L1)
-                    {% else %}
-                        Bienvenue sur ton espace de révision personnalisé ArchivEx
-                    {% endif %}
-                </p>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-black text-blue-950 dark:text-slate-100 tracking-tight mb-1">Bonjour, {{ user.first_name|default:user.username }}</h1>
+                    <p class="text-xs sm:text-sm text-blue-800/70 dark:text-blue-200/50 font-medium">
+                        {% if profile and profile.filiere %}
+                            {{ profile.school.name|default:"Université" }} · {{ profile.filiere.name }} (L1)
+                        {% else %}
+                            Bienvenue sur ton espace de révision personnalisé ArchivEx
+                        {% endif %}
+                    </p>
+                </div>
             </div>
-        </div>
 
-        <div class="flex items-center space-x-3 w-full md:w-auto">
-            <a href="{% url 'accounts:profile' %}" class="btn-secondary text-xs px-4 py-2.5 w-full md:w-auto text-center">
-                Mon Profil
-            </a>
-            <a href="{% url 'accounts:logout' %}" class="text-xs font-bold text-rose-600 hover:underline px-4 py-2.5">
-                Déconnexion
-            </a>
+            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                <a href="{% url 'accounts:profile' %}" class="bg-white/80 dark:bg-[#151f38]/80 backdrop-blur border border-blue-200 dark:border-indigo-900/50 text-blue-900 dark:text-blue-200 text-xs font-bold px-5 py-2.5 rounded-xl hover:bg-white dark:hover:bg-[#1e293b] transition-all shadow-sm flex items-center justify-center">
+                    <i class="fa-solid fa-user-pen mr-2"></i> Mon Profil
+                </a>
+                <a href="{% url 'accounts:logout' %}" class="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/30 text-rose-600 dark:text-rose-400 text-xs font-bold px-5 py-2.5 rounded-xl hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all shadow-sm flex items-center justify-center">
+                    <i class="fa-solid fa-power-off mr-2"></i> Quitter
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- QUICK STATS METRICS (4 COMPACT TINTED FLOATING CARDS) -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="card-medium-floating card-tint-blue">
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Épreuves consultées</span>
-                <span class="w-7 h-7 rounded-lg bg-blue-100 text-[#2563EB] flex items-center justify-center text-xs">
-                    <i class="fa-solid fa-book-open"></i>
-                </span>
+    <!-- DYNAMIC & CHIC METRICS CARDS -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10">
+        <!-- Consultations (Blue Theme) -->
+        <div class="group relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-800 border border-blue-400 dark:border-blue-500 shadow-lg hover:shadow-blue-500/30 transition-all duration-300 transform hover:-translate-y-1">
+            <!-- Decorative circle -->
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-500"></div>
+            
+            <div class="relative z-10 flex justify-between items-start mb-4">
+                <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md text-white border border-white/30 flex items-center justify-center shadow-inner">
+                    <i class="fa-solid fa-book-open text-lg"></i>
+                </div>
+                <span class="text-[10px] font-black text-white/90 uppercase tracking-wider bg-black/10 px-2 py-1 rounded-lg backdrop-blur-sm border border-white/10">Consultations</span>
             </div>
-            <p class="text-2xl font-extrabold text-[#2563EB]">14</p>
-            <p class="text-[10px] text-slate-400 mt-0.5">Sujets L1 révisés</p>
+            <div class="relative z-10">
+                <p class="text-3xl font-black text-white mb-1 tracking-tight drop-shadow-sm">14</p>
+                <p class="text-xs text-blue-100 font-medium">Sujets révisés</p>
+            </div>
         </div>
 
-        <div class="card-medium-floating card-tint-gold">
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Favoris</span>
-                <span class="w-7 h-7 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-xs">
-                    <i class="fa-solid fa-star"></i>
-                </span>
+        <!-- Favoris (Amber Theme) -->
+        <div class="group relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-amber-400 to-orange-500 dark:from-amber-500 dark:to-orange-700 border border-amber-300 dark:border-amber-500 shadow-lg hover:shadow-amber-500/30 transition-all duration-300 transform hover:-translate-y-1">
+            <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-500"></div>
+            
+            <div class="relative z-10 flex justify-between items-start mb-4">
+                <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md text-white border border-white/30 flex items-center justify-center shadow-inner">
+                    <i class="fa-solid fa-star text-lg"></i>
+                </div>
+                <span class="text-[10px] font-black text-white/90 uppercase tracking-wider bg-black/10 px-2 py-1 rounded-lg backdrop-blur-sm border border-white/10">Favoris</span>
             </div>
-            <p class="text-2xl font-extrabold text-amber-600">{{ favorites|length|default:"6" }}</p>
-            <p class="text-[10px] text-slate-400 mt-0.5">Enregistrés pour révisions</p>
+            <div class="relative z-10">
+                <p class="text-3xl font-black text-white mb-1 tracking-tight drop-shadow-sm">{{ favorites|length|default:"0" }}</p>
+                <p class="text-xs text-amber-50 font-medium">Épreuves sauvegardées</p>
+            </div>
         </div>
 
-        <div class="card-medium-floating card-tint-emerald">
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Téléchargements</span>
-                <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs">
-                    <i class="fa-solid fa-download"></i>
-                </span>
+        <!-- Téléchargements (Emerald Theme) -->
+        <div class="group relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-emerald-400 to-teal-500 dark:from-emerald-500 dark:to-teal-700 border border-emerald-300 dark:border-emerald-500 shadow-lg hover:shadow-emerald-500/30 transition-all duration-300 transform hover:-translate-y-1">
+            <div class="absolute -left-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-500"></div>
+            
+            <div class="relative z-10 flex justify-between items-start mb-4">
+                <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md text-white border border-white/30 flex items-center justify-center shadow-inner">
+                    <i class="fa-solid fa-cloud-arrow-down text-lg"></i>
+                </div>
+                <span class="text-[10px] font-black text-white/90 uppercase tracking-wider bg-black/10 px-2 py-1 rounded-lg backdrop-blur-sm border border-white/10">Téléchargements</span>
             </div>
-            <p class="text-2xl font-extrabold text-emerald-600">8</p>
-            <p class="text-[10px] text-slate-400 mt-0.5">Documents PDF enregistrés</p>
+            <div class="relative z-10">
+                <p class="text-3xl font-black text-white mb-1 tracking-tight drop-shadow-sm">8</p>
+                <p class="text-xs text-emerald-50 font-medium">PDF enregistrés</p>
+            </div>
         </div>
 
-        <div class="card-medium-floating card-tint-purple">
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">ArchivEx Pass</span>
-                <span class="w-7 h-7 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-xs">
-                    <i class="fa-solid fa-bolt"></i>
-                </span>
+        <!-- ArchivEx Pass (Purple Theme) -->
+        <div class="group relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-purple-500 to-indigo-600 dark:from-purple-600 dark:to-indigo-800 border border-purple-400 dark:border-purple-500 shadow-lg hover:shadow-purple-500/30 transition-all duration-300 transform hover:-translate-y-1">
+            <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] opacity-50"></div>
+            
+            <div class="relative z-10 flex justify-between items-start mb-4">
+                <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md text-white border border-white/30 flex items-center justify-center shadow-inner">
+                    <i class="fa-solid fa-bolt text-lg"></i>
+                </div>
+                <span class="text-[10px] font-black text-white/90 uppercase tracking-wider bg-black/10 px-2 py-1 rounded-lg backdrop-blur-sm border border-white/10">Abonnement</span>
             </div>
-            {% if active_accesses %}
-                <p class="text-sm font-extrabold text-emerald-600 mt-1 flex items-center space-x-1">
-                    <i class="fa-solid fa-circle-check text-xs"></i>
-                    <span>PASS ACTIF</span>
-                </p>
-                <p class="text-[10px] text-slate-400 mt-0.5">Accès illimité L1</p>
-            {% else %}
-                <p class="text-sm font-extrabold text-amber-600 mt-1">NON ACTIVÉ</p>
-                <p class="text-[10px] text-slate-400 mt-0.5">2 000 FCFA / Semestre</p>
-            {% endif %}
+            <div class="relative z-10">
+                {% if active_accesses %}
+                    <p class="text-2xl sm:text-3xl font-black text-white mb-1 tracking-tight drop-shadow-sm">Actif</p>
+                    <p class="text-xs text-purple-100 font-medium flex items-center"><i class="fa-solid fa-circle-check text-white mr-1.5 opacity-80"></i> Pass validé</p>
+                {% else %}
+                    <p class="text-2xl sm:text-3xl font-black text-white mb-1 tracking-tight drop-shadow-sm">Inactif</p>
+                    <p class="text-xs text-white/80 font-bold flex items-center"><i class="fa-solid fa-lock mr-1.5 opacity-80"></i> Accès restreint</p>
+                {% endif %}
+            </div>
         </div>
     </div>
 
     <!-- MAIN DASHBOARD CONTENT GRID -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
         
         <!-- LEFT COLUMN: ACCESS STATUS & FAVORITES -->
-        <div class="lg:col-span-1 space-y-6">
+        <div class="lg:col-span-4 flex flex-col gap-6">
             
             <!-- PASS STATUS WIDGET -->
-            <div class="card-academic bg-white border border-slate-200 p-5">
-                <h2 class="text-base font-bold text-[#0B122B] mb-3 flex items-center space-x-2">
-                    <i class="fa-solid fa-bolt text-amber-500"></i>
-                    <span>Mon ArchivEx Pass Semestre</span>
+            <div class="bg-white dark:bg-[#0b1120] rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-amber-100 to-transparent dark:from-amber-900/10 rounded-bl-full opacity-50 group-hover:scale-110 transition-transform duration-500"></div>
+                <h2 class="text-sm font-black text-slate-800 dark:text-slate-100 mb-5 flex items-center uppercase tracking-wide relative z-10">
+                    <i class="fa-solid fa-bolt text-amber-500 mr-2 text-lg"></i>
+                    Mon Pass Semestre
                 </h2>
 
-                {% if active_accesses %}
-                    <div class="space-y-2.5 mb-4">
-                        {% for access in active_accesses %}
-                            <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex justify-between items-center">
-                                <div>
-                                    <p class="text-xs font-bold text-emerald-800">{{ access.semester.label }}</p>
-                                    <p class="text-[10px] text-emerald-600">{{ access.filiere.name }}</p>
+                <div class="relative z-10">
+                    {% if active_accesses %}
+                        <div class="space-y-3 mb-5">
+                            {% for access in active_accesses %}
+                                <div class="p-3.5 rounded-xl bg-gradient-to-r from-emerald-50 to-white dark:from-[#0d1726] dark:to-[#0f172a] border border-emerald-100 dark:border-emerald-900/30 flex justify-between items-center hover:border-emerald-200 dark:hover:border-emerald-800 transition-colors">
+                                    <div>
+                                        <p class="text-xs font-extrabold text-emerald-900 dark:text-emerald-400">{{ access.semester.label }}</p>
+                                        <p class="text-[10px] font-bold text-emerald-600/70 dark:text-slate-500 mt-0.5">{{ access.filiere.name }}</p>
+                                    </div>
+                                    <span class="bg-emerald-500 text-white text-[9px] font-black uppercase px-2 py-1 rounded-md shadow-sm">Actif</span>
                                 </div>
-                                <span class="badge-gold text-[10px]">Actif</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="p-5 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-[#0d1726] dark:to-[#0f172a] border border-slate-200 dark:border-slate-800 text-center mb-5 hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+                            <div class="w-10 h-10 mx-auto bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-400 dark:text-slate-500 mb-3 shadow-inner">
+                                <i class="fa-solid fa-lock text-sm"></i>
                             </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center mb-4">
-                        <p class="text-xs font-bold text-[#0B122B] mb-1">Pass Semestre non activé</p>
-                        <p class="text-[11px] text-slate-500 leading-relaxed mb-3">Débloque toutes les épreuves Premium de ton semestre pour 4 500 FCFA.</p>
-                        <a href="{% url 'academics:filieres' %}" class="btn-gold w-full text-xs py-2">
-                            Débloquer mon semestre
-                        </a>
-                    </div>
-                {% endif %}
+                            <p class="text-xs font-black text-slate-700 dark:text-slate-200 mb-1.5">Pass non activé</p>
+                            <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed mb-4">Débloque toutes les épreuves Premium pour un semestre complet.</p>
+                            <a href="{% url 'academics:filieres' %}" class="block w-full bg-amber-400 hover:bg-amber-500 dark:bg-amber-500/90 dark:hover:bg-amber-500 text-amber-950 dark:text-amber-950 text-xs font-black py-2.5 rounded-xl shadow-sm transition-colors text-center">
+                                Débloquer mon semestre
+                            </a>
+                        </div>
+                    {% endif %}
 
-                {% if profile and profile.filiere %}
-                    <a href="{% url 'academics:semestres' filiere_id=profile.filiere.id %}" class="btn-primary w-full text-xs py-2">
-                        Voir mes semestres
-                    </a>
-                {% endif %}
+                    {% if profile and profile.filiere %}
+                        <a href="{% url 'academics:semestres' filiere_id=profile.filiere.id %}" class="block w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-600/90 dark:hover:bg-blue-500 text-white text-xs font-black py-3 rounded-xl shadow-sm hover:shadow-md transition-all text-center">
+                            Voir mes semestres
+                        </a>
+                    {% endif %}
+                </div>
             </div>
 
             <!-- FAVORITES WIDGET -->
-            <div class="card-academic bg-white border border-slate-200 p-5">
-                <div class="flex justify-between items-center mb-3">
-                    <h2 class="text-base font-bold text-[#0B122B] flex items-center space-x-1.5">
-                        <i class="fa-solid fa-heart text-rose-500"></i>
-                        <span>Mes Favoris</span>
+            <div class="bg-white dark:bg-[#0b1120] rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex-grow">
+                <div class="flex justify-between items-center mb-5">
+                    <h2 class="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center uppercase tracking-wide">
+                        <i class="fa-solid fa-heart text-rose-500 mr-2 text-lg"></i>
+                        Mes Favoris
                     </h2>
-s Favoris</span>
-                    </h2>
-                    <a href="{% url 'accounts:favoris' %}" class="text-xs font-bold text-[#2563EB] hover:underline">Tout voir </a>
+                    <a href="{% url 'accounts:favoris' %}" class="text-[10px] font-black bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-[#151f38] text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 px-2 py-1 rounded-lg transition-colors">VOIR TOUT</a>
                 </div>
 
                 {% if favorites %}
-                    <div class="space-y-2">
+                    <div class="space-y-2.5">
                         {% for fav in favorites %}
-                            <a href="{% url 'exams:detail' pk=fav.exam.id %}" class="p-2.5 rounded-xl bg-slate-50 hover:bg-blue-50/50 border border-slate-200 flex justify-between items-center transition-colors group">
-                                <span class="text-xs font-medium text-[#0B122B] group-hover:text-[#2563EB] truncate max-w-[180px]">{{ fav.exam.title }}</span>
-                                <span class="text-[10px] font-bold text-[#2563EB] bg-blue-50 px-2 py-0.5 rounded">{{ fav.exam.get_exam_type_display|default:"EXAM" }}</span>
+                            <a href="{% url 'exams:detail' pk=fav.exam.id %}" class="block p-3 rounded-xl bg-slate-50 dark:bg-[#0f172a] hover:bg-rose-50 dark:hover:bg-rose-950/20 border border-slate-100 dark:border-slate-800 hover:border-rose-200 dark:hover:border-rose-900/50 transition-all group">
+                                <div class="flex justify-between items-start">
+                                    <span class="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-rose-600 dark:group-hover:text-rose-400 truncate pr-3">{{ fav.exam.title }}</span>
+                                    <span class="text-[9px] font-black text-rose-600 bg-rose-100 dark:bg-rose-950/50 dark:text-rose-400 px-2 py-0.5 rounded shrink-0 border dark:border-rose-900/30">{{ fav.exam.get_exam_type_display|default:"EXAM" }}</span>
+                                </div>
+                                <p class="text-[10px] font-medium text-slate-500 dark:text-slate-500 mt-1 truncate">{{ fav.exam.subject.name }}</p>
                             </a>
                         {% endfor %}
                     </div>
                 {% else %}
-                    <div class="text-center py-6 text-slate-400">
-                        <p class="text-xs mb-2">Aucune épreuve en favoris.</p>
-                        <a href="{% url 'exams:liste' %}" class="text-xs font-bold text-[#2563EB] hover:underline">Ajouter des favoris </a>
+                    <div class="text-center py-8">
+                        <div class="w-12 h-12 mx-auto bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-600 mb-3">
+                            <i class="fa-regular fa-heart text-xl"></i>
+                        </div>
+                        <p class="text-xs font-bold text-slate-500 dark:text-slate-500 mb-2">Aucune épreuve en favoris.</p>
+                        <a href="{% url 'exams:liste' %}" class="inline-block text-xs font-black text-blue-600 dark:text-blue-400 hover:underline">Explorer les épreuves</a>
                     </div>
                 {% endif %}
             </div>
@@ -165,44 +197,51 @@ s Favoris</span>
         </div>
 
         <!-- RIGHT COLUMN: RECOMMENDED EXAMS -->
-        <div class="lg:col-span-2 space-y-6">
-            <div class="card-academic bg-white border border-slate-200 p-5">
-                <div class="flex justify-between items-center mb-5">
+        <div class="lg:col-span-8">
+            <div class="bg-white dark:bg-[#0b1120] rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm h-full">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
                     <div>
-                        <h2 class="text-lg font-bold text-[#0B122B]">Épreuves Recommandées L1</h2>
-                        <p class="text-xs text-slate-500">Sélection de sujets récents pour tes révisions</p>
+                        <h2 class="text-lg font-black text-slate-800 dark:text-slate-100 flex items-center">
+                            <i class="fa-solid fa-wand-magic-sparkles text-purple-500 mr-2"></i> Épreuves Recommandées
+                        </h2>
+                        <p class="text-xs font-medium text-slate-500 dark:text-slate-500 mt-1">Sélection sur-mesure basée sur ton parcours actuel.</p>
                     </div>
-                    <a href="{% url 'exams:liste' %}" class="btn-secondary text-xs px-3.5 py-2">
-                        Toute la banque 
+                    <a href="{% url 'exams:liste' %}" class="shrink-0 bg-slate-100 dark:bg-[#0f172a] hover:bg-blue-600 hover:text-white dark:hover:bg-blue-900/40 text-slate-700 dark:text-slate-300 dark:hover:text-blue-400 text-xs font-bold px-4 py-2 rounded-xl transition-colors border dark:border-slate-800 dark:hover:border-blue-800">
+                        Toute la banque
                     </a>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     {% for exam in recent_exams %}
-                        <div class="card-medium-floating {% if exam.user_has_access %}card-tint-blue{% else %}card-tint-gold{% endif %} flex flex-col justify-between group">
+                        <div class="group bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md transition-all duration-300 flex flex-col justify-between">
                             <div>
-                                <div class="flex justify-between items-center mb-2.5">
-                                    <span class="text-[10px] font-bold text-slate-500 uppercase">
-                                        {{ exam.year }} · {{ exam.get_exam_type_display|default:"Session" }}
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="inline-flex text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-white dark:bg-[#151f38] px-2 py-1 rounded shadow-sm border border-slate-100 dark:border-slate-700">
+                                        {{ exam.year }}
                                     </span>
                                     {% if exam.user_has_access %}
-                                        <span class="badge-free text-[10px]">GRATUIT</span>
+                                        <span class="text-[9px] font-black uppercase text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/50 px-2 py-1 rounded-md border border-emerald-200 dark:border-emerald-900/30">GRATUIT</span>
                                     {% else %}
-                                        <span class="badge-premium text-[10px]">PREMIUM</span>
+                                        <span class="text-[9px] font-black uppercase text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/50 px-2 py-1 rounded-md border border-amber-200 dark:border-amber-900/30"><i class="fa-solid fa-lock text-[8px] mr-1"></i> PREMIUM</span>
                                     {% endif %}
                                 </div>
-                                <h3 class="text-xs font-bold text-[#0B122B] group-hover:text-[#2563EB] transition-colors mb-1 line-clamp-1">{{ exam.title }}</h3>
-                                <p class="text-[11px] font-semibold text-[#2563EB] mb-3 line-clamp-1">{{ exam.subject.name }}</p>
+                                <h3 class="text-sm font-extrabold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2 line-clamp-2 leading-snug">{{ exam.title }}</h3>
+                                <p class="text-xs font-bold text-blue-600/80 dark:text-blue-400/60 mb-4 line-clamp-1"><i class="fa-solid fa-folder text-[10px] mr-1"></i> {{ exam.subject.name }}</p>
                             </div>
-                            <div class="pt-2 border-t border-slate-200/60">
-                                <a href="{% url 'exams:detail' pk=exam.id %}" class="btn-primary w-full text-xs py-1.5">
-                                    Consulter
+                            <div class="pt-3 border-t border-slate-200 dark:border-slate-800">
+                                <a href="{% url 'exams:detail' pk=exam.id %}" class="flex items-center justify-center space-x-2 w-full bg-white dark:bg-[#151f38] hover:bg-blue-50 dark:hover:bg-[#1e293b] text-blue-700 dark:text-blue-400 text-xs font-bold py-2 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors">
+                                    <span>Consulter</span>
+                                    <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
                                 </a>
                             </div>
                         </div>
                     {% empty %}
-                        <div class="col-span-2 text-center py-8 text-slate-400 text-xs">
-                            Aucune épreuve disponible pour le moment.
+                        <div class="col-span-1 sm:col-span-2 text-center py-12 px-4 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800">
+                            <div class="w-12 h-12 mx-auto bg-slate-100 dark:bg-slate-800/50 rounded-full flex items-center justify-center text-slate-400 dark:text-slate-600 mb-3">
+                                <i class="fa-solid fa-ghost text-xl"></i>
+                            </div>
+                            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-400 mb-1">C'est un peu vide ici !</h3>
+                            <p class="text-xs font-medium text-slate-500 dark:text-slate-500">Aucune épreuve recommandée pour le moment. Explore le catalogue pour trouver ton bonheur.</p>
                         </div>
                     {% endfor %}
                 </div>

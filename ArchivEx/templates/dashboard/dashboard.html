@@ -149,6 +149,26 @@
                 {% endif %}
             </div>
 
+            <!-- CHART SECTION: DISTRIBUTION DES DOCUMENTS PAR FILIÈRE -->
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600 block">Analyse par Spécialité</span>
+                        <h2 class="text-base sm:text-lg font-black text-[#071A49] flex items-center space-x-2">
+                            <i class="fa-solid fa-chart-column text-indigo-500" aria-hidden="true"></i>
+                            <span>Distribution des documents par filière</span>
+                        </h2>
+                    </div>
+                    <p class="text-xs text-slate-500 font-medium">
+                        Aperçu global du volume d'épreuves, résumés et guides par filière.
+                    </p>
+                </div>
+
+                <div class="relative w-full h-64 sm:h-72">
+                    <canvas id="studentFiliereChart"></canvas>
+                </div>
+            </div>
+
             <!-- RECENT ACTIVITY TIMELINE -->
             <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
                 <div class="flex items-center justify-between mb-6">
@@ -354,5 +374,95 @@
     </div>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const rawData = {{ filiere_chart_json|safe }};
+    const ctx = document.getElementById("studentFiliereChart");
+    if (!ctx || !rawData) return;
+
+    const labels = rawData.labels || [];
+    const exams = rawData.exams || [];
+    const summaries = rawData.summaries || [];
+    const guides = rawData.guides || [];
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Épreuves',
+                    data: exams,
+                    backgroundColor: 'rgba(37, 99, 235, 0.85)',
+                    borderColor: 'rgb(37, 99, 235)',
+                    borderWidth: 1.5,
+                    borderRadius: 6,
+                },
+                {
+                    label: 'Résumés de cours',
+                    data: summaries,
+                    backgroundColor: 'rgba(16, 185, 129, 0.85)',
+                    borderColor: 'rgb(16, 185, 129)',
+                    borderWidth: 1.5,
+                    borderRadius: 6,
+                },
+                {
+                    label: 'Guides d\'étude',
+                    data: guides,
+                    backgroundColor: 'rgba(147, 51, 234, 0.85)',
+                    borderColor: 'rgb(147, 51, 234)',
+                    borderWidth: 1.5,
+                    borderRadius: 6,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        font: { family: 'Plus Jakarta Sans', size: 12, weight: '700' },
+                        usePointStyle: true,
+                        padding: 16
+                    }
+                },
+                tooltip: {
+                    backgroundColor: '#071A49',
+                    titleFont: { size: 13, weight: 'bold' },
+                    bodyFont: { size: 12 },
+                    padding: 12,
+                    cornerRadius: 10
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
+                        color: '#64748B'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        precision: 0,
+                        font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
+                        color: '#64748B'
+                    },
+                    grid: { color: '#F1F5F9' }
+                }
+            }
+        }
+    });
+});
+</script>
 {% endblock %}
 

@@ -9,30 +9,47 @@ from payments.models import SemesterAccess
 User = get_user_model()
 
 
+from content.models import Summary, Guide
+
+
 def home_view(request):
     """Page d'accueil (Landing Page) accessible à tous."""
-    schools_count = School.objects.filter(is_active=True).count()
+    from .models import SiteConfiguration
+    config = SiteConfiguration.objects.first()
+    if not config:
+        config = SiteConfiguration.objects.create()
+
+    schools_count = School.objects.filter(is_active=True).count() + config.base_schools_count
     filieres_count = Filiere.objects.count()
-    subjects_count = Subject.objects.count()
-    exams_count = Exam.objects.filter(is_published=True).count()
-    students_count = User.objects.filter(is_staff=False).count()
+    subjects_count = Subject.objects.count() + config.base_subjects_count
+    exams_count = Exam.objects.filter(is_published=True).count() + config.base_exams_count
+    summaries_count = Summary.objects.filter(publication_status="PUBLISHED").count() + config.base_summaries_count
+    guides_count = Guide.objects.filter(publication_status="PUBLISHED").count()
+    students_count = User.objects.filter(is_staff=False).count() + config.base_students_count
 
     featured_filieres = Filiere.objects.select_related("school", "level").annotate(
-        exams_num=Count("exams")
+        exams_num=Count("exams", distinct=True)
     )[:6]
 
     latest_exams = Exam.objects.filter(
         is_published=True
     ).select_related("subject", "semester", "filiere", "level")[:6]
 
+    latest_summaries = Summary.objects.filter(
+        publication_status="PUBLISHED"
+    ).select_related("subject", "subject__semester", "subject__semester__filiere")[:6]
+
     context = {
         "schools_count": schools_count,
         "filieres_count": filieres_count,
         "subjects_count": subjects_count,
         "exams_count": exams_count,
+        "summaries_count": summaries_count,
+        "guides_count": guides_count,
         "students_count": students_count,
         "featured_filieres": featured_filieres,
         "latest_exams": latest_exams,
+        "latest_summaries": latest_summaries,
     }
     return render(request, "academics/home.html", context)
 

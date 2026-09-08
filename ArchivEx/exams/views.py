@@ -303,6 +303,7 @@ def _render_pdf_error_response(message="Ce fichier PDF n'est pas encore disponib
     <html lang="fr">
     <head>
         <meta charset="utf-8">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <style>
             body {{
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -343,7 +344,7 @@ def _render_pdf_error_response(message="Ce fichier PDF n'est pas encore disponib
     </head>
     <body>
         <div class="card">
-            <div class="icon">⚠️</div>
+            <div class="icon"><i class="fa-solid fa-triangle-exclamation text-amber-400"></i></div>
             <h3>Document Indisponible</h3>
             <p>{message}</p>
         </div>

@@ -7,23 +7,23 @@
 <div class="space-y-6">
 
     <!-- BREADCRUMB & HEADER -->
-    <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div class="bg-white dark:bg-[#121824] p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-[#1e293b] shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-colors duration-200">
         <div>
-            <nav class="flex items-center space-x-2 text-xs font-bold text-slate-400 mb-2 flex-wrap">
-                <a href="{% url 'contributors:library_index' %}" class="hover:text-blue-600">Bibliothèque Cloud</a>
+            <nav class="flex items-center space-x-2 text-xs font-bold text-slate-400 dark:text-slate-500 mb-2 flex-wrap">
+                <a href="{% url 'contributors:library_index' %}" class="hover:text-blue-600 dark:hover:text-blue-400">Bibliothèque Cloud</a>
                 <span>/</span>
-                <span class="text-slate-600">
+                <span class="text-slate-600 dark:text-slate-300">
                     {% if cloud_file %}{{ cloud_file.school.name|default:"Université" }}{% else %}{{ exam.filiere.school.name|default:"Université" }}{% endif %}
                 </span>
                 <span>/</span>
-                <span class="text-slate-600">
+                <span class="text-slate-600 dark:text-slate-300">
                     {% if cloud_file %}{{ cloud_file.filiere.name|default:"Toutes filières" }}{% else %}{{ exam.filiere.name }}{% endif %}
                 </span>
             </nav>
-            <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">
+            <h1 class="text-xl sm:text-2xl font-black text-[#071A49] dark:text-slate-100 tracking-tight">
                 {% if cloud_file %}{{ cloud_file.title }}{% else %}{{ exam.title }}{% endif %}
             </h1>
-            <p class="text-xs text-slate-500 font-semibold mt-1">
+            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1">
                 {% if cloud_file %}
                     Type : {{ cloud_file.get_file_type_display }} · Déposé le {{ cloud_file.created_at|date:"d/m/Y H:i" }}
                 {% else %}
@@ -34,9 +34,13 @@
 
         <div class="flex items-center space-x-3">
             {% if cloud_file %}
+                <a href="{% url 'contributors:publish_from_cloud' pk=cloud_file.id %}?force_ocr=1" class="px-3.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-colors shadow-md shadow-indigo-500/20 inline-flex items-center space-x-1.5">
+                    <i class="fa-solid fa-wand-magic-sparkles text-xs" aria-hidden="true"></i>
+                    <span>Extraire & Résumer (OCR)</span>
+                </a>
                 <a href="{% url 'contributors:publish_from_cloud' pk=cloud_file.id %}" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-colors shadow-md shadow-blue-500/20 inline-flex items-center space-x-2">
                     <i class="fa-solid fa-paper-plane text-xs" aria-hidden="true"></i>
-                    <span>Publier cette ressource sur le site</span>
+                    <span>Publier cette ressource</span>
                 </a>
             {% elif exam %}
                 <a href="{% url 'contributors:exam_edit' pk=exam.id %}" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-colors shadow-md shadow-blue-500/20 inline-flex items-center space-x-2">
@@ -44,31 +48,31 @@
                     <span>Modifier l'épreuve</span>
                 </a>
             {% endif %}
-            <a href="{% url 'contributors:library_index' %}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors">
+            <a href="{% url 'contributors:library_index' %}" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl transition-colors">
                 Retour au Cloud
             </a>
         </div>
     </div>
 
     <!-- RESOURCE DETAILS -->
-    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+    <div class="bg-white dark:bg-[#121824] p-6 rounded-2xl border border-slate-200/80 dark:border-[#1e293b] shadow-sm space-y-4 transition-colors duration-200">
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#1e293b] pb-4">
             <div class="flex items-center space-x-3">
                 <i class="fa-solid fa-file-pdf text-rose-500 text-2xl" aria-hidden="true"></i>
                 <div>
-                    <h3 class="text-sm font-black text-[#071A49]">
+                    <h3 class="text-sm font-black text-[#071A49] dark:text-slate-200">
                         {% if cloud_file %}{{ cloud_file.title }}{% else %}{{ exam.title }}{% endif %}
                     </h3>
-                    <p class="text-xs text-slate-500 font-medium">Document PDF d'examen stocké sur le Cloud Integrated.</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Document PDF d'examen stocké sur le Cloud Integrated.</p>
                 </div>
             </div>
             {% if cloud_file and cloud_file.file %}
-                <a href="{{ cloud_file.file.url }}" target="_blank" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors inline-flex items-center space-x-2">
+                <a href="{{ cloud_file.file.url }}" target="_blank" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl transition-colors inline-flex items-center space-x-2">
                     <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
                     <span>Consulter le PDF</span>
                 </a>
             {% elif exam and exam.file %}
-                <a href="{{ exam.file.url }}" target="_blank" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors inline-flex items-center space-x-2">
+                <a href="{{ exam.file.url }}" target="_blank" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl transition-colors inline-flex items-center space-x-2">
                     <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
                     <span>Consulter le PDF</span>
                 </a>

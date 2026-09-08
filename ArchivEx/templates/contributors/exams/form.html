@@ -55,7 +55,89 @@
  {% endif %}
 
  <!-- FORM CARD -->
- <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+ <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
+
+  <!-- OCR AUTO-SUMMARY & TEXT EXTRACTION CARD -->
+  <div class="bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200/90 dark:border-indigo-800/80 rounded-2xl p-5 shadow-xs space-y-3">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <div>
+          <h3 class="text-xs font-black text-[#071A49] dark:text-indigo-200 uppercase tracking-wider">
+            Extraction de Texte & Résumé Automatique (OCR Python)
+          </h3>
+          <p class="text-[11px] text-indigo-700 dark:text-indigo-300 font-medium">
+            Génération automatique de résumé court et extraction des métadonnées du PDF
+          </p>
+        </div>
+      </div>
+      <button type="button" id="btn-run-ocr" onclick="runOcrExtraction()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center space-x-1.5 transition-all shrink-0">
+        <i class="fa-solid fa-robot text-xs" id="ocr-btn-icon"></i>
+        <span id="ocr-btn-text">Extraire & Résumer (OCR)</span>
+      </button>
+    </div>
+
+    {% if no_metadata_detected %}
+    <div class="p-3 bg-amber-50 dark:bg-amber-950/50 border border-amber-200/80 dark:border-amber-800/70 rounded-xl text-xs text-amber-900 dark:text-amber-200 font-medium flex items-start space-x-2">
+      <i class="fa-solid fa-triangle-exclamation text-amber-600 mt-0.5 text-sm shrink-0"></i>
+      <div>
+        <strong>Aucune méta-donnée exacte détectée dans le nom du fichier.</strong>
+        L'OCR Python a analysé le document PDF pour générer un résumé court et suggérer automatiquement les informations ci-dessous.
+      </div>
+    </div>
+    {% endif %}
+
+    <div id="ocr-result-box" class="{% if not auto_ocr_summary %}hidden{% endif %} bg-white dark:bg-[#121824] p-4 rounded-xl border border-indigo-100 dark:border-indigo-900/60 space-y-2">
+      <div class="flex items-center justify-between text-xs font-bold text-indigo-950 dark:text-indigo-200 border-b border-slate-100 dark:border-slate-800 pb-2">
+        <span class="flex items-center space-x-1.5">
+          <i class="fa-solid fa-file-lines text-indigo-500"></i>
+          <span>Résumé court généré automatiquement :</span>
+        </span>
+        <span id="ocr-badge" class="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-[10px] font-extrabold">
+          {% if ocr_result.used_ocr %}OCR PyTesseract{% else %}Engine PyPDF Server{% endif %}
+        </span>
+      </div>
+      <p id="ocr-summary-text" class="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed italic">
+        {{ auto_ocr_summary }}
+      </p>
+      <div class="pt-2 flex items-center justify-between text-[11px] text-slate-500">
+        <span id="ocr-stats-text">
+          {% if ocr_result %}Taille analysée : {{ ocr_result.extracted_text_length }} caractères{% endif %}
+        </span>
+        <button type="button" onclick="copyOcrSummaryToDescription()" class="text-indigo-600 dark:text-indigo-400 font-bold hover:underline flex items-center space-x-1">
+          <i class="fa-solid fa-copy"></i>
+          <span>Copier dans la Description</span>
+        </button>
+      </div>
+
+      <!-- AUTO EXTRACTED TAGS SECTION -->
+      <div id="ocr-tags-container" class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
+        <div class="flex items-center justify-between text-[11px] font-bold text-slate-500">
+          <span class="flex items-center space-x-1">
+            <i class="fa-solid fa-tags text-indigo-500"></i>
+            <span>Mots-clés & Tags thématiques extraits :</span>
+          </span>
+          <button type="button" onclick="appendTagsToDescription()" class="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">
+            + Ajouter les tags au résumé
+          </button>
+        </div>
+        <div id="ocr-tags-list" class="flex flex-wrap gap-1.5">
+          {% if ocr_result and ocr_result.detected_tags %}
+            {% for tag in ocr_result.detected_tags %}
+              <button type="button" onclick="toggleTagInDescription('{{ tag }}')" class="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 border border-indigo-200/80 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 font-bold text-[11px] hover:bg-indigo-600 hover:text-white transition-all shadow-2xs">
+                {{ tag }}
+              </button>
+            {% endfor %}
+          {% else %}
+            <span class="text-[11px] text-slate-400 italic">Aucun tag extrait pour le moment.</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
  <form method="post" enctype="multipart/form-data" class="space-y-5">
  {% csrf_token %}
 
@@ -191,4 +273,162 @@
  </div>
 
 </div>
+
+<script>
+function copyOcrSummaryToDescription() {
+  const summaryText = document.getElementById('ocr-summary-text')?.innerText || '';
+  const descField = document.querySelector('textarea[name="description"]');
+  if (descField && summaryText) {
+    descField.value = summaryText;
+    descField.classList.add('ring-2', 'ring-indigo-500');
+    setTimeout(() => descField.classList.remove('ring-2', 'ring-indigo-500'), 1500);
+  }
+}
+
+function renderOcrTags(tagsList) {
+  const container = document.getElementById('ocr-tags-list');
+  if (!container) return;
+  if (!tagsList || tagsList.length === 0) {
+    container.innerHTML = '<span class="text-[11px] text-slate-400 italic">Aucun tag extrait pour le moment.</span>';
+    return;
+  }
+  container.innerHTML = tagsList.map(tag => 
+    `<button type="button" onclick="toggleTagInDescription('${tag}')" class="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 border border-indigo-200/80 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 font-bold text-[11px] hover:bg-indigo-600 hover:text-white transition-all shadow-2xs">${tag}</button>`
+  ).join(' ');
+}
+
+function toggleTagInDescription(tag) {
+  const descField = document.querySelector('textarea[name="description"]');
+  if (!descField) return;
+  if (!descField.value.includes(tag)) {
+    descField.value = descField.value ? `${descField.value} ${tag}` : tag;
+    descField.classList.add('ring-2', 'ring-indigo-500');
+    setTimeout(() => descField.classList.remove('ring-2', 'ring-indigo-500'), 1500);
+  }
+}
+
+function appendTagsToDescription() {
+  const tagButtons = document.querySelectorAll('#ocr-tags-list button');
+  const descField = document.querySelector('textarea[name="description"]');
+  if (!descField) return;
+  let addedCount = 0;
+  tagButtons.forEach(btn => {
+    const tag = btn.innerText.trim();
+    if (tag && !descField.value.includes(tag)) {
+      descField.value = descField.value ? `${descField.value} ${tag}` : tag;
+      addedCount++;
+    }
+  });
+  if (addedCount > 0) {
+    descField.classList.add('ring-2', 'ring-indigo-500');
+    setTimeout(() => descField.classList.remove('ring-2', 'ring-indigo-500'), 1500);
+  }
+}
+
+function runOcrExtraction() {
+  const btn = document.getElementById('btn-run-ocr');
+  const icon = document.getElementById('ocr-btn-icon');
+  const text = document.getElementById('ocr-btn-text');
+  const box = document.getElementById('ocr-result-box');
+  const summaryP = document.getElementById('ocr-summary-text');
+  const badge = document.getElementById('ocr-badge');
+  const stats = document.getElementById('ocr-stats-text');
+
+  {% if selected_cloud_file %}
+  const url = "{% url 'contributors:extract_pdf_ocr' pk=selected_cloud_file.id %}?force_ocr=1";
+  {% else %}
+  const url = null;
+  {% endif %}
+
+  if (btn) btn.disabled = true;
+  if (icon) icon.className = "fa-solid fa-spinner fa-spin text-xs";
+  if (text) text.innerText = "Analyse OCR en cours...";
+
+  if (url) {
+    fetch(url, {
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        if (box) box.classList.remove('hidden');
+        if (summaryP) summaryP.innerText = data.summary;
+        if (badge) badge.innerText = data.used_ocr ? 'OCR PyTesseract' : 'Engine PyPDF Server';
+        if (stats) stats.innerText = `Taille analysée : ${data.char_count} caractères`;
+
+        renderOcrTags(data.detected_tags);
+
+        const descField = document.querySelector('textarea[name="description"]');
+        if (descField && !descField.value) descField.value = data.summary;
+
+        if (data.detected_subject) {
+          const subjInput = document.querySelector('input[name="subject_name"]');
+          if (subjInput && !subjInput.value) subjInput.value = data.detected_subject;
+        }
+        if (data.detected_year) {
+          const yrInput = document.querySelector('input[name="year"]');
+          if (yrInput && (!yrInput.value || yrInput.value === '2025-2026')) yrInput.value = data.detected_year;
+        }
+      } else {
+        alert(data.error || "Erreur lors de l'extraction OCR.");
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Erreur réseau lors de l'extraction OCR.");
+    })
+    .finally(() => {
+      if (btn) btn.disabled = false;
+      if (icon) icon.className = "fa-solid fa-robot text-xs";
+      if (text) text.innerText = "Relancer l'extraction OCR";
+    });
+  } else {
+    const fileInput = document.querySelector('input[type="file"][name="file"]');
+    if (fileInput && fileInput.files.length > 0) {
+      const formData = new FormData();
+      formData.append('pdf_file', fileInput.files[0]);
+      formData.append('force_ocr', '1');
+      formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+      fetch("{% url 'contributors:extract_uploaded_pdf_ocr' %}", {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          if (box) box.classList.remove('hidden');
+          if (summaryP) summaryP.innerText = data.summary;
+          if (badge) badge.innerText = data.used_ocr ? 'OCR PyTesseract' : 'Engine PyPDF Server';
+          if (stats) stats.innerText = `Taille analysée : ${data.char_count} caractères`;
+
+          renderOcrTags(data.detected_tags);
+
+          const descField = document.querySelector('textarea[name="description"]');
+          if (descField) descField.value = data.summary;
+        } else {
+          alert(data.error || "Erreur lors de l'analyse OCR.");
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Erreur lors de l'analyse du fichier téléversé.");
+      })
+      .finally(() => {
+        if (btn) btn.disabled = false;
+        if (icon) icon.className = "fa-solid fa-robot text-xs";
+        if (text) text.innerText = "Relancer l'extraction OCR";
+      });
+    } else {
+      alert("Veuillez d'abord sélectionner ou téléverser un fichier PDF.");
+      if (btn) btn.disabled = false;
+      if (icon) icon.className = "fa-solid fa-robot text-xs";
+      if (text) text.innerText = "Extraire & Résumer (OCR)";
+    }
+  }
+}
+</script>
 {% endblock %}

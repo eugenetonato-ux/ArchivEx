@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
@@ -7,7 +8,8 @@ from django.http import JsonResponse
 
 from exams.models import Exam
 from .forms import StudentRegistrationForm, StudentLoginForm, StudentProfileForm
-from .models import StudentProfile, Favorite
+from .models import StudentProfile, Favorite, SiteLog
+from .utils import log_user_action
 from payments.models import SemesterAccess
 
 def register_view(request):
@@ -21,6 +23,7 @@ def register_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
+            log_user_action(request, "CONNECTION", f"Nouvelle inscription et connexion automatique de l'utilisateur : {user.username}")
             messages.success(request, f"Bienvenue {user.first_name} ! Ton compte a été créé avec succès.")
             return redirect("accounts:dashboard")
         else:
@@ -41,6 +44,7 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            log_user_action(request, "CONNECTION", f"Connexion réussie de l'utilisateur : {user.username}")
             messages.success(request, f"Ravi de te revoir, {user.first_name or user.username} !")
             next_url = request.GET.get("next")
             from django.urls import reverse
@@ -57,6 +61,8 @@ def login_view(request):
     return render(request, "accounts/login.html", {"form": form})
 
 def logout_view(request):
+    username = request.user.username if request.user.is_authenticated else "Anonyme"
+    log_user_action(request, "CONNECTION", f"Déconnexion de l'utilisateur : {username}")
     logout(request)
     messages.info(request, "Tu es à présent déconnecté.")
     return redirect("academics:home")
@@ -132,6 +138,37 @@ def dashboard_view(request):
 
     active_pass = active_accesses.exists() or user_subscriptions.filter(is_active=True).exists()
 
+    # Chart data: distribution des documents par filière (spécialité académique)
+    from academics.models import Filiere
+    student_school = profile.school if profile and profile.school else None
+    filieres_qs = Filiere.objects.filter(school=student_school) if student_school else Filiere.objects.all()
+    filieres_qs = filieres_qs.annotate(
+        exams_cnt=Count('exams', distinct=True),
+        summaries_cnt=Count('semesters__subjects__summaries', distinct=True),
+        guides_cnt=Count('semesters__subjects__guides', distinct=True)
+    )
+
+    chart_labels = []
+    chart_exams = []
+    chart_summaries = []
+    chart_guides = []
+    chart_totals = []
+
+    for f in filieres_qs:
+        chart_labels.append(f.name)
+        chart_exams.append(f.exams_cnt)
+        chart_summaries.append(f.summaries_cnt)
+        chart_guides.append(f.guides_cnt)
+        chart_totals.append(f.exams_cnt + f.summaries_cnt + f.guides_cnt)
+
+    filiere_chart_json = json.dumps({
+        "labels": chart_labels,
+        "exams": chart_exams,
+        "summaries": chart_summaries,
+        "guides": chart_guides,
+        "totals": chart_totals,
+    })
+
     context = {
         "profile": profile,
         "active_accesses": active_accesses,
@@ -148,6 +185,7 @@ def dashboard_view(request):
         "recent_summaries": recent_summaries,
         "recent_guides": recent_guides,
         "recent_articles": recent_articles,
+        "filiere_chart_json": filiere_chart_json,
     }
     return render(request, "dashboard/dashboard.html", context)
 
@@ -236,3 +274,28 @@ def api_filieres_view(request):
         filieres = filieres.filter(level_id=level_id)
     data = [{"id": f.id, "name": f.name} for f in filieres]
     return JsonResponse({"filieres": data})
+
+import json
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def api_log_click_view(request):
+    """API JSON pour enregistrer un événement de clic depuis l'interface publique."""
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            button_label = data.get("label", "Bouton inconnu")
+            element_id = data.get("element_id", "")
+            page_title = data.get("page_title", "")
+            
+            desc = f"Clic public : '{button_label}'"
+            if element_id:
+                desc += f" (ID: {element_id})"
+            if page_title:
+                desc += f" sur la page [{page_title}]"
+                
+            log_user_action(request, "CLICK", desc)
+            return JsonResponse({"status": "success"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=400)
+    return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)

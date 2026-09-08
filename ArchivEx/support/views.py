@@ -89,7 +89,7 @@ Pour répondre à cette demande, veuillez vous connecter à l'espace d'administr
 
         messages.success(
             request,
-            "✅ Votre demande a bien été envoyée. Notre équipe vous répondra dans les plus brefs délais."
+            "Votre demande a bien été envoyée. Notre équipe vous répondra dans les plus brefs délais."
         )
         if is_auth:
             return redirect("support:list")

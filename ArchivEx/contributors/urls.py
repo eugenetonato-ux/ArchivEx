@@ -17,6 +17,8 @@ urlpatterns = [
     path("library/<int:pk>/modifier/", views.cloud_file_edit_view, name="cloud_file_edit"),
     path("library/<int:pk>/supprimer/", views.cloud_file_delete_view, name="cloud_file_delete"),
     path("library/<int:pk>/publier/", views.publish_from_cloud_view, name="publish_from_cloud"),
+    path("library/<int:pk>/ocr-extract/", views.extract_pdf_ocr_view, name="extract_pdf_ocr"),
+    path("epreuves/ocr-extract-file/", views.extract_uploaded_pdf_ocr_view, name="extract_uploaded_pdf_ocr"),
     path("library/publish-folder/", views.publish_cloud_folder_view, name="publish_cloud_folder"),
     path("library/toggle-ue-premium/", views.toggle_ue_premium_view, name="toggle_ue_premium"),
     path("library/<int:pk>/download-original/<str:file_type>/", views.library_download_original_view, name="library_download_original"),
@@ -66,4 +68,8 @@ urlpatterns = [
     # Support étudiant
     path("support/", views.admin_support_list_view, name="admin_support_list"),
     path("support/<int:pk>/", views.admin_support_detail_view, name="admin_support_detail"),
+    path("site-logs/", views.site_logs_list_view, name="site_logs_list"),
+    path("site-logs/export-pdf/", views.export_logs_pdf_view, name="export_logs_pdf"),
+    path("library/bulk/", views.bulk_operations_view, name="bulk_operations"),
+    path("parametres/", views.admin_settings_view, name="admin_settings"),
 ]

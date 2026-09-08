@@ -4,21 +4,220 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Administration ArchivEx{% endblock %}</title>
+    <title>{% block title %}Administration — ArchivEx{% endblock %}</title>
+    <meta name="description" content="Espace d'administration et de gestion des ressources universitaires ArchivEx.">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="author" content="ArchivEx">
+    <link rel="icon" type="image/png" href="{% static 'icons/icon-192.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'icons/icon-192.png' %}">
+    
+    <!-- Performance Resource Hints -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
     
     <!-- Google Fonts: Plus Jakarta Sans & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Inline Theme Logic to Prevent FOUC -->
+    <script>
+        (function() {
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            function applyAdminTheme() {
+                const savedTheme = localStorage.getItem('admin-theme');
+                if (savedTheme === 'dark' || (!savedTheme && mediaQuery.matches)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+            applyAdminTheme();
+            mediaQuery.addEventListener('change', applyAdminTheme);
+        })();
+    </script>
+    
+    <!-- Inline Accent Palette Logic (archivex-accent-palette) -->
+    <script>
+        (function() {
+            window.ARCHIVEX_PALETTES = {
+                'violet': { id: 'violet', name: 'Classique Violet', desc: "Violet institutionnel d'origine", hex: '#5B3CC4', hover: '#4C31A7', lightBg: '#F5F3FF', darkBg: 'rgba(91, 60, 196, 0.18)', border: '#8B5CF6', softBorder: 'rgba(91, 60, 196, 0.25)', text: '#5B3CC4', badgeBg: '#EDE9FE', badgeText: '#4C1D95', shadowGlow: 'rgba(91, 60, 196, 0.35)' },
+                'blue': { id: 'blue', name: 'Bleu Océan', desc: 'Bleu rassurant et élégant', hex: '#0284C7', hover: '#0369A1', lightBg: '#F0F9FF', darkBg: 'rgba(2, 132, 199, 0.18)', border: '#38BDF8', softBorder: 'rgba(2, 132, 199, 0.25)', text: '#0284C7', badgeBg: '#E0F2FE', badgeText: '#0369A1', shadowGlow: 'rgba(2, 132, 199, 0.35)' },
+                'emerald': { id: 'emerald', name: 'Vert Émeraude', desc: 'Vert moderne, symbole de validation académique', hex: '#059669', hover: '#047857', lightBg: '#ECFDF5', darkBg: 'rgba(5, 150, 105, 0.18)', border: '#34D399', softBorder: 'rgba(5, 150, 105, 0.25)', text: '#059669', badgeBg: '#D1FAE5', badgeText: '#065F46', shadowGlow: 'rgba(5, 150, 105, 0.35)' },
+                'red': { id: 'red', name: 'Rouge Velours', desc: 'Rouge puissant et audacieux pour une présence affirmée', hex: '#DC2626', hover: '#B91C1C', lightBg: '#FEF2F2', darkBg: 'rgba(220, 38, 38, 0.18)', border: '#F87171', softBorder: 'rgba(220, 38, 38, 0.25)', text: '#DC2626', badgeBg: '#FEE2E2', badgeText: '#991B1B', shadowGlow: 'rgba(220, 38, 38, 0.35)' },
+                'gray': { id: 'gray', name: 'Gris Charbon', desc: 'Un ton neutre, contemporain et ultra-épuré', hex: '#4B5563', hover: '#374151', lightBg: '#F9FAFB', darkBg: 'rgba(75, 85, 99, 0.18)', border: '#9CA3AF', softBorder: 'rgba(75, 85, 99, 0.25)', text: '#4B5563', badgeBg: '#F3F4F6', badgeText: '#1F2937', shadowGlow: 'rgba(75, 85, 99, 0.35)' },
+                'amber': { id: 'amber', name: 'Ambre Doré', desc: 'Un jaune ambré chaleureux et prestigieux', hex: '#D97706', hover: '#B45309', lightBg: '#FFFBEB', darkBg: 'rgba(217, 119, 6, 0.18)', border: '#FBBF24', softBorder: 'rgba(217, 119, 6, 0.25)', text: '#D97706', badgeBg: '#FEF3C7', badgeText: '#92400E', shadowGlow: 'rgba(217, 119, 6, 0.35)' }
+            };
+
+            window.applyAccentPalette = function(key) {
+                const paletteKey = key || localStorage.getItem('archivex-accent-palette') || 'violet';
+                const p = window.ARCHIVEX_PALETTES[paletteKey] || window.ARCHIVEX_PALETTES['violet'];
+                
+                document.documentElement.style.setProperty('--ax-accent', p.hex);
+                document.documentElement.style.setProperty('--ax-accent-hover', p.hover);
+                document.documentElement.style.setProperty('--ax-accent-light-bg', p.lightBg);
+                document.documentElement.style.setProperty('--ax-accent-dark-bg', p.darkBg);
+                document.documentElement.style.setProperty('--ax-accent-border', p.border);
+                document.documentElement.style.setProperty('--ax-accent-soft-border', p.softBorder);
+                document.documentElement.style.setProperty('--ax-accent-text', p.text);
+                document.documentElement.style.setProperty('--ax-accent-badge-bg', p.badgeBg);
+                document.documentElement.style.setProperty('--ax-accent-badge-text', p.badgeText);
+                document.documentElement.style.setProperty('--ax-accent-glow', p.shadowGlow);
+                document.documentElement.setAttribute('data-accent-palette', p.id);
+
+                if (key) {
+                    localStorage.setItem('archivex-accent-palette', p.id);
+                }
+            };
+
+            window.applyAccentPalette();
+        })();
+    </script>
+    <style>
+        :root {
+            --ax-accent: #5B3CC4;
+            --ax-accent-hover: #4C31A7;
+            --ax-accent-light-bg: #F5F3FF;
+            --ax-accent-dark-bg: rgba(91, 60, 196, 0.18);
+            --ax-accent-border: #8B5CF6;
+            --ax-accent-soft-border: rgba(91, 60, 196, 0.25);
+            --ax-accent-text: #5B3CC4;
+            --ax-accent-badge-bg: #EDE9FE;
+            --ax-accent-badge-text: #4C1D95;
+            --ax-accent-glow: rgba(91, 60, 196, 0.35);
+        }
+
+        .btn-ax-primary {
+            background-color: var(--ax-accent) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px var(--ax-accent-dark-bg) !important;
+            transition: all 0.2s ease-in-out !important;
+        }
+        .btn-ax-primary:hover {
+            background-color: var(--ax-accent-hover) !important;
+            box-shadow: 0 6px 18px var(--ax-accent-glow) !important;
+            transform: translateY(-1px);
+        }
+        .btn-ax-secondary {
+            background-color: transparent !important;
+            color: var(--ax-accent) !important;
+            border: 1.5px solid var(--ax-accent) !important;
+            transition: all 0.2s ease-in-out !important;
+        }
+        .btn-ax-secondary:hover {
+            background-color: var(--ax-accent-light-bg) !important;
+        }
+        .dark .btn-ax-secondary:hover {
+            background-color: var(--ax-accent-dark-bg) !important;
+        }
+        .badge-ax {
+            background-color: var(--ax-accent-light-bg) !important;
+            color: var(--ax-accent) !important;
+            border: 1px solid var(--ax-accent-soft-border) !important;
+        }
+        .dark .badge-ax {
+            background-color: var(--ax-accent-dark-bg) !important;
+            color: var(--ax-accent-border) !important;
+            border: 1px solid var(--ax-accent-soft-border) !important;
+        }
+        .text-ax-accent {
+            color: var(--ax-accent) !important;
+        }
+        .border-ax-accent {
+            border-color: var(--ax-accent) !important;
+        }
+        .bg-ax-accent {
+            background-color: var(--ax-accent) !important;
+        }
+        .bg-ax-soft {
+            background-color: var(--ax-accent-light-bg) !important;
+        }
+        .dark .bg-ax-soft {
+            background-color: var(--ax-accent-dark-bg) !important;
+        }
+        .focus-ring-ax:focus {
+            outline: none !important;
+            border-color: var(--ax-accent) !important;
+            box-shadow: 0 0 0 3px var(--ax-accent-soft-border) !important;
+        }
+        .card-ax-accent-top {
+            border-top: 4px solid var(--ax-accent) !important;
+        }
+        .shadow-ax-glow {
+            box-shadow: 0 10px 25px -5px var(--ax-accent-glow) !important;
+        }
+        /* Global Accent Overrides for TOUTES les pages, boutons et éléments */
+        .bg-blue-600, .bg-indigo-600, .bg-\[\#071A49\], .bg-blue-900 {
+            background-color: var(--ax-accent) !important;
+        }
+        .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-blue-900:hover, .hover\:bg-blue-800:hover {
+            background-color: var(--ax-accent-hover) !important;
+        }
+        .text-blue-600, .text-indigo-600 {
+            color: var(--ax-accent) !important;
+        }
+        .border-blue-600, .border-indigo-600 {
+            border-color: var(--ax-accent) !important;
+        }
+        /* Dynamic Accent synchronization for hardcoded blue shadows, borders & gradients */
+        [class*="shadow-blue-"], [class*="shadow-indigo-"] {
+            box-shadow: 0 10px 25px -5px var(--ax-accent-glow) !important;
+        }
+        [class*="border-blue-"], [class*="border-indigo-"] {
+            border-color: var(--ax-accent-border) !important;
+        }
+        [class*="from-blue-"], [class*="from-indigo-"] {
+            background-image: linear-gradient(to bottom right, var(--ax-accent), var(--ax-accent-hover)) !important;
+        }
+        /* Global Dark Mode Automatic Card & Text Overrides */
+        .dark .bg-white {
+            background-color: #121824 !important;
+            color: #f1f5f9 !important;
+            border-color: #1e293b !important;
+        }
+        .dark .bg-slate-50, .dark .bg-gray-50 {
+            background-color: rgba(30, 41, 59, 0.4) !important;
+            border-color: #1e293b !important;
+            color: #e2e8f0 !important;
+        }
+        .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6,
+        .dark .text-slate-800, .dark .text-slate-900, .dark .text-gray-800, .dark .text-gray-900, 
+        .dark .text-\[\#0B122B\], .dark .text-\[\#071A49\],
+        .dark [class*="text-blue-"], .dark [class*="text-indigo-"] {
+            color: #f8fafc !important;
+        }
+        .dark input, .dark textarea, .dark select {
+            background-color: #0b122b !important;
+            color: #f8fafc !important;
+            border-color: #1e293b !important;
+        }
+        .dark input::placeholder, .dark textarea::placeholder {
+            color: #64748b !important;
+        }
+        .dark table th {
+            color: #cbd5e1 !important;
+        }
+        .dark table td {
+            color: #e2e8f0 !important;
+        }
+    </style>
+    
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
                         sans: ['"Plus Jakarta Sans"', '"Inter"', 'sans-serif'],
+                    },
+                    colors: {
+                        darkbg: '#090d16',
+                        darkcard: '#121824',
+                        darkborder: '#1e293b',
                     }
                 }
             }
@@ -31,11 +230,14 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     {% block extra_head %}{% endblock %}
 </head>
-<body class="min-h-screen bg-slate-100 text-[#111827] flex flex-col font-sans">
+<body class="min-h-screen bg-slate-100 dark:bg-[#090d16] text-[#111827] dark:text-slate-200 flex flex-col font-sans transition-colors duration-200 w-full max-w-full overflow-x-hidden">
+
+    <!-- SKIP TO MAIN CONTENT LINK FOR ACCESSIBILITY (a11y) -->
+    <a href="#admin-main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-4 focus:py-2 focus:bg-[#2563EB] focus:text-white focus:font-extrabold focus:rounded-xl focus:shadow-2xl focus:outline-none transition-all">Aller au contenu principal</a>
 
     <!-- TOP CONTEXT BAR & NAVIGATION HEADER -->
-    <header class="bg-[#071A49] border-b border-blue-900/60 sticky top-0 z-40 text-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
+    <header role="banner" class="bg-[#071A49] border-b border-blue-900/60 sticky top-0 z-40 text-white shadow-sm w-full max-w-full overflow-x-hidden">
+        <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 h-auto min-h-[3.5rem] py-1.5 sm:py-0 sm:h-16 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 w-full max-w-full">
             
             <!-- BRAND & SIDEBAR TOGGLE -->
             <div class="flex items-center space-x-2 shrink-0">
@@ -45,20 +247,20 @@
                 
                 <a href="{% url 'contributors:admin_dashboard' %}" class="flex items-center space-x-2">
                     <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg overflow-hidden border border-white/20 bg-[#071A49] flex items-center justify-center shadow-sm shrink-0">
-                        <img src="{% static 'images/logo.jpg' %}" alt="ArchivEx" class="w-full h-full object-cover">
+                        <img src="{% static 'icons/icon-192.png' %}" alt="ArchivEx" class="w-full h-full object-cover">
                     </div>
-                    <span class="text-base sm:text-lg font-black tracking-tight text-white">Archiv<span class="text-[#3B82F6]">Ex</span> <span class="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/30 text-blue-200 ml-1">Staff</span></span>
+                    <span class="hidden sm:inline-block text-base sm:text-lg font-black tracking-tight text-white">Archiv<span class="text-[#3B82F6]">Ex</span> <span class="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/30 text-blue-200 ml-1">Staff</span></span>
                 </a>
             </div>
 
             <!-- ACTIVE ACADEMIC CONTEXT BADGE & DUAL SWITCHER (ÉCOLE, FILIÈRE & SEMESTRE) -->
-            <div class="flex items-center bg-white/10 px-2 sm:px-3 py-1 rounded-xl border border-white/20 text-xs font-bold shrink min-w-0">
-                <form id="admin-context-form" method="get" action="{% url 'contributors:set_context' %}" class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar">
+            <div class="flex items-center bg-white/10 px-1.5 sm:px-3 py-1 rounded-xl border border-white/20 text-xs font-bold shrink min-w-0 max-w-full overflow-x-auto no-scrollbar my-1 sm:my-0">
+                <form id="admin-context-form" method="get" action="{% url 'contributors:set_context' %}" class="flex items-center space-x-1 sm:space-x-1.5 overflow-x-auto no-scrollbar">
                     <!-- SÉLECTEUR ÉCOLE -->
                     <div class="flex items-center space-x-1 shrink-0">
                         <i class="fa-solid fa-building-columns text-[#FBBF24] text-[11px]" aria-hidden="true" title="Université active"></i>
-                        <select name="school_id" id="admin-school-select" onchange="handleSchoolSelectChange(this)" class="bg-[#071A49] text-white text-[11px] font-bold border border-white/30 rounded-lg px-1.5 sm:px-2 py-0.5 focus:outline-none focus:border-amber-400 max-w-[100px] sm:max-w-[160px] truncate">
-                            <option value="all" {% if not active_school %}selected{% endif %}>Toutes les Écoles</option>
+                        <select name="school_id" id="admin-school-select" onchange="handleSchoolSelectChange(this)" class="bg-[#071A49] text-white text-[11px] font-bold border border-white/30 rounded-lg px-1 sm:px-2 py-0.5 focus:outline-none focus:border-amber-400 max-w-[70px] sm:max-w-[160px] truncate">
+                            <option value="all" {% if not active_school %}selected{% endif %}>Toutes Écoles</option>
                             {% for sch in available_schools %}
                                 <option value="{{ sch.id }}" {% if active_school and active_school.id == sch.id %}selected{% endif %}>{{ sch.name }}</option>
                             {% endfor %}
@@ -68,8 +270,8 @@
                     <!-- SÉLECTEUR FILIÈRE -->
                     <div class="flex items-center space-x-1 shrink-0">
                         <i class="fa-solid fa-graduation-cap text-blue-400 text-[11px]" aria-hidden="true" title="Filière d'études active"></i>
-                        <select name="filiere_id" id="admin-filiere-select" onchange="handleFiliereSelectChange(this)" class="bg-[#071A49] text-white text-[11px] font-bold border border-white/30 rounded-lg px-1.5 sm:px-2 py-0.5 focus:outline-none focus:border-blue-400 max-w-[100px] sm:max-w-[160px] truncate">
-                            <option value="all" {% if not active_filiere %}selected{% endif %}>Toutes les Filières</option>
+                        <select name="filiere_id" id="admin-filiere-select" onchange="handleFiliereSelectChange(this)" class="bg-[#071A49] text-white text-[11px] font-bold border border-white/30 rounded-lg px-1 sm:px-2 py-0.5 focus:outline-none focus:border-blue-400 max-w-[70px] sm:max-w-[160px] truncate">
+                            <option value="all" {% if not active_filiere %}selected{% endif %}>Toutes Filières</option>
                             {% for fil in available_filieres %}
                                 <option value="{{ fil.id }}" {% if active_filiere and active_filiere.id == fil.id %}selected{% endif %}>{{ fil.name }}</option>
                             {% endfor %}
@@ -80,7 +282,7 @@
                     {% if available_semesters %}
                     <div class="hidden md:flex items-center space-x-1 shrink-0">
                         <i class="fa-solid fa-calendar-days text-emerald-400 text-[11px]" aria-hidden="true" title="Semestre actif"></i>
-                        <select name="semester_id" id="admin-semester-select" onchange="this.form.submit()" class="bg-[#071A49] text-white text-[11px] font-bold border border-white/30 rounded-lg px-1.5 sm:px-2 py-0.5 focus:outline-none focus:border-emerald-400 max-w-[110px] truncate">
+                        <select name="semester_id" id="admin-semester-select" onchange="this.form.submit()" class="bg-[#071A49] text-white text-[11px] font-bold border border-white/30 rounded-lg px-1 sm:px-2 py-0.5 focus:outline-none focus:border-emerald-400 max-w-[110px] truncate">
                             <option value="all" {% if not active_semester %}selected{% endif %}>Tous Semestres</option>
                             {% for sem in available_semesters %}
                                 <option value="{{ sem.id }}" {% if active_semester and active_semester.id == sem.id %}selected{% endif %}>{{ sem.label }}</option>
@@ -92,99 +294,120 @@
             </div>
 
             <!-- USER INFO, LOGOUT & EXIT TO SITE -->
-            <div class="flex items-center space-x-1.5 sm:space-x-2 text-xs shrink-0">
+            <div class="hidden sm:flex items-center space-x-1 sm:space-x-2 text-xs shrink-0">
                 <div class="hidden lg:flex items-center space-x-2 text-slate-300 bg-white/5 px-2.5 py-1 rounded-lg border border-white/10">
                     <i class="fa-solid fa-user-shield text-amber-400 text-xs" aria-hidden="true"></i>
                     <span class="font-bold text-white">{{ user.first_name|default:user.username }}</span>
                 </div>
                 
-                <a href="{% url 'academics:home' %}" class="text-xs px-2.5 sm:px-3 py-1.5 font-bold rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-colors flex items-center space-x-1.5" title="Accéder au site public">
+                <!-- COMFORT / DARK MODE TOGGLE -->
+                <button type="button" onclick="toggleDarkMode()" class="text-xs px-2 sm:px-3 py-1.5 font-bold rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-colors flex items-center space-x-1.5" title="Mode Confort (Thème Sombre)">
+                    <i class="fa-solid fa-moon text-amber-300 dark:hidden"></i>
+                    <i class="fa-solid fa-sun text-yellow-400 hidden dark:block"></i>
+                    <span class="hidden sm:inline">Mode Confort</span>
+                </button>
+                
+                <a href="{% url 'academics:home' %}" class="text-xs px-2 sm:px-3 py-1.5 font-bold rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-colors flex items-center space-x-1.5" title="Accéder au site public">
                     <i class="fa-solid fa-globe text-xs" aria-hidden="true"></i>
                     <span class="hidden sm:inline">Site public</span>
                 </a>
                 
-                <a href="{% url 'contributors:admin_logout' %}" class="text-xs px-2.5 sm:px-3 py-1.5 font-bold rounded-lg bg-rose-600/80 hover:bg-rose-600 text-white border border-rose-500/50 transition-colors flex items-center space-x-1.5" title="Déconnexion de l'espace staff">
+                <a href="{% url 'contributors:admin_logout' %}" class="text-xs px-2 sm:px-3 py-1.5 font-bold rounded-lg bg-rose-600/80 hover:bg-rose-600 text-white border border-rose-500/50 transition-colors flex items-center space-x-1.5" title="Déconnexion de l'espace staff">
                     <i class="fa-solid fa-power-off text-xs" aria-hidden="true"></i>
                     <span class="hidden sm:inline">Déconnexion</span>
                 </a>
             </div>
-
         </div>
     </header>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow flex flex-col md:flex-row items-start gap-6 w-full">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-3 pb-6 flex-grow w-full max-w-full overflow-x-hidden md:grid md:grid-cols-[16rem_1fr] md:gap-6 items-start">
         
         <!-- SIDEBAR NAVIGATION (FIXE & STICKY EN MD/LG) -->
-        <aside id="admin-sidebar" class="hidden md:block w-full md:w-64 shrink-0 space-y-4 md:sticky md:top-20 md:max-h-[calc(100vh-6rem)] md:overflow-y-auto pr-1 no-scrollbar">
-            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-1">
-                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 px-3 pb-2 border-b border-slate-100">Gestion Principale</p>
+        <aside id="admin-sidebar" class="hidden md:block w-64 space-y-3 md:sticky md:top-4 md:h-[calc(100vh-2rem)] md:overflow-y-auto pr-2 no-scrollbar">
+            <div class="bg-white dark:bg-[#121824] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-4 shadow-sm space-y-1">
+                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 pb-2 border-b border-slate-100 dark:border-[#1e293b]">Gestion Principale</p>
                 
-                <a href="{% url 'contributors:admin_dashboard' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                <a href="{% url 'contributors:admin_dashboard' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
                     <i class="fa-solid fa-gauge w-4 text-center" aria-hidden="true"></i>
                     <span>Tableau de bord</span>
                 </a>
 
-                <a href="{% url 'contributors:library_index' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'library' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                <a href="{% url 'contributors:library_index' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'library' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
                     <i class="fa-solid fa-cloud w-4 text-center text-sky-500" aria-hidden="true"></i>
                     <span>Bibliothèque Cloud Storage</span>
                 </a>
 
-                <a href="{% url 'contributors:exam_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'epreuves' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                <a href="{% url 'contributors:exam_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'epreuves' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
                     <i class="fa-solid fa-paper-plane w-4 text-center text-blue-600" aria-hidden="true"></i>
                     <span>Épreuves Publiées</span>
                 </a>
 
-                <a href="{% url 'contributors:completeness_overview' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'completeness' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                <a href="{% url 'contributors:completeness_overview' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'completeness' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
                     <i class="fa-solid fa-chart-pie w-4 text-center text-amber-500" aria-hidden="true"></i>
                     <span>Complétude ressources</span>
                 </a>
 
-                <a href="{% url 'contributors:summary_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'resumes' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                <a href="{% url 'contributors:summary_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'resumes' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
                     <i class="fa-solid fa-book-open w-4 text-center text-emerald-600" aria-hidden="true"></i>
                     <span>Résumés de cours</span>
                 </a>
 
-                <a href="{% url 'contributors:subject_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'matieres' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                <a href="{% url 'contributors:subject_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'matieres' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
                     <i class="fa-solid fa-book w-4 text-center text-indigo-600" aria-hidden="true"></i>
                     <span>Matières / UE</span>
                 </a>
             </div>
 
-            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-1">
-                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 px-3 pb-2 border-b border-slate-100">Structure & Suivi</p>
+            <div class="bg-white dark:bg-[#121824] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-4 shadow-sm space-y-1">
+                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 pb-2 border-b border-slate-100 dark:border-[#1e293b]">Structure & Suivi</p>
 
-                <a href="{% url 'contributors:structure_overview' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'structure' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                <a href="{% url 'contributors:structure_overview' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'structure' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
                     <i class="fa-solid fa-sitemap w-4 text-center text-slate-500" aria-hidden="true"></i>
                     <span>Structure académique</span>
                 </a>
 
-                <a href="{% url 'contributors:student_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'etudiants' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                <a href="{% url 'contributors:student_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'etudiants' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
                     <i class="fa-solid fa-user-graduate w-4 text-center text-slate-500" aria-hidden="true"></i>
                     <span>Étudiants inscrits</span>
                 </a>
 
-                <a href="{% url 'contributors:payment_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'paiements' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                <a href="{% url 'contributors:payment_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'paiements' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
                     <i class="fa-solid fa-credit-card w-4 text-center text-slate-500" aria-hidden="true"></i>
                     <span>Pass & Paiements</span>
                 </a>
 
-                <a href="{% url 'contributors:notification_create' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'notifications' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                <a href="{% url 'contributors:notification_create' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'notifications' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
                     <i class="fa-solid fa-paper-plane w-4 text-center text-slate-500" aria-hidden="true"></i>
                     <span>Diffuser notification</span>
                 </a>
 
-                <a href="{% url 'contributors:admin_support_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'support' in request.path %}bg-[#071A49] text-white{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                <a href="{% url 'contributors:admin_support_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'support' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
                     <i class="fa-solid fa-headset w-4 text-center text-rose-500" aria-hidden="true"></i>
                     <span class="flex-1">Support</span>
                     {% if unread_notifications_count %}
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white animate-pulse">{{ unread_notifications_count }}</span>
                     {% endif %}
                 </a>
+
+                <a href="{% url 'contributors:site_logs_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'site-logs' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
+                    <i class="fa-solid fa-clock-rotate-left w-4 text-center text-indigo-500" aria-hidden="true"></i>
+                    <span>Journal d'activité</span>
+                </a>
+            </div>
+
+            <div class="bg-white dark:bg-[#121824] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-4 shadow-sm space-y-1">
+                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 pb-2 border-b border-slate-100 dark:border-[#1e293b]">Personnalisation</p>
+
+                <a href="{% url 'contributors:admin_settings' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'parametres' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
+                    <i class="fa-solid fa-sliders w-4 text-center text-ax-accent" aria-hidden="true"></i>
+                    <span class="flex-1">Paramètres</span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-ax-accent inline-block shadow-sm"></span>
+                </a>
             </div>
         </aside>
 
         <!-- MAIN CONTENT CONTAINER -->
-        <main class="flex-grow min-w-0">
+        <main id="admin-main-content" tabindex="-1" role="main" class="flex-grow min-w-0 w-full max-w-full overflow-x-hidden outline-none">
             {% if messages %}
                 <div class="mb-4 space-y-2">
                     {% for message in messages %}
@@ -297,7 +520,58 @@
                 }, 150);
             }
         }
+
+        function toggleDarkMode() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('admin-theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('admin-theme', 'dark');
+            }
+        }
+    </script>
+    <!-- DYNAMIC CLICK EVENT TRACKER -->
+    <script>
+    document.addEventListener('click', function(event) {
+        const clickable = event.target.closest('a, button');
+        if (!clickable) return;
+
+        let label = clickable.innerText ? clickable.innerText.trim() : '';
+        if (!label && clickable.title) {
+            label = clickable.title.trim();
+        }
+        if (!label) {
+            const firstIcon = clickable.querySelector('i, svg');
+            if (firstIcon) {
+                label = "Bouton d'icône (" + firstIcon.className + ")";
+            }
+        }
+        if (!label && clickable.ariaLabel) {
+            label = clickable.ariaLabel;
+        }
+        if (!label) {
+            label = clickable.id || "Bouton sans nom";
+        }
+
+        if (clickable.classList.contains('no-log')) return;
+
+        const data = {
+            label: label.substring(0, 100),
+            element_id: clickable.id || clickable.className || '',
+            page_title: document.title || ''
+        };
+
+        fetch('/accounts/api/log-click/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        }).catch(err => console.log('Click logging skipped: ', err));
+    });
     </script>
     <script src="{% static 'js/drag_drop.js' %}"></script>
+    {% include "base/_confirm_modal.html" %}
 </body>
 </html>
