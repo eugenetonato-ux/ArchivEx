@@ -305,6 +305,20 @@ def icon_512_view(request):
 
     response = FileResponse(open(path, "rb"), content_type="image/png")
     response["Cache-Control"] = "public, max-age=86400"
+def favicon_view(request):
+    """Sert l'icône favicon."""
+    import os
+    from django.conf import settings
+    from django.http import FileResponse, Http404
+
+    path = settings.BASE_DIR / "static" / "icons" / "icon-192.png"
+    if not os.path.exists(path):
+        path = settings.BASE_DIR / "staticfiles" / "icons" / "icon-192.png"
+    if not os.path.exists(path):
+        raise Http404("Favicon non trouvée")
+
+    response = FileResponse(open(path, "rb"), content_type="image/png")
+    response["Cache-Control"] = "public, max-age=86400"
     return response
 
 

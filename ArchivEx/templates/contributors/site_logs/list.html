@@ -1,0 +1,240 @@
+{% extends "contributors/admin_base.html" %}
+
+{% block admin_content %}
+<div class="space-y-6">
+
+    <!-- PAGE HEADER -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2 text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>Audit & Télémétrie</span>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-black text-[#071A49] dark:text-slate-100 tracking-tight mt-1">
+                Journal d'activité de la plateforme
+            </h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                Consultez en temps réel les connexions, modifications de données, pages lues et clics effectués par tous les utilisateurs.
+            </p>
+        </div>
+        <div class="flex items-center space-x-2 self-start md:self-auto shrink-0">
+            <a href="{% url 'contributors:export_logs_pdf' %}?action_type={{ action_filter }}&q={{ search_q }}" class="px-4 py-2.5 rounded-xl bg-[#071A49] dark:bg-blue-600 hover:bg-[#1e3a8a] dark:hover:bg-blue-500 text-white font-black text-xs transition-all inline-flex items-center space-x-2 shadow-sm hover:scale-105">
+                <i class="fa-solid fa-file-pdf"></i>
+                <span>Exporter Rapport PDF</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- STATS / KPI GRID -->
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <!-- TOTAL -->
+        <div class="bg-white dark:bg-[#121824] p-4 rounded-2xl border border-slate-200 dark:border-[#1e293b] shadow-xs flex items-center space-x-3 transition-all duration-200">
+            <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 shrink-0">
+                <i class="fa-solid fa-list-check text-sm"></i>
+            </div>
+            <div>
+                <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">Total actions</span>
+                <span class="text-lg font-black text-[#071A49] dark:text-slate-100">{{ total_logs }}</span>
+            </div>
+        </div>
+
+        <!-- CONNEXIONS -->
+        <div class="bg-white dark:bg-[#121824] p-4 rounded-2xl border border-slate-200 dark:border-[#1e293b] shadow-xs flex items-center space-x-3 transition-all duration-200">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                <i class="fa-solid fa-right-to-bracket text-sm"></i>
+            </div>
+            <div>
+                <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">Connexions</span>
+                <span class="text-lg font-black text-[#071A49] dark:text-slate-100">{{ connections_count }}</span>
+            </div>
+        </div>
+
+        <!-- MODIFICATIONS -->
+        <div class="bg-white dark:bg-[#121824] p-4 rounded-2xl border border-slate-200 dark:border-[#1e293b] shadow-xs flex items-center space-x-3 transition-all duration-200">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                <i class="fa-solid fa-pen-to-square text-sm"></i>
+            </div>
+            <div>
+                <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">Modifications</span>
+                <span class="text-lg font-black text-[#071A49] dark:text-slate-100">{{ modifications_count }}</span>
+            </div>
+        </div>
+
+        <!-- PAGES CONSULTÉES -->
+        <div class="bg-white dark:bg-[#121824] p-4 rounded-2xl border border-slate-200 dark:border-[#1e293b] shadow-xs flex items-center space-x-3 transition-all duration-200">
+            <div class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/30 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
+                <i class="fa-solid fa-eye text-sm"></i>
+            </div>
+            <div>
+                <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">Pages lues</span>
+                <span class="text-lg font-black text-[#071A49] dark:text-slate-100">{{ views_count }}</span>
+            </div>
+        </div>
+
+        <!-- CLICS DYNAMIQUES -->
+        <div class="bg-white dark:bg-[#121824] p-4 rounded-2xl border border-slate-200 dark:border-[#1e293b] shadow-xs flex items-center space-x-3 transition-all duration-200 col-span-2 lg:col-span-1">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                <i class="fa-solid fa-hand-pointer text-sm"></i>
+            </div>
+            <div>
+                <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">Clics boutons</span>
+                <span class="text-lg font-black text-[#071A49] dark:text-slate-100">{{ clicks_count }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="bg-white dark:bg-[#121824] p-4 rounded-2xl border border-slate-200 dark:border-[#1e293b] shadow-sm transition-all duration-200">
+        <form method="get" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <!-- TYPE FILTER -->
+            <div class="w-full sm:w-60">
+                <label for="action-filter" class="sr-only">Type d'action</label>
+                <select name="action_type" id="action-filter" onchange="this.form.submit()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                    <option value="">Tous types d'actions</option>
+                    {% for key, val in action_choices %}
+                        <option value="{{ key }}" {% if action_filter == key %}selected{% endif %}>{{ val }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- SEARCH TEXT -->
+            <div class="relative flex-grow">
+                <input type="text" name="q" value="{{ search_q }}" placeholder="Rechercher par description, utilisateur, IP, URL..." class="w-full px-3 py-2 pl-9 rounded-xl border border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-200 placeholder-slate-400 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+            </div>
+
+            <!-- SUBMIT & RESET -->
+            <div class="flex items-center space-x-2">
+                <button type="submit" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs transition-colors shrink-0 shadow-sm">
+                    Rechercher
+                </button>
+                {% if action_filter or search_q %}
+                    <a href="{% url 'contributors:site_logs_list' %}" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors">
+                        Effacer
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- LOGS LISTING TABLE -->
+    <div class="bg-white dark:bg-[#121824] rounded-2xl border border-slate-200 dark:border-[#1e293b] shadow-sm overflow-hidden transition-all duration-200">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[700px]">
+                <thead>
+                    <tr class="bg-slate-50/80 dark:bg-slate-800/40 border-b border-slate-200 dark:border-[#1e293b] text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        <th class="py-3.5 px-4 w-[160px]">Horodatage</th>
+                        <th class="py-3.5 px-4 w-[150px]">Type d'action</th>
+                        <th class="py-3.5 px-4 w-[160px]">Utilisateur</th>
+                        <th class="py-3.5 px-4">Détail / Description</th>
+                        <th class="py-3.5 px-4 w-[180px]">IP / Client</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    {% for log in page_obj %}
+                        <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors duration-150">
+                            <!-- TIMESTAMP -->
+                            <td class="py-3.5 px-4 text-slate-500 dark:text-slate-400 text-[11px] font-mono whitespace-nowrap">
+                                {{ log.created_at|date:"d/m/Y H:i:s" }}
+                            </td>
+
+                            <!-- ACTION BADGE -->
+                            <td class="py-3.5 px-4">
+                                {% if log.action_type == 'CONNECTION' %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300">
+                                        <i class="fa-solid fa-right-to-bracket mr-1 text-[9px]"></i>
+                                        Connexion
+                                    </span>
+                                {% elif log.action_type == 'MODIFICATION' %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300">
+                                        <i class="fa-solid fa-pen-to-square mr-1 text-[9px]"></i>
+                                        Modification
+                                    </span>
+                                {% elif log.action_type == 'CLICK' %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300">
+                                        <i class="fa-solid fa-hand-pointer mr-1 text-[9px]"></i>
+                                        Clic bouton
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300">
+                                        <i class="fa-solid fa-eye mr-1 text-[9px]"></i>
+                                        Page vue
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- USER -->
+                            <td class="py-3.5 px-4 font-bold text-[#071A49] dark:text-slate-200 whitespace-nowrap">
+                                {% if log.user %}
+                                    <div class="flex items-center space-x-1.5">
+                                        <div class="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] font-extrabold shadow-inner shrink-0">
+                                            {{ log.user.username|slice:":1"|upper }}
+                                        </div>
+                                        <span>{{ log.user.username }}</span>
+                                    </div>
+                                {% else %}
+                                    <span class="text-slate-400 dark:text-slate-500 font-medium italic">Visiteur public</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- DESCRIPTION / DETAILS -->
+                            <td class="py-3.5 px-4">
+                                <p class="text-slate-800 dark:text-slate-200 text-[11px] leading-relaxed break-words font-medium">
+                                    {{ log.description }}
+                                </p>
+                                {% if log.path %}
+                                    <span class="inline-flex items-center text-[9px] font-mono text-slate-400 dark:text-slate-500 mt-1 uppercase bg-slate-50 dark:bg-slate-800/40 px-1.5 py-0.5 rounded">
+                                        <i class="fa-solid fa-link mr-1"></i>{{ log.path }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- IP ADDRESS & USER AGENT -->
+                            <td class="py-3.5 px-4">
+                                <div class="text-[10px] font-mono text-slate-600 dark:text-slate-400 mb-0.5" title="Adresse IP de l'utilisateur">
+                                    <i class="fa-solid fa-network-wired mr-1 text-[9px] text-slate-400"></i>
+                                    {{ log.ip_address|default:"127.0.0.1" }}
+                                </div>
+                                {% if log.user_agent %}
+                                    <div class="text-[9px] text-slate-400 dark:text-slate-500 truncate max-w-[170px]" title="{{ log.user_agent }}">
+                                        {{ log.user_agent }}
+                                    </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="py-12 text-center text-slate-400 dark:text-slate-500 font-medium">
+                                <i class="fa-solid fa-clipboard-question text-3xl mb-3 block"></i>
+                                Aucun log d'activité enregistré correspondant aux critères.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PAGINATION -->
+        {% if page_obj.has_other_pages %}
+            <div class="px-4 py-4 border-t border-slate-100 dark:border-[#1e293b] flex items-center justify-between">
+                <span class="text-[11px] text-slate-500 dark:text-slate-400">
+                    Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                </span>
+                <div class="flex items-center space-x-1">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}{% if action_filter %}&action_type={{ action_filter }}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}" class="p-1 px-3 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-slate-700 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 transition-colors">
+                            Précédent
+                        </a>
+                    {% endif %}
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if action_filter %}&action_type={{ action_filter }}{% endif %}{% if search_q %}&q={{ search_q }}{% endif %}" class="p-1 px-3 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-slate-700 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 transition-colors">
+                            Suivant
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

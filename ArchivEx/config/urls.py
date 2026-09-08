@@ -22,6 +22,7 @@ urlpatterns = [
     path("manifest.json", academic_views.manifest_view, name="manifest_json"),
     path("icons/icon-192.png", academic_views.icon_192_view, name="pwa_icon_192"),
     path("icons/icon-512.png", academic_views.icon_512_view, name="pwa_icon_512"),
+    path("favicon.ico", academic_views.favicon_view, name="favicon"),
 ]
 
 handler403 = "academics.views.custom_403_view"

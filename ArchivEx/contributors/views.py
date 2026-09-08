@@ -1927,7 +1927,12 @@ def site_logs_list_view(request):
         "views_count": views_count,
         "action_choices": getattr(SiteLog, "ACTION_CHOICES", ()),
     }
-    return render(request, "contributors/logs/list.html", context)
+    template_names = [
+        "contributors/logs/list.html",
+        "contributors/site_logs/list.html",
+        "contributors/site_logs/index.html",
+    ]
+    return render(request, template_names, context)
 
 
 @contributor_required
