@@ -46,6 +46,8 @@ body {
     background-color: var(--brand-bg);
     color: var(--brand-text);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     max-width: 100vw;
     overflow-x: hidden;
     width: 100%;

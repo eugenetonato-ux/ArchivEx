@@ -19,7 +19,7 @@
             Rechercher dans ArchivEx
         </h1>
         <p class="text-xs sm:text-sm text-slate-500 font-medium mb-6">
-            Trouvez une matière, une épreuve, un résumé de cours, un guide ou un conseil d'étude.
+            Trouvez une matière, une épreuve ou un résumé de cours.
         </p>
 
         <!-- GLOBAL SEARCH FORM -->
@@ -92,7 +92,7 @@
                                         <div class="flex items-center justify-between mb-2">
                                             <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-[#2563EB]">UE</span>
                                             {% if item.is_priority %}
-                                                <span class="text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">Mon parcours</span>
+                                                <span class="text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">Ma filière</span>
                                             {% endif %}
                                         </div>
                                         <h4 class="text-sm font-black text-[#071A49] group-hover:text-[#2563EB] transition-colors mb-1 line-clamp-1">
@@ -213,16 +213,16 @@
                 <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 text-left text-xs space-y-2 mb-6">
                     <p class="font-black text-[#071A49] flex items-center space-x-2">
                         <i class="fa-solid fa-lightbulb text-amber-500" aria-hidden="true"></i>
-                        <span>Conseils pour améliorer votre recherche :</span>
+                        <span>Astuces pour améliorer votre recherche :</span>
                     </p>
                     <ul class="list-disc list-inside text-slate-600 space-y-1 font-medium pl-1">
-                        <li>Essayez des termes abrégés ou généraux</li>
+                        <li>Essayez des termes abrégés ou généraux.</li>
                         <li>Vérifiez que la matière recherchée fait partie de votre programme d'études.</li>
                         <li>Recherchez directement par nom de matière ou d'Unité d'Enseignement.</li>
                     </ul>
                 </div>
                 <a href="{% url 'academics:filieres' %}" class="btn-primary text-xs px-5 py-2.5 font-extrabold rounded-xl inline-block shadow-sm">
-                    Explorer les matières disponibles
+                    Explorer les filières et matières
                 </a>
             </div>
         {% endif %}

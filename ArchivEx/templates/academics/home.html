@@ -1,160 +1,103 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% block title %}ArchivEx — Banque d'Épreuves, Corrigés & Examens Universitaires{% endblock %}
+{% block title %}ArchivEx — Banque d'épreuves, corrigés & examens universitaires{% endblock %}
 {% block meta_description %}ArchivEx est la banque d'épreuves universitaires de référence. Retrouvez des centaines d'épreuves, de corrigés détaillés et de résumés de cours pour toutes vos matières.{% endblock %}
-{% block og_title %}ArchivEx — Banque d'Épreuves, Corrigés & Examens Universitaires{% endblock %}
+{% block og_title %}ArchivEx — Banque d'épreuves, corrigés & examens universitaires{% endblock %}
 {% block og_description %}Accédez immédiatement aux anciennes épreuves universitaires, corrigés de révision et fiches de synthèse pour réussir chaque semestre.{% endblock %}
 
 {% block content %}
 {% if user.is_authenticated %}
-<!-- KWABO ANIMATED WELCOME BANNER (Shown once per session) -->
-<div id="kwabo-banner" class="fixed top-0 left-0 w-full z-[100] transform -translate-y-full transition-transform duration-1000 ease-out pointer-events-none">
-    <div class="wave-bg shadow-2xl py-6 px-4 flex flex-col items-center justify-center rounded-b-3xl border-b border-white/20">
-        <h2 class="text-white font-black text-3xl sm:text-5xl tracking-tight flex items-center drop-shadow-lg">
-            <span class="mr-3 text-4xl sm:text-5xl animate-bounce"><i class="fa-solid fa-hand-sparkles"></i></span>
-            <div class="flex mr-2">
-                <span class="kwabo-letter">K</span>
-                <span class="kwabo-letter">w</span>
-                <span class="kwabo-letter">a</span>
-                <span class="kwabo-letter">b</span>
-                <span class="kwabo-letter">o</span>
-            </div>
-            <span class="text-blue-100 ml-1 drop-shadow-md">{{ user.first_name|default:user.username }} !</span>
-        </h2>
-        <p class="text-white/90 font-extrabold text-xs sm:text-sm mt-3 tracking-widest uppercase drop-shadow">Heureux de te (re)voir sur ArchivEx.</p>
+<!-- KWABO ELEGANT DISCRETE TOAST (Apple / Linear style) -->
+<div id="kwabo-toast" class="fixed top-20 right-4 sm:right-6 z-50 transform translate-x-32 opacity-0 transition-all duration-300 pointer-events-auto max-w-sm">
+    <div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-blue-200 dark:border-blue-900/50 rounded-2xl shadow-xl p-3.5 flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#2563EB] to-indigo-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
+            <i class="fa-solid fa-hand-sparkles"></i>
+        </div>
+        <div class="flex-grow pr-2">
+            <p class="text-xs font-black text-[#071A49] dark:text-white leading-tight">
+                Kwabo, {{ user.first_name|default:user.username }} !
+            </p>
+            <p class="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">
+                Ravi de vous revoir sur ArchivEx.
+            </p>
+        </div>
+        <button type="button" onclick="dismissKwaboToast()" class="w-6 h-6 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center text-xs shrink-0 transition-colors" aria-label="Fermer">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
     </div>
 </div>
 
-<style>
-.wave-bg {
-    background: linear-gradient(-45deg, #2563EB, #4F46E5, #9333EA, #0EA5E9);
-    background-size: 300% 300%;
-    animation: gradient-wave 3s ease infinite;
-}
-@keyframes gradient-wave {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-@keyframes letter-wave {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px) rotate(-3deg); }
-}
-.kwabo-letter {
-    display: inline-block;
-    animation: letter-wave 1.2s infinite ease-in-out;
-}
-.kwabo-letter:nth-child(1) { animation-delay: 0.0s; }
-.kwabo-letter:nth-child(2) { animation-delay: 0.1s; }
-.kwabo-letter:nth-child(3) { animation-delay: 0.2s; }
-.kwabo-letter:nth-child(4) { animation-delay: 0.3s; }
-.kwabo-letter:nth-child(5) { animation-delay: 0.4s; }
-</style>
-
 <script>
+function dismissKwaboToast() {
+    const toast = document.getElementById('kwabo-toast');
+    if (toast) {
+        toast.classList.add('translate-x-32', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     if (!sessionStorage.getItem('kwabo_welcome_shown')) {
-        const banner = document.getElementById('kwabo-banner');
-        if (banner) {
-            // Drop down smoothly shortly after load
+        const toast = document.getElementById('kwabo-toast');
+        if (toast) {
             setTimeout(() => {
-                banner.classList.remove('-translate-y-full');
-                banner.classList.add('translate-y-0');
-            }, 500);
+                toast.classList.remove('translate-x-32', 'opacity-0');
+                toast.classList.add('translate-x-0', 'opacity-100');
+            }, 150);
 
-            // Disappear after 15 seconds
             setTimeout(() => {
-                banner.classList.remove('translate-y-0');
-                banner.classList.add('-translate-y-full');
-            }, 15500);
-            
-            // Mark as shown for the current browser session
+                dismissKwaboToast();
+            }, 4500);
+
             sessionStorage.setItem('kwabo_welcome_shown', 'true');
         }
     }
 });
 </script>
 <!-- End KWABO -->
-
-<!-- 1. AUTHENTICATED STUDENT DASHBOARD QUICK-ACCESS BANNER -->
-<section class="bg-blue-900/30 dark:bg-blue-950/60 border-b border-blue-800/40 dark:border-blue-900/60 py-3.5 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-        <div class="flex items-center space-x-3">
-            <div class="w-8 h-8 rounded-full bg-[#2563EB] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">
-                <i class="fa-solid fa-user" aria-hidden="true"></i>
-            </div>
-            <div>
-                <p class="text-xs sm:text-sm font-extrabold text-[#071A49] dark:text-slate-100">
-                    Bienvenue, {{ user.first_name|default:user.username }} !
-                </p>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                    Consultez votre progression, vos matières prioritaires et votre Pass Semestre.
-                </p>
-            </div>
-        </div>
-        <div class="flex items-center space-x-2.5 shrink-0">
-            <button type="button" class="pwa-install-trigger text-xs px-3.5 py-2 font-bold rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 flex items-center space-x-1.5 transition-all shadow-xs">
-                <i class="fa-solid fa-cloud-arrow-down text-emerald-600 dark:text-emerald-400"></i>
-                <span>Installer l'app</span>
-            </button>
-            <a href="{% url 'accounts:dashboard' %}" class="btn-primary text-xs px-4 py-2 font-bold rounded-xl flex items-center space-x-2 shadow-sm">
-                <i class="fa-solid fa-gauge text-xs" aria-hidden="true"></i>
-                <span>Accéder à mon tableau de bord</span>
-            </a>
-        </div>
-    </div>
-</section>
 {% endif %}
 
-<!-- 2. HERO SECTION WITH ACADEMIC POSITIONING (EXACT DESIGN MATCH) -->
-<section class="relative overflow-hidden pt-8 pb-14 md:pt-14 md:pb-20 bg-gradient-to-br from-[#F4F8FE] via-[#EDF3FE] to-[#F6F9FF] dark:from-[#09132e] dark:via-[#0c1a3e] dark:to-[#081026] border-b border-blue-100/60 dark:border-blue-900/40">
+<!-- 1. HERO SECTION -->
+<section class="relative overflow-hidden pt-8 pb-14 md:pt-14 md:pb-20 bg-gradient-to-b from-[#F4F8FE] via-[#EDF3FE] to-[#F6F9FF] border-b border-blue-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
 
         <!-- LEFT COLUMN: EDITORIAL CONTENT & ACTIONS -->
         <div class="lg:col-span-6 text-center lg:text-left">
             <!-- Top Badge Pill -->
-            <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#E1EEFE] dark:bg-blue-950/80 border border-[#CDE1FE] dark:border-blue-800 text-[#2563EB] dark:text-blue-400 text-xs font-bold mb-5 shadow-xs">
+            <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#E1EEFE] border border-[#CDE1FE] text-[#2563EB] text-xs font-black mb-5 shadow-2xs">
                 <i class="fa-solid fa-graduation-cap"></i>
                 <span>ArchivEx</span>
             </div>
 
-            <!-- Main Heading -->
-            <h1 class="text-xl sm:text-3xl lg:text-4xl font-black tracking-tight text-[#071A49] dark:text-slate-100 mb-4 leading-tight">
-                Prends le contrôle de tes examens
-                avec <span class="text-[#2563EB] dark:text-blue-400">ArchivEx</span>
+            <!-- Main Heading (Sentence Case) -->
+            <h1 class="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#071A49] mb-4 leading-tight">
+                Prenez le contrôle de vos examens
+                avec <span class="text-[#2563EB]">ArchivEx</span>
             </h1>
 
             <!-- Subtitle -->
-            <p class="max-w-xl mx-auto lg:mx-0 text-sm sm:text-base text-slate-600 dark:text-slate-300 mb-6 leading-relaxed font-medium">
-                L'application web qui centralise tes anciennes épreuves, corrigés et résumés de cours pour réussir sereinement chaque semestre.
+            <p class="max-w-xl mx-auto lg:mx-0 text-sm sm:text-base text-slate-700 mb-6 leading-relaxed font-semibold">
+                La plateforme académique qui centralise vos anciennes épreuves, corrigés détaillés et fiches de synthèse pour réussir sereinement chaque semestre.
             </p>
 
             <!-- MOBILE LAPTOP MOCKUP (Visible only on mobile/tablet) -->
             <div class="flex lg:hidden justify-center mb-8">
                 <div class="relative w-full max-w-[560px] mx-auto pt-2 pb-2">
-
-                    <!-- LAPTOP FRAME -->
-                    <div class="relative mx-auto border-[10px] border-[#1E293B] rounded-t-2xl bg-[#1E293B] shadow-2xl overflow-hidden max-w-[500px]">
-                        <!-- SCREEN CONTENT -->
+                    <div class="relative mx-auto border-[8px] border-[#1E293B] rounded-t-2xl bg-[#1E293B] shadow-2xl overflow-hidden max-w-[500px]">
                         <div class="bg-slate-50 text-slate-800 text-[11px] aspect-[16/10] overflow-hidden flex flex-col select-none">
                             <!-- Screen Top Navbar -->
                             <div class="bg-white border-b border-slate-200 px-3 py-1.5 flex items-center justify-between shrink-0">
                                 <div class="flex items-center space-x-2">
-                                    <div class="w-5 h-5 rounded-lg bg-[#071A49] flex items-center justify-center text-[10px] text-white font-extrabold">A</div>
+                                    <div class="w-5 h-5 rounded-lg bg-[#071A49] flex items-center justify-center text-[10px] text-white font-black">A</div>
                                     <span class="font-black text-[#071A49] text-[11px]">Archiv<span class="text-[#2563EB]">Ex</span></span>
-                                    <span class="text-[8px] text-slate-400 font-medium hidden sm:inline">les épreuves en un clic</span>
                                 </div>
-                                <div class="bg-slate-100 rounded-lg px-2 py-0.5 flex items-center space-x-1.5 text-[9px] text-slate-400 w-44">
-                                    <i class="fa-solid fa-magnifying-glass text-[8px]"></i>
-                                    <span class="truncate">Rechercher une épreuve, une matière...</span>
+                                <div class="bg-slate-100 rounded-lg px-2 py-0.5 flex items-center space-x-1.5 text-[9px] text-slate-600 font-medium w-44">
+                                    <i class="fa-solid fa-magnifying-glass text-[8px] text-slate-400"></i>
+                                    <span class="truncate">Rechercher une épreuve...</span>
                                 </div>
                                 <div class="flex items-center space-x-1.5">
-                                    <div class="w-5 h-5 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-[9px] font-bold">É</div>
-                                    <div class="hidden sm:block text-[9px]">
-                                        <p class="font-bold text-[#071A49] leading-none">Étudiant</p>
-                                        <p class="text-[8px] text-slate-400 leading-none">Licence Informatique</p>
-                                    </div>
+                                    <div class="w-5 h-5 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-[9px] font-black">É</div>
                                 </div>
                             </div>
 
@@ -162,92 +105,79 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="flex-grow flex overflow-hidden">
                                 <!-- Sidebar -->
                                 <div class="w-28 bg-white border-r border-slate-200 p-2 space-y-1 shrink-0 text-[9px]">
-                                    <div class="bg-blue-50 text-[#2563EB] font-bold p-1.5 rounded-lg flex items-center space-x-1.5">
+                                    <div class="bg-blue-50 text-[#2563EB] font-black p-1.5 rounded-lg flex items-center space-x-1.5">
                                         <i class="fa-solid fa-house text-[9px]"></i>
-                                        <span class="truncate">Tableau de bord</span>
+                                        <span class="truncate">Accueil</span>
                                     </div>
-                                    <div class="text-slate-600 p-1.5 rounded-lg flex items-center space-x-1.5 hover:bg-slate-50">
+                                    <div class="text-slate-700 font-bold p-1.5 rounded-lg flex items-center space-x-1.5">
                                         <i class="fa-solid fa-book-open text-[9px] text-slate-400"></i>
-                                        <span class="truncate">Mes matières</span>
+                                        <span class="truncate">Matières</span>
                                     </div>
-                                    <div class="text-slate-600 p-1.5 rounded-lg flex items-center space-x-1.5 hover:bg-slate-50">
-                                        <i class="fa-solid fa-download text-[9px] text-slate-400"></i>
-                                        <span class="truncate">Mes téléchargements</span>
-                                    </div>
-                                    <div class="text-slate-600 p-1.5 rounded-lg flex items-center space-x-1.5 hover:bg-slate-50">
+                                    <div class="text-slate-700 font-bold p-1.5 rounded-lg flex items-center space-x-1.5">
                                         <i class="fa-solid fa-id-card text-[9px] text-slate-400"></i>
-                                        <span class="truncate">Pass Semestre</span>
+                                        <span class="truncate">Pass</span>
                                     </div>
                                 </div>
 
                                 <!-- Main Content -->
-                                <div class="flex-grow p-3 bg-slate-50/70 overflow-hidden">
+                                <div class="flex-grow p-2.5 bg-slate-50 overflow-hidden">
                                     <div class="mb-2">
-                                        <h4 class="font-black text-[#071A49] text-xs leading-tight">Bienvenue sur ArchivEx</h4>
-                                        <p class="text-[9px] text-slate-500 font-medium">Accède aux meilleures ressources pour préparer tes examens.</p>
+                                        <h4 class="font-black text-[#071A49] text-xs leading-tight">Espace étudiant</h4>
+                                        <p class="text-[9px] text-slate-600 font-semibold">Toutes vos épreuves classées.</p>
                                     </div>
 
                                     <!-- Mini Stat Cards -->
-                                    <div class="grid grid-cols-3 gap-1.5 mb-2.5">
-                                        <div class="bg-white p-1.5 rounded-lg border border-slate-200/80 shadow-2xs flex items-center space-x-1.5">
-                                            <div class="w-5 h-5 rounded bg-blue-50 text-[#2563EB] flex items-center justify-center font-bold text-[9px]">EP</div>
+                                    <div class="grid grid-cols-3 gap-1.5 mb-2">
+                                        <div class="bg-white p-1.5 rounded-lg border border-slate-200 shadow-2xs flex items-center space-x-1.5">
+                                            <div class="w-5 h-5 rounded bg-blue-100 text-[#2563EB] flex items-center justify-center font-black text-[9px]">EP</div>
                                             <div>
-                                                <span class="font-black text-xs text-[#071A49] block leading-none">12</span>
-                                                <span class="text-[7px] text-slate-400 font-medium block">Épreuves consultées</span>
+                                                <span class="font-black text-xs text-[#071A49] block leading-none">+{{ exams_count|default:"100" }}</span>
+                                                <span class="text-[7px] text-slate-600 font-bold block">Épreuves</span>
                                             </div>
                                         </div>
-                                        <div class="bg-white p-1.5 rounded-lg border border-slate-200/80 shadow-2xs flex items-center space-x-1.5">
-                                            <div class="w-5 h-5 rounded bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-[9px]">8</div>
+                                        <div class="bg-white p-1.5 rounded-lg border border-slate-200 shadow-2xs flex items-center space-x-1.5">
+                                            <div class="w-5 h-5 rounded bg-amber-100 text-amber-800 flex items-center justify-center font-black text-[9px]">UE</div>
                                             <div>
-                                                <span class="font-black text-xs text-[#071A49] block leading-none">8</span>
-                                                <span class="text-[7px] text-slate-400 font-medium block">Matières suivies</span>
+                                                <span class="font-black text-xs text-[#071A49] block leading-none">{{ subjects_count|default:"20" }}</span>
+                                                <span class="text-[7px] text-slate-600 font-bold block">Matières</span>
                                             </div>
                                         </div>
-                                        <div class="bg-white p-1.5 rounded-lg border border-slate-200/80 shadow-2xs flex items-center space-x-1.5">
-                                            <div class="w-5 h-5 rounded bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-[9px]">1</div>
+                                        <div class="bg-white p-1.5 rounded-lg border border-slate-200 shadow-2xs flex items-center space-x-1.5">
+                                            <div class="w-5 h-5 rounded bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-[9px]">OK</div>
                                             <div>
-                                                <span class="font-black text-xs text-[#071A49] block leading-none">1</span>
-                                                <span class="text-[7px] text-slate-400 font-medium block">Pass actif</span>
+                                                <span class="font-black text-xs text-emerald-800 block leading-none">100%</span>
+                                                <span class="text-[7px] text-slate-600 font-bold block">Conforme</span>
                                             </div>
                                         </div>
-                                    </div>
-
-                                    <!-- Ressources récentes header -->
-                                    <div class="flex items-center justify-between mb-1 text-[9px]">
-                                        <span class="font-bold text-[#071A49]">Ressources récentes</span>
-                                        <span class="text-[8px] text-[#2563EB] font-bold">Voir tout →</span>
                                     </div>
 
                                     <!-- Cards row -->
                                     <div class="grid grid-cols-3 gap-1.5">
-                                        <div class="bg-white p-2 rounded-lg border border-slate-200/80 shadow-2xs space-y-1">
+                                        <div class="bg-white p-2 rounded-lg border border-slate-200 shadow-2xs space-y-1">
                                             <div class="flex items-center justify-between">
-                                                <i class="fa-solid fa-file-lines text-slate-400 text-[9px]"></i>
-                                                <span class="text-[7px] font-extrabold bg-amber-100 text-amber-800 px-1 py-0.2 rounded">Premium</span>
+                                                <i class="fa-solid fa-file-lines text-slate-500 text-[9px]"></i>
+                                                <span class="text-[7px] font-black bg-amber-500 text-white px-1.5 py-0.2 rounded">Premium</span>
                                             </div>
-                                            <p class="font-bold text-[#071A49] text-[9px] leading-tight truncate">Base de données</p>
-                                            <p class="text-[7px] text-slate-400">Licence Informatique - S4</p>
-                                            <span class="text-[6px] font-bold text-blue-600 bg-blue-50 px-1 py-0.2 rounded inline-block">+ Épreuve + Corrigé</span>
+                                            <p class="font-black text-[#071A49] text-[9px] leading-tight truncate">Base de données</p>
+                                            <p class="text-[7px] text-slate-600 font-semibold">Licence • S4</p>
                                         </div>
 
-                                        <div class="bg-white p-2 rounded-lg border border-slate-200/80 shadow-2xs space-y-1">
+                                        <div class="bg-white p-2 rounded-lg border border-slate-200 shadow-2xs space-y-1">
                                             <div class="flex items-center justify-between">
-                                                <i class="fa-solid fa-file-lines text-slate-400 text-[9px]"></i>
-                                                <span class="text-[7px] font-extrabold bg-emerald-100 text-emerald-800 px-1 py-0.2 rounded">Gratuit</span>
+                                                <i class="fa-solid fa-file-lines text-slate-500 text-[9px]"></i>
+                                                <span class="text-[7px] font-black bg-emerald-600 text-white px-1.5 py-0.2 rounded">Gratuit</span>
                                             </div>
-                                            <p class="font-bold text-[#071A49] text-[9px] leading-tight truncate">Algorithmique</p>
-                                            <p class="text-[7px] text-slate-400">Licence Informatique - S3</p>
-                                            <span class="text-[6px] font-bold text-emerald-600 bg-emerald-50 px-1 py-0.2 rounded inline-block">+ Épreuve</span>
+                                            <p class="font-black text-[#071A49] text-[9px] leading-tight truncate">Algorithmique</p>
+                                            <p class="text-[7px] text-slate-600 font-semibold">Licence • S3</p>
                                         </div>
 
-                                        <div class="bg-white p-2 rounded-lg border border-slate-200/80 shadow-2xs space-y-1">
+                                        <div class="bg-white p-2 rounded-lg border border-slate-200 shadow-2xs space-y-1">
                                             <div class="flex items-center justify-between">
-                                                <i class="fa-solid fa-book-open text-slate-400 text-[9px]"></i>
-                                                <span class="text-[7px] font-extrabold bg-amber-100 text-amber-800 px-1 py-0.2 rounded">Premium</span>
+                                                <i class="fa-solid fa-book-open text-slate-500 text-[9px]"></i>
+                                                <span class="text-[7px] font-black bg-blue-600 text-white px-1.5 py-0.2 rounded">Résumé</span>
                                             </div>
-                                            <p class="font-bold text-[#071A49] text-[9px] leading-tight truncate">Réseaux</p>
-                                            <p class="text-[7px] text-slate-400">Licence Informatique - S5</p>
-                                            <span class="text-[6px] font-bold text-purple-600 bg-purple-50 px-1 py-0.2 rounded inline-block">+ Résumé</span>
+                                            <p class="font-black text-[#071A49] text-[9px] leading-tight truncate">Réseaux</p>
+                                            <p class="text-[7px] text-slate-600 font-semibold">Licence • S5</p>
                                         </div>
                                     </div>
                                 </div>
@@ -263,11 +193,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             <!-- QUICK SEARCH FORM HERO CARD -->
             <form action="{% url 'academics:global_search' %}" method="get" class="mb-7 max-w-xl mx-auto lg:mx-0">
-                <div class="relative flex items-center bg-white dark:bg-[#0f172a] border-2 border-blue-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 focus-within:border-[#2563EB] rounded-2xl p-1.5 shadow-lg shadow-blue-500/10 transition-all">
-                    <div class="pl-3.5 pr-2 text-slate-400 dark:text-slate-500">
+                <div class="relative flex items-center bg-white border-2 border-blue-200 hover:border-blue-400 focus-within:border-[#2563EB] rounded-2xl p-1.5 shadow-lg shadow-blue-500/10 transition-all">
+                    <div class="pl-3.5 pr-2 text-slate-500">
                         <i class="fa-solid fa-magnifying-glass text-base"></i>
                     </div>
-                    <input type="text" name="q" placeholder="Rechercher une épreuve, une matière, un sujet..." class="w-full bg-transparent border-0 focus:ring-0 text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 py-2.5 px-1 focus:outline-none" required>
+                    <input type="text" name="q" placeholder="Rechercher une épreuve, une matière, un sujet..." class="w-full bg-transparent border-0 focus:ring-0 text-xs sm:text-sm font-bold text-slate-800 placeholder-slate-400 py-2.5 px-1 focus:outline-none" required>
                     <button type="submit" class="bg-[#2563EB] hover:bg-blue-700 text-white font-black text-xs sm:text-sm px-5 py-2.5 rounded-xl transition-all shrink-0 flex items-center space-x-1.5 shadow-md active:scale-95">
                         <span>Rechercher</span>
                         <i class="fa-solid fa-arrow-right text-xs"></i>
@@ -275,38 +205,38 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </form>
 
-            <!-- 3 Mini Feature Cards -->
+            <!-- 3 Mini Feature Cards (Clean, Solid, Ultra-High Contrast, Sentence Case) -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 max-w-xl mx-auto lg:mx-0 text-left">
                 <!-- Card 1: Épreuves -->
-                <div class="bg-gradient-to-br from-blue-50/80 to-white hover:from-blue-100 hover:to-blue-50 dark:from-[#0f172a] dark:to-blue-950/20 dark:bg-[#0f172a]/90 backdrop-blur border border-blue-100/80 dark:border-slate-800 rounded-2xl p-3.5 flex items-center space-x-3 shadow-xs hover:border-blue-300 transition-colors">
-                    <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-[#2563EB] dark:text-blue-400 flex items-center justify-center shrink-0 text-lg">
+                <div class="bg-white border-2 border-blue-100 hover:border-blue-400 rounded-2xl p-3.5 flex items-center space-x-3 shadow-xs transition-colors">
+                    <div class="w-10 h-10 rounded-xl bg-blue-100 text-[#2563EB] flex items-center justify-center shrink-0 text-lg font-black">
                         <i class="fa-solid fa-book-open"></i>
                     </div>
                     <div>
-                        <h4 class="text-xs font-black text-blue-950 dark:text-slate-100 leading-snug">Épreuves</h4>
-                        <p class="text-[11px] text-slate-600 dark:text-slate-300 font-semibold">d'examens passés</p>
+                        <h4 class="text-xs font-black text-[#071A49] leading-snug">Épreuves</h4>
+                        <p class="text-[11px] text-slate-700 font-bold">Sessions passées</p>
                     </div>
                 </div>
 
                 <!-- Card 2: Corrigés -->
-                <div class="bg-gradient-to-br from-emerald-50/80 to-white hover:from-emerald-100 hover:to-emerald-50 dark:from-[#0f172a] dark:to-emerald-950/20 dark:bg-[#0f172a]/90 backdrop-blur border border-emerald-100/80 dark:border-slate-800 rounded-2xl p-3.5 flex items-center space-x-3 shadow-xs hover:border-emerald-300 transition-colors">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 text-lg">
+                <div class="bg-white border-2 border-emerald-100 hover:border-emerald-400 rounded-2xl p-3.5 flex items-center space-x-3 shadow-xs transition-colors">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 text-lg font-black">
                         <i class="fa-solid fa-file-circle-check"></i>
                     </div>
                     <div>
-                        <h4 class="text-xs font-black text-emerald-950 dark:text-slate-100 leading-snug">Corrigés</h4>
-                        <p class="text-[11px] text-slate-600 dark:text-slate-300 font-semibold">détaillés & pas à pas</p>
+                        <h4 class="text-xs font-black text-emerald-950 leading-snug">Corrigés</h4>
+                        <p class="text-[11px] text-slate-700 font-bold">Détaillés pas à pas</p>
                     </div>
                 </div>
 
                 <!-- Card 3: Résumés -->
-                <div class="bg-gradient-to-br from-purple-50/80 to-white hover:from-purple-100 hover:to-purple-50 dark:from-[#0f172a] dark:to-purple-950/20 dark:bg-[#0f172a]/90 backdrop-blur border border-purple-100/80 dark:border-slate-800 rounded-2xl p-3.5 flex items-center space-x-3 shadow-xs hover:border-purple-300 transition-colors">
-                    <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 text-lg">
+                <div class="bg-white border-2 border-purple-100 hover:border-purple-400 rounded-2xl p-3.5 flex items-center space-x-3 shadow-xs transition-colors">
+                    <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 text-lg font-black">
                         <i class="fa-solid fa-file-lines"></i>
                     </div>
                     <div>
-                        <h4 class="text-xs font-black text-purple-950 dark:text-slate-100 leading-snug">Résumés</h4>
-                        <p class="text-[11px] text-slate-600 dark:text-slate-300 font-semibold">fiches de révision</p>
+                        <h4 class="text-xs font-black text-purple-950 leading-snug">Résumés</h4>
+                        <p class="text-[11px] text-slate-700 font-bold">Fiches de révision</p>
                     </div>
                 </div>
             </div>
@@ -314,29 +244,29 @@ document.addEventListener('DOMContentLoaded', function() {
             <!-- Action Buttons -->
             <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5">
                 {% if user.is_authenticated and user.is_staff or user.is_authenticated and user.is_superuser or user.is_authenticated and user.contributor_profile %}
-                    <a href="{% url 'contributors:admin_dashboard' %}" class="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-slate-900 font-black text-sm px-7 py-3.5 rounded-2xl shadow-lg shadow-amber-500/25 flex items-center justify-center space-x-2.5 transition-all">
+                    <a href="{% url 'contributors:admin_dashboard' %}" class="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm px-7 py-3.5 rounded-2xl shadow-lg shadow-amber-500/25 flex items-center justify-center space-x-2.5 transition-all">
                         <i class="fa-solid fa-user-shield"></i>
-                        <span>Espace Administration</span>
+                        <span>Espace d'administration</span>
                     </a>
                 {% else %}
                     <a href="{% url 'academics:filieres' %}" class="w-full sm:w-auto bg-[#2563EB] hover:bg-blue-700 text-white font-black text-sm px-7 py-3.5 rounded-2xl shadow-lg shadow-blue-500/25 flex items-center justify-center space-x-2.5 transition-all">
                         <i class="fa-solid fa-graduation-cap"></i>
-                        <span>Explorer</span>
+                        <span>Explorer les matières</span>
                         <i class="fa-solid fa-chevron-right text-xs"></i>
                     </a>
                 {% endif %}
 
-                <a href="{% url 'academics:about' %}" class="w-full sm:w-auto bg-white dark:bg-[#0f172a] hover:bg-slate-50 dark:hover:bg-slate-800 text-[#071A49] dark:text-slate-100 border border-slate-200/90 dark:border-slate-800 font-extrabold text-sm px-6 py-3.5 rounded-2xl shadow-xs flex items-center justify-center space-x-2.5 transition-all">
-                    <div class="w-5 h-5 rounded-full border border-slate-300 dark:border-slate-700 flex items-center justify-center text-[10px]">
-                        <i class="fa-solid fa-play text-[8px] text-[#071A49] dark:text-slate-100 ml-0.5"></i>
+                <a href="{% url 'academics:about' %}" class="w-full sm:w-auto bg-white hover:bg-slate-50 text-[#071A49] border-2 border-slate-200 font-black text-sm px-6 py-3.5 rounded-2xl shadow-xs flex items-center justify-center space-x-2.5 transition-all">
+                    <div class="w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center text-[10px]">
+                        <i class="fa-solid fa-play text-[8px] text-[#071A49] ml-0.5"></i>
                     </div>
                     <span>Découvrir la plateforme</span>
                 </a>
 
                 <!-- BOUTON DE TÉLÉCHARGEMENT PWA HERO -->
-                <button type="button" class="pwa-install-trigger w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-sm px-6 py-3.5 rounded-2xl shadow-lg shadow-emerald-600/25 flex items-center justify-center space-x-2.5 transition-all hover:scale-[1.02]">
+                <button type="button" class="pwa-install-trigger w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm px-6 py-3.5 rounded-2xl shadow-lg shadow-emerald-600/25 flex items-center justify-center space-x-2.5 transition-all hover:scale-[1.02]">
                     <i class="fa-solid fa-cloud-arrow-down text-base"></i>
-                    <span>Télécharger l'application</span>
+                    <span>Installer l'application</span>
                 </button>
             </div>
         </div>
@@ -344,27 +274,24 @@ document.addEventListener('DOMContentLoaded', function() {
         <!-- RIGHT COLUMN: LAPTOP MOCKUP (DESKTOP ONLY) -->
         <div class="hidden lg:flex lg:col-span-6 justify-center">
             <div class="relative w-full max-w-[560px] mx-auto pt-6 pb-2">
-
-                <!-- LAPTOP FRAME -->
                 <div class="relative mx-auto border-[10px] border-[#1E293B] rounded-t-2xl bg-[#1E293B] shadow-2xl overflow-hidden max-w-[500px]">
-                    <!-- SCREEN CONTENT -->
                     <div class="bg-slate-50 text-slate-800 text-[11px] aspect-[16/10] overflow-hidden flex flex-col select-none">
                         <!-- Screen Top Navbar -->
                         <div class="bg-white border-b border-slate-200 px-3 py-1.5 flex items-center justify-between shrink-0">
                             <div class="flex items-center space-x-2">
-                                <div class="w-5 h-5 rounded-lg bg-[#071A49] flex items-center justify-center text-[10px] text-white font-extrabold">A</div>
+                                <div class="w-5 h-5 rounded-lg bg-[#071A49] flex items-center justify-center text-[10px] text-white font-black">A</div>
                                 <span class="font-black text-[#071A49] text-[11px]">Archiv<span class="text-[#2563EB]">Ex</span></span>
-                                <span class="text-[8px] text-slate-400 font-medium hidden sm:inline">les épreuves en un clic</span>
+                                <span class="text-[8px] text-slate-500 font-bold hidden sm:inline">les épreuves en un clic</span>
                             </div>
-                            <div class="bg-slate-100 rounded-lg px-2 py-0.5 flex items-center space-x-1.5 text-[9px] text-slate-400 w-44">
-                                <i class="fa-solid fa-magnifying-glass text-[8px]"></i>
-                                <span class="truncate">Rechercher une épreuve, une matière...</span>
+                            <div class="bg-slate-100 rounded-lg px-2 py-0.5 flex items-center space-x-1.5 text-[9px] text-slate-600 font-medium w-44">
+                                <i class="fa-solid fa-magnifying-glass text-[8px] text-slate-400"></i>
+                                <span class="truncate">Rechercher une épreuve, UE...</span>
                             </div>
                             <div class="flex items-center space-x-1.5">
-                                <div class="w-5 h-5 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-[9px] font-bold">É</div>
+                                <div class="w-5 h-5 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-[9px] font-black">É</div>
                                 <div class="hidden sm:block text-[9px]">
-                                    <p class="font-bold text-[#071A49] leading-none">Étudiant</p>
-                                    <p class="text-[8px] text-slate-400 leading-none">Licence Informatique</p>
+                                    <p class="font-black text-[#071A49] leading-none">Étudiant</p>
+                                    <p class="text-[8px] text-slate-500 font-medium leading-none">Licence 1 informatique</p>
                                 </div>
                             </div>
                         </div>
@@ -373,92 +300,92 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="flex-grow flex overflow-hidden">
                             <!-- Sidebar -->
                             <div class="w-28 bg-white border-r border-slate-200 p-2 space-y-1 shrink-0 text-[9px]">
-                                <div class="bg-blue-50 text-[#2563EB] font-bold p-1.5 rounded-lg flex items-center space-x-1.5">
+                                <div class="bg-blue-50 text-[#2563EB] font-black p-1.5 rounded-lg flex items-center space-x-1.5">
                                     <i class="fa-solid fa-house text-[9px]"></i>
                                     <span class="truncate">Tableau de bord</span>
                                 </div>
-                                <div class="text-slate-600 p-1.5 rounded-lg flex items-center space-x-1.5 hover:bg-slate-50">
+                                <div class="text-slate-700 font-bold p-1.5 rounded-lg flex items-center space-x-1.5 hover:bg-slate-50">
                                     <i class="fa-solid fa-book-open text-[9px] text-slate-400"></i>
                                     <span class="truncate">Mes matières</span>
                                 </div>
-                                <div class="text-slate-600 p-1.5 rounded-lg flex items-center space-x-1.5 hover:bg-slate-50">
+                                <div class="text-slate-700 font-bold p-1.5 rounded-lg flex items-center space-x-1.5 hover:bg-slate-50">
                                     <i class="fa-solid fa-download text-[9px] text-slate-400"></i>
-                                    <span class="truncate">Mes téléchargements</span>
+                                    <span class="truncate">Téléchargements</span>
                                 </div>
-                                <div class="text-slate-600 p-1.5 rounded-lg flex items-center space-x-1.5 hover:bg-slate-50">
+                                <div class="text-slate-700 font-bold p-1.5 rounded-lg flex items-center space-x-1.5 hover:bg-slate-50">
                                     <i class="fa-solid fa-id-card text-[9px] text-slate-400"></i>
-                                    <span class="truncate">Pass Semestre</span>
+                                    <span class="truncate">Pass semestre</span>
                                 </div>
                             </div>
 
                             <!-- Main Content -->
-                            <div class="flex-grow p-3 bg-slate-50/70 overflow-hidden">
+                            <div class="flex-grow p-3 bg-slate-50 overflow-hidden">
                                 <div class="mb-2">
                                     <h4 class="font-black text-[#071A49] text-xs leading-tight">Bienvenue sur ArchivEx</h4>
-                                    <p class="text-[9px] text-slate-500 font-medium">Accède aux meilleures ressources pour préparer tes examens.</p>
+                                    <p class="text-[9px] text-slate-600 font-medium">Préparez vos examens avec les meilleures annales.</p>
                                 </div>
 
                                 <!-- Mini Stat Cards -->
                                 <div class="grid grid-cols-3 gap-1.5 mb-2.5">
-                                    <div class="bg-white p-1.5 rounded-lg border border-slate-200/80 shadow-2xs flex items-center space-x-1.5">
-                                        <div class="w-5 h-5 rounded bg-blue-50 text-[#2563EB] flex items-center justify-center font-bold text-[9px]">EP</div>
+                                    <div class="bg-white p-1.5 rounded-lg border border-slate-200 shadow-2xs flex items-center space-x-1.5">
+                                        <div class="w-5 h-5 rounded bg-blue-100 text-[#2563EB] flex items-center justify-center font-black text-[9px]">EP</div>
                                         <div>
-                                            <span class="font-black text-xs text-[#071A49] block leading-none">12</span>
-                                            <span class="text-[7px] text-slate-400 font-medium block">Épreuves consultées</span>
+                                            <span class="font-black text-xs text-[#071A49] block leading-none">+{{ exams_count|default:"100" }}</span>
+                                            <span class="text-[7px] text-slate-600 font-bold block">Épreuves</span>
                                         </div>
                                     </div>
-                                    <div class="bg-white p-1.5 rounded-lg border border-slate-200/80 shadow-2xs flex items-center space-x-1.5">
-                                        <div class="w-5 h-5 rounded bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-[9px]">8</div>
+                                    <div class="bg-white p-1.5 rounded-lg border border-slate-200 shadow-2xs flex items-center space-x-1.5">
+                                        <div class="w-5 h-5 rounded bg-amber-100 text-amber-800 flex items-center justify-center font-black text-[9px]">UE</div>
                                         <div>
-                                            <span class="font-black text-xs text-[#071A49] block leading-none">8</span>
-                                            <span class="text-[7px] text-slate-400 font-medium block">Matières suivies</span>
+                                            <span class="font-black text-xs text-[#071A49] block leading-none">{{ subjects_count|default:"20" }}</span>
+                                            <span class="text-[7px] text-slate-600 font-bold block">Matières</span>
                                         </div>
                                     </div>
-                                    <div class="bg-white p-1.5 rounded-lg border border-slate-200/80 shadow-2xs flex items-center space-x-1.5">
-                                        <div class="w-5 h-5 rounded bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-[9px]">1</div>
+                                    <div class="bg-white p-1.5 rounded-lg border border-slate-200 shadow-2xs flex items-center space-x-1.5">
+                                        <div class="w-5 h-5 rounded bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-[9px]">OK</div>
                                         <div>
-                                            <span class="font-black text-xs text-[#071A49] block leading-none">1</span>
-                                            <span class="text-[7px] text-slate-400 font-medium block">Pass actif</span>
+                                            <span class="font-black text-xs text-emerald-800 block leading-none">100%</span>
+                                            <span class="text-[7px] text-slate-600 font-bold block">Conforme</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Ressources récentes header -->
-                                <div class="flex items-center justify-between mb-1 text-[9px]">
-                                    <span class="font-bold text-[#071A49]">Ressources récentes</span>
-                                    <span class="text-[8px] text-[#2563EB] font-bold">Voir tout →</span>
+                                <div class="flex items-center justify-between mb-1.5 text-[9px]">
+                                    <span class="font-black text-[#071A49]">Ressources récentes</span>
+                                    <span class="text-[8px] text-[#2563EB] font-black">Voir tout →</span>
                                 </div>
 
                                 <!-- Cards row -->
                                 <div class="grid grid-cols-3 gap-1.5">
-                                    <div class="bg-white p-2 rounded-lg border border-slate-200/80 shadow-2xs space-y-1">
+                                    <div class="bg-white p-2 rounded-lg border border-slate-200 shadow-2xs space-y-1">
                                         <div class="flex items-center justify-between">
                                             <i class="fa-solid fa-file-lines text-slate-400 text-[9px]"></i>
-                                            <span class="text-[7px] font-extrabold bg-amber-100 text-amber-800 px-1 py-0.2 rounded">Premium</span>
+                                            <span class="text-[7px] font-black bg-amber-500 text-white px-1.5 py-0.2 rounded">Premium</span>
                                         </div>
-                                        <p class="font-bold text-[#071A49] text-[9px] leading-tight truncate">Base de données</p>
-                                        <p class="text-[7px] text-slate-400">Licence Informatique - S4</p>
-                                        <span class="text-[6px] font-bold text-blue-600 bg-blue-50 px-1 py-0.2 rounded inline-block">+ Épreuve + Corrigé</span>
+                                        <p class="font-black text-[#071A49] text-[9px] leading-tight truncate">Base de données</p>
+                                        <p class="text-[7px] text-slate-600 font-semibold">Licence • S4</p>
+                                        <span class="text-[6px] font-black text-blue-700 bg-blue-100 px-1 py-0.2 rounded inline-block">+ Épreuve + Corrigé</span>
                                     </div>
 
-                                    <div class="bg-white p-2 rounded-lg border border-slate-200/80 shadow-2xs space-y-1">
+                                    <div class="bg-white p-2 rounded-lg border border-slate-200 shadow-2xs space-y-1">
                                         <div class="flex items-center justify-between">
                                             <i class="fa-solid fa-file-lines text-slate-400 text-[9px]"></i>
-                                            <span class="text-[7px] font-extrabold bg-emerald-100 text-emerald-800 px-1 py-0.2 rounded">Gratuit</span>
+                                            <span class="text-[7px] font-black bg-emerald-600 text-white px-1.5 py-0.2 rounded">Gratuit</span>
                                         </div>
-                                        <p class="font-bold text-[#071A49] text-[9px] leading-tight truncate">Algorithmique</p>
-                                        <p class="text-[7px] text-slate-400">Licence Informatique - S3</p>
-                                        <span class="text-[6px] font-bold text-emerald-600 bg-emerald-50 px-1 py-0.2 rounded inline-block">+ Épreuve</span>
+                                        <p class="font-black text-[#071A49] text-[9px] leading-tight truncate">Algorithmique</p>
+                                        <p class="text-[7px] text-slate-600 font-semibold">Licence • S3</p>
+                                        <span class="text-[6px] font-black text-emerald-700 bg-emerald-100 px-1 py-0.2 rounded inline-block">+ Épreuve</span>
                                     </div>
 
-                                    <div class="bg-white p-2 rounded-lg border border-slate-200/80 shadow-2xs space-y-1">
+                                    <div class="bg-white p-2 rounded-lg border border-slate-200 shadow-2xs space-y-1">
                                         <div class="flex items-center justify-between">
                                             <i class="fa-solid fa-book-open text-slate-400 text-[9px]"></i>
-                                            <span class="text-[7px] font-extrabold bg-amber-100 text-amber-800 px-1 py-0.2 rounded">Premium</span>
+                                            <span class="text-[7px] font-black bg-purple-600 text-white px-1.5 py-0.2 rounded">Fiche</span>
                                         </div>
-                                        <p class="font-bold text-[#071A49] text-[9px] leading-tight truncate">Réseaux</p>
-                                        <p class="text-[7px] text-slate-400">Licence Informatique - S5</p>
-                                        <span class="text-[6px] font-bold text-purple-600 bg-purple-50 px-1 py-0.2 rounded inline-block">+ Résumé</span>
+                                        <p class="font-black text-[#071A49] text-[9px] leading-tight truncate">Réseaux</p>
+                                        <p class="text-[7px] text-slate-600 font-semibold">Licence • S5</p>
+                                        <span class="text-[6px] font-black text-purple-700 bg-purple-100 px-1 py-0.2 rounded inline-block">+ Résumé</span>
                                     </div>
                                 </div>
                             </div>
@@ -475,86 +402,86 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </section>
 
-<!-- 3. MARQUEE TICKER -->
+<!-- 2. MARQUEE TICKER -->
 <section class="marquee-ticker-container">
     <div class="marquee-wrapper">
         <div class="marquee-content">
             <div class="stat-ticker-pill">
-                <span class="text-white font-extrabold text-sm">+{{ exams_count|default:"0" }}</span>
-                <span class="text-slate-300 text-xs font-semibold">Épreuves disponibles</span>
+                <span class="text-white font-black text-sm">+{{ exams_count|default:"0" }}</span>
+                <span class="text-slate-200 text-xs font-bold">Épreuves disponibles</span>
             </div>
             <div class="stat-ticker-pill">
-                <span class="text-white font-extrabold text-sm">{{ subjects_count|default:"0" }}</span>
-                <span class="text-slate-300 text-xs font-semibold">Matières clés</span>
+                <span class="text-white font-black text-sm">{{ subjects_count|default:"0" }}</span>
+                <span class="text-slate-200 text-xs font-bold">Matières clés</span>
             </div>
             <div class="stat-ticker-pill">
-                <span class="text-white font-extrabold text-sm">{{ summaries_count|default:"0" }}</span>
-                <span class="text-slate-300 text-xs font-semibold">Résumés de cours</span>
+                <span class="text-white font-black text-sm">{{ summaries_count|default:"0" }}</span>
+                <span class="text-slate-200 text-xs font-bold">Résumés de cours</span>
             </div>
             <div class="stat-ticker-pill">
-                <span class="text-white font-extrabold text-sm">{{ students_count|default:"0" }}</span>
-                <span class="text-slate-300 text-xs font-semibold">Étudiants inscrits</span>
+                <span class="text-white font-black text-sm">{{ students_count|default:"0" }}</span>
+                <span class="text-slate-200 text-xs font-bold">Étudiants inscrits</span>
             </div>
             <div class="stat-ticker-pill">
-                <span class="text-amber-300 font-extrabold text-xs uppercase tracking-wider">Pass Semestre</span>
+                <span class="text-amber-300 font-black text-xs uppercase tracking-wider">Pass semestre</span>
             </div>
             <div class="stat-ticker-pill">
-                <span class="text-emerald-300 font-extrabold text-xs uppercase tracking-wider">{{ schools_count|default:"1" }} Écoles & Universités</span>
+                <span class="text-emerald-300 font-black text-xs uppercase tracking-wider">{{ schools_count|default:"1" }} Écoles & Universités</span>
             </div>
         </div>
 
         <div class="marquee-content" aria-hidden="true">
             <div class="stat-ticker-pill">
-                <span class="text-white font-extrabold text-sm">+{{ exams_count|default:"0" }}</span>
-                <span class="text-slate-300 text-xs font-semibold">Épreuves disponibles</span>
+                <span class="text-white font-black text-sm">+{{ exams_count|default:"0" }}</span>
+                <span class="text-slate-200 text-xs font-bold">Épreuves disponibles</span>
             </div>
             <div class="stat-ticker-pill">
-                <span class="text-white font-extrabold text-sm">{{ subjects_count|default:"0" }}</span>
-                <span class="text-slate-300 text-xs font-semibold">Matières clés</span>
+                <span class="text-white font-black text-sm">{{ subjects_count|default:"0" }}</span>
+                <span class="text-slate-200 text-xs font-bold">Matières clés</span>
             </div>
             <div class="stat-ticker-pill">
-                <span class="text-white font-extrabold text-sm">{{ summaries_count|default:"0" }}</span>
-                <span class="text-slate-300 text-xs font-semibold">Résumés de cours</span>
+                <span class="text-white font-black text-sm">{{ summaries_count|default:"0" }}</span>
+                <span class="text-slate-200 text-xs font-bold">Résumés de cours</span>
             </div>
             <div class="stat-ticker-pill">
-                <span class="text-white font-extrabold text-sm">{{ students_count|default:"0" }}</span>
-                <span class="text-slate-300 text-xs font-semibold">Étudiants inscrits</span>
+                <span class="text-white font-black text-sm">{{ students_count|default:"0" }}</span>
+                <span class="text-slate-200 text-xs font-bold">Étudiants inscrits</span>
             </div>
             <div class="stat-ticker-pill">
-                <span class="text-amber-300 font-extrabold text-xs uppercase tracking-wider">Pass Semestre</span>
+                <span class="text-amber-300 font-black text-xs uppercase tracking-wider">Pass semestre</span>
             </div>
             <div class="stat-ticker-pill">
-                <span class="text-emerald-300 font-extrabold text-xs uppercase tracking-wider">{{ schools_count|default:"1" }} Écoles & Universités</span>
+                <span class="text-emerald-300 font-black text-xs uppercase tracking-wider">{{ schools_count|default:"1" }} Écoles & Universités</span>
             </div>
         </div>
     </div>
 </section>
 
-<!-- 4. RESOURCE OVERVIEW -->
+<!-- 3. RESOURCE OVERVIEW -->
 <section class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="mb-12 text-center max-w-3xl mx-auto">
-        <h2 class="text-2xl sm:text-4xl font-extrabold text-[#071A49] dark:text-slate-100 tracking-tight mb-3">
+        <h2 class="text-2xl sm:text-4xl font-black text-[#071A49] tracking-tight mb-3">
             Toutes vos ressources académiques en un seul endroit
         </h2>
-        <p class="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
+        <p class="text-slate-700 text-xs sm:text-sm leading-relaxed font-semibold">
             ArchivEx rassemble et organise l'ensemble des contenus indispensables pour accompagner la réussite de votre semestre universitaire.
         </p>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
         <!-- Épreuves -->
-        <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-blue-50/60 to-white hover:from-blue-100/80 hover:to-blue-50/60 dark:from-[#0f172a] dark:to-[#0f172a] border border-blue-100 dark:border-slate-800 shadow-sm hover:border-[#2563EB] dark:hover:border-blue-500 transition-all flex flex-col justify-between">
+        <div class="p-6 sm:p-8 rounded-3xl bg-white border-2 border-blue-100 hover:border-[#2563EB] shadow-sm transition-all flex flex-col justify-between">
             <div>
-                <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/60 text-[#2563EB] dark:text-blue-400 flex items-center justify-center text-xl mb-4 shrink-0">
+                <div class="w-12 h-12 rounded-2xl bg-blue-100 text-[#2563EB] flex items-center justify-center text-xl mb-4 shrink-0 font-black">
                     <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
                 </div>
-                <h3 class="text-lg font-black text-blue-950 dark:text-slate-100 mb-2">Épreuves & Annales</h3>
-                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                <h3 class="text-lg font-black text-[#071A49] mb-2">Épreuves et annales</h3>
+                <p class="text-xs text-slate-700 leading-relaxed font-medium">
                     Consultez les sujets d'examens des sessions précédentes classés par filière, semestre et matière avec leurs corrections méthodologiques.
                 </p>
             </div>
-            <div class="pt-4 mt-6 border-t border-blue-100 dark:border-slate-800">
-                <a href="{% url 'exams:liste' %}" class="text-xs font-extrabold text-[#2563EB] dark:text-blue-400 hover:underline flex items-center space-x-1.5">
+            <div class="pt-4 mt-6 border-t border-slate-100">
+                <a href="{% url 'exams:liste' %}" class="text-xs font-black text-[#2563EB] hover:underline flex items-center space-x-1.5">
                     <span>Parcourir les épreuves</span>
                     <i class="fa-solid fa-arrow-right text-[10px]" aria-hidden="true"></i>
                 </a>
@@ -562,18 +489,18 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
 
         <!-- Résumés -->
-        <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-emerald-50/60 to-white hover:from-emerald-100/80 hover:to-emerald-50/60 dark:from-[#0f172a] dark:to-[#0f172a] border border-emerald-100 dark:border-slate-800 shadow-sm hover:border-emerald-500 transition-all flex flex-col justify-between">
+        <div class="p-6 sm:p-8 rounded-3xl bg-white border-2 border-emerald-100 hover:border-emerald-500 shadow-sm transition-all flex flex-col justify-between">
             <div>
-                <div class="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl mb-4 shrink-0">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl mb-4 shrink-0 font-black">
                     <i class="fa-solid fa-book-open" aria-hidden="true"></i>
                 </div>
-                <h3 class="text-lg font-black text-emerald-950 dark:text-slate-100 mb-2">Résumés de Cours</h3>
-                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                <h3 class="text-lg font-black text-emerald-950 mb-2">Résumés de cours</h3>
+                <p class="text-xs text-slate-700 leading-relaxed font-medium">
                     Révisez l'essentiel des chapitres grâce à des fiches de synthèse structurées et concises rédigées pour chaque unité d'enseignement.
                 </p>
             </div>
-            <div class="pt-4 mt-6 border-t border-emerald-100 dark:border-slate-800">
-                <a href="{% url 'content:summary_list' %}" class="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center space-x-1.5">
+            <div class="pt-4 mt-6 border-t border-slate-100">
+                <a href="{% url 'content:summary_list' %}" class="text-xs font-black text-emerald-700 hover:underline flex items-center space-x-1.5">
                     <span>Parcourir les résumés</span>
                     <i class="fa-solid fa-arrow-right text-[10px]" aria-hidden="true"></i>
                 </a>
@@ -582,26 +509,26 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </section>
 
-<!-- 4.5 LIVE SHOWCASE CATALOGUE -->
-<section class="py-12 bg-slate-50/80 dark:bg-[#091228] border-y border-slate-200/80 dark:border-slate-800/80">
+<!-- 4. LIVE SHOWCASE CATALOGUE -->
+<section class="py-12 bg-slate-50 border-y border-slate-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
             <div>
-                <span class="text-xs font-black uppercase tracking-wider text-[#2563EB] dark:text-blue-400 mb-1 block">Vitrine du Catalogue</span>
-                <h2 class="text-2xl sm:text-3xl font-black text-[#071A49] dark:text-slate-100 tracking-tight">Dernières publications en ligne</h2>
+                <span class="text-xs font-black uppercase tracking-wider text-[#2563EB] mb-1 block">Vitrine du catalogue</span>
+                <h2 class="text-2xl sm:text-3xl font-black text-[#071A49] tracking-tight">Dernières publications en ligne</h2>
             </div>
             
             <!-- Showcase Filter Tabs -->
-            <div class="flex items-center space-x-1.5 bg-white dark:bg-[#0f172a] p-1 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs self-start md:self-auto">
-                <button type="button" onclick="switchShowcaseTab('exams')" id="tab-btn-exams" class="px-4 py-2 rounded-xl text-xs font-extrabold transition-all bg-[#071A49] dark:bg-blue-600 text-white shadow-xs">
+            <div class="flex items-center space-x-1.5 bg-white p-1 rounded-2xl border-2 border-slate-200 shadow-2xs self-start md:self-auto">
+                <button type="button" onclick="switchShowcaseTab('exams')" id="tab-btn-exams" class="px-4 py-2 rounded-xl text-xs font-black transition-all bg-[#071A49] text-white shadow-xs">
                     <i class="fa-solid fa-file-lines mr-1.5"></i>
                     <span>Épreuves ({{ latest_exams|length }})</span>
                 </button>
-                <button type="button" onclick="switchShowcaseTab('summaries')" id="tab-btn-summaries" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all">
+                <button type="button" onclick="switchShowcaseTab('summaries')" id="tab-btn-summaries" class="px-4 py-2 rounded-xl text-xs font-black text-slate-700 hover:text-[#071A49] transition-all">
                     <i class="fa-solid fa-book-open mr-1.5"></i>
                     <span>Résumés ({{ latest_summaries|length }})</span>
                 </button>
-                <button type="button" onclick="switchShowcaseTab('filieres')" id="tab-btn-filieres" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all">
+                <button type="button" onclick="switchShowcaseTab('filieres')" id="tab-btn-filieres" class="px-4 py-2 rounded-xl text-xs font-black text-slate-700 hover:text-[#071A49] transition-all">
                     <i class="fa-solid fa-graduation-cap mr-1.5"></i>
                     <span>Filières</span>
                 </button>
@@ -611,7 +538,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <!-- TAB CONTENT 1: EXAMS -->
         <div id="showcase-exams" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {% for exam in latest_exams %}
-            <div class="bg-white dark:bg-[#0f172a] border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-xs hover:shadow-md hover:border-blue-300 dark:hover:border-blue-500 transition-all flex flex-col overflow-hidden group">
+            <div class="bg-white border-2 border-slate-200 rounded-2xl shadow-xs hover:shadow-md hover:border-blue-400 transition-all flex flex-col overflow-hidden group">
                 <!-- TOP VIGNETTE / SUBJECT COVER IMAGE -->
                 <div class="relative w-full h-28 sm:h-32 bg-slate-100 overflow-hidden shrink-0">
                     <a href="{% url 'exams:detail' exam.pk %}" class="block w-full h-full" aria-label="{{ exam.subject.name }}">
@@ -622,45 +549,45 @@ document.addEventListener('DOMContentLoaded', function() {
                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                         {% else %}
                             <div class="w-full h-full bg-gradient-to-br from-[#071A49] via-[#0F2C6E] to-[#1E3A8A] flex items-center justify-center p-3 text-center">
-                                <div class="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-blue-200">
+                                <div class="w-9 h-9 rounded-xl bg-white/15 border border-white/30 flex items-center justify-center text-white">
                                     <i class="fa-solid fa-graduation-cap text-sm"></i>
                                 </div>
                             </div>
                         {% endif %}
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
                     </a>
 
                     <!-- EXAM TYPE BADGE -->
-                    <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-[#071A49]/85 backdrop-blur-md text-white text-[9px] sm:text-[10px] font-bold border border-white/10 shadow-sm pointer-events-none">
-                        {{ exam.get_exam_type_display|default:"Session Normale" }}
+                    <span class="absolute top-2 left-2 px-2.5 py-1 rounded-lg bg-[#071A49] text-white text-[9px] sm:text-[10px] font-black border border-white/20 shadow-sm pointer-events-none">
+                        {{ exam.get_exam_type_display|default:"Session normale" }}
                     </span>
                 </div>
 
                 <div class="p-5 flex flex-col justify-between flex-grow">
                     <div>
                         <div class="flex items-center justify-between mb-2">
-                            <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg {% if exam.is_free %}bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300{% else %}bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300{% endif %}">
-                                {% if exam.is_free %}Gratuit{% else %}Pass Semestre{% endif %}
+                            <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg {% if exam.is_free %}bg-emerald-100 text-emerald-950 border border-emerald-300{% else %}bg-amber-100 text-amber-950 border border-amber-300{% endif %}">
+                                {% if exam.is_free %}Gratuit{% else %}Pass semestre{% endif %}
                             </span>
-                            <span class="text-xs font-bold text-slate-400 dark:text-slate-500">
+                            <span class="text-xs font-bold text-slate-600">
                                 {{ exam.year|default:exam.created_at|date:"Y" }}
                             </span>
                         </div>
 
-                        <h3 class="text-sm font-extrabold text-[#071A49] dark:text-slate-100 mb-1 line-clamp-2">
+                        <h3 class="text-sm font-black text-[#071A49] mb-1 line-clamp-2">
                             {{ exam.title }}
                         </h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mb-3">
+                        <p class="text-xs text-slate-700 font-semibold mb-3">
                             {{ exam.subject.name|default:"UE" }} • {{ exam.filiere.name|default:"" }}
                         </p>
                     </div>
 
-                    <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                        <span class="text-[11px] text-slate-400 dark:text-slate-500 font-semibold truncate max-w-[170px]">
-                            <i class="fa-solid fa-university text-slate-300 dark:text-slate-600 mr-1"></i>
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                        <span class="text-[11px] text-slate-700 font-bold truncate max-w-[170px]">
+                            <i class="fa-solid fa-university text-[#2563EB] mr-1"></i>
                             {{ exam.filiere.school.code|default:exam.filiere.school.name|default:"Université" }}
                         </span>
-                        <a href="{% url 'exams:detail' exam.pk %}" class="text-xs font-extrabold text-[#2563EB] dark:text-blue-400 hover:underline flex items-center space-x-1 shrink-0">
+                        <a href="{% url 'exams:detail' exam.pk %}" class="text-xs font-black text-[#2563EB] hover:underline flex items-center space-x-1 shrink-0">
                             <span>Consulter</span>
                             <i class="fa-solid fa-chevron-right text-[9px]"></i>
                         </a>
@@ -668,7 +595,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
             {% empty %}
-            <div class="col-span-full bg-white rounded-2xl p-8 text-center text-slate-400 text-xs italic border border-slate-200">
+            <div class="col-span-full bg-white rounded-2xl p-8 text-center text-slate-500 text-xs italic border-2 border-slate-200">
                 Aucune épreuve publiée pour le moment.
             </div>
             {% endfor %}
@@ -677,38 +604,38 @@ document.addEventListener('DOMContentLoaded', function() {
         <!-- TAB CONTENT 2: SUMMARIES -->
         <div id="showcase-summaries" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {% for summary in latest_summaries %}
-            <div class="bg-gradient-to-br from-slate-50/50 to-white hover:from-purple-50/30 hover:to-white border border-slate-200/90 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-purple-300 transition-all flex flex-col justify-between">
+            <div class="bg-white border-2 border-purple-100 hover:border-purple-400 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-3">
-                        <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg bg-purple-100 text-purple-900">
-                            Fiche Résumé
+                        <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg bg-purple-100 text-purple-950 border border-purple-200">
+                            Fiche résumé
                         </span>
-                        <span class="text-xs font-bold text-slate-400">
+                        <span class="text-xs font-bold text-slate-600">
                             {{ summary.created_at|date:"d/m/Y" }}
                         </span>
                     </div>
 
-                    <h3 class="text-sm font-extrabold text-[#071A49] mb-1 line-clamp-2">
+                    <h3 class="text-sm font-black text-[#071A49] mb-1 line-clamp-2">
                         {{ summary.title }}
                     </h3>
-                    <p class="text-xs text-slate-500 font-medium mb-3">
+                    <p class="text-xs text-slate-700 font-semibold mb-3">
                         UE : {{ summary.subject.name }}
                     </p>
                 </div>
 
                 <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
-                    <span class="text-[11px] text-slate-400 font-semibold truncate max-w-[170px]">
-                        <i class="fa-solid fa-book-open text-purple-400 mr-1"></i>
+                    <span class="text-[11px] text-slate-700 font-bold truncate max-w-[170px]">
+                        <i class="fa-solid fa-book-open text-purple-600 mr-1"></i>
                         {{ summary.subject.semester.filiere.name|default:"Licence" }}
                     </span>
-                    <a href="{% url 'content:summary_detail' summary.slug %}" class="text-xs font-extrabold text-purple-600 hover:underline flex items-center space-x-1 shrink-0">
+                    <a href="{% url 'content:summary_detail' summary.slug %}" class="text-xs font-black text-purple-700 hover:underline flex items-center space-x-1 shrink-0">
                         <span>Lire la fiche</span>
                         <i class="fa-solid fa-chevron-right text-[9px]"></i>
                     </a>
                 </div>
             </div>
             {% empty %}
-            <div class="col-span-full bg-white rounded-2xl p-8 text-center text-slate-400 text-xs italic border border-slate-200">
+            <div class="col-span-full bg-white rounded-2xl p-8 text-center text-slate-500 text-xs italic border-2 border-slate-200">
                 Aucun résumé de cours disponible pour le moment.
             </div>
             {% endfor %}
@@ -717,31 +644,31 @@ document.addEventListener('DOMContentLoaded', function() {
         <!-- TAB CONTENT 3: FILIERES -->
         <div id="showcase-filieres" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {% for filiere in featured_filieres %}
-            <div class="bg-gradient-to-br from-slate-50/50 to-white hover:from-blue-50/30 hover:to-white border border-slate-200/90 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-blue-400 transition-all flex flex-col justify-between">
+            <div class="bg-white border-2 border-blue-100 hover:border-blue-400 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
                 <div>
                     <div class="flex items-center space-x-3 mb-3">
-                        <div class="w-10 h-10 rounded-xl bg-blue-50 text-[#2563EB] font-black text-sm flex items-center justify-center shrink-0">
+                        <div class="w-10 h-10 rounded-xl bg-blue-100 text-[#2563EB] font-black text-sm flex items-center justify-center shrink-0">
                             <i class="fa-solid fa-graduation-cap"></i>
                         </div>
                         <div>
-                            <h3 class="text-sm font-extrabold text-[#071A49] leading-tight">{{ filiere.name }}</h3>
-                            <p class="text-[11px] text-slate-400 font-medium">{{ filiere.school.name }}</p>
+                            <h3 class="text-sm font-black text-[#071A49] leading-tight">{{ filiere.name }}</h3>
+                            <p class="text-xs text-slate-700 font-semibold">{{ filiere.school.name }}</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
-                    <span class="text-xs font-extrabold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">
-                        {{ filiere.exams_num }} Épreuve{{ filiere.exams_num|pluralize }}
+                    <span class="text-xs font-black text-[#2563EB] bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg">
+                        {{ filiere.exams_num }} épreuve{{ filiere.exams_num|pluralize }}
                     </span>
-                    <a href="{% url 'academics:semestres' filiere.pk %}" class="text-xs font-extrabold text-[#2563EB] hover:underline flex items-center space-x-1 shrink-0">
+                    <a href="{% url 'academics:semestres' filiere.pk %}" class="text-xs font-black text-[#2563EB] hover:underline flex items-center space-x-1 shrink-0">
                         <span>Voir les semestres</span>
                         <i class="fa-solid fa-chevron-right text-[9px]"></i>
                     </a>
                 </div>
             </div>
             {% empty %}
-            <div class="col-span-full bg-white rounded-2xl p-8 text-center text-slate-400 text-xs italic border border-slate-200">
+            <div class="col-span-full bg-white rounded-2xl p-8 text-center text-slate-500 text-xs italic border-2 border-slate-200">
                 Aucune filière configurée.
             </div>
             {% endfor %}
@@ -758,12 +685,12 @@ function switchShowcaseTab(tabName) {
         if (t === tabName) {
             if (content) content.classList.remove('hidden');
             if (btn) {
-                btn.className = 'px-4 py-2 rounded-xl text-xs font-extrabold transition-all bg-[#071A49] text-white shadow-xs';
+                btn.className = 'px-4 py-2 rounded-xl text-xs font-black transition-all bg-[#071A49] text-white shadow-xs';
             }
         } else {
             if (content) content.classList.add('hidden');
             if (btn) {
-                btn.className = 'px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 transition-all';
+                btn.className = 'px-4 py-2 rounded-xl text-xs font-black text-slate-700 hover:text-[#071A49] transition-all';
             }
         }
     });
@@ -771,52 +698,52 @@ function switchShowcaseTab(tabName) {
 </script>
 
 <!-- 5. HOW ARCHIVEX WORKS -->
-<section class="py-16 bg-slate-100/60 border-y border-slate-200/80">
+<section class="py-16 bg-white border-y border-slate-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="mb-12 text-left">
-            <span class="text-xs font-bold uppercase tracking-wider text-[#2563EB] mb-1 block">Parcours étudiant</span>
-            <h2 class="text-2xl sm:text-3xl font-extrabold text-[#071A49] tracking-tight">Comment fonctionne ArchivEx ?</h2>
+            <span class="text-xs font-black uppercase tracking-wider text-[#2563EB] mb-1 block">Parcours étudiant</span>
+            <h2 class="text-2xl sm:text-3xl font-black text-[#071A49] tracking-tight">Comment fonctionne ArchivEx ?</h2>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-            <div class="bg-white dark:bg-[#0f172a] hover:border-blue-300 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex flex-col items-start transition-colors">
-                <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-black text-xs flex items-center justify-center mb-3">
+            <div class="bg-white hover:border-blue-400 border-2 border-slate-200 p-5 rounded-2xl shadow-sm flex flex-col items-start transition-colors">
+                <div class="w-8 h-8 rounded-xl bg-blue-600 text-white font-black text-xs flex items-center justify-center mb-3 shadow-xs">
                     01
                 </div>
-                <h3 class="text-sm font-extrabold text-[#071A49] dark:text-white mb-1">Inscrivez-vous</h3>
-                <p class="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">Créez votre compte étudiant rapidement et en toute sécurité.</p>
+                <h3 class="text-sm font-black text-[#071A49] mb-1">Inscrivez-vous</h3>
+                <p class="text-xs text-slate-700 font-medium leading-relaxed">Créez votre compte étudiant en toute sécurité.</p>
             </div>
 
-            <div class="bg-white dark:bg-[#0f172a] hover:border-indigo-300 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex flex-col items-start transition-colors">
-                <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-black text-xs flex items-center justify-center mb-3">
+            <div class="bg-white hover:border-indigo-400 border-2 border-slate-200 p-5 rounded-2xl shadow-sm flex flex-col items-start transition-colors">
+                <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-black text-xs flex items-center justify-center mb-3 shadow-xs">
                     02
                 </div>
-                <h3 class="text-sm font-extrabold text-[#071A49] dark:text-white mb-1">Configurez votre profil</h3>
-                <p class="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">Indiquez votre école et votre filière d'études.</p>
+                <h3 class="text-sm font-black text-[#071A49] mb-1">Votre profil</h3>
+                <p class="text-xs text-slate-700 font-medium leading-relaxed">Indiquez votre école et votre filière d'études.</p>
             </div>
 
-            <div class="bg-white dark:bg-[#0f172a] hover:border-purple-300 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex flex-col items-start transition-colors">
-                <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-700 font-black text-xs flex items-center justify-center mb-3">
+            <div class="bg-white hover:border-purple-400 border-2 border-slate-200 p-5 rounded-2xl shadow-sm flex flex-col items-start transition-colors">
+                <div class="w-8 h-8 rounded-xl bg-purple-600 text-white font-black text-xs flex items-center justify-center mb-3 shadow-xs">
                     03
                 </div>
-                <h3 class="text-sm font-extrabold text-[#071A49] dark:text-white mb-1">Explorez vos matières</h3>
-                <p class="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">Accédez à votre programme organisé par semestre et Unité d'Enseignement.</p>
+                <h3 class="text-sm font-black text-[#071A49] mb-1">Vos matières</h3>
+                <p class="text-xs text-slate-700 font-medium leading-relaxed">Accédez à votre programme par semestre et UE.</p>
             </div>
 
-            <div class="bg-white dark:bg-[#0f172a] hover:border-fuchsia-300 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex flex-col items-start transition-colors">
-                <div class="w-8 h-8 rounded-full bg-fuchsia-100 text-fuchsia-700 font-black text-xs flex items-center justify-center mb-3">
+            <div class="bg-white hover:border-fuchsia-400 border-2 border-slate-200 p-5 rounded-2xl shadow-sm flex flex-col items-start transition-colors">
+                <div class="w-8 h-8 rounded-xl bg-fuchsia-600 text-white font-black text-xs flex items-center justify-center mb-3 shadow-xs">
                     04
                 </div>
-                <h3 class="text-sm font-extrabold text-[#071A49] dark:text-white mb-1">Consultez les ressources</h3>
-                <p class="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">Consultez les sujets d'examens, résumés et fiches de travail.</p>
+                <h3 class="text-sm font-black text-[#071A49] mb-1">Ressources</h3>
+                <p class="text-xs text-slate-700 font-medium leading-relaxed">Consultez les épreuves, corrigés et fiches.</p>
             </div>
 
-            <div class="bg-white dark:bg-[#0f172a] hover:border-rose-300 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex flex-col items-start transition-colors">
-                <div class="w-8 h-8 rounded-full bg-rose-100 text-rose-700 font-black text-xs flex items-center justify-center mb-3">
+            <div class="bg-white hover:border-rose-400 border-2 border-slate-200 p-5 rounded-2xl shadow-sm flex flex-col items-start transition-colors">
+                <div class="w-8 h-8 rounded-xl bg-rose-600 text-white font-black text-xs flex items-center justify-center mb-3 shadow-xs">
                     05
                 </div>
-                <h3 class="text-sm font-extrabold text-[#071A49] dark:text-white mb-1">Révisez efficacement</h3>
-                <p class="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">Préparez vos sessions d'examens sereinement avec des bases solides.</p>
+                <h3 class="text-sm font-black text-[#071A49] mb-1">Révisez serein</h3>
+                <p class="text-xs text-slate-700 font-medium leading-relaxed">Préparez vos examens avec des bases solides.</p>
             </div>
         </div>
     </div>
@@ -824,19 +751,19 @@ function switchShowcaseTab(tabName) {
 
 <!-- 6. ARCHIVEX PASS SECTION -->
 <section class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="bg-gradient-to-br from-amber-50/40 via-white to-white border border-amber-100/80 rounded-3xl p-8 sm:p-12 shadow-sm grid grid-cols-1 lg:grid-cols-12 gap-8 items-center transition-all hover:shadow-md hover:border-amber-200/80">
+    <div class="bg-gradient-to-br from-amber-50/80 via-white to-white border-2 border-amber-200 rounded-3xl p-8 sm:p-12 shadow-sm grid grid-cols-1 lg:grid-cols-12 gap-8 items-center transition-all hover:shadow-md">
         <div class="lg:col-span-8 space-y-4">
-            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-100/80 border border-amber-200 text-xs font-bold text-amber-800">
-                <i class="fa-solid fa-id-card text-amber-600" aria-hidden="true"></i>
+            <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-amber-100 border border-amber-300 text-xs font-black text-amber-950">
+                <i class="fa-solid fa-id-card text-amber-700" aria-hidden="true"></i>
                 <span>Accès complet par semestre</span>
             </div>
-            <h2 class="text-2xl sm:text-3xl font-extrabold text-amber-950 tracking-tight">
-                Le Pass Semestre ArchivEx
+            <h2 class="text-2xl sm:text-3xl font-black text-amber-950 tracking-tight">
+                Le pass semestre ArchivEx
             </h2>
-            <p class="text-slate-600 text-xs sm:text-sm leading-relaxed font-medium">
-                Le Pass Semestre permet de débloquer l'intégralité des épreuves Premium et des corrigés détaillés d'un semestre spécifique. Il permet de financer directement le travail de numérisation, de tri et d'indexation académique des sujets.
+            <p class="text-slate-700 text-xs sm:text-sm leading-relaxed font-semibold">
+                Le pass semestre permet de débloquer l'intégralité des épreuves et des corrigés détaillés d'un semestre spécifique. Il permet de financer directement le travail de numérisation, de tri et d'indexation académique des sujets.
             </p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs font-bold text-amber-900/80">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs font-bold text-slate-800">
                 <div class="flex items-center space-x-2">
                     <i class="fa-solid fa-circle-check text-emerald-600" aria-hidden="true"></i>
                     <span>Accès illimité aux épreuves du semestre</span>
@@ -847,16 +774,16 @@ function switchShowcaseTab(tabName) {
                 </div>
             </div>
         </div>
-        <div class="lg:col-span-4 flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-amber-200/50 shadow-xs text-center">
-            <p class="text-xs font-bold uppercase tracking-wider text-amber-600/80 mb-1">Formule unique</p>
-            <p class="text-2xl sm:text-3xl font-black text-amber-950 mb-2">Pass Semestre</p>
-            <p class="text-[11px] font-semibold text-slate-500 mb-6">Valable pour toute la durée du semestre en cours.</p>
+        <div class="lg:col-span-4 flex flex-col items-center justify-center p-6 bg-white rounded-2xl border-2 border-amber-200 shadow-xs text-center">
+            <p class="text-xs font-black uppercase tracking-wider text-amber-700 mb-1">Formule unique</p>
+            <p class="text-2xl sm:text-3xl font-black text-amber-950 mb-2">Pass semestre</p>
+            <p class="text-xs font-semibold text-slate-600 mb-6">Valable pour toute la durée du semestre en cours.</p>
             {% if user.is_authenticated %}
-                <a href="{% url 'accounts:dashboard' %}" class="btn-primary text-xs px-6 py-3 font-extrabold rounded-xl w-full text-center">
-                    Consulter mon Pass
+                <a href="{% url 'accounts:dashboard' %}" class="btn-primary text-xs px-6 py-3 font-black rounded-xl w-full text-center">
+                    Consulter mon pass
                 </a>
             {% else %}
-                <a href="{% url 'accounts:register' %}" class="btn-primary text-xs px-6 py-3 font-extrabold rounded-xl w-full text-center">
+                <a href="{% url 'accounts:register' %}" class="btn-primary text-xs px-6 py-3 font-black rounded-xl w-full text-center">
                     Créer un compte pour activer
                 </a>
             {% endif %}
@@ -868,101 +795,98 @@ function switchShowcaseTab(tabName) {
 <section class="py-16 bg-[#071A49] text-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
         <div class="md:col-span-8 space-y-4">
-            <span class="text-xs font-bold uppercase tracking-widest text-[#3B82F6] block">Guide Étudiant & Méthodologie</span>
-            <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <span class="text-xs font-black uppercase tracking-widest text-[#60A5FA] block">Guide étudiant et méthodologie</span>
+            <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
                 Accompagner les étudiants au-delà des simples documents
             </h2>
-            <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
-                Avoir accès aux épreuves ne suffit pas : encore faut-il savoir comment les travailler efficacement. Notre Guide Étudiant propose des conseils pratiques sur la prise de notes, l'organisation du temps de travail et la gestion du stress lors des examens.
+            <p class="text-slate-200 text-xs sm:text-sm leading-relaxed font-medium">
+                Avoir accès aux épreuves ne suffit pas : encore faut-il savoir comment les travailler efficacement. Notre guide étudiant propose des conseils pratiques sur la prise de notes, l'organisation du temps de travail et la gestion du stress lors des examens.
             </p>
         </div>
         <div class="md:col-span-4 flex justify-start md:justify-end">
-            <a href="{% url 'content:student_guide' %}" class="btn-secondary text-xs sm:text-sm px-6 py-3.5 font-extrabold rounded-xl flex items-center space-x-2 bg-white text-[#071A49] hover:bg-slate-100 transition-colors">
+            <a href="{% url 'content:student_guide' %}" class="btn-secondary text-xs sm:text-sm px-6 py-3.5 font-black rounded-xl flex items-center space-x-2 bg-white text-[#071A49] hover:bg-slate-100 transition-colors shadow-md">
                 <i class="fa-solid fa-graduation-cap text-blue-600" aria-hidden="true"></i>
-                <span>Consulter le Guide Étudiant</span>
+                <span>Consulter le guide étudiant</span>
             </a>
         </div>
     </div>
 </section>
 
-<!-- 7.5. PWA APPLICATION DOWNLOAD SECTION -->
-<section class="py-16 bg-gradient-to-br from-slate-900 via-[#071A49] to-blue-950 text-white relative overflow-hidden border-y border-blue-800/50">
-    <div class="absolute -top-24 -left-24 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
-
+<!-- 8. PWA APPLICATION DOWNLOAD SECTION -->
+<section class="py-16 bg-gradient-to-br from-[#061230] via-[#071A49] to-[#0A2260] text-white relative overflow-hidden border-y border-blue-800">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             <div class="lg:col-span-7 space-y-5">
-                <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold">
+                <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-900 border border-blue-400 text-blue-200 text-xs font-black">
                     <i class="fa-solid fa-mobile-screen-button"></i>
-                    <span>Application Web Progressive (PWA)</span>
+                    <span>Application web progressive</span>
                 </div>
-                <h2 class="text-3xl sm:text-4xl font-black tracking-tight leading-tight">
-                    Emportez <span class="text-[#3B82F6]">ArchivEx</span> partout avec vous, même hors-ligne
+                <h2 class="text-3xl sm:text-4xl font-black tracking-tight leading-tight text-white">
+                    Emportez <span class="text-[#60A5FA]">ArchivEx</span> partout avec vous, même hors-ligne
                 </h2>
-                <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
-                    Installez l'application directement sur votre smartphone (Android, iPhone) ou votre ordinateur (Windows, Mac) en 1 clic. Aucun téléchargement lourd depuis les stores : l'application pèse moins de 2 Mo et se lance instantanément.
+                <p class="text-slate-200 text-sm sm:text-base leading-relaxed font-medium">
+                    Installez l'application directement sur votre smartphone ou votre ordinateur en un clic. L'application est légère et se lance instantanément.
                 </p>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-                    <div class="bg-white/10 backdrop-blur border border-white/10 rounded-2xl p-3.5">
-                        <i class="fa-solid fa-bolt text-[#FBBF24] text-lg mb-2"></i>
-                        <h4 class="text-xs font-black">Accès instantané</h4>
-                        <p class="text-[11px] text-slate-300">Lancement direct depuis l'écran d'accueil</p>
+                    <div class="bg-[#0c2054] border border-blue-400/40 rounded-2xl p-4 shadow-sm hover:border-blue-400 transition-colors">
+                        <i class="fa-solid fa-bolt text-[#FBBF24] text-xl mb-2 block"></i>
+                        <h4 class="text-xs font-black text-white">Accès instantané</h4>
+                        <p class="text-[11px] text-slate-200 font-medium">Lancement direct depuis l'écran d'accueil</p>
                     </div>
-                    <div class="bg-white/10 backdrop-blur border border-white/10 rounded-2xl p-3.5">
-                        <i class="fa-solid fa-wifi-slash text-emerald-400 text-lg mb-2"></i>
-                        <h4 class="text-xs font-black">Mode hors-ligne</h4>
-                        <p class="text-[11px] text-slate-300">Vos révisions accessibles partout</p>
+                    <div class="bg-[#0c2054] border border-blue-400/40 rounded-2xl p-4 shadow-sm hover:border-blue-400 transition-colors">
+                        <i class="fa-solid fa-wifi-slash text-emerald-400 text-xl mb-2 block"></i>
+                        <h4 class="text-xs font-black text-white">Mode hors-ligne</h4>
+                        <p class="text-[11px] text-slate-200 font-medium">Vos révisions accessibles partout</p>
                     </div>
-                    <div class="bg-white/10 backdrop-blur border border-white/10 rounded-2xl p-3.5">
-                        <i class="fa-solid fa-shield-halved text-blue-400 text-lg mb-2"></i>
-                        <h4 class="text-xs font-black">100% Sécurisé</h4>
-                        <p class="text-[11px] text-slate-300">Mises à jour automatiques transparentes</p>
+                    <div class="bg-[#0c2054] border border-blue-400/40 rounded-2xl p-4 shadow-sm hover:border-blue-400 transition-colors">
+                        <i class="fa-solid fa-shield-halved text-blue-400 text-xl mb-2 block"></i>
+                        <h4 class="text-xs font-black text-white">100% sécurisé</h4>
+                        <p class="text-[11px] text-slate-200 font-medium">Mises à jour transparentes</p>
                     </div>
                 </div>
 
                 <div class="pt-4 flex flex-col sm:flex-row items-center gap-3">
-                    <button type="button" class="pwa-install-trigger w-full sm:w-auto bg-[#2563EB] hover:bg-blue-600 active:scale-95 text-white font-black text-sm px-8 py-4 rounded-2xl shadow-xl shadow-blue-600/30 flex items-center justify-center space-x-3 transition-all">
+                    <button type="button" class="pwa-install-trigger w-full sm:w-auto bg-[#2563EB] hover:bg-blue-600 active:scale-95 text-white font-black text-sm px-8 py-4 rounded-2xl shadow-xl shadow-blue-600/40 flex items-center justify-center space-x-3 transition-all">
                         <i class="fa-solid fa-cloud-arrow-down text-lg"></i>
-                        <span>Télécharger l'application ArchivEx</span>
+                        <span>Télécharger l'application</span>
                     </button>
-                    <span class="text-xs text-slate-400 font-medium">Compatible Android • iOS • Windows • Mac</span>
+                    <span class="text-xs text-slate-300 font-bold">Compatible Android • iOS • Windows • Mac</span>
                 </div>
             </div>
 
             <div class="lg:col-span-5 flex justify-center">
-                <div class="relative bg-gradient-to-b from-blue-900/60 to-slate-900/80 border border-blue-500/30 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl text-center backdrop-blur-xl">
-                    <div class="w-24 h-24 mx-auto rounded-3xl bg-[#071A49] border-2 border-blue-400/40 p-2 shadow-2xl mb-4 flex items-center justify-center">
+                <div class="relative bg-[#08173d] border-2 border-blue-400/40 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl text-center">
+                    <div class="w-24 h-24 mx-auto rounded-3xl bg-[#071A49] border-2 border-blue-400/60 p-2 shadow-2xl mb-4 flex items-center justify-center">
                         <img src="{% static 'icons/icon-192.png' %}" alt="ArchivEx PWA" class="w-full h-full object-cover rounded-2xl">
                     </div>
-                    <h3 class="text-lg font-black text-white mb-1">ArchivEx Mobile & Desktop</h3>
-                    <p class="text-xs text-slate-300 mb-5">Prêt à être installé sur votre appareil</p>
-                    <button type="button" class="pwa-install-trigger w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm py-3 px-4 rounded-xl shadow-lg flex items-center justify-center space-x-2 transition-all">
+                    <h3 class="text-lg font-black text-white mb-1">ArchivEx mobile & ordinateur</h3>
+                    <p class="text-xs text-slate-200 font-semibold mb-5">Prêt à être installé sur votre appareil</p>
+                    <button type="button" class="pwa-install-trigger w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black text-sm py-3.5 px-5 rounded-xl shadow-lg flex items-center justify-center space-x-2 transition-all">
                         <i class="fa-solid fa-download"></i>
                         <span>Installer maintenant</span>
                     </button>
-                    <p class="text-[10px] text-slate-400 mt-3">Gratuit • Sans passer par le Play Store / App Store</p>
+                    <p class="text-[11px] text-slate-300 font-semibold mt-3">Gratuit • Sans passer par les stores</p>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- 8. FINAL CTA -->
+<!-- 9. FINAL CTA -->
 <section class="py-16 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-    <h2 class="text-2xl sm:text-3xl font-extrabold text-[#071A49] mb-4">
+    <h2 class="text-2xl sm:text-3xl font-black text-[#071A49] mb-4">
         Prêt à mieux préparer votre semestre ?
     </h2>
-    <p class="text-slate-600 text-xs sm:text-sm leading-relaxed mb-8 max-w-xl mx-auto">
+    <p class="text-slate-700 text-xs sm:text-sm leading-relaxed mb-8 max-w-xl mx-auto font-semibold">
         Rejoignez les étudiants qui utilisent ArchivEx pour organiser leurs révisions et aborder leurs examens en toute confiance.
     </p>
     {% if not user.is_authenticated %}
-        <a href="{% url 'accounts:register' %}" class="btn-primary text-xs sm:text-sm px-8 py-3.5 font-extrabold rounded-xl inline-block shadow-md">
+        <a href="{% url 'accounts:register' %}" class="btn-primary text-xs sm:text-sm px-8 py-3.5 font-black rounded-xl inline-block shadow-md">
             Créer un compte gratuitement
         </a>
     {% else %}
-        <a href="{% url 'academics:filieres' %}" class="btn-primary text-xs sm:text-sm px-8 py-3.5 font-extrabold rounded-xl inline-block shadow-md">
+        <a href="{% url 'academics:filieres' %}" class="btn-primary text-xs sm:text-sm px-8 py-3.5 font-black rounded-xl inline-block shadow-md">
             Accéder à mes matières
         </a>
     {% endif %}

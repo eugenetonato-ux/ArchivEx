@@ -111,7 +111,7 @@ class Phase11AdministrationTests(TestCase):
         self.client.login(username="staff_eneam", password="Password123!")
         res = self.client.get(reverse("contributors:admin_dashboard"))
         self.assertEqual(res.status_code, 200)
-        self.assertContains(res, "Administration")
+        self.assertContains(res, "Portail administrateur")
         self.assertContains(res, "ENEAM")
 
     def test_active_university_context_session_persistence(self):

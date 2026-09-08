@@ -53,9 +53,6 @@
         <a href="{% url 'notifications:list' %}?filter=NEW_SUMMARY" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors {% if selected_filter == 'NEW_SUMMARY' %}bg-[#071A49] text-white{% else %}bg-white border border-slate-200 text-slate-600 hover:border-slate-300{% endif %}">
             Résumés
         </a>
-        <a href="{% url 'notifications:list' %}?filter=NEW_GUIDE" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors {% if selected_filter == 'NEW_GUIDE' %}bg-[#071A49] text-white{% else %}bg-white border border-slate-200 text-slate-600 hover:border-slate-300{% endif %}">
-            Guides
-        </a>
         <a href="{% url 'notifications:list' %}?filter=PAYMENT" class="px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors {% if selected_filter == 'PAYMENT' %}bg-[#071A49] text-white{% else %}bg-white border border-slate-200 text-slate-600 hover:border-slate-300{% endif %}">
             Paiements
         </a>
@@ -77,13 +74,11 @@
                         {% if notif.notification_type == 'NEW_EXAM' %}bg-blue-100 text-[#2563EB]
                         {% elif notif.notification_type == 'NEW_CORRECTION' %}bg-indigo-100 text-indigo-700
                         {% elif notif.notification_type == 'NEW_SUMMARY' %}bg-amber-100 text-amber-800
-                        {% elif notif.notification_type == 'NEW_GUIDE' %}bg-emerald-100 text-emerald-800
                         {% elif notif.notification_type == 'PAYMENT' %}bg-purple-100 text-purple-800
                         {% else %}bg-slate-100 text-slate-700{% endif %}">
                         {% if notif.notification_type == 'NEW_EXAM' %}<i class="fa-solid fa-file-lines"></i>
                         {% elif notif.notification_type == 'NEW_CORRECTION' %}<i class="fa-solid fa-square-check"></i>
                         {% elif notif.notification_type == 'NEW_SUMMARY' %}<i class="fa-solid fa-book"></i>
-                        {% elif notif.notification_type == 'NEW_GUIDE' %}<i class="fa-solid fa-compass"></i>
                         {% elif notif.notification_type == 'PAYMENT' %}<i class="fa-solid fa-credit-card"></i>
                         {% else %}<i class="fa-solid fa-bell"></i>{% endif %}
                     </div>
@@ -94,7 +89,6 @@
                                 {% if notif.notification_type == 'NEW_EXAM' %}bg-blue-100 text-[#2563EB]
                                 {% elif notif.notification_type == 'NEW_CORRECTION' %}bg-indigo-100 text-indigo-700
                                 {% elif notif.notification_type == 'NEW_SUMMARY' %}bg-amber-100 text-amber-800
-                                {% elif notif.notification_type == 'NEW_GUIDE' %}bg-emerald-100 text-emerald-800
                                 {% elif notif.notification_type == 'PAYMENT' %}bg-purple-100 text-purple-800
                                 {% else %}bg-slate-100 text-slate-700{% endif %}">
                                 {{ notif.get_notification_type_display }}
@@ -124,7 +118,6 @@
                                 {% if notif.notification_type == 'NEW_EXAM' %}Voir l'épreuve
                                 {% elif notif.notification_type == 'NEW_CORRECTION' %}Consulter le corrigé
                                 {% elif notif.notification_type == 'NEW_SUMMARY' %}Consulter le résumé
-                                {% elif notif.notification_type == 'NEW_GUIDE' %}Lire le guide
                                 {% elif notif.notification_type == 'PAYMENT' %}Accéder aux ressources
                                 {% elif notif.notification_type == 'NEW_SUPPORT' or notif.notification_type == 'SUPPORT_REPLY' %}Consulter le message support
                                 {% else %}Consulter{% endif %}
@@ -146,7 +139,7 @@
                 </div>
                 <h3 class="text-base font-black text-[#071A49] mb-1">Aucune notification</h3>
                 <p class="text-xs text-slate-500 font-medium max-w-sm mx-auto">
-                    Les nouvelles épreuves, résumés, guides et informations importantes de votre filière apparaîtront ici.
+                    Les nouvelles épreuves, corrigés, résumés de cours et informations importantes de votre filière apparaîtront ici.
                 </p>
             </div>
 

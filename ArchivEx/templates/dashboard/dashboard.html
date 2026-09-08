@@ -80,14 +80,12 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
         <!-- MAIN COLUMN (8 COLS ON DESKTOP) -->
-        <div class="lg:col-span-8 space-y-8">
-            
-            <!-- MON PARCOURS & CURRENT SEMESTER CARD -->
+        <div class="lg:col-span-8 spac            <!-- MA FILIÈRE & CURRENT SEMESTER CARD -->
             <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
                 <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
                     <div>
                         <span class="text-[10px] font-black uppercase tracking-wider text-[#2563EB] bg-blue-50 px-2.5 py-0.5 rounded-full">
-                            Mon Parcours Académique
+                            Ma Filière Universitaire
                         </span>
                         <h2 class="text-xl font-black text-[#071A49] mt-2">
                             {% if profile and profile.filiere %}{{ profile.filiere.name }}{% else %}Filière universitaire{% endif %}
@@ -160,7 +158,7 @@
                         </h2>
                     </div>
                     <p class="text-xs text-slate-500 font-medium">
-                        Aperçu global du volume d'épreuves, résumés et guides par filière.
+                        Aperçu global du volume d'épreuves et résumés par filière.
                     </p>
                 </div>
 
@@ -194,7 +192,7 @@
                         </a>
                     {% endfor %}
 
-                    {% for summary in recent_summaries|slice:":2" %}
+                    {% for summary in recent_summaries|slice:":3" %}
                         <a href="{% url 'content:summary_detail' pk=summary.id %}" class="p-4 rounded-2xl bg-amber-50/50 hover:bg-amber-50 border border-amber-200/70 flex items-center justify-between transition-colors group">
                             <div class="flex items-center space-x-3.5">
                                 <span class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 font-bold text-xs flex items-center justify-center flex-shrink-0">
@@ -208,21 +206,8 @@
                             <span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded">Résumé</span>
                         </a>
                     {% endfor %}
-
-                    {% for guide in recent_guides|slice:":1" %}
-                        <a href="{% url 'content:guide_detail' pk=guide.id %}" class="p-4 rounded-2xl bg-emerald-50/50 hover:bg-emerald-50 border border-emerald-200/70 flex items-center justify-between transition-colors group">
-                            <div class="flex items-center space-x-3.5">
-                                <span class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-center flex-shrink-0">
-                                    <i class="fa-solid fa-compass"></i>
-                                </span>
-                                <div>
-                                    <h4 class="text-xs font-bold text-[#071A49] group-hover:text-emerald-800 transition-colors">{{ guide.title }}</h4>
-                                    <p class="text-[11px] text-slate-500 font-medium">Guide · {{ guide.subject.name }}</p>
-                                </div>
-                            </div>
-                            <span class="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">Guide</span>
-                        </a>
-                    {% endfor %}
+                </div>
+            </div>ndfor %}
                 </div>
             </div>
 
@@ -387,7 +372,6 @@ document.addEventListener("DOMContentLoaded", function() {
     const labels = rawData.labels || [];
     const exams = rawData.exams || [];
     const summaries = rawData.summaries || [];
-    const guides = rawData.guides || [];
 
     new Chart(ctx, {
         type: 'bar',
@@ -407,14 +391,6 @@ document.addEventListener("DOMContentLoaded", function() {
                     data: summaries,
                     backgroundColor: 'rgba(16, 185, 129, 0.85)',
                     borderColor: 'rgb(16, 185, 129)',
-                    borderWidth: 1.5,
-                    borderRadius: 6,
-                },
-                {
-                    label: 'Guides d\'étude',
-                    data: guides,
-                    backgroundColor: 'rgba(147, 51, 234, 0.85)',
-                    borderColor: 'rgb(147, 51, 234)',
                     borderWidth: 1.5,
                     borderRadius: 6,
                 }

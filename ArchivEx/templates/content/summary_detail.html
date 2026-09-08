@@ -1,22 +1,22 @@
 {% extends "base/base.html" %}
 
-{% block title %}{{ summary.title }} — Résumé {{ summary.subject.name }}{% endblock %}
+{% block title %}{{ summary.title }} — Résumé {{ summary.subject.name }} | ArchivEx{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-sm mb-8">
         <div class="flex items-center gap-2 mb-4">
-            <span class="text-xs font-black text-[#2563EB] bg-blue-50 px-3 py-1 rounded-full uppercase">
+            <span class="text-xs font-bold text-[#2563EB] bg-blue-50 px-3 py-1 rounded-full uppercase">
                 {{ summary.subject.name }}
             </span>
             {% if summary.is_free %}
-                <span class="text-xs font-bold px-2.5 py-0.5 rounded bg-emerald-50 text-emerald-700">GRATUIT</span>
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded bg-emerald-50 text-emerald-700">Gratuit</span>
             {% else %}
-                <span class="text-xs font-bold px-2.5 py-0.5 rounded bg-amber-50 text-amber-700">PREMIUM</span>
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded bg-amber-50 text-amber-700">Pass requis</span>
             {% endif %}
         </div>
 
-        <h1 class="text-2xl sm:text-3xl font-black text-[#071A49] mb-4">{{ summary.title }}</h1>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#071A49] mb-4">{{ summary.title }}</h1>
 
         {% if summary.introduction %}
             <p class="text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-200/80 mb-6 italic leading-relaxed">
@@ -48,17 +48,17 @@
             <div class="bg-gradient-to-br from-[#071A49] via-[#0E2461] to-[#1D4ED8] rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-blue-900/40">
                 <div class="flex items-center space-x-2 text-amber-300 text-xs font-extrabold uppercase tracking-wider mb-2">
                     <i class="fa-solid fa-bolt text-amber-400"></i>
-                    <span>ARCHIVEX PASS</span>
+                    <span>Pass ArchivEx</span>
                     <span>·</span>
                     <span>{{ summary.subject.semester.filiere.name }}</span>
                 </div>
 
                 <h3 class="text-xl sm:text-2xl font-black text-white mb-2 leading-snug">
-                    Débloque ce résumé complet et tout ton semestre
+                    Débloquez ce résumé complet et tout votre semestre
                 </h3>
 
                 <p class="text-xs sm:text-sm text-blue-100 mb-6 leading-relaxed">
-                    Accède immédiatement au contenu rédigé de <strong class="text-white">{{ summary.title }}</strong> ainsi qu'à l'ensemble des ressources de ton semestre.
+                    Accédez immédiatement au contenu rédigé de <strong class="text-white">{{ summary.title }}</strong> ainsi qu'à l'ensemble des ressources de votre semestre.
                 </p>
 
                 <!-- DYNAMIC BENEFITS LIST -->
@@ -77,7 +77,7 @@
                         <span class="w-4 h-4 rounded-full bg-amber-400 text-[#071A49] flex items-center justify-center font-black text-[10px]">
                             <i class="fa-solid fa-check text-[9px]"></i>
                         </span>
-                        <span><strong>{{ summaries_count }} résumés de cours</strong> rédigés pour tes UE</span>
+                        <span><strong>{{ summaries_count }} résumés de cours</strong> rédigés pour vos UE</span>
                     </div>
                     {% endif %}
                 </div>
@@ -90,19 +90,19 @@
 
                     <a href="{% url 'payments:pass_semestre' summary.subject.semester.id %}" class="btn-gold w-full sm:w-auto py-3.5 px-6 text-xs sm:text-sm font-black rounded-2xl text-center shadow-lg shadow-amber-500/30 flex items-center justify-center space-x-1.5">
                         <i class="fa-solid fa-lock text-xs"></i>
-                        <span>Débloquer mon Pass Semestre</span>
+                        <span>Débloquer mon pass semestre</span>
                     </a>
                 </div>
 
 
                 <div class="mt-4 text-center">
                     <a href="{% url 'payments:pass_semestre' summary.subject.semester.id %}" class="text-xs text-blue-200 hover:text-white underline font-medium">
-                        En savoir plus sur les avantages du Pass
+                        En savoir plus sur les avantages du pass
                     </a>
                 </div>
             </div>
         {% endif %}
-
     </div>
 </div>
 {% endblock %}
+

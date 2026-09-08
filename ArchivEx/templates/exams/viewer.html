@@ -64,26 +64,20 @@
         </div>
     </div>
 
-    <!-- PROTECTED PDF EMBEDDED CANVAS / IFRAME VIEWER WITH ACTIVE SECURITY OVERLAY -->
-    <div id="viewer-container" class="w-full h-[750px] rounded-3xl overflow-hidden bg-slate-100 border border-slate-300 shadow-xl relative transition-all duration-200">
+    <!-- PROTECTED PDF EMBEDDED CANVAS / VIEWER WITH ACTIVE SECURITY OVERLAY -->
+    <div id="viewer-container" class="w-full h-[750px] rounded-3xl overflow-hidden bg-slate-900 border border-slate-300 shadow-xl relative transition-all duration-200">
         
-        <!-- LOADING SPINNER (DISPLAYED UNTIL IFRAME IS FULLY LOADED) -->
-        <div id="pdf-loader-spinner" class="absolute inset-0 z-10 bg-slate-50 flex flex-col items-center justify-center space-y-3 p-6 text-center">
-            <div class="w-10 h-10 border-4 border-blue-200 border-t-[#2563EB] rounded-full animate-spin"></div>
-            <p class="text-xs font-bold text-[#071A49]">Chargement sécurisé du document PDF...</p>
-        </div>
-
         <!-- TAB SWITCH SECURITY BLUR MASK (ONLY SHOWN WHEN USER SWITCHES BROWSER TABS) -->
         <div id="tab-blur-mask" class="absolute inset-0 z-40 bg-[#071a49]/95 backdrop-blur-md hidden flex-col items-center justify-center text-center p-6 transition-all duration-150">
             <div class="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-amber-300 flex items-center justify-center text-2xl mb-3 shadow-lg">
                 <i class="fa-solid fa-user-shield" aria-hidden="true"></i>
             </div>
             <h3 class="text-white font-extrabold text-lg mb-1">Protection ArchivEx Active</h3>
-            <p class="text-blue-200 text-xs max-w-md">Le document est temporairement flouté pendant que vous consultez un autre onglet du navigateur.</p>
+            <p class="text-blue-200 text-xs max-w-md">Le document est temporairement masqué pendant que vous consultez un autre onglet du navigateur.</p>
         </div>
 
         <!-- FLOATING DYNAMIC HTML WATERMARK OVERLAY (BURNS USER IDENTITY INTO SCREENSHOTS & PHOTOS) -->
-        <div class="absolute inset-0 z-20 pointer-events-none overflow-hidden select-none opacity-25 flex flex-wrap content-start p-4 gap-12" aria-hidden="true">
+        <div class="absolute inset-0 z-20 pointer-events-none overflow-hidden select-none opacity-20 flex flex-wrap content-start p-4 gap-12" aria-hidden="true">
             {% for i in "123456789012" %}
                 <div class="transform -rotate-12 text-slate-400 text-xs font-black tracking-widest uppercase">
                     {{ request.user.get_full_name|default:request.user.username }} • {{ request.user.email }} • ArchivEx
@@ -91,12 +85,22 @@
             {% endfor %}
         </div>
 
-        <iframe id="pdf-frame" src="{{ stream_url }}" onload="const s=document.getElementById('pdf-loader-spinner'); if(s) s.classList.add('hidden');" class="w-full h-full border-0 no-select relative z-30" title="Lecteur de document académique sécurisé"></iframe>
+        <!-- INLINE PDF.JS CONTAINER (NO EXTERNAL BROWSER REDIRECTION ON MOBILE) -->
+        <div id="pdf-viewer-mount" class="w-full h-full relative z-30"></div>
     </div>
 
 </div>
 
+<script src="{% static 'js/pdf-viewer.js' %}"></script>
 <script>
+    // Initialize Inline Secure PDF Viewer
+    document.addEventListener('DOMContentLoaded', () => {
+        initArchivexPdfViewer('pdf-viewer-mount', '{{ stream_url }}', {
+            studentName: '{{ request.user.get_full_name|default:request.user.username|escapejs }}',
+            watermarkText: '{{ request.user.email|escapejs }}'
+        });
+    });
+
     // 1. SMART TAB SWITCH PROTECTION (FLOUTAGE SEULEMENT LORSQU'ON QUITTE L'ONGLET)
     const tabBlurMask = document.getElementById('tab-blur-mask');
     document.addEventListener('visibilitychange', () => {

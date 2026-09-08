@@ -265,73 +265,15 @@ def execute_intelligent_search(query_string, category="all", user=None):
         summaries_results.sort(key=lambda x: x["score"], reverse=True)
         total_results_count += len(summaries_results)
 
-    # 4. GUIDES
-    if category in ["all", "guides"]:
-        gd_q = Q()
-        for v in all_variants:
-            gd_q |= Q(title__icontains=v) | Q(introduction__icontains=v) | Q(subject__name__icontains=v)
-
-        gd_qs = Guide.objects.filter(publication_status="PUBLISHED").filter(gd_q).select_related(
-            "subject", "subject__semester", "subject__semester__filiere", "author"
-        ).distinct()
-
-        for gd in gd_qs:
-            has_access = can_user_access(user, gd)
-            is_priority = bool(user_filiere and gd.subject.semester.filiere_id == user_filiere.id)
-            score = compute_relevance_score(
-                item_title=gd.title,
-                item_subject_name=gd.subject.name if gd.subject else "",
-                item_desc=gd.introduction or "",
-                q_raw=q_raw,
-                tokens=raw_tokens,
-                is_priority=is_priority,
-            )
-            guides_results.append({
-                "object": gd,
-                "has_access": has_access,
-                "is_priority": is_priority,
-                "score": score,
-            })
-        guides_results.sort(key=lambda x: x["score"], reverse=True)
-        total_results_count += len(guides_results)
-
-    # 5. ARTICLES
-    if category in ["all", "articles"]:
-        art_q = Q()
-        for v in all_variants:
-            art_q |= Q(title__icontains=v) | Q(summary__icontains=v) | Q(content__icontains=v)
-
-        art_qs = Article.objects.filter(publication_status="PUBLISHED").filter(art_q).select_related(
-            "target_school", "target_filiere", "author"
-        ).distinct()
-
-        for art in art_qs:
-            is_priority = bool(user_school and art.target_school_id == user_school.id)
-            score = compute_relevance_score(
-                item_title=art.title,
-                item_subject_name=art.target_filiere.name if art.target_filiere else "",
-                item_desc=art.summary or art.content or "",
-                q_raw=q_raw,
-                tokens=raw_tokens,
-                is_priority=is_priority,
-            )
-            articles_results.append({
-                "object": art,
-                "has_access": True,
-                "is_priority": is_priority,
-                "score": score,
-            })
-        articles_results.sort(key=lambda x: x["score"], reverse=True)
-        total_results_count += len(articles_results)
-
     return {
         "q": q_raw,
         "selected_category": category,
         "subjects_results": subjects_results,
         "exams_results": exams_results,
         "summaries_results": summaries_results,
-        "guides_results": guides_results,
-        "articles_results": articles_results,
+        "guides_results": [],
+        "articles_results": [],
         "total_results_count": total_results_count,
         "used_expanded_search": used_expanded_search,
     }
+

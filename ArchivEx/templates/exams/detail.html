@@ -25,23 +25,23 @@
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6">
             <div>
                 <div class="flex items-center space-x-2 mb-3 flex-wrap gap-1">
-                    <span class="badge-l1">{{ exam.filiere.level.name|default:"LICENCE 1" }}</span>
+                    <span class="badge-l1">{{ exam.filiere.level.name|default:"Licence 1" }}</span>
                     {% if has_access %}
                         <span class="badge-free text-[10px]">Gratuit</span>
                     {% else %}
                         <span class="badge-premium text-[10px] flex items-center space-x-1">
                             <i class="fa-solid fa-lock text-[9px]"></i>
-                            <span>Incluse dans le Pass</span>
+                            <span>Inclus dans le pass</span>
                         </span>
                     {% endif %}
-                    <span class="text-xs font-bold text-slate-500">{{ exam.year }} · {{ exam.get_exam_type_display|default:"Session Normale" }}</span>
+                    <span class="text-xs font-bold text-slate-500">{{ exam.year }} · {{ exam.get_exam_type_display|default:"Session normale" }}</span>
                 </div>
 
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-[#071A49] mb-2 flex items-center space-x-2">
                     <i class="fa-solid fa-file-lines text-[#2563EB]"></i>
                     <span>{{ exam.title }}</span>
                 </h1>
-                <p class="text-xs sm:text-sm font-bold text-[#2563EB]">UE — {{ exam.subject.name }} · {{ exam.filiere.school.name|default:"ENEAM" }} · {{ exam.filiere.name }} ({{ exam.semester.label }})</p>
+                <p class="text-xs sm:text-sm font-bold text-[#2563EB]">UE — {{ exam.subject.name }} · {{ exam.filiere.school.name|default:"Université" }} · {{ exam.filiere.name }} ({{ exam.semester.label }})</p>
             </div>
 
             <div class="flex items-center space-x-3 w-full md:w-auto">
@@ -68,9 +68,9 @@
                         <i class="fa-solid {% if has_access %}fa-circle-check{% else %}fa-lock{% endif %}"></i>
                     </div>
                     <div>
-                        <h2 class="text-base font-bold text-[#071A49]">Épreuve d'Examen</h2>
+                        <h2 class="text-base font-bold text-[#071A49]">Épreuve d'examen</h2>
                         <p class="text-xs {% if has_access %}text-emerald-600{% else %}text-amber-600{% endif %} font-semibold">
-                            {% if has_access %}PDF disponible et accessible{% else %}Accès réservé au Pass Semestre{% endif %}
+                            {% if has_access %}PDF disponible et accessible{% else %}Accès réservé aux abonnés du pass semestre{% endif %}
                         </p>
                     </div>
                 </div>
@@ -79,27 +79,27 @@
                     <div class="flex items-center space-x-3 w-full sm:w-auto">
                         <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=exam" class="btn-primary text-xs px-6 py-2.5 font-bold inline-flex items-center space-x-1.5">
                             <i class="fa-solid fa-eye text-xs" aria-hidden="true"></i>
-                            <span>Consulter l'Épreuve</span>
+                            <span>Consulter l'épreuve</span>
                         </a>
                     </div>
                 {% endif %}
             </div>
 
             {% if has_access %}
-                <!-- PDF PREVIEW / SECURE VIEWER EMBED -->
-                <div class="w-full h-[600px] rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 flex items-center justify-center">
-                    <iframe src="{% url 'exams:stream_watermarked_pdf' pk=exam.id %}?type=exam" class="w-full h-full border-0"></iframe>
+                <!-- PDF PREVIEW / SECURE INLINE VIEWER (NO EXTERNAL REDIRECTION ON MOBILE) -->
+                <div class="w-full h-[650px] rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 relative shadow-inner">
+                    <div id="detail-pdf-viewer-mount" class="w-full h-full"></div>
                 </div>
             {% else %}
                 <!-- LOCKED PREMIUM ACCESS CARD WITH VALUE SHOWCASE -->
                 <div class="bg-gradient-to-br from-[#071A49] via-[#0E2461] to-[#1D4ED8] rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-blue-900/40">
                     <div class="flex items-center justify-center space-x-2 text-amber-300 text-xs font-extrabold uppercase tracking-wider mb-2">
                         <i class="fa-solid fa-bolt text-amber-400"></i>
-                        <span>ARCHIVEX PASS · {{ exam.semester.label }}</span>
+                        <span>Pass ArchivEx · {{ exam.semester.label }}</span>
                     </div>
 
                     <h2 class="text-xl sm:text-2xl font-black text-white text-center mb-2">
-                        Débloque cette épreuve et tout ton semestre
+                        Débloquez cette épreuve et tout votre semestre
                     </h2>
 
                     <p class="text-xs text-blue-100 text-center max-w-lg mx-auto mb-6 leading-relaxed">
@@ -109,7 +109,7 @@
                     <div class="flex items-center justify-center">
                         <a href="{% url 'payments:pass_semestre' semester_id=exam.semester.id %}" class="btn-gold text-xs py-3 px-6 font-black rounded-xl shadow-lg hover:scale-105 transition-all text-center flex items-center justify-center space-x-2">
                             <i class="fa-solid fa-lock text-xs"></i>
-                            <span>Débloquer mon Pass Semestre (4 500 FCFA)</span>
+                            <span>Débloquer mon pass semestre (4 500 FCFA)</span>
                         </a>
                     </div>
                 </div>
@@ -126,8 +126,8 @@
                         </div>
                         <div>
                             <div class="flex items-center space-x-2">
-                                <h2 class="text-base font-bold text-[#071A49]">Correction Détaillée</h2>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800">Ressource Premium</span>
+                                <h2 class="text-base font-bold text-[#071A49]">Correction détaillée</h2>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">Ressource premium</span>
                             </div>
                             <p class="text-xs text-slate-500 font-medium mt-0.5">Solution rédigée par l'équipe pédagogique.</p>
                         </div>
@@ -137,7 +137,7 @@
                         <div class="flex items-center space-x-3 w-full sm:w-auto">
                             <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=correction" class="btn-primary text-xs px-6 py-2.5 font-bold inline-flex items-center space-x-1.5">
                                 <i class="fa-solid fa-eye text-xs" aria-hidden="true"></i>
-                                <span>Consulter la Correction</span>
+                                <span>Consulter la correction</span>
                             </a>
                         </div>
                     {% else %}
@@ -160,8 +160,8 @@
                         </div>
                         <div>
                             <div class="flex items-center space-x-2">
-                                <h2 class="text-base font-bold text-[#071A49]">Fiche Résumé de Cours</h2>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-purple-100 text-purple-800">Ressource Premium</span>
+                                <h2 class="text-base font-bold text-[#071A49]">Fiche résumé de cours</h2>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800">Ressource premium</span>
                             </div>
                             <p class="text-xs text-slate-500 font-medium mt-0.5">Synthèse des notions clés de la matière.</p>
                         </div>
@@ -171,7 +171,7 @@
                         <div class="flex items-center space-x-3 w-full sm:w-auto">
                             <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=summary" class="btn-primary text-xs px-6 py-2.5 font-bold inline-flex items-center space-x-1.5">
                                 <i class="fa-solid fa-eye text-xs" aria-hidden="true"></i>
-                                <span>Consulter la Fiche Résumé</span>
+                                <span>Consulter la fiche résumé</span>
                             </a>
                         </div>
                     {% else %}
@@ -186,4 +186,16 @@
 
     </div>
 </div>
+
+{% if has_access %}
+<script src="{% static 'js/pdf-viewer.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    initArchivexPdfViewer('detail-pdf-viewer-mount', '{% url "exams:stream_watermarked_pdf" pk=exam.id %}?type=exam', {
+        studentName: '{{ request.user.get_full_name|default:request.user.username|escapejs }}',
+        watermarkText: '{{ request.user.email|escapejs }}'
+    });
+});
+</script>
+{% endif %}
 {% endblock %}

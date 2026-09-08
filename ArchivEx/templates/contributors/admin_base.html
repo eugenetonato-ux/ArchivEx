@@ -341,7 +341,7 @@
         <!-- SIDEBAR NAVIGATION (FIXE & STICKY EN MD/LG) -->
         <aside id="admin-sidebar" class="hidden md:block w-64 space-y-3 md:sticky md:top-20 md:self-start md:h-[calc(100vh-5.5rem)] md:overflow-y-auto pr-2 select-none custom-scrollbar">
             <div class="bg-white dark:bg-[#121824] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-4 shadow-sm space-y-1">
-                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 pb-2 border-b border-slate-100 dark:border-[#1e293b]">Gestion Principale</p>
+                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 pb-2 border-b border-slate-100 dark:border-[#1e293b]">Gestion principale</p>
                 
                 <a href="{% url 'contributors:admin_dashboard' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
                     <i class="fa-solid fa-gauge w-4 text-center" aria-hidden="true"></i>
@@ -350,17 +350,17 @@
 
                 <a href="{% url 'contributors:library_index' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'library' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
                     <i class="fa-solid fa-cloud w-4 text-center text-sky-500" aria-hidden="true"></i>
-                    <span>Bibliothèque Cloud Storage</span>
+                    <span>Bibliothèque cloud</span>
                 </a>
 
                 <a href="{% url 'contributors:exam_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'epreuves' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
-                    <i class="fa-solid fa-paper-plane w-4 text-center text-blue-600" aria-hidden="true"></i>
-                    <span>Épreuves Publiées</span>
+                    <i class="fa-solid fa-file-lines w-4 text-center text-blue-600" aria-hidden="true"></i>
+                    <span>Épreuves publiées</span>
                 </a>
 
                 <a href="{% url 'contributors:completeness_overview' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'completeness' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
                     <i class="fa-solid fa-chart-pie w-4 text-center text-amber-500" aria-hidden="true"></i>
-                    <span>Complétude ressources</span>
+                    <span>Complétude des ressources</span>
                 </a>
 
                 <a href="{% url 'contributors:summary_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'resumes' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
@@ -370,12 +370,12 @@
 
                 <a href="{% url 'contributors:subject_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'matieres' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
                     <i class="fa-solid fa-layer-group w-4 text-center text-indigo-600" aria-hidden="true"></i>
-                    <span>Matières / UE</span>
+                    <span>Matières et UE</span>
                 </a>
             </div>
 
             <div class="bg-white dark:bg-[#121824] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-4 shadow-sm space-y-1">
-                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 pb-2 border-b border-slate-100 dark:border-[#1e293b]">Structure & Suivi</p>
+                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 pb-2 border-b border-slate-100 dark:border-[#1e293b]">Structure & suivi</p>
 
                 <a href="{% url 'contributors:structure_overview' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'structure' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
                     <i class="fa-solid fa-sitemap w-4 text-center text-slate-500" aria-hidden="true"></i>
@@ -389,12 +389,12 @@
 
                 <a href="{% url 'contributors:payment_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'paiements' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
                     <i class="fa-solid fa-credit-card w-4 text-center text-slate-500" aria-hidden="true"></i>
-                    <span>Pass & Paiements</span>
+                    <span>Pass & paiements</span>
                 </a>
 
                 <a href="{% url 'contributors:notification_create' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'notifications' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
                     <i class="fa-solid fa-paper-plane w-4 text-center text-slate-500" aria-hidden="true"></i>
-                    <span>Diffuser notification</span>
+                    <span>Diffuser une notification</span>
                 </a>
 
                 <a href="{% url 'contributors:admin_support_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'support' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
@@ -407,16 +407,16 @@
 
                 <a href="{% url 'contributors:site_logs_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'site-logs' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
                     <i class="fa-solid fa-clock-rotate-left w-4 text-center text-indigo-500" aria-hidden="true"></i>
-                    <span>Journal d'activité</span>
+                    <span>Journal des actions</span>
                 </a>
             </div>
 
             <div class="bg-white dark:bg-[#121824] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-4 shadow-sm space-y-1">
-                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 pb-2 border-b border-slate-100 dark:border-[#1e293b]">Personnalisation</p>
+                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 pb-2 border-b border-slate-100 dark:border-[#1e293b]">Paramètres</p>
 
                 <a href="{% url 'contributors:admin_settings' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'parametres' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
                     <i class="fa-solid fa-sliders w-4 text-center text-ax-accent" aria-hidden="true"></i>
-                    <span class="flex-1">Paramètres</span>
+                    <span class="flex-1">Paramètres du site</span>
                     <span class="w-2.5 h-2.5 rounded-full bg-ax-accent inline-block shadow-sm"></span>
                 </a>
             </div>

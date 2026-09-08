@@ -87,21 +87,19 @@ class GlobalSearchSystemTest(TestCase):
         self.assertEqual(res_auth.status_code, 200)
 
     def test_search_across_all_models_and_partial_matching(self):
-        """Search term 'prob' matches Subject, Exam, Summary, Guide, and Article case-insensitively."""
+        """Search term 'prob' matches Subject, Exam, and Summary case-insensitively."""
         res = self.client.get(reverse("academics:global_search") + "?q=prob")
         self.assertEqual(res.status_code, 200)
 
         subjects = [item["object"] for item in res.context["subjects_results"]]
         exams = [item["object"] for item in res.context["exams_results"]]
         summaries = [item["object"] for item in res.context["summaries_results"]]
-        guides = [item["object"] for item in res.context["guides_results"]]
-        articles = [item["object"] for item in res.context["articles_results"]]
 
         self.assertIn(self.subject, subjects)
         self.assertIn(self.exam_published, exams)
         self.assertIn(self.summary_published, summaries)
-        self.assertIn(self.guide_published, guides)
-        self.assertIn(self.article_published, articles)
+        self.assertEqual(len(res.context["guides_results"]), 0)
+        self.assertEqual(len(res.context["articles_results"]), 0)
 
     def test_draft_content_not_exposed_in_search(self):
         """Unpublished draft exams or content are never exposed in search results."""
@@ -196,7 +194,7 @@ class GlobalErrorPagesAndUIStatesTest(TestCase):
         res = self.client.get(reverse("exams:detail", kwargs={"pk": self.premium_exam.pk}))
         self.assertEqual(res.status_code, 200)
         # Should display Pass Semestre unlock CTA, not a 403 Forbidden page!
-        self.assertContains(res, "Débloque cette épreuve")
+        self.assertContains(res, "Débloquez cette épreuve")
         self.assertNotContains(res, "Accès refusé (403)")
 
     def test_zero_emoji_policy_in_error_pages(self):
@@ -219,15 +217,13 @@ class Phase10PublicAndSearchTests(TestCase):
         # Academic hierarchy setup
         self.school = School.objects.create(name="ENEAM", code="ENEAM", slug="eneam", is_active=True)
         self.level = Level.objects.create(name="Licence 1", code="L1")
-        self.filiere = Filiere.objects.create(school=self.school, level=self.level, name="Informatique")
+        self.filiere = Filiere.objects.create(name="Informatique", code="INFO", school=self.school, level=self.level, is_active=True)
         self.year = AcademicYear.objects.create(label="2025-2026")
         self.semester = Semester.objects.create(filiere=self.filiere, academic_year=self.year, label="Semestre 1")
-
-        # Subjects for search testing
-        self.subject_math = Subject.objects.create(semester=self.semester, name="Mathématiques approfondies")
-        self.subject_droit = Subject.objects.create(semester=self.semester, name="Introduction au droit")
-        self.subject_droit_exact = Subject.objects.create(semester=self.semester, name="Droit")
-        self.subject_eco = Subject.objects.create(semester=self.semester, name="Économie générale")
+        self.subject_math = Subject.objects.create(name="Mathématiques approfondies", code="MATH101", semester=self.semester)
+        self.subject_droit = Subject.objects.create(name="Introduction au droit", code="DROIT101", semester=self.semester)
+        self.subject_droit_exact = Subject.objects.create(name="Droit", code="DROIT001", semester=self.semester)
+        self.subject_eco = Subject.objects.create(name="Économie générale", code="ECO101", semester=self.semester)
 
         # Exam for search testing
         self.exam_published = Exam.objects.create(
@@ -280,17 +276,17 @@ class Phase10PublicAndSearchTests(TestCase):
         """Homepage renders V2 messaging, resource overview, 5-step journey, and ArchivEx Pass."""
         res = self.client.get(reverse("academics:home"))
         self.assertEqual(res.status_code, 200)
-        self.assertContains(res, "Prends le contrôle de tes examens")
-        self.assertContains(res, "Pass Semestre")
+        self.assertContains(res, "Prenez le contrôle de vos examens")
+        self.assertContains(res, "pass semestre")
         self.assertContains(res, "Comment fonctionne ArchivEx")
 
     def test_student_dashboard_cta_for_authenticated_users(self):
-        """Authenticated students see a direct welcome CTA block on homepage linking to dashboard."""
+        """Authenticated students see Kwabo welcome toast and direct dashboard link in navbar."""
         self.client.login(username="phase10_student@univ.edu", password="Password123!")
         res = self.client.get(reverse("academics:home"))
         self.assertEqual(res.status_code, 200)
-        self.assertContains(res, "Accéder à mon tableau de bord")
-        self.assertContains(res, "Bienvenue, phase10_student@univ.edu")
+        self.assertContains(res, "Tableau de bord")
+        self.assertContains(res, "Kwabo, phase10_student@univ.edu")
 
     def test_about_page_content_and_accessibility(self):
         """About page renders updated V2 academic positioning without emojis."""

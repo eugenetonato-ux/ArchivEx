@@ -2,55 +2,71 @@ from django.shortcuts import render, get_object_or_404
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q
-from .models import School, Level, Filiere, Semester, Subject
+from django.core.cache import cache
+from .models import School, Level, Filiere, Semester, Subject, SiteConfiguration
 from exams.models import Exam
 from payments.models import SemesterAccess
+from content.models import Summary, Guide
+from subscriptions.services import can_user_access
 
 User = get_user_model()
 
 
-from content.models import Summary, Guide
-
-
 def home_view(request):
-    """Page d'accueil (Landing Page) accessible à tous."""
-    from .models import SiteConfiguration
-    config = SiteConfiguration.objects.first()
-    if not config:
-        config = SiteConfiguration.objects.create()
+    """
+    Page d'accueil (Landing Page) accessible à tous.
+    Optimisée avec un cache mémoire haute vitesse pour garantir un temps de réponse < 100ms.
+    """
+    cache_key = "archivex_home_stats_and_showcase"
+    cached_data = cache.get(cache_key)
 
-    schools_count = School.objects.filter(is_active=True).count() + config.base_schools_count
-    filieres_count = Filiere.objects.count()
-    subjects_count = Subject.objects.count() + config.base_subjects_count
-    exams_count = Exam.objects.filter(is_published=True).count() + config.base_exams_count
-    summaries_count = Summary.objects.filter(publication_status="PUBLISHED").count() + config.base_summaries_count
-    guides_count = Guide.objects.filter(publication_status="PUBLISHED").count()
-    students_count = User.objects.filter(is_staff=False).count() + config.base_students_count
+    if not cached_data:
+        config = SiteConfiguration.objects.first()
+        if not config:
+            config = SiteConfiguration.objects.create()
 
-    featured_filieres = Filiere.objects.select_related("school", "level").annotate(
-        exams_num=Count("exams", distinct=True)
-    )[:6]
+        schools_count = School.objects.filter(is_active=True).count() + config.base_schools_count
+        filieres_count = Filiere.objects.count()
+        subjects_count = Subject.objects.count() + config.base_subjects_count
+        exams_count = Exam.objects.filter(is_published=True).count() + config.base_exams_count
+        summaries_count = Summary.objects.filter(publication_status="PUBLISHED").count() + config.base_summaries_count
+        guides_count = Guide.objects.filter(publication_status="PUBLISHED").count()
+        students_count = User.objects.filter(is_staff=False).count() + config.base_students_count
 
-    latest_exams = Exam.objects.filter(
-        is_published=True
-    ).select_related("subject", "semester", "filiere", "level")[:6]
+        featured_filieres = list(
+            Filiere.objects.select_related("school", "level").annotate(
+                exams_num=Count("exams", distinct=True)
+            )[:6]
+        )
 
-    latest_summaries = Summary.objects.filter(
-        publication_status="PUBLISHED"
-    ).select_related("subject", "subject__semester", "subject__semester__filiere")[:6]
+        latest_exams = list(
+            Exam.objects.filter(
+                is_published=True
+            ).select_related("subject", "semester", "filiere", "level", "filiere__school")[:6]
+        )
 
-    context = {
-        "schools_count": schools_count,
-        "filieres_count": filieres_count,
-        "subjects_count": subjects_count,
-        "exams_count": exams_count,
-        "summaries_count": summaries_count,
-        "guides_count": guides_count,
-        "students_count": students_count,
-        "featured_filieres": featured_filieres,
-        "latest_exams": latest_exams,
-        "latest_summaries": latest_summaries,
-    }
+        latest_summaries = list(
+            Summary.objects.filter(
+                publication_status="PUBLISHED"
+            ).select_related("subject", "subject__semester", "subject__semester__filiere")[:6]
+        )
+
+        cached_data = {
+            "schools_count": schools_count,
+            "filieres_count": filieres_count,
+            "subjects_count": subjects_count,
+            "exams_count": exams_count,
+            "summaries_count": summaries_count,
+            "guides_count": guides_count,
+            "students_count": students_count,
+            "featured_filieres": featured_filieres,
+            "latest_exams": latest_exams,
+            "latest_summaries": latest_summaries,
+        }
+        # Mise en cache pour 180 secondes (3 minutes)
+        cache.set(cache_key, cached_data, 180)
+
+    context = dict(cached_data)
     return render(request, "academics/home.html", context)
 
 
@@ -62,9 +78,6 @@ def about_view(request):
 def student_guide_view(request):
     """Guide d'utilisation d'ArchivEx pour les étudiants."""
     return render(request, "academics/student_guide.html")
-
-
-from subscriptions.services import can_user_access
 
 
 @login_required
@@ -101,12 +114,20 @@ def filiere_list_view(request):
 
     subjects_data = []
     if semester:
-        subjects = Subject.objects.filter(semester=semester)
+        subjects = list(Subject.objects.filter(semester=semester))
+        
+        # Batch query for exam counts to eliminate N+1 queries
+        exam_counts = dict(
+            Exam.objects.filter(subject__in=subjects, is_published=True)
+            .values("subject_id")
+            .annotate(c=Count("id"))
+            .values_list("subject_id", "c")
+        )
+        
         for subj in subjects:
-            e_count = Exam.objects.filter(subject=subj, is_published=True).count()
             subjects_data.append({
                 "subject": subj,
-                "exams_count": e_count,
+                "exams_count": exam_counts.get(subj.id, 0),
             })
         has_semester_access = can_user_access(request.user, semester)
 
@@ -129,27 +150,40 @@ def filiere_list_view(request):
 @login_required
 def semester_list_view(request, filiere_id):
     """Page listant les semestres d'une filière avec counts réels et statut d'accès."""
-    from exams.models import Exam
-    from content.models import Summary, Guide
-
     filiere = get_object_or_404(Filiere.objects.select_related("school", "level"), pk=filiere_id)
-    semesters = Semester.objects.filter(filiere=filiere).select_related("academic_year").annotate(
+    semesters = list(Semester.objects.filter(filiere=filiere).select_related("academic_year").annotate(
         subjects_num=Count("subjects")
+    ))
+
+    # Batch counts to eliminate N+1 queries
+    exam_counts = dict(
+        Exam.objects.filter(semester__in=semesters, is_published=True)
+        .values("semester_id")
+        .annotate(c=Count("id"))
+        .values_list("semester_id", "c")
+    )
+    summary_counts = dict(
+        Summary.objects.filter(subject__semester__in=semesters, publication_status="PUBLISHED")
+        .values("subject__semester_id")
+        .annotate(c=Count("id"))
+        .values_list("subject__semester_id", "c")
+    )
+    guide_counts = dict(
+        Guide.objects.filter(subject__semester__in=semesters, publication_status="PUBLISHED")
+        .values("subject__semester_id")
+        .annotate(c=Count("id"))
+        .values_list("subject__semester_id", "c")
     )
 
     semesters_data = []
     for sem in semesters:
-        exams_count = Exam.objects.filter(semester=sem, is_published=True).count()
-        summaries_count = Summary.objects.filter(subject__semester=sem, publication_status="PUBLISHED").count()
-        guides_count = Guide.objects.filter(subject__semester=sem, publication_status="PUBLISHED").count()
-
         semesters_data.append({
             "semester": sem,
             "has_access": can_user_access(request.user, sem),
             "subjects_num": sem.subjects_num,
-            "exams_count": exams_count,
-            "summaries_count": summaries_count,
-            "guides_count": guides_count,
+            "exams_count": exam_counts.get(sem.id, 0),
+            "summaries_count": summary_counts.get(sem.id, 0),
+            "guides_count": guide_counts.get(sem.id, 0),
         })
 
     context = {
@@ -163,25 +197,39 @@ def semester_list_view(request, filiere_id):
 @login_required
 def subject_list_view(request, semester_id):
     """Page listant les UE d'un semestre spécifié avec counts par ressource."""
-    from exams.models import Exam
-    from content.models import Summary, Guide
-
     semester = get_object_or_404(
         Semester.objects.select_related("filiere", "filiere__school", "filiere__level", "academic_year"),
         pk=semester_id
     )
-    subjects = Subject.objects.filter(semester=semester)
+    subjects = list(Subject.objects.filter(semester=semester))
+
+    # Batch counts to eliminate N+1 queries
+    exam_counts = dict(
+        Exam.objects.filter(subject__in=subjects, is_published=True)
+        .values("subject_id")
+        .annotate(c=Count("id"))
+        .values_list("subject_id", "c")
+    )
+    summary_counts = dict(
+        Summary.objects.filter(subject__in=subjects, publication_status="PUBLISHED")
+        .values("subject_id")
+        .annotate(c=Count("id"))
+        .values_list("subject_id", "c")
+    )
+    guide_counts = dict(
+        Guide.objects.filter(subject__in=subjects, publication_status="PUBLISHED")
+        .values("subject_id")
+        .annotate(c=Count("id"))
+        .values_list("subject_id", "c")
+    )
 
     subjects_data = []
     for subj in subjects:
-        e_count = Exam.objects.filter(subject=subj, is_published=True).count()
-        s_count = Summary.objects.filter(subject=subj, publication_status="PUBLISHED").count()
-        g_count = Guide.objects.filter(subject=subj, publication_status="PUBLISHED").count()
         subjects_data.append({
             "subject": subj,
-            "exams_count": e_count,
-            "summaries_count": s_count,
-            "guides_count": g_count,
+            "exams_count": exam_counts.get(subj.id, 0),
+            "summaries_count": summary_counts.get(subj.id, 0),
+            "guides_count": guide_counts.get(subj.id, 0),
         })
 
     has_semester_access = can_user_access(request.user, semester)
