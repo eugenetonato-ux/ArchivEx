@@ -41,6 +41,10 @@ class Payment(models.Model):
     OPERATOR_CHOICES = [
         ("mtn", "MTN Mobile Money"),
         ("moov", "Moov Money"),
+        ("celtiis", "Celtiis Cash"),
+        ("wave", "Wave"),
+        ("card", "Carte bancaire"),
+        ("chariow", "Chariow Multi-Paiement"),
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="payments")
@@ -49,7 +53,7 @@ class Payment(models.Model):
     
     amount = models.PositiveIntegerField()
     currency = models.CharField(max_length=10, default="XOF")
-    operator = models.CharField(max_length=20, choices=OPERATOR_CHOICES, default="mtn")
+    operator = models.CharField(max_length=50, blank=True, default="", choices=OPERATOR_CHOICES)
     phone_number = models.CharField(max_length=20, blank=True)
     
     external_reference = models.CharField(max_length=64, unique=True, null=True, blank=True)

@@ -94,7 +94,6 @@ def initier_paiement(request, semester_id):
         messages.info(request, "Vous disposez déjà d'un Pass actif pour ce semestre.")
         return redirect("academics:matieres", semester_id=semester.id)
 
-    operator = request.POST.get("operator", "mtn").strip().lower()
     raw_phone = request.POST.get("phone_number", "").strip()
 
     try:
@@ -103,11 +102,10 @@ def initier_paiement(request, semester_id):
         messages.error(request, str(e))
         return redirect("payments:pass_semestre", semester_id=semester.id)
 
-    detected_op = detect_operator(normalized_phone)
-    if detected_op in ["mtn", "moov"]:
-        operator = detected_op
-    elif operator not in ["mtn", "moov"]:
-        operator = "mtn"
+    operator = request.POST.get("operator", "").strip().lower()
+    if not operator:
+        detected_op = detect_operator(normalized_phone)
+        operator = detected_op or "chariow"
 
     ext_ref = generate_external_reference()
 

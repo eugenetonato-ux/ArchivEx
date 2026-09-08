@@ -103,7 +103,7 @@ class ChariowIntegrationTests(TestCase):
         self.client.login(username="etudiant_test", password="Password123!")
         res = self.client.post(
             reverse("payments:initier_paiement", kwargs={"semester_id": self.semester.id}),
-            {"operator": "mtn", "phone_number": "0150196407"}
+            {"phone_number": "0150196407"}
         )
 
         payment = Payment.objects.filter(user=self.student, semester=self.semester).first()
@@ -128,7 +128,7 @@ class ChariowIntegrationTests(TestCase):
         self.client.login(username="etudiant_test", password="Password123!")
         res = self.client.post(
             reverse("payments:initier_paiement", kwargs={"semester_id": self.semester.id}),
-            {"operator": "mtn", "phone_number": "0150196407"},
+            {"phone_number": "0150196407"},
             follow=True
         )
 
