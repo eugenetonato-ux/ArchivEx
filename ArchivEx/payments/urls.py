@@ -8,8 +8,8 @@ urlpatterns = [
     path("<int:semester_id>/payer/", views.initier_paiement, name="initier_paiement"),
     path("attente/<str:reference>/", views.payment_pending_view, name="payment_pending"),
     path("retour/<str:reference>/", views.payment_return_view, name="payment_return"),
-    path("sebpay/return/", views.payment_return_view, name="payment_return_generic"),
+    path("retour/", views.payment_return_view, name="payment_return_generic"),
     path("status/<str:reference>/", views.payment_status_api_view, name="payment_status_api"),
     path("historique/", views.student_payment_history_view, name="student_history"),
-    path("webhook/sebpay/", views.sebpay_webhook_view, name="sebpay_webhook"),
+    path("webhook/chariow/", views.chariow_webhook_view, name="chariow_webhook"),
 ]

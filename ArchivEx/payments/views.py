@@ -1,7 +1,9 @@
 import json
+import logging
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
 from django.contrib import messages
 from django.views.decorators.http import require_POST
@@ -12,17 +14,20 @@ from academics.models import Semester
 from .models import SemesterAccess, Payment
 from .services import (
     normalize_benin_phone,
+    detect_operator,
     generate_external_reference,
-    create_sebpay_collection,
-    verify_sebpay_transaction,
-    verify_webhook_signature,
+    create_chariow_checkout,
+    verify_chariow_pulse_signature,
+    handle_chariow_pulse_event,
     activate_pass_for_payment,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
 def pass_semestre(request, semester_id):
-    """Page de présentation et formulaire de souscription du Pass Semestre (MTN, Moov, Celtiis)."""
+    """Page de présentation et formulaire de souscription du Pass Semestre (2 000 FCFA)."""
     from exams.models import Exam
     from content.models import Summary, Guide, Article
     from academics.models import Subject
@@ -38,7 +43,7 @@ def pass_semestre(request, semester_id):
         user=request.user, semester=semester, activated_at__isnull=False
     ).exists()
 
-    # Statistique dynamique du package
+    # Statistiques du package pour le semestre
     exams_count = Exam.objects.filter(semester=semester, is_published=True).count()
     summaries_count = Summary.objects.filter(subject__semester=semester, publication_status="PUBLISHED").count()
     guides_count = Guide.objects.filter(subject__semester=semester, publication_status="PUBLISHED").count()
@@ -67,12 +72,13 @@ def pass_semestre(request, semester_id):
 @require_POST
 def initier_paiement(request, semester_id):
     """
-    Initié de façon sécurisée côté serveur :
-    - Détermine le tarif serveur (jamais soumis par le navigateur)
-    - Normalise le numéro béninois (229XXXXXXXX)
+    Initialise le paiement sécurisé côté serveur :
+    - Détermine le tarif serveur (2 000 FCFA)
+    - Valide et normalise le numéro béninois
     - Génère une référence externe unique (ARCHIVEX-PASS-YYYY-XXXXXX)
     - Crée l'enregistrement Payment local PENDING
-    - Transmet la requête d'encaissement à SebPay
+    - Appelle l'API Chariow /checkout
+    - Redirige l'étudiant vers payment.checkout_url
     """
     semester = get_object_or_404(
         Semester.objects.select_related("filiere", "filiere__school", "filiere__level", "academic_year"),
@@ -97,8 +103,6 @@ def initier_paiement(request, semester_id):
         messages.error(request, str(e))
         return redirect("payments:pass_semestre", semester_id=semester.id)
 
-    # Détection automatique de l'opérateur (MTN ou Moov) selon l'indicatif ARCEP Bénin
-    from .services import detect_operator
     detected_op = detect_operator(normalized_phone)
     if detected_op in ["mtn", "moov"]:
         operator = detected_op
@@ -110,51 +114,48 @@ def initier_paiement(request, semester_id):
     payment = Payment.objects.create(
         user=request.user,
         semester=semester,
-        amount=price,  # Montant déterminé STRICTEMENT par le serveur (ex: 4500 FCFA)
-        currency=getattr(settings, "SEBPAY_CURRENCY", "XOF"),
+        amount=price,
+        currency=getattr(settings, "CHARIOW_CURRENCY", "XOF"),
         operator=operator,
         phone_number=normalized_phone,
         external_reference=ext_ref,
         status=Payment.STATUS_PENDING,
     )
 
-    # Envoi de la demande d'encaissement Mobile Money à SebPay API
-    sebpay_res = create_sebpay_collection(payment)
-    if sebpay_res.get("success"):
-        res_data = sebpay_res.get("data", {})
-        data_body = res_data.get("data", res_data) if isinstance(res_data, dict) else {}
-        provider_link = data_body.get("provider_link") or data_body.get("payment_url") or data_body.get("url")
-        if provider_link:
-            return redirect(provider_link)
-        return redirect("payments:payment_pending", reference=payment.external_reference)
+    redirect_url = request.build_absolute_uri(
+        reverse("payments:payment_return", kwargs={"reference": payment.external_reference})
+    )
+
+    # Appel à l'API Chariow Checkout (/v1/checkout)
+    chariow_res = create_chariow_checkout(payment, redirect_url=redirect_url)
+
+    if chariow_res.get("success"):
+        checkout_url = chariow_res.get("checkout_url")
+        if checkout_url:
+            return redirect(checkout_url)
+        elif chariow_res.get("step") == "completed":
+            # Produit validé immédiatement
+            activate_pass_for_payment(payment)
+            messages.success(request, f"Félicitations ! Votre Pass Semestre pour {semester.label} est actif !")
+            return redirect("academics:matieres", semester_id=semester.id)
+        else:
+            return redirect("payments:payment_pending", reference=payment.external_reference)
     else:
-        # Échec de l'envoi vers SebPay (ex: IP non autorisée, etc.)
-        error_raw = sebpay_res.get("error", "Erreur lors de l'envoi de la demande de paiement.")
-        data = sebpay_res.get("data", {})
-        error_code = ""
-        if isinstance(data, dict):
-            errors = data.get("errors", {})
-            if isinstance(errors, dict):
-                error_code = errors.get("code", "")
-        
+        error_msg = chariow_res.get("error", "Erreur lors de l'initialisation du paiement.")
         payment.status = Payment.STATUS_REJECTED
         payment.save(update_fields=["status"])
-
-        if error_code == "IP_NOT_ALLOWED":
-            messages.error(
-                request,
-                f"SebPay (IP non autorisée) : {error_raw} Veuillez ajouter votre adresse IP à la liste blanche dans le tableau de bord SebPay."
-            )
-        else:
-            messages.error(request, f"SebPay : {error_raw}")
-
+        messages.error(request, error_msg)
         return redirect("payments:pass_semestre", semester_id=semester.id)
 
 
 @login_required
 def payment_pending_view(request, reference):
-    """Écran d'attente de confirmation Mobile Money avec sondage d'état."""
-    payment = get_object_or_404(Payment.objects.select_related("semester", "semester__filiere"), external_reference=reference, user=request.user)
+    """Écran d'attente de confirmation de la transaction avec sondage asynchrone."""
+    payment = get_object_or_404(
+        Payment.objects.select_related("semester", "semester__filiere"),
+        external_reference=reference,
+        user=request.user
+    )
 
     if payment.is_approved:
         messages.success(request, f"Félicitations ! Votre Pass Semestre pour {payment.semester.label} est actif !")
@@ -170,18 +171,24 @@ def payment_pending_view(request, reference):
 @login_required
 def payment_return_view(request, reference=None):
     """
-    Page de retour après la redirection ou le traitement du paiement SEBPay.
-    - Affiche l'état réel de la transaction sans jamais forcer l'activation manuelle côté client.
-    - Si le paiement est PENDING, effectue une vérification serveur complémentaire auprès de SEBPay.
-    - Si SEBPay confirme APPROVED, active le Pass Semestre de façon autonome et transparente.
+    Page de retour post-paiement Chariow (redirect_url).
+    
+    IMPORTANT :
+    Cette page sert à l'expérience utilisateur. La source de vérité reste le webhook Pulse.
+    Le statut affiché correspond strictement à l'état en base de données.
     """
     ref = reference or request.GET.get("external_reference") or request.GET.get("reference")
     payment = None
+
     if ref:
-        payment = Payment.objects.filter(external_reference=ref, user=request.user).select_related("semester", "semester__filiere").first()
+        payment = Payment.objects.filter(
+            external_reference=ref, user=request.user
+        ).select_related("semester", "semester__filiere").first()
 
     if not payment:
-        payment = Payment.objects.filter(user=request.user).select_related("semester", "semester__filiere").first()
+        payment = Payment.objects.filter(
+            user=request.user
+        ).select_related("semester", "semester__filiere").order_by("-created_at").first()
 
     if not payment:
         first_sem = Semester.objects.first()
@@ -192,20 +199,6 @@ def payment_return_view(request, reference=None):
             "is_pending": False,
             "is_rejected": True,
         })
-
-    # Synchronisation complémentaire auprès de SEBPay si encore PENDING
-    if payment.is_pending:
-        remote_res = verify_sebpay_transaction(payment.external_reference)
-        if remote_res.get("success"):
-            data = remote_res.get("data", {})
-            remote_status = str(data.get("status", "")).lower()
-            if remote_status in ["approved", "success", "completed"]:
-                payment.status = Payment.STATUS_APPROVED
-                payment.sebpay_transaction_id = str(data.get("id") or data.get("reference") or payment.sebpay_transaction_id)
-                activate_pass_for_payment(payment)
-            elif remote_status in ["rejected", "failed", "cancelled"]:
-                payment.status = Payment.STATUS_REJECTED
-                payment.save()
 
     context = {
         "payment": payment,
@@ -221,24 +214,9 @@ def payment_return_view(request, reference=None):
 @login_required
 def payment_status_api_view(request, reference):
     """
-    API JSON d'état pour le sondage AJAX de l'écran d'attente.
-    Retourne le statut actuel et effectue une synchronisation complémentaire si demandé.
+    API JSON d'état pour le sondage dynamique depuis les pages d'attente / retour.
     """
     payment = get_object_or_404(Payment, external_reference=reference, user=request.user)
-
-    # Synchronisation complémentaire auprès de SebPay si encore PENDING
-    if payment.status in [Payment.STATUS_PENDING, "en_attente"] and request.GET.get("check_remote") == "1":
-        remote_res = verify_sebpay_transaction(payment.external_reference)
-        if remote_res.get("success"):
-            data = remote_res.get("data", {})
-            remote_status = str(data.get("status", "")).lower()
-            if remote_status in ["approved", "success", "completed"]:
-                payment.status = Payment.STATUS_APPROVED
-                payment.sebpay_transaction_id = str(data.get("id") or data.get("reference") or payment.sebpay_transaction_id)
-                activate_pass_for_payment(payment)
-            elif remote_status in ["rejected", "failed", "cancelled"]:
-                payment.status = Payment.STATUS_REJECTED
-                payment.save()
 
     return JsonResponse({
         "reference": payment.external_reference,
@@ -246,69 +224,57 @@ def payment_status_api_view(request, reference):
         "is_approved": payment.is_approved,
         "is_rejected": payment.is_rejected,
         "is_pending": payment.is_pending,
+        "chariow_sale_id": payment.chariow_sale_id,
     })
 
 
 @csrf_exempt
-def sebpay_webhook_view(request):
+@require_POST
+def chariow_webhook_view(request):
     """
-    Endpoint de Webhook sécurisé pour la notification asynchrone des paiements SebPay.
-    POST /webhook/sebpay/
-    1. Vérification de la signature HMAC-SHA256 (header X-SebPay-Signature)
-    2. Contrôle d'intégrité (montant & devise)
-    3. Idempotence stricte (ne duplique pas l'activation du Pass)
-    4. Activation du Pass Semestre lorsque statut est 'approved'
+    Endpoint Webhook sécurisé pour la réception des Pulses Chariow.
+    POST /pass/webhook/chariow/ et POST /webhook/chariow/
+    
+    Sécurité & Idempotence :
+    1. Vérification de la signature HMAC-SHA256 (header x-chariow-signature)
+    2. Dé-duplication via x-pulse-delivery-id et external_reference
+    3. Traitement des événements (successful.sale, failed.sale, abandoned.sale, refunded.sale)
+    4. Réponse HTTP 200 JSON
     """
-    if request.method != "POST":
-        return HttpResponse("Méthode non autorisée", status=405)
+    signature_header = (
+        request.headers.get("X-Chariow-Signature") or
+        request.headers.get("x-chariow-signature") or
+        request.META.get("HTTP_X_CHARIOW_SIGNATURE", "")
+    )
 
-    signature_header = request.headers.get("X-SebPay-Signature") or request.META.get("HTTP_X_SEBPAY_SIGNATURE", "")
-
-    if not verify_webhook_signature(request.body, signature_header):
-        return HttpResponseForbidden("Signature Webhook SebPay invalide.")
+    if not verify_chariow_pulse_signature(request.body, signature_header):
+        logger.warning("[Chariow Webhook] Signature invalide reçue.")
+        return HttpResponseForbidden("Signature Webhook Chariow invalide.")
 
     try:
         payload = json.loads(request.body.decode("utf-8"))
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        logger.error("[Chariow Webhook] Payload JSON non décodable.")
         return JsonResponse({"error": "Payload JSON invalide"}, status=400)
 
-    ext_ref = payload.get("external_reference") or payload.get("reference")
-    if not ext_ref:
-        return JsonResponse({"error": "Référence externe manquante"}, status=400)
+    delivery_id = (
+        request.headers.get("X-Pulse-Delivery-Id") or
+        request.headers.get("x-pulse-delivery-id") or
+        request.META.get("HTTP_X_PULSE_DELIVERY_ID", "")
+    )
 
-    payment = Payment.objects.filter(external_reference=ext_ref).first()
-    if not payment:
-        return JsonResponse({"error": "Paiement introuvable"}, status=404)
+    result = handle_chariow_pulse_event(payload, delivery_id=delivery_id)
 
-    # Vérification d'intégrité sur montant et devise
-    payload_amount = payload.get("amount")
-    if payload_amount is not None and int(payload_amount) != int(payment.amount):
-        return JsonResponse({"error": "Montant non conforme"}, status=400)
-
-    # Traitement Idempotent : Si déjà APPROVED, retourner 200 immédiatement sans dupliquer
-    if payment.is_approved:
-        return JsonResponse({"status": "already_approved", "message": "Paiement déjà validé."})
-
-    sebpay_status = str(payload.get("status", "")).lower()
-
-    if sebpay_status in ["approved", "success", "completed"]:
-        payment.status = Payment.STATUS_APPROVED
-        payment.sebpay_transaction_id = str(payload.get("id") or payload.get("transaction_id") or payment.sebpay_transaction_id)
-        activate_pass_for_payment(payment)
-        return JsonResponse({"status": "approved", "message": "Pass Semestre activé avec succès."})
-
-    elif sebpay_status in ["rejected", "failed", "cancelled"]:
-        payment.status = Payment.STATUS_REJECTED
-        payment.save()
-        return JsonResponse({"status": "rejected", "message": "Paiement non confirmé."})
-
-    return JsonResponse({"status": payment.status, "message": "Statut reçu."})
+    status_code = 200 if result.get("success", True) else result.get("status_code", 400)
+    return JsonResponse(result, status=status_code)
 
 
 @login_required
 def student_payment_history_view(request):
-    """Historique personnel des transactions et Pass Semestre de l'étudiant."""
-    payments = Payment.objects.filter(user=request.user).select_related("semester", "semester__filiere").order_by("-created_at")
+    """Historique des transactions et Pass Semestre de l'étudiant."""
+    payments = Payment.objects.filter(
+        user=request.user
+    ).select_related("semester", "semester__filiere").order_by("-created_at")
 
     context = {
         "payments": payments,

@@ -14,14 +14,16 @@ def get_client_ip(request):
 def log_user_action(request, action_type, description):
     try:
         user = request.user if (request and hasattr(request, 'user') and request.user.is_authenticated) else None
-        path = request.path if request else None
+        path = (request.path[:250]) if (request and hasattr(request, 'path') and request.path) else None
         ip_address = get_client_ip(request)
-        user_agent = request.META.get('HTTP_USER_AGENT', '') if request else ''
+        if ip_address:
+            ip_address = ip_address[:45]
+        user_agent = (request.META.get('HTTP_USER_AGENT', '')[:500]) if request else ''
         
         SiteLog.objects.create(
             user=user,
             action_type=action_type,
-            description=description,
+            description=str(description)[:1000] if description else "",
             path=path,
             ip_address=ip_address,
             user_agent=user_agent

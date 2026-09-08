@@ -108,6 +108,49 @@ def get_filieres_by_school_api(request):
 
 
 @contributor_required
+def check_exam_duplicate_api(request):
+    """
+    API JSON vérifiant en direct (AJAX) si une épreuve ou un document du même nom/matière existe déjà.
+    """
+    title = request.GET.get("title", "").strip()
+    subject_name = request.GET.get("subject_name", "").strip()
+    semester_id = request.GET.get("semester_id")
+    exclude_id = request.GET.get("exclude_id")
+
+    if not title and not subject_name:
+        return JsonResponse({"duplicate": False})
+
+    qs = Exam.objects.select_related("subject", "semester", "filiere", "academic_year")
+    if exclude_id and str(exclude_id).isdigit():
+        qs = qs.exclude(pk=int(exclude_id))
+
+    match = None
+    if title:
+        match = qs.filter(title__iexact=title).first()
+
+    if not match and subject_name:
+        sub_qs = qs.filter(subject__name__iexact=subject_name)
+        if semester_id and str(semester_id).isdigit():
+            sub_qs = sub_qs.filter(semester_id=int(semester_id))
+        match = sub_qs.first()
+
+    if match:
+        return JsonResponse({
+            "duplicate": True,
+            "existing_id": match.id,
+            "title": match.title,
+            "subject": match.subject.name if match.subject else "Matière non spécifiée",
+            "filiere": match.filiere.name if match.filiere else "",
+            "semester": match.semester.label if match.semester else "",
+            "academic_year": match.academic_year.label if match.academic_year else (str(match.year) if match.year else ""),
+            "edit_url": f"/administration/epreuves/{match.id}/modifier/",
+            "is_published": match.is_published,
+        })
+
+    return JsonResponse({"duplicate": False})
+
+
+@contributor_required
 def admin_dashboard_view(request):
     """Tableau de bord privé d'administration ArchivEx V2."""
     active_school, active_filiere, active_semester = get_active_academic_context(request)
@@ -422,24 +465,34 @@ def exam_create_view(request):
             exam.is_published = form.cleaned_data["is_published"]
 
             # Vérification des doublons
-            duplicate_exists = Exam.objects.filter(
-                title__iexact=exam.title,
-                subject=exam.subject,
-                academic_year=exam.academic_year,
-                semester=exam.semester
-            ).exists()
+            duplicate_match = Exam.objects.filter(
+                Q(title__iexact=exam.title) |
+                (Q(subject=exam.subject, semester=exam.semester, exam_type=exam.exam_type) & (Q(academic_year=exam.academic_year) if exam.academic_year else Q()))
+            ).select_related("subject", "semester", "filiere", "academic_year").first()
 
-            if duplicate_exists:
-                form.add_error("title", f"Une épreuve nommée « {exam.title} » existe déjà pour cette matière.")
-            else:
-                # Traitement des fichiers Cloud et téléversements directs
-                _process_exam_cloud_files(form, exam, target_semester, active_school, active_filiere, active_semester, request.user)
-    
-                exam.save()
-    
-                status_str = "publiée" if exam.is_published else "enregistrée en brouillon"
-                messages.success(request, f"Épreuve « {exam.title} » {status_str} avec succès pour {exam.subject.name}.")
-                return redirect("contributors:exam_list")
+            if duplicate_match and request.POST.get("confirm_duplicate") != "1":
+                context = {
+                    "active_school": active_school,
+                    "active_filiere": active_filiere,
+                    "active_semester": active_semester,
+                    "available_subjects": Subject.objects.filter(semester__filiere=active_filiere).select_related("semester") if active_filiere else Subject.objects.none(),
+                    "form": form,
+                    "is_create": True,
+                    "duplicate_warning": True,
+                    "existing_duplicate": duplicate_match,
+                }
+                messages.warning(request, f"Attention : Une épreuve nommée « {duplicate_match.title} » existe déjà pour cette matière ({duplicate_match.subject.name}).")
+                return render(request, "contributors/exams/form.html", context)
+
+            # Traitement des fichiers Cloud et téléversements directs
+            _process_exam_cloud_files(form, exam, target_semester, active_school, active_filiere, active_semester, request.user)
+
+            exam.save()
+
+            status_str = "publiée" if exam.is_published else "enregistrée en brouillon"
+            messages.success(request, f"Épreuve « {exam.title} » {status_str} avec succès pour {exam.subject.name}.")
+            return redirect("contributors:exam_list")
+
     else:
         form = ExamAdminForm(active_filiere=active_filiere, active_semester=active_semester)
 
@@ -452,6 +505,8 @@ def exam_create_view(request):
         "available_subjects": available_subjects,
         "form": form,
         "is_create": True,
+        "duplicate_warning": False,
+        "existing_duplicate": None,
     }
     return render(request, "contributors/exams/form.html", context)
 
@@ -1450,6 +1505,33 @@ def publish_from_cloud_view(request, pk):
             exam.is_free = form.cleaned_data["is_free"]
             exam.is_published = form.cleaned_data["is_published"]
 
+            # Duplicate check
+            duplicate_match = Exam.objects.filter(
+                Q(title__iexact=exam.title) |
+                (Q(subject=exam.subject, semester=exam.semester, exam_type=exam.exam_type) & (Q(academic_year=exam.academic_year) if exam.academic_year else Q()))
+            ).select_related("subject", "semester", "filiere", "academic_year").first()
+
+            if duplicate_match and request.POST.get("confirm_duplicate") != "1":
+                context = {
+                    "active_school": active_school,
+                    "active_filiere": active_filiere,
+                    "active_semester": active_semester,
+                    "available_subjects": available_subjects,
+                    "form": form,
+                    "is_create": True,
+                    "selected_cloud_file": cloud_file,
+                    "auto_corr_cloud": auto_corr_cloud,
+                    "auto_sum_cloud": auto_sum_cloud,
+                    "parsed_info": parsed,
+                    "ocr_result": ocr_result,
+                    "auto_ocr_summary": auto_ocr_summary,
+                    "no_metadata_detected": not parsed.get("is_valid", False),
+                    "duplicate_warning": True,
+                    "existing_duplicate": duplicate_match,
+                }
+                messages.warning(request, f"Attention : Une épreuve nommée « {duplicate_match.title} » existe déjà pour cette matière ({duplicate_match.subject.name}).")
+                return render(request, "contributors/exams/form.html", context)
+
             _process_exam_cloud_files(form, exam, target_semester, active_school, target_filiere, active_semester, request.user)
 
             exam.save()
@@ -1488,6 +1570,8 @@ def publish_from_cloud_view(request, pk):
         "ocr_result": ocr_result,
         "auto_ocr_summary": auto_ocr_summary,
         "no_metadata_detected": not parsed.get("is_valid", False),
+        "duplicate_warning": False,
+        "existing_duplicate": None,
     }
     return render(request, "contributors/exams/form.html", context)
 
@@ -1790,31 +1874,40 @@ def site_logs_list_view(request):
     action_filter = request.GET.get("action_type", "")
     search_q = request.GET.get("q", "").strip()
     
-    logs_qs = SiteLog.objects.select_related("user").order_by("-created_at")
-    
-    if action_filter:
-        logs_qs = logs_qs.filter(action_type=action_filter)
+    try:
+        logs_qs = SiteLog.objects.select_related("user").order_by("-created_at")
         
-    if search_q:
-        logs_qs = logs_qs.filter(
-            Q(description__icontains=search_q) |
-            Q(user__username__icontains=search_q) |
-            Q(path__icontains=search_q) |
-            Q(ip_address__icontains=search_q)
-        )
+        if action_filter:
+            logs_qs = logs_qs.filter(action_type=action_filter)
+            
+        if search_q:
+            logs_qs = logs_qs.filter(
+                Q(description__icontains=search_q) |
+                Q(user__username__icontains=search_q) |
+                Q(path__icontains=search_q) |
+                Q(ip_address__icontains=search_q)
+            )
+            
+        # Pagination (50 logs par page)
+        paginator = Paginator(logs_qs, 50)
+        page_number = request.GET.get("page", 1)
+        page_obj = paginator.get_page(page_number)
         
-    # Pagination (50 logs par page)
-    paginator = Paginator(logs_qs, 50)
-    page_number = request.GET.get("page", 1)
-    page_obj = paginator.get_page(page_number)
-    
-    # Statistiques pour les KPI du journal
-    total_logs = SiteLog.objects.count()
-    connections_count = SiteLog.objects.filter(action_type="CONNECTION").count()
-    modifications_count = SiteLog.objects.filter(action_type="MODIFICATION").count()
-    clicks_count = SiteLog.objects.filter(action_type="CLICK").count()
-    views_count = SiteLog.objects.filter(action_type="PAGE_VIEW").count()
-    
+        # Statistiques pour les KPI du journal
+        total_logs = SiteLog.objects.count()
+        connections_count = SiteLog.objects.filter(action_type="CONNECTION").count()
+        modifications_count = SiteLog.objects.filter(action_type="MODIFICATION").count()
+        clicks_count = SiteLog.objects.filter(action_type="CLICK").count()
+        views_count = SiteLog.objects.filter(action_type="PAGE_VIEW").count()
+    except Exception as e:
+        page_obj = []
+        total_logs = 0
+        connections_count = 0
+        modifications_count = 0
+        clicks_count = 0
+        views_count = 0
+        messages.warning(request, f"Note: Une erreur est survenue lors de la lecture du journal des actions ({str(e)}).")
+
     context = {
         "active_school": active_school,
         "active_filiere": active_filiere,
@@ -1827,7 +1920,7 @@ def site_logs_list_view(request):
         "modifications_count": modifications_count,
         "clicks_count": clicks_count,
         "views_count": views_count,
-        "action_choices": SiteLog.ACTION_CHOICES,
+        "action_choices": getattr(SiteLog, "ACTION_CHOICES", ()),
     }
     return render(request, "contributors/logs/list.html", context)
 

@@ -422,36 +422,42 @@
         </div>
     </form>
 
-    <!-- FLOATING ACTIONS BAR FOR BULK OPERATIONS -->
-    <div id="bulk-actions-bar" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-[#071A49] dark:bg-[#121824] border border-slate-200/20 dark:border-[#1e293b]/80 shadow-2xl rounded-2xl px-6 py-4 flex items-center justify-between z-[90] hidden transition-all duration-300 ease-out translate-y-10 opacity-0 max-w-2xl w-[90%] md:w-full">
-        <div class="flex items-center space-x-3 text-white text-xs font-bold">
-            <span class="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-black" id="bulk-selected-count">0</span>
-            <span class="hidden sm:inline">fichiers sélectionnés</span>
-            <span class="sm:hidden">sél.</span>
+    <!-- FLOATING ACTIONS BAR FOR BULK OPERATIONS (RESPONSIVE MOBILE & DESKTOP) -->
+    <div id="bulk-actions-bar" class="fixed bottom-3 sm:bottom-6 left-1/2 transform -translate-x-1/2 bg-[#071A49] dark:bg-[#0f172a] border-2 border-blue-500/40 dark:border-blue-400/40 shadow-2xl rounded-2xl px-3 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between z-[120] hidden transition-all duration-300 ease-out translate-y-10 opacity-0 w-[94%] sm:w-auto sm:max-w-2xl sm:min-w-[440px] gap-2">
+        <div class="flex items-center space-x-2 sm:space-x-3 text-white text-xs font-bold shrink-0">
+            <span class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-black shadow-inner" id="bulk-selected-count">0</span>
+            <span class="hidden sm:inline">sélectionné(s)</span>
+            <span class="sm:hidden text-[11px]">sél.</span>
+            <button type="button" onclick="deselectAllFiles()" class="text-[10px] text-slate-300 hover:text-white underline ml-1 cursor-pointer" title="Annuler la sélection">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
         
-        <div class="h-6 w-px bg-slate-700/50 mx-4"></div>
+        <div class="h-6 w-px bg-slate-600/60 mx-1 sm:mx-3 shrink-0"></div>
         
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
             <!-- PUBLISH BUTTON -->
-            <button type="button" onclick="submitBulkAction('publish')" class="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold transition-all flex items-center space-x-1.5 shadow-md shadow-blue-500/20 active:scale-95">
-                <i class="fa-solid fa-paper-plane text-[10px]"></i>
+            <button type="button" onclick="submitBulkAction('publish')" class="px-2.5 sm:px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-[10px] sm:text-xs font-black transition-all flex items-center space-x-1 sm:space-x-1.5 shadow-md shadow-blue-500/30 active:scale-95 cursor-pointer">
+                <i class="fa-solid fa-paper-plane text-[9px] sm:text-[11px]"></i>
                 <span>Publier</span>
             </button>
 
             <!-- MOVE BUTTON -->
-            <button type="button" onclick="openBulkMoveModal()" class="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-bold transition-all flex items-center space-x-1.5 shadow-md shadow-amber-500/20 active:scale-95">
-                <i class="fa-solid fa-folder-open text-[10px]"></i>
-                <span>Déplacer</span>
+            <button type="button" onclick="openBulkMoveModal()" class="px-2.5 sm:px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[10px] sm:text-xs font-black transition-all flex items-center space-x-1 sm:space-x-1.5 shadow-md shadow-amber-500/30 active:scale-95 cursor-pointer">
+                <i class="fa-solid fa-folder-open text-[9px] sm:text-[11px]"></i>
+                <span class="hidden xs:inline">Déplacer</span>
+                <span class="xs:hidden">Dép.</span>
             </button>
 
             <!-- DELETE BUTTON -->
-            <button type="button" onclick="confirmBulkDelete()" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold transition-all flex items-center space-x-1.5 shadow-md shadow-rose-500/20 active:scale-95">
-                <i class="fa-solid fa-trash text-[10px]"></i>
-                <span>Supprimer</span>
+            <button type="button" onclick="confirmBulkDelete()" class="px-2.5 sm:px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-[10px] sm:text-xs font-black transition-all flex items-center space-x-1 sm:space-x-1.5 shadow-md shadow-rose-500/30 active:scale-95 cursor-pointer">
+                <i class="fa-solid fa-trash text-[9px] sm:text-[11px]"></i>
+                <span class="hidden xs:inline">Supprimer</span>
+                <span class="xs:hidden">Supp.</span>
             </button>
         </div>
     </div>
+
 
     <!-- BULK MOVE MODAL -->
     <div id="bulk-move-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center z-[110] hidden transition-opacity duration-200">
@@ -601,7 +607,18 @@ function toggleSelectAllInUe(masterCheckbox) {
     updateBulkActionBar();
 }
 
+function deselectAllFiles() {
+    document.querySelectorAll('.file-checkbox').forEach(cb => {
+        cb.checked = false;
+    });
+    document.querySelectorAll('.select-all-ue-files').forEach(mcb => {
+        mcb.checked = false;
+    });
+    updateBulkActionBar();
+}
+
 function updateBulkActionBar() {
+
     const checkedCheckboxes = document.querySelectorAll('.file-checkbox:checked');
     const bar = document.getElementById('bulk-actions-bar');
     const selectedCountSpan = document.getElementById('bulk-selected-count');

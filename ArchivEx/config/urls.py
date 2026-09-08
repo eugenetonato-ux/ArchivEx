@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from payments.views import sebpay_webhook_view, payment_return_view
+from payments.views import chariow_webhook_view, payment_return_view
 from academics import views as academic_views
 
 urlpatterns = [
@@ -13,7 +13,8 @@ urlpatterns = [
     path("epreuves/", include("exams.urls")),
     path("pass/", include("payments.urls")),
     path("payment/success/", payment_return_view, name="payment_success_return"),
-    path("webhook/sebpay/", sebpay_webhook_view, name="root_sebpay_webhook"),
+    path("webhook/chariow/", chariow_webhook_view, name="root_chariow_webhook"),
+
     path("ressources/", include("content.urls")),
     path("notifications/", include("notifications.urls")),
     path("support/", include("support.urls")),

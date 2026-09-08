@@ -213,14 +213,13 @@ LOGGING = {
 
 PASS_SEMESTRE_PRIX_DEFAUT = config("PASS_SEMESTRE_PRIX_DEFAUT", default=4500, cast=int)
 
-# SebPay Mobile Money Payment Configuration
-SEBPAY_PUBLIC_KEY = config("SEBPAY_PUBLIC_KEY", default="pk_test_archivex_demo")
-SEBPAY_SECRET_KEY = config("SEBPAY_SECRET_KEY", default=config("SEBPAY_SECRET", default="sk_test_archivex_demo_secret_key"))
-SEBPAY_BASE_URL = config("SEBPAY_BASE_URL", default="https://newapi.sebpay.bj/api/v1")
-SEBPAY_COUNTRY = config("SEBPAY_COUNTRY", default="BJ")
-SEBPAY_CURRENCY = config("SEBPAY_CURRENCY", default="XOF")
-SEBPAY_CALLBACK_URL = config("SEBPAY_CALLBACK_URL", default="https://archivex.bj/webhook/sebpay/")
-SEBPAY_PAYMENT_URL = config("SEBPAY_PAYMENT_URL", default="https://redsandro.pythonanywhere.com/pay/pass-semestre-archivex-7hvUb1")
+# Chariow Payment Gateway Configuration (https://chariow.dev)
+CHARIOW_API_KEY = config("CHARIOW_API_KEY", default="")
+CHARIOW_PRODUCT_ID = config("CHARIOW_PRODUCT_ID", default="")
+CHARIOW_PULSE_SECRET = config("CHARIOW_PULSE_SECRET", default=config("CHARIOW_WEBHOOK_SECRET", default=""))
+CHARIOW_BASE_URL = config("CHARIOW_BASE_URL", default="https://api.chariow.com/v1").rstrip("/")
+CHARIOW_CURRENCY = config("CHARIOW_CURRENCY", default="XOF")
+
 
 # Patch de compatibilité Python 3.14 pour les tests Django (duplication de Context)
 import sys

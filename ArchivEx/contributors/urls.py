@@ -7,6 +7,7 @@ urlpatterns = [
     path("login/", views.admin_login_view, name="admin_login"),
     path("logout/", views.admin_logout_view, name="admin_logout"),
     path("api/filieres/", views.get_filieres_by_school_api, name="api_filieres"),
+    path("api/check-exam-duplicate/", views.check_exam_duplicate_api, name="api_check_exam_duplicate"),
     path("", views.admin_dashboard_view, name="admin_dashboard"),
     path("contexte/", views.set_context_view, name="set_context"),
 

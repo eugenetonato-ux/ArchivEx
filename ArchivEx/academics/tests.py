@@ -201,7 +201,7 @@ class GlobalErrorPagesAndUIStatesTest(TestCase):
 
     def test_zero_emoji_policy_in_error_pages(self):
         """Verify zero emojis appear in 403, 404, and 500 error pages."""
-        emojis = ["fa-lock", "fa-bolt", "fa-rocket", "fa-book", "fa-file", "fa-bullseye", "fa-lightbulb", "fa-check", "fa-xmark", "fa-triangle-exclamation"]
+        emojis = ["🔒", "⚡", "🚀", "📚", "📁", "🎯", "💡", "✅", "❌", "⚠️"]
         for endpoint in ["academics:error_403", "academics:error_404", "academics:error_500"]:
             status_code = 403 if "403" in endpoint else (404 if "404" in endpoint else 500)
             res = self.client.get(reverse(endpoint))
@@ -280,7 +280,7 @@ class Phase10PublicAndSearchTests(TestCase):
         """Homepage renders V2 messaging, resource overview, 5-step journey, and ArchivEx Pass."""
         res = self.client.get(reverse("academics:home"))
         self.assertEqual(res.status_code, 200)
-        self.assertContains(res, "Votre espace de ressources pour")
+        self.assertContains(res, "Prends le contrôle de tes examens")
         self.assertContains(res, "Pass Semestre")
         self.assertContains(res, "Comment fonctionne ArchivEx")
 
@@ -348,7 +348,7 @@ class Phase10PublicAndSearchTests(TestCase):
 
     def test_zero_emoji_policy_in_phase10_pages(self):
         """Verify zero emojis exist across home, about, and search templates."""
-        emojis = ["fa-lock", "fa-bolt", "fa-rocket", "fa-book", "fa-file", "fa-bullseye", "fa-lightbulb", "fa-check", "fa-xmark", "fa-triangle-exclamation"]
+        emojis = ["🔒", "⚡", "🚀", "📚", "📁", "🎯", "💡", "✅", "❌", "⚠️"]
         for endpoint in ["academics:home", "academics:about", "academics:global_search"]:
             res = self.client.get(reverse(endpoint))
             content = res.content.decode("utf-8")

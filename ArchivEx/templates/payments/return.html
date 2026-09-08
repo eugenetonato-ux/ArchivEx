@@ -34,7 +34,7 @@
                 </div>
                 <div class="flex justify-between">
                     <span class="text-slate-400">Montant réglé :</span>
-                    <span class="font-bold text-[#071A49]">{{ payment.amount }} FCFA</span>
+                    <span class="font-bold text-[#071A49]">{{ payment.amount }} {{ payment.currency }}</span>
                 </div>
             </div>
 
@@ -55,11 +55,11 @@
             </span>
 
             <h1 class="text-2xl sm:text-3xl font-black text-[#071A49] mb-3">
-                Nous attendons encore la confirmation de SEBPay
+                Confirmation du paiement en cours
             </h1>
 
             <p class="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed max-w-md mx-auto mb-8">
-                Si vous avez effectué le paiement sur la plateforme SEBPay, la confirmation parvient généralement sous quelques instants.
+                Si vous venez d'effectuer votre règlement sur la plateforme sécurisée, la confirmation parvient généralement sous quelques instants.
             </p>
 
             <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left text-xs space-y-2 max-w-md mx-auto mb-8 font-medium text-slate-600">
@@ -99,13 +99,13 @@
             </h1>
 
             <p class="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed max-w-md mx-auto mb-8">
-                Le transfert n'a pas pu être confirmé par SEBPay. Aucun débit n'a été retenu pour ce Pass.
+                Le transfert n'a pas été validé par la plateforme de paiement. Aucun débit n'a été retenu pour ce Pass.
             </p>
 
             <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <a href="{% url 'payments:pass_semestre' semester_id=semester.id %}" class="btn-gold text-xs px-6 py-3.5 font-bold rounded-2xl inline-flex items-center space-x-1.5">
                     <i class="fa-solid fa-rotate-right text-xs" aria-hidden="true"></i>
-                    <span>Réessayer le paiement (4 500 FCFA)</span>
+                    <span>Réessayer le paiement ({{ payment.amount|default:2000 }} FCFA)</span>
                 </a>
                 <a href="{% url 'accounts:dashboard' %}" class="text-xs text-slate-500 hover:text-[#071A49] font-bold py-2">
                     Retour au tableau de bord

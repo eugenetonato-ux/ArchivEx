@@ -53,7 +53,10 @@ class Payment(models.Model):
     phone_number = models.CharField(max_length=20, blank=True)
     
     external_reference = models.CharField(max_length=64, unique=True, null=True, blank=True)
-    sebpay_transaction_id = models.CharField(max_length=100, blank=True)
+    chariow_sale_id = models.CharField(max_length=100, blank=True, db_index=True, help_text="Identifiant de la vente sur Chariow (ex: sal_xxx)")
+    chariow_checkout_url = models.URLField(max_length=500, blank=True, help_text="URL de paiement sécurisée générée par Chariow")
+    chariow_customer_id = models.CharField(max_length=100, blank=True, help_text="Identifiant client Chariow")
+    sebpay_transaction_id = models.CharField(max_length=100, blank=True, help_text="Ancien identifiant SebPay (conservé pour historique)")
     
     status = models.CharField(max_length=20, choices=STATUT_CHOICES, default=STATUS_PENDING, db_index=True)
     paid_at = models.DateTimeField(null=True, blank=True)
@@ -62,6 +65,12 @@ class Payment(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+    @property
+    def gateway_reference(self):
+        """Référence retournée par la passerelle de paiement (Chariow ou legacy)."""
+        return self.chariow_sale_id or self.sebpay_transaction_id or ""
+
 
     @property
     def is_approved(self):

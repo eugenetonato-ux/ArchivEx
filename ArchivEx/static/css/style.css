@@ -829,3 +829,83 @@ img, video, iframe, svg, canvas {
         animation: none !important;
     }
 }
+
+/* ==========================================================================
+   HIGH-CONTRAST & CRISP TYPOGRAPHY FOR LIGHT & DARK MODES
+   ========================================================================== */
+
+/* Anti-blur & Crisp Text Rendering */
+html, body, button, input, select, textarea {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* Enhanced Light Mode Legibility */
+.light body, body:not(.dark) {
+    color: #0F172A;
+}
+
+/* Enhanced Dark Mode Contrast & Crystal-Clear Typography */
+.dark body {
+    color: #F8FAFC;
+    background-color: #0B0F19;
+}
+
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+    color: #F8FAFC !important;
+}
+
+.dark .text-[#071A49],
+.dark .text-slate-900,
+.dark .text-slate-800 {
+    color: #F1F5F9 !important;
+}
+
+.dark .text-slate-700 {
+    color: #E2E8F0 !important;
+}
+
+.dark .text-slate-600 {
+    color: #CBD5E1 !important;
+}
+
+.dark .text-slate-500 {
+    color: #94A3B8 !important;
+}
+
+.dark .text-slate-400 {
+    color: #94A3B8 !important;
+}
+
+/* Crisp Dark Mode Cards & Inputs */
+.dark .bg-white {
+    background-color: #121826 !important;
+    border-color: #1E293B !important;
+}
+
+.dark .bg-slate-50 {
+    background-color: #0F172A !important;
+}
+
+.dark .border-slate-200,
+.dark .border-slate-100 {
+    border-color: #1E293B !important;
+}
+
+/* Dynamic Accent Colors in Dark Mode - Guarantee High Legibility */
+.dark .text-ax-accent,
+.dark [data-accent-text] {
+    color: var(--ax-accent-border) !important;
+}
+
+.dark .badge-ax {
+    background-color: var(--ax-accent-dark-bg) !important;
+    color: var(--ax-accent-border) !important;
+    border-color: var(--ax-accent-soft-border) !important;
+}
+
+.dark .bg-ax-accent {
+    background-color: var(--ax-accent) !important;
+    color: #FFFFFF !important;
+}

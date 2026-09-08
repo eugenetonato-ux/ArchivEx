@@ -138,17 +138,30 @@
     </div>
   </div>
 
- <form method="post" enctype="multipart/form-data" class="space-y-5">
+ <form id="exam-admin-form" method="post" enctype="multipart/form-data" class="space-y-5">
  {% csrf_token %}
+ <input type="hidden" name="confirm_duplicate" id="id_confirm_duplicate" value="0">
 
  <div>
- <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.title.label }}</label>
+ <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200 mb-1.5">{{ form.title.label }}</label>
  {{ form.title }}
+ <div id="live-duplicate-alert" class="hidden mt-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 text-xs text-amber-900 dark:text-amber-200 flex items-start justify-between gap-2 shadow-xs animate-fade-in">
+   <div class="flex items-start space-x-2">
+     <i class="fa-solid fa-triangle-exclamation text-amber-600 dark:text-amber-400 mt-0.5 shrink-0 text-sm"></i>
+     <div>
+       <span class="font-extrabold text-amber-950 dark:text-amber-100">Attention, document similaire détecté :</span>
+       <p id="live-duplicate-desc" class="text-[11px] mt-0.5 text-amber-800 dark:text-amber-300"></p>
+     </div>
+   </div>
+   <button type="button" onclick="openDuplicateModal()" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-black text-[10px] rounded-lg shrink-0 transition-colors shadow-2xs">
+     Voir détails
+   </button>
+ </div>
  {% if form.title.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.title.errors.0 }}</p>{% endif %}
  </div>
 
  <div>
- <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.subject_name.label }}</label>
+ <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200 mb-1.5">{{ form.subject_name.label }}</label>
  {{ form.subject_name }}
  <p class="text-[11px] text-slate-400 mt-1 font-medium">Saisie libre : tapez le nom de la matière. Elle sera créée automatiquement si elle n'existe pas encore.</p>
  {% if form.subject_name.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.subject_name.errors.0 }}</p>{% endif %}
@@ -162,13 +175,13 @@
 
  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
  <div>
- <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.year.label }}</label>
+ <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200 mb-1.5">{{ form.year.label }}</label>
  {{ form.year }}
  {% if form.year.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.year.errors.0 }}</p>{% endif %}
  </div>
 
  <div>
- <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.exam_type.label }}</label>
+ <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200 mb-1.5">{{ form.exam_type.label }}</label>
  {{ form.exam_type }}
  {% if form.exam_type.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.exam_type.errors.0 }}</p>{% endif %}
  </div>
@@ -176,31 +189,31 @@
 
  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
  <div>
- <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.is_free.label }}</label>
+ <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200 mb-1.5">{{ form.is_free.label }}</label>
  {{ form.is_free }}
  {% if form.is_free.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.is_free.errors.0 }}</p>{% endif %}
  </div>
 
  <div>
- <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.is_published.label }}</label>
+ <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200 mb-1.5">{{ form.is_published.label }}</label>
  {{ form.is_published }}
  {% if form.is_published.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.is_published.errors.0 }}</p>{% endif %}
  </div>
  </div>
 
  <!-- INTEGRATED CLOUD SELECTION vs DIRECT UPLOAD -->
- <div class="space-y-4 pt-2 border-t border-slate-100">
- <div class="bg-blue-50/60 p-4 rounded-xl border border-blue-200/80 space-y-3">
- <label class="block text-xs font-black text-[#071A49] flex items-center space-x-1.5">
- <i class="fa-solid fa-cloud text-blue-600"></i>
+ <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+ <div class="bg-blue-50/60 dark:bg-blue-950/30 p-4 rounded-xl border border-blue-200/80 dark:border-blue-900/50 space-y-3">
+ <label class="block text-xs font-black text-[#071A49] dark:text-blue-300 flex items-center space-x-1.5">
+ <i class="fa-solid fa-cloud text-blue-600 dark:text-blue-400"></i>
  <span>1. Sélectionner l'épreuve depuis le Cloud Storage</span>
  </label>
  {{ form.cloud_file }}
  {% if form.cloud_file.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.cloud_file.errors.0 }}</p>{% endif %}
  </div>
 
- <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-2">
- <label class="block text-xs font-bold text-[#071A49]">
+ <div class="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 space-y-2">
+ <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200">
  OU Téléverser directement un nouveau fichier PDF (Il sera archivé dans le Cloud)
  </label>
  {{ form.file }}
@@ -212,9 +225,9 @@
  </div>
 
  <!-- OPTIONAL CORRECTION & SUMMARY CLOUD / FILE UPLOADS -->
- <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50/80 p-4 rounded-xl border border-slate-200/80">
+ <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50/80 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200/80 dark:border-slate-800">
  <div class="space-y-2">
- <label class="block text-xs font-bold text-[#071A49]">
+ <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200">
  <i class="fa-solid fa-file-signature text-amber-500 mr-1" aria-hidden="true"></i> Correction (Cloud ou Téléversement)
  </label>
  {{ form.cloud_correction_file }}
@@ -228,7 +241,7 @@
  </div>
 
  <div class="space-y-2">
- <label class="block text-xs font-bold text-[#071A49]">
+ <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200">
  <i class="fa-solid fa-book-open text-purple-500 mr-1" aria-hidden="true"></i> Résumé (Cloud ou Téléversement)
  </label>
  {{ form.cloud_summary_file }}
@@ -244,7 +257,7 @@
 
  {% if form.semester.field.queryset.count > 1 %}
  <details class="text-xs text-slate-500 pt-1">
- <summary class="font-bold text-[#071A49] cursor-pointer hover:text-blue-600 select-none">
+ <summary class="font-bold text-[#071A49] dark:text-slate-200 cursor-pointer hover:text-blue-600 select-none">
  <i class="fa-solid fa-sliders text-slate-400 mr-1" aria-hidden="true"></i> Changer manuellement de semestre (optionnel)
  </summary>
  <div class="pt-2">
@@ -255,16 +268,16 @@
  {% endif %}
 
  <div>
- <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.description.label }}</label>
+ <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200 mb-1.5">{{ form.description.label }}</label>
  {{ form.description }}
  {% if form.description.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.description.errors.0 }}</p>{% endif %}
  </div>
 
- <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
- <a href="{% url 'contributors:exam_list' %}" class="text-xs font-bold text-slate-500 hover:text-slate-800">
+ <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+ <a href="{% url 'contributors:exam_list' %}" class="text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-300">
  Annuler
  </a>
- <button type="submit" class="btn-primary text-xs px-6 py-3 font-extrabold rounded-xl shadow-sm flex items-center space-x-2">
+ <button type="submit" id="btn-submit-exam" class="btn-primary text-xs px-6 py-3 font-extrabold rounded-xl shadow-sm flex items-center space-x-2">
  <i class="fa-solid fa-paper-plane text-xs" aria-hidden="true"></i>
  <span>{% if is_create %}Publier l'épreuve{% else %}Enregistrer les modifications{% endif %}</span>
  </button>
@@ -272,6 +285,91 @@
  </form>
  </div>
 
+</div>
+
+<!-- DUPLICATE WARNING MODAL -->
+<div id="duplicate-warning-modal" class="fixed inset-0 z-[150] bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 {% if not duplicate_warning %}hidden{% endif %} transition-all duration-200" role="dialog" aria-modal="true" aria-labelledby="dup-modal-title">
+  <div class="bg-white dark:bg-[#121824] rounded-2xl max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-scale-up">
+    <!-- MODAL HEADER -->
+    <div class="bg-gradient-to-r from-amber-500 to-orange-600 p-5 text-white flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-lg font-black shrink-0">
+          <i class="fa-solid fa-copy"></i>
+        </div>
+        <div>
+          <h3 id="dup-modal-title" class="text-base font-black tracking-tight leading-tight">Épreuve / Document déjà existant</h3>
+          <p class="text-xs text-amber-100 font-medium">Un document similaire a été trouvé dans la base</p>
+        </div>
+      </div>
+      <button type="button" onclick="closeDuplicateModal()" class="w-8 h-8 rounded-lg bg-black/10 hover:bg-black/20 flex items-center justify-center text-white transition-colors" aria-label="Fermer">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+
+    <!-- MODAL BODY -->
+    <div class="p-6 space-y-4">
+      <div class="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-950 dark:text-amber-200 space-y-2">
+        <p class="font-extrabold flex items-center space-x-1.5 text-amber-900 dark:text-amber-100">
+          <i class="fa-solid fa-circle-exclamation text-amber-600"></i>
+          <span>Attention : Cette épreuve semble déjà enregistrée ou publiée !</span>
+        </p>
+        <p class="text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+          Pour éviter les doublons et préserver la qualité de la base d'archives, veuillez vérifier si vous souhaitez mettre à jour le document existant ou forcer une nouvelle publication.
+        </p>
+      </div>
+
+      <!-- EXISTING EXAM DETAILS CARD -->
+      <div class="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2.5">
+        <div class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Détails du document existant</div>
+        <div class="text-sm font-black text-[#071A49] dark:text-slate-100" id="dup-exam-title">
+          {% if existing_duplicate %}{{ existing_duplicate.title }}{% else %}Titre de l'épreuve{% endif %}
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 block">Matière / UE :</span>
+            <span class="font-bold text-slate-700 dark:text-slate-200" id="dup-exam-subject">
+              {% if existing_duplicate and existing_duplicate.subject %}{{ existing_duplicate.subject.name }}{% else %}N/A{% endif %}
+            </span>
+          </div>
+          <div>
+            <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 block">Semestre / Filière :</span>
+            <span class="font-bold text-slate-700 dark:text-slate-200" id="dup-exam-semester">
+              {% if existing_duplicate and existing_duplicate.semester %}{{ existing_duplicate.semester.label }}{% endif %}
+            </span>
+          </div>
+          <div>
+            <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 block">Année Académique :</span>
+            <span class="font-bold text-slate-700 dark:text-slate-200" id="dup-exam-year">
+              {% if existing_duplicate %}{% if existing_duplicate.academic_year %}{{ existing_duplicate.academic_year.label }}{% else %}{{ existing_duplicate.year }}{% endif %}{% else %}Non spécifiée{% endif %}
+            </span>
+          </div>
+          <div>
+            <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 block">Statut actuel :</span>
+            <span class="font-bold text-emerald-600 dark:text-emerald-400" id="dup-exam-status">
+              {% if existing_duplicate and existing_duplicate.is_published %}Publiée{% else %}Brouillon{% endif %}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL FOOTER / ACTIONS -->
+    <div class="p-5 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-end gap-2.5">
+      <button type="button" onclick="closeDuplicateModal()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors">
+        Modifier le nom / Annuler
+      </button>
+
+      <a id="dup-edit-link" href="{% if existing_duplicate and existing_duplicate.id %}/administration/epreuves/{{ existing_duplicate.id }}/modifier/{% else %}#{% endif %}" target="_blank" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#071A49] hover:bg-[#1e3a8a] text-white font-black text-xs transition-colors inline-flex items-center justify-center space-x-1.5 shadow-sm">
+        <i class="fa-solid fa-pen-to-square"></i>
+        <span>Consulter l'épreuve existante</span>
+      </a>
+
+      <button type="button" onclick="confirmDuplicateAndSubmit()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-black text-xs transition-colors shadow-sm flex items-center justify-center space-x-1.5">
+        <i class="fa-solid fa-check"></i>
+        <span>Publier quand même</span>
+      </button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -430,5 +528,124 @@ function runOcrExtraction() {
     }
   }
 }
+
+// ==========================================
+// GESTION DU MODAL DE DOUBLON D'ÉPREUVE
+// ==========================================
+let detectedDuplicateData = null;
+
+function openDuplicateModal(dupData) {
+  const modal = document.getElementById('duplicate-warning-modal');
+  if (!modal) return;
+
+  const data = dupData || detectedDuplicateData;
+  if (data) {
+    const titleEl = document.getElementById('dup-exam-title');
+    const subjEl = document.getElementById('dup-exam-subject');
+    const semEl = document.getElementById('dup-exam-semester');
+    const yrEl = document.getElementById('dup-exam-year');
+    const statusEl = document.getElementById('dup-exam-status');
+    const editLink = document.getElementById('dup-edit-link');
+
+    if (titleEl) titleEl.innerText = data.title || 'Document existant';
+    if (subjEl) subjEl.innerText = data.subject || 'Matière non spécifiée';
+    if (semEl) semEl.innerText = (data.semester || '') + (data.filiere ? ' (' + data.filiere + ')' : '');
+    if (yrEl) yrEl.innerText = data.academic_year || 'Non spécifiée';
+    if (statusEl) statusEl.innerText = data.is_published ? 'Publiée' : 'Brouillon';
+    if (editLink && data.edit_url) editLink.href = data.edit_url;
+  }
+
+  modal.classList.remove('hidden');
+}
+
+function closeDuplicateModal() {
+  const modal = document.getElementById('duplicate-warning-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function confirmDuplicateAndSubmit() {
+  const confirmInput = document.getElementById('id_confirm_duplicate');
+  const form = document.getElementById('exam-admin-form');
+  if (confirmInput && form) {
+    confirmInput.value = '1';
+    closeDuplicateModal();
+    form.submit();
+  }
+}
+
+// Vérification AJAX dynamique lors de la saisie
+let duplicateDebounceTimer = null;
+function checkDuplicateAsync() {
+  const titleInput = document.getElementById('id_title') || document.querySelector('input[name="title"]');
+  const subjInput = document.getElementById('id_subject_name') || document.querySelector('input[name="subject_name"]');
+  const semesterSelect = document.getElementById('id_semester') || document.querySelector('select[name="semester"]');
+  
+  const title = titleInput ? titleInput.value.trim() : '';
+  const subj = subjInput ? subjInput.value.trim() : '';
+  const semesterId = semesterSelect ? semesterSelect.value : '';
+
+  const alertBox = document.getElementById('live-duplicate-alert');
+  const descEl = document.getElementById('live-duplicate-desc');
+
+  if (!title && !subj) {
+    if (alertBox) alertBox.classList.add('hidden');
+    detectedDuplicateData = null;
+    return;
+  }
+
+  clearTimeout(duplicateDebounceTimer);
+  duplicateDebounceTimer = setTimeout(() => {
+    const params = new URLSearchParams({
+      title: title,
+      subject_name: subj,
+      semester_id: semesterId || '',
+      {% if exam %}exclude_id: '{{ exam.id }}'{% endif %}
+    });
+
+    fetch("{% url 'contributors:api_check_exam_duplicate' %}?" + params.toString(), {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.duplicate) {
+        detectedDuplicateData = data;
+        if (alertBox && descEl) {
+          descEl.innerHTML = `L'épreuve <strong>« ${data.title} »</strong> existe déjà pour <strong>${data.subject}</strong> (${data.academic_year || ''}).`;
+          alertBox.classList.remove('hidden');
+        }
+      } else {
+        detectedDuplicateData = null;
+        if (alertBox) alertBox.classList.add('hidden');
+      }
+    })
+    .catch(err => console.debug("Duplicate check skipped:", err));
+  }, 400);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const titleInput = document.getElementById('id_title') || document.querySelector('input[name="title"]');
+  const subjInput = document.getElementById('id_subject_name') || document.querySelector('input[name="subject_name"]');
+  const form = document.getElementById('exam-admin-form');
+
+  if (titleInput) {
+    titleInput.addEventListener('input', checkDuplicateAsync);
+    titleInput.addEventListener('blur', checkDuplicateAsync);
+  }
+  if (subjInput) {
+    subjInput.addEventListener('input', checkDuplicateAsync);
+    subjInput.addEventListener('blur', checkDuplicateAsync);
+  }
+
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      const confirmInput = document.getElementById('id_confirm_duplicate');
+      if (detectedDuplicateData && (!confirmInput || confirmInput.value !== '1')) {
+        e.preventDefault();
+        openDuplicateModal(detectedDuplicateData);
+      }
+    });
+  }
+});
 </script>
 {% endblock %}
+

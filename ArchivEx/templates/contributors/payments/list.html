@@ -1,7 +1,7 @@
 {% extends "contributors/admin_base.html" %}
 {% load static %}
 
-{% block admin_title %}Suivi des Paiements SebPay | Administration ArchivEx{% endblock %}
+{% block admin_title %}Suivi des Paiements | Administration ArchivEx{% endblock %}
 
 {% block admin_content %}
 <div class="space-y-6">
@@ -11,13 +11,13 @@
         <div>
             <div class="flex items-center space-x-2 text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">
                 <i class="fa-solid fa-credit-card text-sm" aria-hidden="true"></i>
-                <span>Supervision Financière Mobile Money</span>
+                <span>Supervision Financière des Paiements</span>
             </div>
             <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">
-                Paiements SebPay & Pass Semestre
+                Paiements Chariow & Pass Semestre
             </h1>
             <p class="text-xs text-slate-500 font-medium mt-1">
-                Suivi des encaissements MTN, Moov et Celtiis en temps réel.
+                Suivi des encaissements en temps réel via la passerelle Chariow.
             </p>
         </div>
         <div class="flex items-center space-x-2">
@@ -40,7 +40,7 @@
         <a href="?filter=pending" class="p-4 rounded-2xl border transition-all {% if status_filter == 'pending' %}bg-amber-500 text-white border-amber-500 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-amber-300{% endif %}">
             <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">En Attente</div>
             <div class="text-2xl font-black mt-1 {% if status_filter == 'pending' %}text-white{% else %}text-amber-600{% endif %}">{{ pending_count }}</div>
-            <div class="text-[11px] font-semibold mt-2 opacity-90">Validation téléphone</div>
+            <div class="text-[11px] font-semibold mt-2 opacity-90">Validation paiement</div>
         </a>
 
         <!-- APPROVED -->
@@ -54,7 +54,7 @@
         <a href="?filter=rejected" class="p-4 rounded-2xl border transition-all {% if status_filter == 'rejected' %}bg-rose-600 text-white border-rose-600 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-rose-300{% endif %}">
             <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Rejetés / Échoués</div>
             <div class="text-2xl font-black mt-1 {% if status_filter == 'rejected' %}text-white{% else %}text-rose-600{% endif %}">{{ rejected_count }}</div>
-            <div class="text-[11px] font-semibold mt-2 opacity-90">Transactions annulées</div>
+            <div class="text-[11px] font-semibold mt-2 opacity-90">Transactions non abouties</div>
         </a>
     </div>
 
@@ -62,7 +62,7 @@
     <form method="get" class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row gap-3">
         <input type="hidden" name="filter" value="{{ status_filter }}">
         <div class="relative flex-grow">
-            <input type="text" name="q" value="{{ q }}" placeholder="Rechercher par étudiant, téléphone, référence externe ou transaction SebPay..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#071A49] placeholder-slate-400 focus:ring-2 focus:ring-blue-600 outline-none">
+            <input type="text" name="q" value="{{ q }}" placeholder="Rechercher par étudiant, téléphone, référence externe ou vente Chariow..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#071A49] placeholder-slate-400 focus:ring-2 focus:ring-blue-600 outline-none">
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs" aria-hidden="true"></i>
         </div>
         <div class="flex items-center space-x-2">
@@ -133,8 +133,10 @@
                             </td>
                             <td class="py-3.5 px-4 text-right font-mono font-bold text-[11px] text-blue-600">
                                 {{ p.external_reference }}
-                                {% if p.sebpay_transaction_id %}
-                                    <div class="text-[10px] text-slate-400 font-normal">ID: {{ p.sebpay_transaction_id }}</div>
+                                {% if p.chariow_sale_id %}
+                                    <div class="text-[10px] text-slate-400 font-normal">Chariow: {{ p.chariow_sale_id }}</div>
+                                {% elif p.sebpay_transaction_id %}
+                                    <div class="text-[10px] text-slate-400 font-normal">Legacy: {{ p.sebpay_transaction_id }}</div>
                                 {% endif %}
                             </td>
                         </tr>
