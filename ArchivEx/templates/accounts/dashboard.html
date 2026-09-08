@@ -19,7 +19,7 @@
                 </div>
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-black text-blue-950 dark:text-slate-100 tracking-tight mb-1">Bonjour, {{ user.first_name|default:user.username }}</h1>
-                    <p class="text-xs sm:text-sm text-blue-800/70 dark:text-blue-200/50 font-medium">
+                    <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium">
                         {% if profile and profile.filiere %}
                             {{ profile.school.name|default:"Université" }} · {{ profile.filiere.name }} (L1)
                         {% else %}
