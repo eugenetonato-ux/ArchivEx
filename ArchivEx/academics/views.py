@@ -351,6 +351,9 @@ def icon_512_view(request):
 
     response = FileResponse(open(path, "rb"), content_type="image/png")
     response["Cache-Control"] = "public, max-age=86400"
+    return response
+
+
 def favicon_view(request):
     """Sert l'icône favicon."""
     import os

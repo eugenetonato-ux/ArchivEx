@@ -212,12 +212,15 @@ def dashboard_view(request):
         "#64748B",  # Ardoise Élégante
     ]
 
-    consultation_counts = dict(
-        SubjectConsultation.objects.filter(
-            user=request.user,
-            subject__in=user_ues
-        ).values("subject_id").annotate(total=Count("id")).values_list("subject_id", "total")
-    )
+    try:
+        consultation_counts = dict(
+            SubjectConsultation.objects.filter(
+                user=request.user,
+                subject__in=user_ues
+            ).values("subject_id").annotate(total=Count("id")).values_list("subject_id", "total")
+        )
+    except Exception:
+        consultation_counts = {}
 
     ue_chart_labels = []
     ue_chart_counts = []
