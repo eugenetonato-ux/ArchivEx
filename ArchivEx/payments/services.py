@@ -163,8 +163,20 @@ def create_chariow_checkout(payment, redirect_url=None):
 
     user = payment.user
     email = getattr(user, "email", None) or f"{user.username}@archivex.bj"
-    first_name = getattr(user, "first_name", "") or user.username
-    last_name = getattr(user, "last_name", "") or ""
+    raw_first = (getattr(user, "first_name", "") or "").strip()
+    raw_last = (getattr(user, "last_name", "") or "").strip()
+
+    if not raw_last:
+        if " " in raw_first:
+            first_name, last_name = raw_first.split(" ", 1)
+        elif " " in (user.username or ""):
+            first_name, last_name = user.username.split(" ", 1)
+        else:
+            first_name = raw_first or user.username or "Étudiant"
+            last_name = "ArchivEx"
+    else:
+        first_name = raw_first or user.username or "Étudiant"
+        last_name = raw_last
 
     # Nettoyage du numéro pour l'objet phone
     phone_digits = re.sub(r"[^\d]", "", str(payment.phone_number or ""))

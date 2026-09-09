@@ -5,6 +5,11 @@
 
 {% block content %}
 <style>
+    /* Masquer le bouton support flottant pour une vue sans compromis */
+    #floating-support-btn {
+        display: none !important;
+    }
+
     /* Protection anti-impression et anti-copie */
     @media print {
         body { display: none !important; }
@@ -16,6 +21,28 @@
         -moz-user-select: none;
         -ms-user-select: none;
         user-select: none;
+    }
+
+    /* Barre de défilement verticale visible et ergonomique pour lire l'épreuve sans rétrécir */
+    #viewer-container {
+        scrollbar-width: thin;
+        scrollbar-color: #475569 #0f172a;
+    }
+    #viewer-container::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    #viewer-container::-webkit-scrollbar-track {
+        background: #0f172a;
+        border-radius: 9999px;
+    }
+    #viewer-container::-webkit-scrollbar-thumb {
+        background: #475569;
+        border-radius: 9999px;
+        border: 2px solid #0f172a;
+    }
+    #viewer-container::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
     }
 </style>
 
@@ -107,7 +134,7 @@
     </div>
 
     <!-- PROTECTED PDF EMBEDDED VIEWER WITH CANVAS & FALLBACK IFRAME -->
-    <div id="viewer-container" class="w-full h-[750px] rounded-3xl overflow-auto bg-slate-900 border border-slate-300 shadow-xl relative transition-all duration-200 flex flex-col items-center justify-start p-4">
+    <div id="viewer-container" class="w-full h-[82vh] min-h-[620px] max-h-[920px] rounded-3xl overflow-y-auto overflow-x-auto bg-slate-900 border border-slate-700 shadow-2xl relative transition-all duration-200 flex flex-col items-center justify-start p-3 sm:p-5">
         
         <!-- LOADING SPINNER -->
         <div id="pdf-loader-spinner" class="absolute inset-0 z-10 bg-slate-900/90 backdrop-blur-sm flex flex-col items-center justify-center space-y-3 p-6 text-center">
@@ -133,8 +160,8 @@
         </div>
 
         <!-- CANVAS RENDERER CONTAINER -->
-        <div id="canvas-wrapper" class="relative z-30 flex flex-col items-center justify-center w-full min-h-full">
-            <canvas id="pdf-canvas" class="shadow-2xl rounded-xl bg-white max-w-full"></canvas>
+        <div id="canvas-wrapper" class="relative z-30 flex flex-col items-center justify-start w-full py-2">
+            <canvas id="pdf-canvas" class="shadow-2xl rounded-xl bg-white block"></canvas>
         </div>
 
         <!-- FALLBACK IFRAME (IF PDF.JS UNSUPPORTED OR BLOCKED) -->
@@ -178,6 +205,28 @@
 
         document.getElementById('page-num').textContent = num;
         document.getElementById('zoom-level').textContent = Math.round(scale * 100) + '%';
+        const vc = document.getElementById('viewer-container');
+        if (vc) vc.scrollTop = 0;
+    }
+
+    function calculateOptimalScale(page) {
+        const container = document.getElementById('viewer-container');
+        const containerWidth = (container ? container.clientWidth : window.innerWidth) - 40;
+        const unscaledViewport = page.getViewport({scale: 1.0});
+        
+        // Sur grand écran / desktop / tablette, on cale l'épreuve à une largeur de lecture naturelle et lisible
+        // L'étudiant peut ainsi lire immédiatement avec un défilement vertical complet sans avoir à zoomer ni rétrécir.
+        let targetWidth = containerWidth;
+        if (window.innerWidth >= 1200) {
+            targetWidth = Math.min(containerWidth, 960);
+        } else if (window.innerWidth >= 768) {
+            targetWidth = Math.min(containerWidth, 840);
+        }
+        
+        let calculated = targetWidth / unscaledViewport.width;
+        if (calculated < 0.85) calculated = 0.85;
+        if (calculated > 2.2) calculated = 2.2;
+        return calculated;
     }
 
     function queueRenderPage(num) {
@@ -204,27 +253,36 @@
 
     document.getElementById('zoom-in').addEventListener('click', () => {
         if (scale < 3.0) {
-            scale += 0.25;
+            scale += 0.20;
             queueRenderPage(pageNum);
         }
     });
 
     document.getElementById('zoom-out').addEventListener('click', () => {
-        if (scale > 0.5) {
-            scale -= 0.25;
+        if (scale > 0.6) {
+            scale -= 0.20;
             queueRenderPage(pageNum);
         }
     });
 
     document.getElementById('fit-width').addEventListener('click', () => {
         pdfDoc.getPage(pageNum).then(function(page) {
-            let containerWidth = document.getElementById('viewer-container').clientWidth - 60;
-            let unscaledViewport = page.getViewport({scale: 1.0});
-            scale = containerWidth / unscaledViewport.width;
-            if (scale < 0.5) scale = 0.5;
-            if (scale > 3.0) scale = 3.0;
+            scale = calculateOptimalScale(page);
             queueRenderPage(pageNum);
         });
+    });
+
+    // Auto-adaptation fluide en cas de rotation d'écran ou redimensionnement
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+        if (!pdfDoc) return;
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            pdfDoc.getPage(pageNum).then(function(page) {
+                scale = calculateOptimalScale(page);
+                queueRenderPage(pageNum);
+            });
+        }, 200);
     });
 
     // Initialize PDF.js loading
@@ -247,14 +305,9 @@
             pdfDoc = pdfDoc_;
             document.getElementById('page-count').textContent = pdfDoc.numPages;
             
-            // Calcul automatique de l'ajustement à l'écran dès la 1ère page
+            // Calcul automatique de l'ajustement optimal dès la 1ère page (lecture directe sans zoomer/rétrécir)
             pdfDoc.getPage(1).then(function(firstPage) {
-                const container = document.getElementById('viewer-container');
-                const containerWidth = (container ? container.clientWidth : window.innerWidth) - 48;
-                const unscaledViewport = firstPage.getViewport({scale: 1.0});
-                scale = containerWidth / unscaledViewport.width;
-                if (scale < 0.75) scale = 0.75;
-                if (scale > 1.6) scale = 1.6;
+                scale = calculateOptimalScale(firstPage);
 
                 const spinner = document.getElementById('pdf-loader-spinner');
                 if (spinner) spinner.classList.add('hidden');
