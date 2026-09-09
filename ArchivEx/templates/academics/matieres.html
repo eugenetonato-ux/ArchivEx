@@ -59,7 +59,17 @@
                 </p>
             </div>
 
-            {% if semester and not has_semester_access %}
+            {% if has_semester_access %}
+                <div class="flex items-center space-x-3 bg-emerald-500/15 border border-emerald-400/30 rounded-2xl px-4 py-3 text-emerald-300">
+                    <span class="w-8 h-8 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-black text-xs shrink-0 shadow-sm">
+                        <i class="fa-solid fa-unlock-keyhole"></i>
+                    </span>
+                    <div>
+                        <span class="text-xs font-black text-white block">Accès Pass Débloqué</span>
+                        <span class="text-[10px] text-emerald-200 font-medium">Accès illimité pour {{ user.first_name|default:user.username }}</span>
+                    </div>
+                </div>
+            {% elif semester %}
                 <a href="{% url 'payments:pass_semestre' semester_id=semester.id %}" class="btn-gold text-xs px-5 py-3 font-black rounded-xl shadow-lg shadow-amber-500/25 flex-shrink-0 flex items-center space-x-2 transition-transform hover:scale-[1.02] active:scale-[0.98]">
                     <i class="fa-solid fa-lock text-xs" aria-hidden="true"></i>
                     <span>Débloquer le Pass (4 500 FCFA)</span>
@@ -80,7 +90,7 @@
             </span>
         </div>
         <span class="text-xs text-slate-400 font-medium hidden sm:inline-block">
-            Clique sur une matière pour voir ses épreuves
+            {% if has_semester_access %}Toutes les matières sont prêtes pour vos révisions{% else %}Clique sur une matière pour voir ses épreuves{% endif %}
         </span>
     </div>
 
@@ -120,8 +130,13 @@
                         </span>
                     {% endif %}
 
-                    <!-- Free Badge in Top-Right if applicable -->
-                    {% if subj.is_free %}
+                    <!-- Top-Right Status Badge -->
+                    {% if has_semester_access %}
+                        <span class="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 px-2 py-0.5 rounded-md bg-emerald-600/90 backdrop-blur-md text-[9px] sm:text-[10px] font-extrabold text-white shadow-sm flex items-center space-x-1">
+                            <i class="fa-solid fa-check text-[8px]" aria-hidden="true"></i>
+                            <span>Débloqué</span>
+                        </span>
+                    {% elif subj.is_free %}
                         <span class="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-emerald-500/90 backdrop-blur-md text-[9px] sm:text-[10px] font-black text-white shadow-sm flex items-center space-x-1">
                             <i class="fa-solid fa-gift text-[8px] sm:text-[9px]" aria-hidden="true"></i>
                             <span class="hidden xs:inline">Gratuit</span>

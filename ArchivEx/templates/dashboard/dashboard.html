@@ -182,25 +182,25 @@
 
                 <!-- Insights: UE la plus consultée & UE à approfondir -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- Top consultée -->
-                    <div class="p-4 rounded-2xl bg-gradient-to-br from-blue-50/70 to-indigo-50/40 border border-blue-100 flex items-center justify-between">
+                    <!-- Top consultée (Style Noir Profond) -->
+                    <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 shadow-sm flex items-center justify-between text-white">
                         <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 rounded-xl bg-[#2563EB] text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                            <div class="w-10 h-10 rounded-xl bg-white/10 text-amber-400 border border-white/15 flex items-center justify-center font-bold text-sm shadow-inner">
                                 <i class="fa-solid fa-fire"></i>
                             </div>
                             <div>
-                                <span class="text-[10px] font-black uppercase tracking-wider text-blue-700 block">Matière la plus révisée</span>
-                                <h3 class="text-xs font-bold text-[#071A49] line-clamp-1">
+                                <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Matière la plus révisée</span>
+                                <h3 class="text-xs font-black text-white line-clamp-1">
                                     {% if most_consulted_ue %}{{ most_consulted_ue.name }}{% else %}Pas encore d'activité{% endif %}
                                 </h3>
                             </div>
                         </div>
                         {% if most_consulted_ue %}
-                            <span class="text-xs font-black text-[#2563EB] bg-white px-2.5 py-1 rounded-xl shadow-2xs border border-blue-200">
+                            <span class="text-xs font-black text-white bg-white/15 px-2.5 py-1 rounded-xl shadow-2xs border border-white/20">
                                 {{ most_consulted_ue.count }} vue{{ most_consulted_ue.count|pluralize }} ({{ most_consulted_ue.percent }}%)
                             </span>
                         {% else %}
-                            <span class="text-[11px] font-semibold text-slate-400">0 consultation</span>
+                            <span class="text-[11px] font-bold text-slate-300 bg-white/10 px-2.5 py-1 rounded-xl border border-white/15">0 consultation</span>
                         {% endif %}
                     </div>
 
@@ -312,51 +312,49 @@
         <!-- SECONDARY SIDEBAR COLUMN (4 COLS ON DESKTOP) -->
         <div class="lg:col-span-4 space-y-6 sticky top-20">
             
-            <!-- COMPACT PREMIUM STATUS CARD -->
-            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-                <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-100">
-                    <h3 class="text-xs font-extrabold text-[#071A49] uppercase tracking-wider flex items-center space-x-1.5">
-                        <i class="fa-solid fa-bolt text-amber-500"></i>
-                        <span>ArchivEx Pass</span>
-                    </h3>
-                    {% if active_pass %}
-                        <span class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center space-x-1">
-                            <i class="fa-solid fa-check text-[9px]"></i>
-                            <span>Actif</span>
+            <!-- STATUT D'ACCÈS ÉTUDIANT -->
+            {% if active_pass %}
+                <!-- Message de déblocage complet (aucun appel d'activation) -->
+                <div class="bg-gradient-to-br from-emerald-50 to-teal-50/40 border border-emerald-200/90 rounded-3xl p-6 shadow-sm">
+                    <div class="flex items-center space-x-3 mb-2.5">
+                        <span class="w-9 h-9 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-sm font-black shadow-xs flex-shrink-0">
+                            <i class="fa-solid fa-unlock-keyhole"></i>
                         </span>
-                    {% else %}
-                        <span class="text-[10px] font-extrabold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">Gratuit</span>
-                    {% endif %}
-                </div>
-
-                {% if active_pass %}
-                    <div class="space-y-2 mb-4 text-xs">
-                        <p class="font-extrabold text-emerald-900 flex items-center space-x-1">
-                            <i class="fa-solid fa-circle-check"></i>
-                            <span>Pass Semestre Actif</span>
-                        </p>
-                        <p class="text-slate-500 text-[11px]">Accès illimité débloqué pour l'ensemble de tes épreuves et cours rédigés.</p>
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-800 block">Accès Débloqué</span>
+                            <h3 class="text-xs font-black text-[#071A49]">Pass Semestre Actif</h3>
+                        </div>
                     </div>
-                    <a href="{% url 'academics:filieres' %}" class="btn-primary w-full text-xs py-2.5 font-bold block text-center rounded-xl">
-                        Accéder à mes cours
-                    </a>
-                {% else %}
+                    <p class="text-xs text-slate-600 leading-relaxed font-medium">
+                        Votre Pass est activé. Vous bénéficiez d'un accès illimité à l'intégralité des épreuves, corrigés et résumés de cours.
+                    </p>
+                </div>
+            {% else %}
+                <!-- CARTE ACTIVATION PASS (Affichée uniquement si non payé) -->
+                <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                    <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-100">
+                        <h3 class="text-xs font-extrabold text-[#071A49] uppercase tracking-wider flex items-center space-x-1.5">
+                            <i class="fa-solid fa-bolt text-amber-500"></i>
+                            <span>ArchivEx Pass</span>
+                        </h3>
+                        <span class="text-[10px] font-extrabold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">Gratuit</span>
+                    </div>
                     <p class="text-xs text-slate-600 mb-4 leading-relaxed font-medium">
-                        Accède à toutes les épreuves et résumés de ton semestre.
+                        Accédez à toutes les épreuves et résumés de votre semestre sans restriction.
                     </p>
                     {% if active_semester %}
                         <a href="{% url 'payments:pass_semestre' active_semester.id %}" class="btn-gold w-full text-xs py-3 font-black block text-center rounded-xl shadow-md flex items-center justify-center space-x-1.5">
                             <i class="fa-solid fa-lock text-xs"></i>
-                            <span>Découvrir le Pass Semestre</span>
+                            <span>Débloquer mon Pass</span>
                         </a>
                     {% else %}
                         <a href="{% url 'academics:filieres' %}" class="btn-gold w-full text-xs py-3 font-black block text-center rounded-xl shadow-md flex items-center justify-center space-x-1.5">
                             <i class="fa-solid fa-lock text-xs"></i>
-                            <span>Découvrir le Pass Semestre</span>
+                            <span>Débloquer mon Pass</span>
                         </a>
                     {% endif %}
-                {% endif %}
-            </div>
+                </div>
+            {% endif %}
 
             <!-- COMPACT NOTIFICATIONS CARD -->
             <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
