@@ -195,8 +195,7 @@ def stream_exam_pdf(request, pk):
     else:
         return redirect(file_obj.url)
 
-    is_download = request.GET.get("download") == "1"
-    disposition = "attachment" if is_download else "inline"
+    disposition = "inline"
     subj_name = exam.subject.name if exam.subject else "Epreuve"
     safe_filename = _sanitize_header_filename(f"ArchivEx_{subj_name}_{exam.year}") + ".pdf"
     response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
@@ -231,8 +230,7 @@ def stream_correction_pdf(request, pk):
     else:
         return redirect(file_obj.url)
 
-    is_download = request.GET.get("download") == "1"
-    disposition = "attachment" if is_download else "inline"
+    disposition = "inline"
     subj_name = exam.subject.name if exam.subject else "Correction"
     safe_filename = _sanitize_header_filename(f"ArchivEx_Correction_{subj_name}_{exam.year}") + ".pdf"
     response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
@@ -273,8 +271,7 @@ def stream_summary_pdf(request, pk):
     else:
         return redirect(file_obj.url)
 
-    is_download = request.GET.get("download") == "1"
-    disposition = "attachment" if is_download else "inline"
+    disposition = "inline"
     subj_name = exam.subject.name if exam.subject else "Resume"
     safe_filename = _sanitize_header_filename(f"ArchivEx_Resume_{subj_name}_{exam.year}") + ".pdf"
     response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
@@ -445,14 +442,34 @@ def stream_watermarked_pdf_view(request, pk):
     if not file_obj:
         return _render_pdf_error_response("Le fichier PDF demandé n'est pas encore disponible sur le serveur.")
 
+    subj_name = exam.subject.name if exam.subject else "Document"
+    safe_filename = _sanitize_header_filename(f"ArchivEx_{res_type}_{subj_name}_{exam.year}") + ".pdf"
+
+    # 1. Vérification du cache serveur (réponse instantanée sous ~5ms)
+    from django.core.cache import cache
+    file_mtime = 0
+    if isinstance(file_obj, str) and os.path.exists(file_obj):
+        file_mtime = int(os.path.getmtime(file_obj))
+
+    cache_key = f"wm_pdf_{exam.id}_{res_type}_{request.user.id}_{file_mtime}"
+    from io import BytesIO
+    cached_pdf = cache.get(cache_key)
+    if cached_pdf:
+        response = FileResponse(BytesIO(cached_pdf), content_type="application/pdf")
+        response["Content-Length"] = len(cached_pdf)
+        response["Accept-Ranges"] = "bytes"
+        response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
+        return response
+
     try:
         watermarked_io = apply_student_watermark(file_obj, request.user)
-        response = FileResponse(
-            watermarked_io,
-            content_type="application/pdf"
-        )
-        subj_name = exam.subject.name if exam.subject else "Document"
-        safe_filename = _sanitize_header_filename(f"ArchivEx_{res_type}_{subj_name}_{exam.year}") + ".pdf"
+        pdf_bytes = watermarked_io.getvalue()
+        # Enregistrement en cache pour 3 heures (10800s)
+        cache.set(cache_key, pdf_bytes, timeout=10800)
+
+        response = FileResponse(BytesIO(pdf_bytes), content_type="application/pdf")
+        response["Content-Length"] = len(pdf_bytes)
+        response["Accept-Ranges"] = "bytes"
         response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
         return response
     except Exception:
@@ -468,8 +485,6 @@ def stream_watermarked_pdf_view(request, pk):
                 watermarked_io,
                 content_type="application/pdf"
             )
-            subj_name = exam.subject.name if exam.subject else "Document"
-            safe_filename = _sanitize_header_filename(f"ArchivEx_{res_type}_{subj_name}_{exam.year}") + ".pdf"
             response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
             return response
         except Exception:

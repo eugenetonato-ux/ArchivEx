@@ -309,26 +309,27 @@
                 </form>
             </div>
 
-            <!-- USER INFO, LOGOUT & EXIT TO SITE -->
-            <div class="hidden sm:flex items-center space-x-1 sm:space-x-2 text-xs shrink-0">
+            <!-- USER INFO, LOGOUT & EXIT TO PUBLIC SITE -->
+            <div class="flex items-center space-x-1.5 sm:space-x-2 text-xs shrink-0">
                 <div class="hidden lg:flex items-center space-x-2 text-slate-300 bg-white/5 px-2.5 py-1 rounded-lg border border-white/10">
                     <i class="fa-solid fa-user-shield text-amber-400 text-xs" aria-hidden="true"></i>
                     <span class="font-bold text-white">{{ user.first_name|default:user.username }}</span>
                 </div>
                 
                 <!-- COMFORT / DARK MODE TOGGLE -->
-                <button type="button" onclick="toggleDarkMode()" class="text-xs px-2 sm:px-3 py-1.5 font-bold rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-colors flex items-center space-x-1.5" title="Mode Confort (Thème Sombre)">
-                    <i class="fa-solid fa-moon text-amber-300 dark:hidden"></i>
-                    <i class="fa-solid fa-sun text-yellow-400 hidden dark:block"></i>
+                <button type="button" onclick="toggleDarkMode()" class="p-1.5 sm:px-3 sm:py-1.5 font-bold rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-colors flex items-center space-x-1.5 shrink-0" title="Mode Confort (Thème Sombre)">
+                    <i class="fa-solid fa-moon text-amber-300 dark:hidden text-xs"></i>
+                    <i class="fa-solid fa-sun text-yellow-400 hidden dark:block text-xs"></i>
                     <span class="hidden sm:inline">Mode Confort</span>
                 </button>
                 
-                <a href="{% url 'academics:home' %}" class="text-xs px-2 sm:px-3 py-1.5 font-bold rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-colors flex items-center space-x-1.5" title="Accéder au site public">
+                <!-- BOUTON RETOUR SITE PUBLIC (STYLE IDENTIQUE AU BOUTON D'ADMINISTRATION DU SITE PUBLIC) -->
+                <a href="{% url 'academics:home' %}" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 border border-blue-400/40 text-blue-300 hover:text-white font-extrabold text-xs flex items-center space-x-1.5 transition-colors shrink-0 shadow-sm" title="Accéder au site public">
                     <i class="fa-solid fa-globe text-xs" aria-hidden="true"></i>
-                    <span class="hidden sm:inline">Site public</span>
+                    <span>Site public</span>
                 </a>
                 
-                <a href="{% url 'contributors:admin_logout' %}" class="text-xs px-2 sm:px-3 py-1.5 font-bold rounded-lg bg-rose-600/80 hover:bg-rose-600 text-white border border-rose-500/50 transition-colors flex items-center space-x-1.5" title="Déconnexion de l'espace staff">
+                <a href="{% url 'contributors:admin_logout' %}" class="p-1.5 sm:px-3 sm:py-1.5 font-bold rounded-xl bg-rose-600/80 hover:bg-rose-600 text-white border border-rose-500/50 transition-colors flex items-center space-x-1.5 shrink-0" title="Déconnexion de l'espace staff">
                     <i class="fa-solid fa-power-off text-xs" aria-hidden="true"></i>
                     <span class="hidden sm:inline">Déconnexion</span>
                 </a>
@@ -418,6 +419,20 @@
                     <i class="fa-solid fa-sliders w-4 text-center text-ax-accent" aria-hidden="true"></i>
                     <span class="flex-1">Paramètres du site</span>
                     <span class="w-2.5 h-2.5 rounded-full bg-ax-accent inline-block shadow-sm"></span>
+                </a>
+            </div>
+
+            <div class="bg-white dark:bg-[#121824] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-4 shadow-sm space-y-1">
+                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 pb-2 border-b border-slate-100 dark:border-[#1e293b]">Navigation externe</p>
+
+                <a href="{% url 'academics:home' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors">
+                    <i class="fa-solid fa-globe w-4 text-center text-blue-500" aria-hidden="true"></i>
+                    <span>Accéder au site public</span>
+                </a>
+
+                <a href="{% url 'contributors:admin_logout' %}" class="flex md:hidden items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors">
+                    <i class="fa-solid fa-power-off w-4 text-center text-rose-500" aria-hidden="true"></i>
+                    <span>Déconnexion</span>
                 </a>
             </div>
         </aside>

@@ -63,6 +63,8 @@ def apply_student_watermark(pdf_source, user):
             f"{now_str}",
         ]
 
+        wm_pages_by_size = {}
+
         for page in reader.pages:
             width = 595.27
             height = 841.89
@@ -83,47 +85,37 @@ def apply_student_watermark(pdf_source, user):
             if not height or height <= 0:
                 height = 841.89
 
-            wm_buf = BytesIO()
-            c = canvas.Canvas(wm_buf, pagesize=(width, height))
-            c.saveState()
+            size_key = (round(width, 1), round(height, 1))
 
-            # A. Bandeau supérieur officiel de traçabilité (fond blanc translucide + texte rouge foncé)
-            c.setFillColor(colors.Color(1.0, 1.0, 1.0, alpha=0.88))
-            c.rect(0, height - 26, width, 26, fill=1, stroke=0)
-            c.setFillColor(colors.Color(0.80, 0.12, 0.12, alpha=0.95))
-            c.setFont("Helvetica-Bold", 8)
-            header_text = f"ARCHIVEX • Épreuve sous licence individuelle • Étudiant : {full_name} ({email}) • {now_str}"
-            c.drawString(12, height - 17, header_text[:110])
+            if size_key not in wm_pages_by_size:
+                wm_buf = BytesIO()
+                c = canvas.Canvas(wm_buf, pagesize=(width, height))
+                c.saveState()
 
-            # B. Bandeau inférieur de sécurité anti-partage
-            c.setFillColor(colors.Color(1.0, 1.0, 1.0, alpha=0.88))
-            c.rect(0, 0, width, 20, fill=1, stroke=0)
-            c.setFillColor(colors.Color(0.80, 0.12, 0.12, alpha=0.95))
-            c.setFont("Helvetica-Bold", 7.5)
-            footer_text = f"Document certifié ArchivEx ID-{user_id} • Reproduction, capture et redistribution strictement interdites."
-            c.drawString(12, 7, footer_text[:120])
+                # 1. Bandeau inférieur de sécurité anti-partage (message d'interdiction certifié)
+                c.setFillColor(colors.Color(1.0, 1.0, 1.0, alpha=0.92))
+                c.rect(0, 0, width, 18, fill=1, stroke=0)
+                c.setFillColor(colors.Color(0.80, 0.12, 0.12, alpha=0.95))
+                c.setFont("Helvetica-Bold", 7.5)
+                footer_text = f"Document certifié ArchivEx ID-{user_id} • Reproduction, capture et redistribution strictement interdites."
+                c.drawString(12, 5, footer_text[:120])
 
-            # C. Filigrane diagonal répété directement SUR le corps du document
-            c.setFont("Helvetica-Bold", 11)
-            c.setFillColor(colors.Color(0.80, 0.12, 0.12, alpha=0.38))
-            c.rotate(35)
+                # 2. Filigrane unique centré au milieu de la page (lisibilité optimale)
+                c.translate(width / 2.0, height / 2.0)
+                c.rotate(32)
+                c.setFont("Helvetica-Bold", 16)
+                c.setFillColor(colors.Color(0.45, 0.50, 0.60, alpha=0.18))
+                c.drawCentredString(0, 10, f"ARCHIVEX • {full_name}")
+                c.setFont("Helvetica-Bold", 11)
+                c.drawCentredString(0, -9, f"{email} • Consultation individuelle")
 
-            step_x = 240
-            step_y = 130
-            for x in range(-350, int(width + 550), step_x):
-                for y in range(-350, int(height + 550), step_y):
-                    curr_y = y
-                    for line in text_lines:
-                        c.drawString(x, curr_y, line)
-                        curr_y -= 13
+                c.restoreState()
+                c.save()
+                wm_buf.seek(0)
+                wm_pages_by_size[size_key] = PdfReader(wm_buf).pages[0]
 
-            c.restoreState()
-            c.save()
-            wm_buf.seek(0)
-
-            wm_page = PdfReader(wm_buf).pages[0]
+            wm_page = wm_pages_by_size[size_key]
             try:
-                # over=True garantit que le filigrane est incrusté AU-DESSUS du contenu du PDF
                 page.merge_page(wm_page, over=True)
             except Exception:
                 try:

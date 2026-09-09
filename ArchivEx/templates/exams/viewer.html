@@ -65,10 +65,6 @@
         </div>
 
         <div class="flex items-center space-x-3 w-full md:w-auto">
-            <a href="{{ stream_url }}&download=1" class="btn-primary text-xs px-4 py-2.5 font-bold inline-flex items-center space-x-1.5 w-full md:w-auto justify-center bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 transition-all">
-                <i class="fa-solid fa-download text-xs" aria-hidden="true"></i>
-                <span>Télécharger</span>
-            </a>
             <a href="{% url 'exams:detail' pk=exam.id %}" class="btn-secondary text-xs px-4 py-2.5 font-bold inline-flex items-center space-x-1.5 w-full md:w-auto justify-center">
                 <i class="fa-solid fa-arrow-left text-xs" aria-hidden="true"></i>
                 <span>Retour à la fiche</span>
@@ -120,8 +116,8 @@
         <!-- LOADING SPINNER -->
         <div id="pdf-loader-spinner" class="absolute inset-0 z-10 bg-slate-900/90 backdrop-blur-sm flex flex-col items-center justify-center space-y-3 p-6 text-center">
             <div class="w-12 h-12 border-4 border-blue-400/30 border-t-blue-500 rounded-full animate-spin"></div>
-            <p class="text-xs font-bold text-white">Chargement et sécurisation du document PDF...</p>
-            <p class="text-[11px] text-slate-400">Optimisé pour tous les appareils (Ordinateur & Mobile)</p>
+            <p class="text-xs font-bold text-white">Chargement du document PDF...</p>
+            <p id="pdf-loading-progress" class="text-[11px] font-bold text-blue-300">Initialisation rapide...</p>
         </div>
 
         <!-- TAB SWITCH SECURITY BLUR MASK -->
@@ -133,13 +129,11 @@
             <p class="text-blue-200 text-xs max-w-md">Le document est temporairement flouté pendant que vous consultez un autre onglet du navigateur.</p>
         </div>
 
-        <!-- WATERMARK OVERLAY -->
-        <div class="absolute inset-0 z-20 pointer-events-none overflow-hidden select-none opacity-20 flex flex-wrap content-start p-4 gap-12" aria-hidden="true">
-            {% for i in "123456789012" %}
-                <div class="transform -rotate-12 text-slate-300 text-xs font-black tracking-widest uppercase">
-                    {{ request.user.get_full_name|default:request.user.username }} • {{ request.user.email }} • ArchivEx
-                </div>
-            {% endfor %}
+        <!-- UNIQUE FILIGRANE CENTRAL DISCRET (LISIBILITÉ MAXIMALE) -->
+        <div class="absolute inset-0 z-20 pointer-events-none flex items-center justify-center select-none overflow-hidden p-6" aria-hidden="true">
+            <div class="transform -rotate-25 text-slate-400/20 text-xs sm:text-sm font-black tracking-widest uppercase text-center select-none pointer-events-none">
+                {{ request.user.get_full_name|default:request.user.username }} • ArchivEx
+            </div>
         </div>
 
         <!-- CANVAS RENDERER CONTAINER -->
@@ -239,14 +233,38 @@
 
     // Initialize PDF.js loading
     if (window.pdfjsLib) {
-        pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
+        const loadingTask = pdfjsLib.getDocument({
+            url: url,
+            withCredentials: true,
+            cMapPacked: true,
+        });
+
+        loadingTask.onProgress = function(progressData) {
+            if (progressData && progressData.total > 0) {
+                const percent = Math.min(100, Math.round((progressData.loaded / progressData.total) * 100));
+                const progressElem = document.getElementById('pdf-loading-progress');
+                if (progressElem) progressElem.textContent = 'Chargement ' + percent + '%...';
+            }
+        };
+
+        loadingTask.promise.then(function(pdfDoc_) {
             pdfDoc = pdfDoc_;
             document.getElementById('page-count').textContent = pdfDoc.numPages;
             
-            const spinner = document.getElementById('pdf-loader-spinner');
-            if (spinner) spinner.classList.add('hidden');
+            // Calcul automatique de l'ajustement à l'écran dès la 1ère page
+            pdfDoc.getPage(1).then(function(firstPage) {
+                const container = document.getElementById('viewer-container');
+                const containerWidth = (container ? container.clientWidth : window.innerWidth) - 48;
+                const unscaledViewport = firstPage.getViewport({scale: 1.0});
+                scale = containerWidth / unscaledViewport.width;
+                if (scale < 0.75) scale = 0.75;
+                if (scale > 1.6) scale = 1.6;
 
-            renderPage(pageNum);
+                const spinner = document.getElementById('pdf-loader-spinner');
+                if (spinner) spinner.classList.add('hidden');
+
+                renderPage(1);
+            });
         }).catch(function(error) {
             console.error('PDF.js loading error:', error);
             // Fallback to iframe if pdf.js fails
