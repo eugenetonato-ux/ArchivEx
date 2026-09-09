@@ -186,20 +186,24 @@ def record_ue_consultation(user, subject, exam=None):
     """Enregistre la consultation d'une matière/UE par un étudiant connecté avec une protection anti-spam."""
     if not user or not user.is_authenticated or not subject:
         return None
-    # Anti-spam léger : ignorer si consultation identique dans les 15 dernières secondes
-    recent = SubjectConsultation.objects.filter(
-        user=user,
-        subject=subject,
-        created_at__gte=timezone.now() - timezone.timedelta(seconds=15)
-    )
-    if exam:
-        recent = recent.filter(exam=exam)
-    if recent.exists():
-        return recent.first()
+    try:
+        # Anti-spam léger : ignorer si consultation identique dans les 15 dernières secondes
+        recent = SubjectConsultation.objects.filter(
+            user=user,
+            subject=subject,
+            created_at__gte=timezone.now() - timezone.timedelta(seconds=15)
+        )
+        if exam:
+            recent = recent.filter(exam=exam)
+        if recent.exists():
+            return recent.first()
 
-    return SubjectConsultation.objects.create(
-        user=user,
-        subject=subject,
-        exam=exam
-    )
+        return SubjectConsultation.objects.create(
+            user=user,
+            subject=subject,
+            exam=exam
+        )
+    except Exception:
+        # Si la table n'a pas encore été créée ou en cas de problème ponctuel, ne pas bloquer l'utilisateur
+        return None
 
