@@ -176,6 +176,13 @@
 
                 <div class="relative w-full h-64 sm:h-72">
                     <canvas id="studentFiliereChart"></canvas>
+                    <div id="studentChartEmptyState" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center p-4 bg-white/90">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center text-lg mb-3">
+                            <i class="fa-solid fa-chart-simple"></i>
+                        </div>
+                        <h3 class="text-xs font-bold text-slate-700">Aucune donnée de filière</h3>
+                        <p class="text-[11px] text-slate-400 mt-1 max-w-xs">Les statistiques de documents par filière s'afficheront dès qu'une filière sera répertoriée.</p>
+                    </div>
                 </div>
             </div>
 
@@ -218,8 +225,6 @@
                             <span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded">Résumé</span>
                         </a>
                     {% endfor %}
-                </div>
-            </div>ndfor %}
                 </div>
             </div>
 
@@ -376,81 +381,130 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    const rawData = {{ filiere_chart_json|safe }};
-    const ctx = document.getElementById("studentFiliereChart");
-    if (!ctx || !rawData) return;
+(function() {
+    function initFiliereChart() {
+        if (typeof Chart === 'undefined') {
+            // Chart.js CDN still downloading, retry
+            setTimeout(initFiliereChart, 100);
+            return;
+        }
 
-    const labels = rawData.labels || [];
-    const exams = rawData.exams || [];
-    const summaries = rawData.summaries || [];
+        const canvas = document.getElementById("studentFiliereChart");
+        const emptyState = document.getElementById("studentChartEmptyState");
+        if (!canvas) return;
 
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Épreuves',
-                    data: exams,
-                    backgroundColor: 'rgba(37, 99, 235, 0.85)',
-                    borderColor: 'rgb(37, 99, 235)',
-                    borderWidth: 1.5,
-                    borderRadius: 6,
-                },
-                {
-                    label: 'Résumés de cours',
-                    data: summaries,
-                    backgroundColor: 'rgba(16, 185, 129, 0.85)',
-                    borderColor: 'rgb(16, 185, 129)',
-                    borderWidth: 1.5,
-                    borderRadius: 6,
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        font: { family: 'Plus Jakarta Sans', size: 12, weight: '700' },
-                        usePointStyle: true,
-                        padding: 16
-                    }
-                },
-                tooltip: {
-                    backgroundColor: '#071A49',
-                    titleFont: { size: 13, weight: 'bold' },
-                    bodyFont: { size: 12 },
-                    padding: 12,
-                    cornerRadius: 10
-                }
-            },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    ticks: {
-                        font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
-                        color: '#64748B'
-                    }
-                },
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1,
-                        precision: 0,
-                        font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
-                        color: '#64748B'
+        let rawData = null;
+        try {
+            rawData = {{ filiere_chart_json|safe }};
+        } catch (e) {
+            console.error("Erreur parsing filiere_chart_json:", e);
+        }
+
+        const labels = (rawData && rawData.labels) ? rawData.labels : [];
+        const exams = (rawData && rawData.exams) ? rawData.exams : [];
+        const summaries = (rawData && rawData.summaries) ? rawData.summaries : [];
+        const guides = (rawData && rawData.guides) ? rawData.guides : [];
+
+        if (labels.length === 0) {
+            if (emptyState) emptyState.classList.remove('hidden');
+            canvas.style.display = 'none';
+            return;
+        }
+
+        if (emptyState) emptyState.classList.add('hidden');
+        canvas.style.display = 'block';
+
+        // Destroy existing Chart instance if present
+        const existingChart = Chart.getChart(canvas);
+        if (existingChart) {
+            existingChart.destroy();
+        }
+
+        new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Épreuves',
+                        data: exams,
+                        backgroundColor: 'rgba(37, 99, 235, 0.85)',
+                        borderColor: 'rgb(37, 99, 235)',
+                        borderWidth: 1.5,
+                        borderRadius: 6,
+                        maxBarThickness: 48,
                     },
-                    grid: { color: '#F1F5F9' }
+                    {
+                        label: 'Résumés de cours',
+                        data: summaries,
+                        backgroundColor: 'rgba(16, 185, 129, 0.85)',
+                        borderColor: 'rgb(16, 185, 129)',
+                        borderWidth: 1.5,
+                        borderRadius: 6,
+                        maxBarThickness: 48,
+                    },
+                    {
+                        label: 'Guides de révision',
+                        data: guides,
+                        backgroundColor: 'rgba(245, 158, 11, 0.85)',
+                        borderColor: 'rgb(245, 158, 11)',
+                        borderWidth: 1.5,
+                        borderRadius: 6,
+                        maxBarThickness: 48,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            font: { family: 'Plus Jakarta Sans', size: 12, weight: '700' },
+                            usePointStyle: true,
+                            padding: 16
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#071A49',
+                        titleFont: { size: 13, weight: 'bold' },
+                        bodyFont: { size: 12 },
+                        padding: 12,
+                        cornerRadius: 10
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
+                            color: '#64748B'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: 5,
+                        ticks: {
+                            stepSize: 1,
+                            precision: 0,
+                            font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
+                            color: '#64748B'
+                        },
+                        grid: { color: '#F1F5F9' }
+                    }
                 }
             }
-        }
-    });
-});
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener("DOMContentLoaded", initFiliereChart);
+    } else {
+        initFiliereChart();
+    }
+})();
 </script>
 {% endblock %}
 

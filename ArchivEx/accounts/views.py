@@ -222,7 +222,7 @@ def dashboard_view(request):
         "summaries": chart_summaries,
         "guides": chart_guides,
         "totals": chart_totals,
-    })
+    }, ensure_ascii=False)
 
     context = {
         "profile": profile,
