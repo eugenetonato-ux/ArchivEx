@@ -50,10 +50,6 @@
                     {{ resource_label }}
                 </span>
                 <span class="text-xs font-bold text-slate-500">{{ exam.year }} · {{ exam.get_exam_type_display|default:"Session Normale" }}</span>
-                <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold flex items-center space-x-1">
-                    <i class="fa-solid fa-shield-halved text-[9px]" aria-hidden="true"></i>
-                    <span>Consultation Sécurisée Filigranée</span>
-                </span>
             </div>
 
             <h1 class="text-xl sm:text-2xl font-black text-[#071A49]">
@@ -129,9 +125,9 @@
             <p class="text-blue-200 text-xs max-w-md">Le document est temporairement flouté pendant que vous consultez un autre onglet du navigateur.</p>
         </div>
 
-        <!-- UNIQUE FILIGRANE CENTRAL DISCRET (LISIBILITÉ MAXIMALE) -->
+        <!-- UNIQUE FILIGRANE CENTRAL DISCRET (LISIBILITÉ AMÉLIORÉE) -->
         <div class="absolute inset-0 z-20 pointer-events-none flex items-center justify-center select-none overflow-hidden p-6" aria-hidden="true">
-            <div class="transform -rotate-25 text-slate-400/20 text-xs sm:text-sm font-black tracking-widest uppercase text-center select-none pointer-events-none">
+            <div class="transform -rotate-25 text-slate-400/35 text-sm sm:text-base font-black tracking-widest uppercase text-center select-none pointer-events-none">
                 {{ request.user.get_full_name|default:request.user.username }} • ArchivEx
             </div>
         </div>

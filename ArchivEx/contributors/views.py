@@ -110,11 +110,13 @@ def get_filieres_by_school_api(request):
 @contributor_required
 def check_exam_duplicate_api(request):
     """
-    API JSON vérifiant en direct (AJAX) si une épreuve ou un document du même nom/matière existe déjà.
+    API JSON vérifiant en direct (AJAX) si une épreuve identique existe déjà.
     """
     title = request.GET.get("title", "").strip()
     subject_name = request.GET.get("subject_name", "").strip()
     semester_id = request.GET.get("semester_id")
+    year_str = request.GET.get("year", "").strip()
+    exam_type = request.GET.get("exam_type", "").strip()
     exclude_id = request.GET.get("exclude_id")
 
     if not title and not subject_name:
@@ -132,7 +134,23 @@ def check_exam_duplicate_api(request):
         sub_qs = qs.filter(subject__name__iexact=subject_name)
         if semester_id and str(semester_id).isdigit():
             sub_qs = sub_qs.filter(semester_id=int(semester_id))
-        match = sub_qs.first()
+
+        if year_str:
+            extracted_digits = "".join([c for c in year_str if c.isdigit()])
+            if len(extracted_digits) >= 4:
+                first_4 = int(extracted_digits[:4])
+                year_match_qs = sub_qs.filter(
+                    Q(academic_year__label__icontains=year_str) |
+                    Q(year=first_4)
+                )
+                if exam_type:
+                    year_type_match = year_match_qs.filter(exam_type=exam_type).first()
+                    if year_type_match:
+                        match = year_type_match
+                if not match:
+                    match = year_match_qs.first()
+        elif exam_type:
+            match = sub_qs.filter(exam_type=exam_type).first()
 
     if match:
         return JsonResponse({
@@ -464,25 +482,53 @@ def exam_create_view(request):
             exam.is_free = form.cleaned_data["is_free"]
             exam.is_published = form.cleaned_data["is_published"]
 
-            # Vérification des doublons
-            duplicate_match = Exam.objects.filter(
-                Q(title__iexact=exam.title) |
-                (Q(subject=exam.subject, semester=exam.semester, exam_type=exam.exam_type) & (Q(academic_year=exam.academic_year) if exam.academic_year else Q()))
-            ).select_related("subject", "semester", "filiere", "academic_year").first()
+            # Vérification robuste des doublons
+            duplicate_filter = Q(title__iexact=exam.title)
+            if exam.subject and exam.semester:
+                sub_sem_filter = Q(subject=exam.subject, semester=exam.semester, exam_type=exam.exam_type)
+                if exam.academic_year:
+                    sub_sem_filter &= (Q(academic_year=exam.academic_year) | Q(year=exam.year))
+                elif exam.year:
+                    sub_sem_filter &= Q(year=exam.year)
+                duplicate_filter |= sub_sem_filter
 
-            if duplicate_match and request.POST.get("confirm_duplicate") != "1":
-                context = {
-                    "active_school": active_school,
-                    "active_filiere": active_filiere,
-                    "active_semester": active_semester,
-                    "available_subjects": Subject.objects.filter(semester__filiere=active_filiere).select_related("semester") if active_filiere else Subject.objects.none(),
-                    "form": form,
-                    "is_create": True,
-                    "duplicate_warning": True,
-                    "existing_duplicate": duplicate_match,
-                }
-                messages.warning(request, f"Attention : Une épreuve nommée « {duplicate_match.title} » existe déjà pour cette matière ({duplicate_match.subject.name}).")
-                return render(request, "contributors/exams/form.html", context)
+            duplicate_match = Exam.objects.filter(duplicate_filter).select_related("subject", "semester", "filiere", "academic_year").first()
+
+            if duplicate_match:
+                if request.POST.get("replace_existing") == "1":
+                    # Remplacement de l'épreuve existante avec les nouvelles informations et fichiers
+                    duplicate_match.title = exam.title
+                    duplicate_match.exam_type = exam.exam_type
+                    duplicate_match.year = exam.year
+                    if exam.academic_year:
+                        duplicate_match.academic_year = exam.academic_year
+                    duplicate_match.is_free = exam.is_free
+                    duplicate_match.is_published = exam.is_published
+                    if exam.description:
+                        duplicate_match.description = exam.description
+
+                    _process_exam_cloud_files(form, duplicate_match, target_semester, active_school, active_filiere, active_semester, request.user)
+                    duplicate_match.save()
+
+                    from accounts.utils import log_user_action
+                    log_user_action(request, "MODIFICATION", f"Remplacement de l'épreuve existante #{duplicate_match.id} ({duplicate_match.title})")
+
+                    messages.success(request, f"L'épreuve existante « {duplicate_match.title} » a été remplacée et mise à jour avec succès avec vos nouveaux fichiers !")
+                    return redirect("contributors:exam_list")
+                else:
+                    # Blocage strict de la publication d'un doublon
+                    context = {
+                        "active_school": active_school,
+                        "active_filiere": active_filiere,
+                        "active_semester": active_semester,
+                        "available_subjects": Subject.objects.filter(semester__filiere=active_filiere).select_related("semester") if active_filiere else Subject.objects.none(),
+                        "form": form,
+                        "is_create": True,
+                        "duplicate_warning": True,
+                        "existing_duplicate": duplicate_match,
+                    }
+                    messages.error(request, f"Publication impossible : Une épreuve identique existe déjà dans la base (« {duplicate_match.title} » pour {duplicate_match.subject.name}). Vous devez soit remplacer l'épreuve existante, soit modifier les informations.")
+                    return render(request, "contributors/exams/form.html", context)
 
             # Traitement des fichiers Cloud et téléversements directs
             _process_exam_cloud_files(form, exam, target_semester, active_school, active_filiere, active_semester, request.user)
@@ -1506,31 +1552,57 @@ def publish_from_cloud_view(request, pk):
             exam.is_published = form.cleaned_data["is_published"]
 
             # Duplicate check
-            duplicate_match = Exam.objects.filter(
-                Q(title__iexact=exam.title) |
-                (Q(subject=exam.subject, semester=exam.semester, exam_type=exam.exam_type) & (Q(academic_year=exam.academic_year) if exam.academic_year else Q()))
-            ).select_related("subject", "semester", "filiere", "academic_year").first()
+            duplicate_filter = Q(title__iexact=exam.title)
+            if exam.subject and exam.semester:
+                sub_sem_filter = Q(subject=exam.subject, semester=exam.semester, exam_type=exam.exam_type)
+                if exam.academic_year:
+                    sub_sem_filter &= (Q(academic_year=exam.academic_year) | Q(year=exam.year))
+                elif exam.year:
+                    sub_sem_filter &= Q(year=exam.year)
+                duplicate_filter |= sub_sem_filter
 
-            if duplicate_match and request.POST.get("confirm_duplicate") != "1":
-                context = {
-                    "active_school": active_school,
-                    "active_filiere": active_filiere,
-                    "active_semester": active_semester,
-                    "available_subjects": available_subjects,
-                    "form": form,
-                    "is_create": True,
-                    "selected_cloud_file": cloud_file,
-                    "auto_corr_cloud": auto_corr_cloud,
-                    "auto_sum_cloud": auto_sum_cloud,
-                    "parsed_info": parsed,
-                    "ocr_result": ocr_result,
-                    "auto_ocr_summary": auto_ocr_summary,
-                    "no_metadata_detected": not parsed.get("is_valid", False),
-                    "duplicate_warning": True,
-                    "existing_duplicate": duplicate_match,
-                }
-                messages.warning(request, f"Attention : Une épreuve nommée « {duplicate_match.title} » existe déjà pour cette matière ({duplicate_match.subject.name}).")
-                return render(request, "contributors/exams/form.html", context)
+            duplicate_match = Exam.objects.filter(duplicate_filter).select_related("subject", "semester", "filiere", "academic_year").first()
+
+            if duplicate_match:
+                if request.POST.get("replace_existing") == "1":
+                    duplicate_match.title = exam.title
+                    duplicate_match.exam_type = exam.exam_type
+                    duplicate_match.year = exam.year
+                    if exam.academic_year:
+                        duplicate_match.academic_year = exam.academic_year
+                    duplicate_match.is_free = exam.is_free
+                    duplicate_match.is_published = exam.is_published
+                    if exam.description:
+                        duplicate_match.description = exam.description
+
+                    _process_exam_cloud_files(form, duplicate_match, target_semester, active_school, target_filiere, active_semester, request.user)
+                    duplicate_match.save()
+
+                    from accounts.utils import log_user_action
+                    log_user_action(request, "MODIFICATION", f"Remplacement de l'épreuve existante #{duplicate_match.id} ({duplicate_match.title})")
+
+                    messages.success(request, f"L'épreuve existante « {duplicate_match.title} » a été remplacée et mise à jour avec succès avec vos nouveaux fichiers !")
+                    return redirect("contributors:exam_list")
+                else:
+                    context = {
+                        "active_school": active_school,
+                        "active_filiere": active_filiere,
+                        "active_semester": active_semester,
+                        "available_subjects": available_subjects,
+                        "form": form,
+                        "is_create": True,
+                        "selected_cloud_file": cloud_file,
+                        "auto_corr_cloud": auto_corr_cloud,
+                        "auto_sum_cloud": auto_sum_cloud,
+                        "parsed_info": parsed,
+                        "ocr_result": ocr_result,
+                        "auto_ocr_summary": auto_ocr_summary,
+                        "no_metadata_detected": not parsed.get("is_valid", False),
+                        "duplicate_warning": True,
+                        "existing_duplicate": duplicate_match,
+                    }
+                    messages.error(request, f"Publication impossible : Une épreuve identique existe déjà dans la base (« {duplicate_match.title} » pour {duplicate_match.subject.name}). Vous devez soit remplacer l'épreuve existante, soit modifier les informations.")
+                    return render(request, "contributors/exams/form.html", context)
 
             _process_exam_cloud_files(form, exam, target_semester, active_school, target_filiere, active_semester, request.user)
 

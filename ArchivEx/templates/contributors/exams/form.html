@@ -138,8 +138,37 @@
     </div>
   </div>
 
+ {% if duplicate_warning and existing_duplicate %}
+ <div class="p-4 sm:p-5 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border-2 border-rose-300 dark:border-rose-800 text-rose-950 dark:text-rose-100 mb-6 shadow-md flex flex-col sm:flex-row items-start justify-between gap-4 animate-fade-in">
+   <div class="flex items-start space-x-3">
+     <div class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center text-lg shrink-0 shadow-sm">
+       <i class="fa-solid fa-ban"></i>
+     </div>
+     <div>
+       <h4 class="text-sm font-black text-rose-950 dark:text-rose-100">Publication bloquée : Cette épreuve existe déjà</h4>
+       <p class="text-xs text-rose-800 dark:text-rose-300 mt-1">
+         L'épreuve <strong>« {{ existing_duplicate.title }} »</strong> est déjà enregistrée pour la matière <strong>{{ existing_duplicate.subject.name }}</strong> ({{ existing_duplicate.academic_year.label|default:existing_duplicate.year }}).
+       </p>
+       <div class="mt-3 flex flex-wrap gap-2">
+         <button type="button" onclick="replaceExistingExam()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition-all shadow-sm flex items-center space-x-1.5">
+           <i class="fa-solid fa-arrows-rotate text-xs"></i>
+           <span>Remplacer l'épreuve existante</span>
+         </button>
+         <button type="button" onclick="openDuplicateModal()" class="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs transition-all shadow-sm">
+           Voir les détails
+         </button>
+         <a href="/administration/epreuves/{{ existing_duplicate.id }}/modifier/" target="_blank" class="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900 font-bold text-xs transition-colors">
+           Consulter l'épreuve existante ↗
+         </a>
+       </div>
+     </div>
+   </div>
+ </div>
+ {% endif %}
+
  <form id="exam-admin-form" method="post" enctype="multipart/form-data" class="space-y-5">
  {% csrf_token %}
+ <input type="hidden" name="replace_existing" id="id_replace_existing" value="0">
  <input type="hidden" name="confirm_duplicate" id="id_confirm_duplicate" value="0">
 
  <div>
@@ -291,14 +320,14 @@
 <div id="duplicate-warning-modal" class="fixed inset-0 z-[150] bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 {% if not duplicate_warning %}hidden{% endif %} transition-all duration-200" role="dialog" aria-modal="true" aria-labelledby="dup-modal-title">
   <div class="bg-white dark:bg-[#121824] rounded-2xl max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-scale-up">
     <!-- MODAL HEADER -->
-    <div class="bg-gradient-to-r from-amber-500 to-orange-600 p-5 text-white flex items-center justify-between">
+    <div class="bg-gradient-to-r from-rose-600 to-amber-600 p-5 text-white flex items-center justify-between">
       <div class="flex items-center space-x-3">
         <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-lg font-black shrink-0">
-          <i class="fa-solid fa-copy"></i>
+          <i class="fa-solid fa-ban"></i>
         </div>
         <div>
-          <h3 id="dup-modal-title" class="text-base font-black tracking-tight leading-tight">Épreuve / Document déjà existant</h3>
-          <p class="text-xs text-amber-100 font-medium">Un document similaire a été trouvé dans la base</p>
+          <h3 id="dup-modal-title" class="text-base font-black tracking-tight leading-tight">Publication bloquée : Épreuve déjà existante</h3>
+          <p class="text-xs text-rose-100 font-medium">Un document identique existe déjà dans la base ArchivEx</p>
         </div>
       </div>
       <button type="button" onclick="closeDuplicateModal()" class="w-8 h-8 rounded-lg bg-black/10 hover:bg-black/20 flex items-center justify-center text-white transition-colors" aria-label="Fermer">
@@ -308,13 +337,13 @@
 
     <!-- MODAL BODY -->
     <div class="p-6 space-y-4">
-      <div class="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-950 dark:text-amber-200 space-y-2">
-        <p class="font-extrabold flex items-center space-x-1.5 text-amber-900 dark:text-amber-100">
-          <i class="fa-solid fa-circle-exclamation text-amber-600"></i>
-          <span>Attention : Cette épreuve semble déjà enregistrée ou publiée !</span>
+      <div class="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-xs text-rose-950 dark:text-rose-200 space-y-2">
+        <p class="font-extrabold flex items-center space-x-1.5 text-rose-900 dark:text-rose-100">
+          <i class="fa-solid fa-circle-exclamation text-rose-600"></i>
+          <span>Attention : La création d'un doublon est strictement empêchée.</span>
         </p>
         <p class="text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-          Pour éviter les doublons et préserver la qualité de la base d'archives, veuillez vérifier si vous souhaitez mettre à jour le document existant ou forcer une nouvelle publication.
+          Cette épreuve est déjà enregistrée. Pour préserver la qualité de la plateforme, vous pouvez soit <strong>remplacer l'épreuve existante</strong> avec vos nouveaux fichiers, soit <strong>modifier les informations</strong> pour enregistrer une épreuve différente.
         </p>
       </div>
 
@@ -356,7 +385,7 @@
     <!-- MODAL FOOTER / ACTIONS -->
     <div class="p-5 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-end gap-2.5">
       <button type="button" onclick="closeDuplicateModal()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors">
-        Modifier le nom / Annuler
+        Modifier les informations
       </button>
 
       <a id="dup-edit-link" href="{% if existing_duplicate and existing_duplicate.id %}/administration/epreuves/{{ existing_duplicate.id }}/modifier/{% else %}#{% endif %}" target="_blank" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#071A49] hover:bg-[#1e3a8a] text-white font-black text-xs transition-colors inline-flex items-center justify-center space-x-1.5 shadow-sm">
@@ -364,9 +393,10 @@
         <span>Consulter l'épreuve existante</span>
       </a>
 
-      <button type="button" onclick="confirmDuplicateAndSubmit()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-black text-xs transition-colors shadow-sm flex items-center justify-center space-x-1.5">
-        <i class="fa-solid fa-check"></i>
-        <span>Publier quand même</span>
+      <!-- BOUTON REMPLACER L'ÉPREUVE EXISTANTE (SANS PUBLIER DE DOUBLON) -->
+      <button type="button" onclick="replaceExistingExam()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition-all shadow-md flex items-center justify-center space-x-2">
+        <i class="fa-solid fa-arrows-rotate text-xs"></i>
+        <span>Remplacer l'épreuve existante</span>
       </button>
     </div>
   </div>
@@ -563,11 +593,11 @@ function closeDuplicateModal() {
   if (modal) modal.classList.add('hidden');
 }
 
-function confirmDuplicateAndSubmit() {
-  const confirmInput = document.getElementById('id_confirm_duplicate');
+function replaceExistingExam() {
+  const replaceInput = document.getElementById('id_replace_existing');
   const form = document.getElementById('exam-admin-form');
-  if (confirmInput && form) {
-    confirmInput.value = '1';
+  if (replaceInput && form) {
+    replaceInput.value = '1';
     closeDuplicateModal();
     form.submit();
   }
@@ -579,10 +609,14 @@ function checkDuplicateAsync() {
   const titleInput = document.getElementById('id_title') || document.querySelector('input[name="title"]');
   const subjInput = document.getElementById('id_subject_name') || document.querySelector('input[name="subject_name"]');
   const semesterSelect = document.getElementById('id_semester') || document.querySelector('select[name="semester"]');
+  const yearInput = document.getElementById('id_year') || document.querySelector('input[name="year"]');
+  const examTypeSelect = document.getElementById('id_exam_type') || document.querySelector('select[name="exam_type"]');
   
   const title = titleInput ? titleInput.value.trim() : '';
   const subj = subjInput ? subjInput.value.trim() : '';
   const semesterId = semesterSelect ? semesterSelect.value : '';
+  const yearVal = yearInput ? yearInput.value.trim() : '';
+  const examType = examTypeSelect ? examTypeSelect.value : '';
 
   const alertBox = document.getElementById('live-duplicate-alert');
   const descEl = document.getElementById('live-duplicate-desc');
@@ -599,6 +633,8 @@ function checkDuplicateAsync() {
       title: title,
       subject_name: subj,
       semester_id: semesterId || '',
+      year: yearVal || '',
+      exam_type: examType || '',
       {% if exam %}exclude_id: '{{ exam.id }}'{% endif %}
     });
 
@@ -619,12 +655,15 @@ function checkDuplicateAsync() {
       }
     })
     .catch(err => console.debug("Duplicate check skipped:", err));
-  }, 400);
+  }, 350);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   const titleInput = document.getElementById('id_title') || document.querySelector('input[name="title"]');
   const subjInput = document.getElementById('id_subject_name') || document.querySelector('input[name="subject_name"]');
+  const yearInput = document.getElementById('id_year') || document.querySelector('input[name="year"]');
+  const examTypeSelect = document.getElementById('id_exam_type') || document.querySelector('select[name="exam_type"]');
+  const semesterSelect = document.getElementById('id_semester') || document.querySelector('select[name="semester"]');
   const form = document.getElementById('exam-admin-form');
 
   if (titleInput) {
@@ -635,15 +674,33 @@ document.addEventListener('DOMContentLoaded', () => {
     subjInput.addEventListener('input', checkDuplicateAsync);
     subjInput.addEventListener('blur', checkDuplicateAsync);
   }
+  if (yearInput) {
+    yearInput.addEventListener('input', checkDuplicateAsync);
+    yearInput.addEventListener('blur', checkDuplicateAsync);
+  }
+  if (examTypeSelect) {
+    examTypeSelect.addEventListener('change', checkDuplicateAsync);
+  }
+  if (semesterSelect) {
+    semesterSelect.addEventListener('change', checkDuplicateAsync);
+  }
 
   if (form) {
     form.addEventListener('submit', (e) => {
-      const confirmInput = document.getElementById('id_confirm_duplicate');
-      if (detectedDuplicateData && (!confirmInput || confirmInput.value !== '1')) {
+      const replaceInput = document.getElementById('id_replace_existing');
+      if (replaceInput && replaceInput.value === '1') {
+        return; // Soumission autorisée pour remplacer
+      }
+      if (detectedDuplicateData) {
         e.preventDefault();
         openDuplicateModal(detectedDuplicateData);
       }
     });
+  }
+
+  // Vérification initiale si des champs sont déjà renseignés
+  if (titleInput && titleInput.value.trim().length > 3) {
+    checkDuplicateAsync();
   }
 });
 </script>
