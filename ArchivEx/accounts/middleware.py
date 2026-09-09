@@ -9,7 +9,10 @@ class SiteLoggingMiddleware:
             r'^/static/',
             r'^/media/',
             r'^/accounts/api/log-click/',
-            r'^/favicon.ico',
+            r'^/favicon\.ico',
+            r'^/icons/',
+            r'^/manifest\.json',
+            r'^/service-worker\.js',
         ]
 
     def __call__(self, request):
