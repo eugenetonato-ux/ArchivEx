@@ -1309,10 +1309,16 @@ def library_index_view(request):
 
     available_subjects = Subject.objects.filter(semester__filiere=active_filiere) if active_filiere else Subject.objects.all()
 
+    published_exam_map = dict(
+        Exam.objects.filter(cloud_file__in=cloud_files).values_list("cloud_file_id", "id")
+    )
+
     grouped_cloud_files = {}
     for cf in cloud_files:
         parsed = parse_exam_filename(cf.title, available_subjects=available_subjects)
         cf.parsed_info = parsed
+        cf.published_exam_id = published_exam_map.get(cf.id)
+        cf.is_already_published = bool(cf.published_exam_id)
         matched_subj = parsed["matched_subject"]
         ue_name = matched_subj.name if matched_subj else (parsed["subject_candidate"] or "Noms non conformes / Non classés")
         
@@ -1552,7 +1558,9 @@ def publish_from_cloud_view(request, pk):
             exam.is_published = form.cleaned_data["is_published"]
 
             # Duplicate check
-            duplicate_filter = Q(title__iexact=exam.title)
+            duplicate_filter = Q(title__iexact=exam.title) | Q(cloud_file=cloud_file)
+            if cloud_file and cloud_file.file:
+                duplicate_filter |= Q(file=cloud_file.file)
             if exam.subject and exam.semester:
                 sub_sem_filter = Q(subject=exam.subject, semester=exam.semester, exam_type=exam.exam_type)
                 if exam.academic_year:
@@ -1579,7 +1587,7 @@ def publish_from_cloud_view(request, pk):
                     duplicate_match.save()
 
                     from accounts.utils import log_user_action
-                    log_user_action(request, "MODIFICATION", f"Remplacement de l'épreuve existante #{duplicate_match.id} ({duplicate_match.title})")
+                    log_user_action(request, "MODIFICATION", f"Remplacement de l'épreuve existante #{duplicate_match.id} ({duplicate_match.title}) depuis le Cloud Storage")
 
                     messages.success(request, f"L'épreuve existante « {duplicate_match.title} » a été remplacée et mise à jour avec succès avec vos nouveaux fichiers !")
                     return redirect("contributors:exam_list")
@@ -1628,6 +1636,23 @@ def publish_from_cloud_view(request, pk):
         }
         form = ExamAdminForm(initial=form_initial, active_filiere=target_filiere, active_semester=cloud_file.semester or active_semester)
 
+    # Détection dès l'ouverture du formulaire si ce document Cloud ou titre existe déjà
+    pre_dup_filter = Q(cloud_file=cloud_file)
+    if cloud_file.file:
+        pre_dup_filter |= Q(file=cloud_file.file)
+    if initial_title:
+        pre_dup_filter |= Q(title__iexact=initial_title)
+    if detected_subject_name and (cloud_file.semester or active_semester):
+        sem_cand = cloud_file.semester or active_semester
+        pre_dup_filter |= Q(subject__name__iexact=detected_subject_name, semester=sem_cand)
+
+    existing_duplicate_on_get = Exam.objects.filter(pre_dup_filter).select_related("subject", "semester", "filiere", "academic_year").first()
+    if existing_duplicate_on_get and request.method != "POST":
+        messages.warning(
+            request,
+            f"Attention : Ce fichier Cloud est déjà associé à l'épreuve « {existing_duplicate_on_get.title} » ({existing_duplicate_on_get.subject.name}). Vous pouvez remplacer l'épreuve existante ci-dessous ou modifier les informations."
+        )
+
     context = {
         "active_school": active_school,
         "active_filiere": active_filiere,
@@ -1642,8 +1667,8 @@ def publish_from_cloud_view(request, pk):
         "ocr_result": ocr_result,
         "auto_ocr_summary": auto_ocr_summary,
         "no_metadata_detected": not parsed.get("is_valid", False),
-        "duplicate_warning": False,
-        "existing_duplicate": None,
+        "duplicate_warning": bool(existing_duplicate_on_get),
+        "existing_duplicate": existing_duplicate_on_get,
     }
     return render(request, "contributors/exams/form.html", context)
 
@@ -1726,17 +1751,6 @@ def publish_cloud_folder_view(request):
     with_corr_count = 0
 
     for cf, parsed in matching_cloud_exams:
-        if cf.file:
-            existing_exam = Exam.objects.filter(Q(cloud_file=cf) | Q(file=cf.file)).first()
-        else:
-            existing_exam = Exam.objects.filter(cloud_file=cf).first()
-
-        if existing_exam:
-            existing_exam.is_published = True
-            existing_exam.save()
-            published_count += 1
-            continue
-
         yr_label = parsed["detected_academic_year"] or "2025-2026"
         if "-" in yr_label:
             ay_obj, _ = AcademicYear.objects.get_or_create(label=yr_label)
@@ -1745,6 +1759,17 @@ def publish_cloud_folder_view(request):
             yr_int = 2025
             ay_obj = target_semester.academic_year or AcademicYear.objects.first()
 
+        exam_title = cf.title.replace("Épreuve — ", "").replace(".pdf", "").strip()
+
+        # Recherche avancée anti-doublon : par CloudFile, par fichier ou par titre/matière/semestre/année
+        dup_filter = Q(title__iexact=exam_title) | Q(cloud_file=cf)
+        if cf.file:
+            dup_filter |= Q(file=cf.file)
+        if subject and target_semester:
+            dup_filter |= Q(subject=subject, semester=target_semester, exam_type="examen", year=yr_int)
+
+        existing_exam = Exam.objects.filter(dup_filter).first()
+
         # Recherche du corrigé correspondant parmi les fichiers de cette même UE
         corr_cf = None
         for c_cf, c_parsed in matching_cloud_corrections:
@@ -1752,7 +1777,24 @@ def publish_cloud_folder_view(request):
                 corr_cf = c_cf
                 break
 
-        exam_title = cf.title.replace("Épreuve — ", "").replace(".pdf", "").strip()
+        if existing_exam:
+            # Mettre à jour l'épreuve existante SANS créer de doublon
+            existing_exam.is_published = True
+            if not existing_exam.file and cf.file:
+                existing_exam.file = cf.file
+            if not existing_exam.cloud_file:
+                existing_exam.cloud_file = cf
+            if corr_cf:
+                if not existing_exam.cloud_correction_file:
+                    existing_exam.cloud_correction_file = corr_cf
+                if not existing_exam.correction_file and corr_cf.file:
+                    existing_exam.correction_file = corr_cf.file
+            existing_exam.save()
+            published_count += 1
+            if existing_exam.has_correction:
+                with_corr_count += 1
+            continue
+
         exam = Exam.objects.create(
             title=exam_title,
             subject=subject,
