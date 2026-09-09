@@ -159,29 +159,108 @@
                 {% endif %}
             </div>
 
-            <!-- CHART SECTION: DISTRIBUTION DES DOCUMENTS PAR FILIÈRE -->
-            <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <!-- CHART SECTION: RÉPARTITION DES RÉVISIONS PAR MATIÈRE (UE) -->
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+                <!-- Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
                     <div>
-                        <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600 block">Analyse par Spécialité</span>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full inline-block mb-1">
+                            Analyse de mes Révisions
+                        </span>
                         <h2 class="text-base sm:text-lg font-black text-[#071A49] flex items-center space-x-2">
-                            <i class="fa-solid fa-chart-column text-indigo-500" aria-hidden="true"></i>
-                            <span>Distribution des documents par filière</span>
+                            <i class="fa-solid fa-chart-pie text-indigo-500" aria-hidden="true"></i>
+                            <span>Répartition des consultations par matière (UE)</span>
                         </h2>
                     </div>
-                    <p class="text-xs text-slate-500 font-medium">
-                        Aperçu global du volume d'épreuves et résumés par filière.
-                    </p>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full flex items-center space-x-1.5">
+                            <i class="fa-solid fa-eye text-slate-400 text-[10px]"></i>
+                            <span>{{ total_ue_consultations }} consultation{{ total_ue_consultations|pluralize }}</span>
+                        </span>
+                    </div>
                 </div>
 
-                <div class="relative w-full h-64 sm:h-72">
-                    <canvas id="studentFiliereChart"></canvas>
-                    <div id="studentChartEmptyState" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center p-4 bg-white/90">
-                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center text-lg mb-3">
-                            <i class="fa-solid fa-chart-simple"></i>
+                <!-- Insights: UE la plus consultée & UE à approfondir -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Top consultée -->
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-blue-50/70 to-indigo-50/40 border border-blue-100 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-[#2563EB] text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                                <i class="fa-solid fa-fire"></i>
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-black uppercase tracking-wider text-blue-700 block">Matière la plus révisée</span>
+                                <h3 class="text-xs font-bold text-[#071A49] line-clamp-1">
+                                    {% if most_consulted_ue %}{{ most_consulted_ue.name }}{% else %}Pas encore d'activité{% endif %}
+                                </h3>
+                            </div>
                         </div>
-                        <h3 class="text-xs font-bold text-slate-700">Aucune donnée de filière</h3>
-                        <p class="text-[11px] text-slate-400 mt-1 max-w-xs">Les statistiques de documents par filière s'afficheront dès qu'une filière sera répertoriée.</p>
+                        {% if most_consulted_ue %}
+                            <span class="text-xs font-black text-[#2563EB] bg-white px-2.5 py-1 rounded-xl shadow-2xs border border-blue-200">
+                                {{ most_consulted_ue.count }} vue{{ most_consulted_ue.count|pluralize }} ({{ most_consulted_ue.percent }}%)
+                            </span>
+                        {% else %}
+                            <span class="text-[11px] font-semibold text-slate-400">0 consultation</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Moins consultée / À approfondir -->
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-amber-50/60 to-orange-50/30 border border-amber-100 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                                <i class="fa-solid fa-bullseye"></i>
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-black uppercase tracking-wider text-amber-700 block">Matière à approfondir</span>
+                                <h3 class="text-xs font-bold text-[#071A49] line-clamp-1">
+                                    {% if least_consulted_ue %}{{ least_consulted_ue.name }}{% else %}Toutes les UE à jour{% endif %}
+                                </h3>
+                            </div>
+                        </div>
+                        {% if least_consulted_ue %}
+                            <a href="{% url 'exams:liste' %}?subject={{ least_consulted_ue.id }}" class="text-xs font-black text-amber-800 bg-white hover:bg-amber-50 px-2.5 py-1 rounded-xl shadow-2xs border border-amber-200 flex items-center space-x-1 transition-colors">
+                                <span>Réviser</span>
+                                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Doughnut Chart + Legend Section -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center pt-2">
+                    <!-- Circular Diagram (5 cols) -->
+                    <div class="md:col-span-5 flex flex-col items-center justify-center relative">
+                        <div class="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center">
+                            <canvas id="studentUeDonutChart"></canvas>
+                            <!-- Center Hole Stat Overlay -->
+                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+                                <span class="text-2xl sm:text-3xl font-black text-[#071A49]" id="donutCenterTotal">{{ total_ue_consultations }}</span>
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Consultation{{ total_ue_consultations|pluralize }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Legend per UE (7 cols) -->
+                    <div class="md:col-span-7 space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                        {% for item in ue_legend_items %}
+                            <a href="{% url 'exams:liste' %}?subject={{ item.id }}" class="group block p-2.5 rounded-2xl hover:bg-slate-50 border border-slate-100 transition-all hover:border-slate-200">
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: {{ item.color }};"></span>
+                                        <h4 class="text-xs font-bold text-[#071A49] group-hover:text-[#2563EB] transition-colors line-clamp-1">{{ item.name }}</h4>
+                                    </div>
+                                    <div class="flex items-center space-x-2 shrink-0 text-right">
+                                        <span class="text-xs font-black text-slate-800">{{ item.count }} vue{{ item.count|pluralize }}</span>
+                                        <span class="text-[10px] font-bold text-slate-400">({{ item.percent }}%)</span>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                    <div class="h-full rounded-full transition-all duration-500" style="width: {% if total_ue_consultations > 0 %}{{ item.percent }}%{% else %}0%{% endif %}; background-color: {{ item.color }};"></div>
+                                </div>
+                            </a>
+                        {% empty %}
+                            <p class="text-xs text-slate-400 text-center py-6">Aucune matière trouvée pour ce semestre.</p>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
@@ -382,37 +461,26 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 (function() {
-    function initFiliereChart() {
+    function initUeDonutChart() {
         if (typeof Chart === 'undefined') {
-            // Chart.js CDN still downloading, retry
-            setTimeout(initFiliereChart, 100);
+            setTimeout(initUeDonutChart, 100);
             return;
         }
 
-        const canvas = document.getElementById("studentFiliereChart");
-        const emptyState = document.getElementById("studentChartEmptyState");
+        const canvas = document.getElementById("studentUeDonutChart");
         if (!canvas) return;
 
         let rawData = null;
         try {
-            rawData = {{ filiere_chart_json|safe }};
+            rawData = {{ ue_chart_json|safe }};
         } catch (e) {
-            console.error("Erreur parsing filiere_chart_json:", e);
+            console.error("Erreur parsing ue_chart_json:", e);
         }
 
         const labels = (rawData && rawData.labels) ? rawData.labels : [];
-        const exams = (rawData && rawData.exams) ? rawData.exams : [];
-        const summaries = (rawData && rawData.summaries) ? rawData.summaries : [];
-        const guides = (rawData && rawData.guides) ? rawData.guides : [];
-
-        if (labels.length === 0) {
-            if (emptyState) emptyState.classList.remove('hidden');
-            canvas.style.display = 'none';
-            return;
-        }
-
-        if (emptyState) emptyState.classList.add('hidden');
-        canvas.style.display = 'block';
+        const counts = (rawData && rawData.counts) ? rawData.counts : [];
+        const colors = (rawData && rawData.colors) ? rawData.colors : [];
+        const total = (rawData && rawData.total) ? rawData.total : 0;
 
         // Destroy existing Chart instance if present
         const existingChart = Chart.getChart(canvas);
@@ -420,89 +488,66 @@
             existingChart.destroy();
         }
 
+        let chartData = counts;
+        let chartColors = colors;
+        let isPlaceholder = false;
+
+        if (total === 0) {
+            isPlaceholder = true;
+            // Draw a subtle soft multi-segment ring with muted tone
+            chartData = labels.length > 0 ? labels.map(function() { return 1; }) : [1];
+            chartColors = labels.length > 0 ? colors.map(function(c) { return c + '33'; }) : ['#E2E8F0'];
+        }
+
         new Chart(canvas, {
-            type: 'bar',
+            type: 'doughnut',
             data: {
                 labels: labels,
-                datasets: [
-                    {
-                        label: 'Épreuves',
-                        data: exams,
-                        backgroundColor: 'rgba(37, 99, 235, 0.85)',
-                        borderColor: 'rgb(37, 99, 235)',
-                        borderWidth: 1.5,
-                        borderRadius: 6,
-                        maxBarThickness: 48,
-                    },
-                    {
-                        label: 'Résumés de cours',
-                        data: summaries,
-                        backgroundColor: 'rgba(16, 185, 129, 0.85)',
-                        borderColor: 'rgb(16, 185, 129)',
-                        borderWidth: 1.5,
-                        borderRadius: 6,
-                        maxBarThickness: 48,
-                    },
-                    {
-                        label: 'Guides de révision',
-                        data: guides,
-                        backgroundColor: 'rgba(245, 158, 11, 0.85)',
-                        borderColor: 'rgb(245, 158, 11)',
-                        borderWidth: 1.5,
-                        borderRadius: 6,
-                        maxBarThickness: 48,
-                    }
-                ]
+                datasets: [{
+                    data: chartData,
+                    backgroundColor: chartColors,
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    hoverOffset: isPlaceholder ? 0 : 8,
+                    borderRadius: 4
+                }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                cutout: '72%',
                 plugins: {
                     legend: {
-                        display: true,
-                        position: 'top',
-                        labels: {
-                            font: { family: 'Plus Jakarta Sans', size: 12, weight: '700' },
-                            usePointStyle: true,
-                            padding: 16
-                        }
+                        display: false
                     },
                     tooltip: {
+                        enabled: !isPlaceholder,
                         backgroundColor: '#071A49',
-                        titleFont: { size: 13, weight: 'bold' },
-                        bodyFont: { size: 12 },
-                        padding: 12,
-                        cornerRadius: 10
+                        titleFont: { size: 12, weight: 'bold', family: 'Plus Jakarta Sans' },
+                        bodyFont: { size: 11, family: 'Plus Jakarta Sans' },
+                        padding: 10,
+                        cornerRadius: 10,
+                        callbacks: {
+                            label: function(context) {
+                                const val = counts[context.dataIndex] || 0;
+                                const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                                return ' ' + val + ' consultation' + (val > 1 ? 's' : '') + ' (' + pct + '%)';
+                            }
+                        }
                     }
                 },
-                scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: {
-                            font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
-                            color: '#64748B'
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        suggestedMax: 5,
-                        ticks: {
-                            stepSize: 1,
-                            precision: 0,
-                            font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
-                            color: '#64748B'
-                        },
-                        grid: { color: '#F1F5F9' }
-                    }
+                animation: {
+                    animateScale: true,
+                    animateRotate: true
                 }
             }
         });
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener("DOMContentLoaded", initFiliereChart);
+        document.addEventListener("DOMContentLoaded", initUeDonutChart);
     } else {
-        initFiliereChart();
+        initUeDonutChart();
     }
 })();
 </script>

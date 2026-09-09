@@ -64,6 +64,9 @@ def exam_list(request):
         ).first()
         if selected_subject:
             exams = exams.filter(subject=selected_subject)
+            if request.user.is_authenticated:
+                from academics.models import record_ue_consultation
+                record_ue_consultation(request.user, selected_subject)
 
     # Filter by semester
     semester_id = request.GET.get("semester")
@@ -114,6 +117,10 @@ def exam_detail(request, pk):
         pk=pk,
         is_published=True
     )
+
+    if exam.subject and request.user.is_authenticated:
+        from academics.models import record_ue_consultation
+        record_ue_consultation(request.user, exam.subject, exam=exam)
 
     has_access = can_user_access_exam_pdf(request.user, exam)
     has_correction_access = can_user_access_correction(request.user, exam)
@@ -396,6 +403,10 @@ def student_viewer_view(request, pk):
         return redirect("payments:pass_semestre", semester_id=sem_id)
 
     stream_url = reverse("exams:stream_watermarked_pdf", kwargs={"pk": exam.id}) + f"?type={res_type}"
+
+    if exam.subject and request.user.is_authenticated:
+        from academics.models import record_ue_consultation
+        record_ue_consultation(request.user, exam.subject, exam=exam)
 
     context = {
         "exam": exam,

@@ -49,6 +49,9 @@ def summary_detail(request, pk):
     )
 
     has_access = can_user_access(request.user, summary)
+    if summary.subject and request.user.is_authenticated:
+        from academics.models import record_ue_consultation
+        record_ue_consultation(request.user, summary.subject)
 
     exams_count = 0
     summaries_count = 0

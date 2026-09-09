@@ -1,6 +1,8 @@
 import re
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 
 
 def validate_academic_year_format(value):
@@ -146,3 +148,58 @@ class SiteConfiguration(models.Model):
         if not self.pk and SiteConfiguration.objects.exists():
             return
         return super(SiteConfiguration, self).save(*args, **kwargs)
+
+
+class SubjectConsultation(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="ue_consultations",
+        verbose_name="Étudiant"
+    )
+    subject = models.ForeignKey(
+        Subject,
+        on_delete=models.CASCADE,
+        related_name="consultations",
+        verbose_name="Matière / UE"
+    )
+    exam = models.ForeignKey(
+        "exams.Exam",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="subject_consultations",
+        verbose_name="Épreuve consultée"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Consultation d'UE"
+        verbose_name_plural = "Consultations d'UE"
+
+    def __str__(self):
+        return f"{self.user} - {self.subject.name} ({self.created_at:%d/%m/%Y %H:%M})"
+
+
+def record_ue_consultation(user, subject, exam=None):
+    """Enregistre la consultation d'une matière/UE par un étudiant connecté avec une protection anti-spam."""
+    if not user or not user.is_authenticated or not subject:
+        return None
+    # Anti-spam léger : ignorer si consultation identique dans les 15 dernières secondes
+    recent = SubjectConsultation.objects.filter(
+        user=user,
+        subject=subject,
+        created_at__gte=timezone.now() - timezone.timedelta(seconds=15)
+    )
+    if exam:
+        recent = recent.filter(exam=exam)
+    if recent.exists():
+        return recent.first()
+
+    return SubjectConsultation.objects.create(
+        user=user,
+        subject=subject,
+        exam=exam
+    )
+

@@ -194,34 +194,68 @@ def dashboard_view(request):
 
     active_pass = active_accesses.exists() or user_subscriptions.filter(is_active=True).exists()
 
-    # Chart data: distribution des documents par filière (spécialité académique)
-    student_school = profile.school if profile and profile.school else None
-    filieres_qs = Filiere.objects.filter(school=student_school) if student_school else Filiere.objects.all()
-    filieres_qs = filieres_qs.annotate(
-        exams_cnt=Count('exams', filter=Q(exams__is_published=True), distinct=True),
-        summaries_cnt=Count('semesters__subjects__summaries', filter=Q(semesters__subjects__summaries__publication_status="PUBLISHED"), distinct=True),
-        guides_cnt=Count('semesters__subjects__guides', filter=Q(semesters__subjects__guides__publication_status="PUBLISHED"), distinct=True)
+    # DIAGRAMME CIRCULAIRE : Activité et consultations des UE par l'étudiant
+    from academics.models import SubjectConsultation
+
+    UE_PALETTE = [
+        "#2563EB",  # Bleu Royal ArchivEx
+        "#10B981",  # Vert Émeraude
+        "#8B5CF6",  # Violet Améthyste
+        "#F59E0B",  # Ambre Doré
+        "#EC4899",  # Rose Framboise
+        "#06B6D4",  # Cyan Océan
+        "#F97316",  # Orange Corail
+        "#6366F1",  # Indigo Nuit
+        "#14B8A6",  # Teal Lagon
+        "#84CC16",  # Citron Vert
+        "#D946EF",  # Fuchsia
+        "#64748B",  # Ardoise Élégante
+    ]
+
+    consultation_counts = dict(
+        SubjectConsultation.objects.filter(
+            user=request.user,
+            subject__in=user_ues
+        ).values("subject_id").annotate(total=Count("id")).values_list("subject_id", "total")
     )
 
-    chart_labels = []
-    chart_exams = []
-    chart_summaries = []
-    chart_guides = []
-    chart_totals = []
+    ue_chart_labels = []
+    ue_chart_counts = []
+    ue_chart_colors = []
+    ue_legend_items = []
 
-    for f in filieres_qs:
-        chart_labels.append(f.name)
-        chart_exams.append(f.exams_cnt)
-        chart_summaries.append(f.summaries_cnt)
-        chart_guides.append(f.guides_cnt)
-        chart_totals.append(f.exams_cnt + f.summaries_cnt + f.guides_cnt)
+    total_ue_consultations = sum(consultation_counts.values())
 
-    filiere_chart_json = json.dumps({
-        "labels": chart_labels,
-        "exams": chart_exams,
-        "summaries": chart_summaries,
-        "guides": chart_guides,
-        "totals": chart_totals,
+    for idx, ue in enumerate(user_ues):
+        cnt = consultation_counts.get(ue.id, 0)
+        color = UE_PALETTE[idx % len(UE_PALETTE)]
+        percent = round((cnt / total_ue_consultations * 100), 1) if total_ue_consultations > 0 else 0
+
+        ue_chart_labels.append(ue.name)
+        ue_chart_counts.append(cnt)
+        ue_chart_colors.append(color)
+
+        ue_legend_items.append({
+            "id": ue.id,
+            "name": ue.name,
+            "code": getattr(ue, "code", "") or f"UE-{idx+1}",
+            "count": cnt,
+            "percent": percent,
+            "color": color,
+            "exams_num": getattr(ue, "exams_num", 0),
+        })
+
+    # Classement pour identifier l'UE la plus consultée et celle à approfondir
+    sorted_by_activity = sorted(ue_legend_items, key=lambda x: x["count"], reverse=True)
+    most_consulted_ue = sorted_by_activity[0] if sorted_by_activity and sorted_by_activity[0]["count"] > 0 else None
+    least_consulted_ue = sorted_by_activity[-1] if sorted_by_activity else None
+
+    ue_chart_json = json.dumps({
+        "labels": ue_chart_labels,
+        "counts": ue_chart_counts,
+        "colors": ue_chart_colors,
+        "total": total_ue_consultations,
+        "has_activity": total_ue_consultations > 0,
     }, ensure_ascii=False)
 
     context = {
@@ -242,7 +276,11 @@ def dashboard_view(request):
         "recent_summaries": recent_summaries,
         "recent_guides": recent_guides,
         "recent_articles": recent_articles,
-        "filiere_chart_json": filiere_chart_json,
+        "ue_chart_json": ue_chart_json,
+        "ue_legend_items": ue_legend_items,
+        "most_consulted_ue": most_consulted_ue,
+        "least_consulted_ue": least_consulted_ue,
+        "total_ue_consultations": total_ue_consultations,
     }
     return render(request, "dashboard/dashboard.html", context)
 
