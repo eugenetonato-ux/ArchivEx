@@ -344,3 +344,7 @@ git add .
 git commit -m "mise a jour"
 git push origin main
 ```
+Touche S : Coche/décoche d'un coup absolument toutes les cases de sélection visibles à l'écran (pratique pour tout attraper rapidement).
+Touche P : Déclenche l'action de Publication pour la sélection actuelle.
+Touche M : Ouvre le panneau pour Move/Déplacer les fichiers sélectionnés vers une autre filière ou un autre semestre.
+Touche Suppr (ou Retour Arrière/Backspace) : Déclenche la demande de suppression (avec le popup de confirmation de sécurité) pour vider la sélection.
