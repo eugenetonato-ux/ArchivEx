@@ -131,14 +131,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <div class="bg-white p-1.5 rounded-lg border border-slate-200 shadow-2xs flex items-center space-x-1.5">
                                             <div class="w-5 h-5 rounded bg-blue-100 text-[#2563EB] flex items-center justify-center font-black text-[9px]">EP</div>
                                             <div>
-                                                <span class="font-black text-xs text-[#071A49] block leading-none">+{{ exams_count|default:"100" }}</span>
+                                                <span class="font-black text-xs text-[#071A49] block leading-none">{{ exams_count|default:"0" }}</span>
                                                 <span class="text-[7px] text-slate-600 font-bold block">Épreuves</span>
                                             </div>
                                         </div>
                                         <div class="bg-white p-1.5 rounded-lg border border-slate-200 shadow-2xs flex items-center space-x-1.5">
                                             <div class="w-5 h-5 rounded bg-amber-100 text-amber-800 flex items-center justify-center font-black text-[9px]">UE</div>
                                             <div>
-                                                <span class="font-black text-xs text-[#071A49] block leading-none">{{ subjects_count|default:"20" }}</span>
+                                                <span class="font-black text-xs text-[#071A49] block leading-none">{{ subjects_count|default:"0" }}</span>
                                                 <span class="text-[7px] text-slate-600 font-bold block">Matières</span>
                                             </div>
                                         </div>
@@ -330,14 +330,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <div class="bg-white p-1.5 rounded-lg border border-slate-200 shadow-2xs flex items-center space-x-1.5">
                                         <div class="w-5 h-5 rounded bg-blue-100 text-[#2563EB] flex items-center justify-center font-black text-[9px]">EP</div>
                                         <div>
-                                            <span class="font-black text-xs text-[#071A49] block leading-none">+{{ exams_count|default:"100" }}</span>
+                                            <span class="font-black text-xs text-[#071A49] block leading-none">{{ exams_count|default:"0" }}</span>
                                             <span class="text-[7px] text-slate-600 font-bold block">Épreuves</span>
                                         </div>
                                     </div>
                                     <div class="bg-white p-1.5 rounded-lg border border-slate-200 shadow-2xs flex items-center space-x-1.5">
                                         <div class="w-5 h-5 rounded bg-amber-100 text-amber-800 flex items-center justify-center font-black text-[9px]">UE</div>
                                         <div>
-                                            <span class="font-black text-xs text-[#071A49] block leading-none">{{ subjects_count|default:"20" }}</span>
+                                            <span class="font-black text-xs text-[#071A49] block leading-none">{{ subjects_count|default:"0" }}</span>
                                             <span class="text-[7px] text-slate-600 font-bold block">Matières</span>
                                         </div>
                                     </div>
@@ -402,56 +402,60 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </section>
 
-<!-- 2. MARQUEE TICKER -->
+<!-- 2. MARQUEE TICKER (STATISTIQUES RÉELLES DU PROJET) -->
 <section class="marquee-ticker-container">
     <div class="marquee-wrapper">
         <div class="marquee-content">
             <div class="stat-ticker-pill">
-                <span class="text-white font-black text-sm">+{{ exams_count|default:"0" }}</span>
-                <span class="text-slate-200 text-xs font-bold">Épreuves disponibles</span>
+                <span class="text-white font-black text-sm">{{ exams_count|default:"0" }}</span>
+                <span class="text-slate-200 text-xs font-bold">Épreuve{{ exams_count|pluralize }} disponible{{ exams_count|pluralize }}</span>
             </div>
             <div class="stat-ticker-pill">
                 <span class="text-white font-black text-sm">{{ subjects_count|default:"0" }}</span>
-                <span class="text-slate-200 text-xs font-bold">Matières clés</span>
+                <span class="text-slate-200 text-xs font-bold">Matière{{ subjects_count|pluralize }} clé{{ subjects_count|pluralize }}</span>
             </div>
             <div class="stat-ticker-pill">
                 <span class="text-white font-black text-sm">{{ summaries_count|default:"0" }}</span>
-                <span class="text-slate-200 text-xs font-bold">Résumés de cours</span>
+                <span class="text-slate-200 text-xs font-bold">Résumé{{ summaries_count|pluralize }} de cours</span>
             </div>
             <div class="stat-ticker-pill">
                 <span class="text-white font-black text-sm">{{ students_count|default:"0" }}</span>
-                <span class="text-slate-200 text-xs font-bold">Étudiants inscrits</span>
+                <span class="text-slate-200 text-xs font-bold">Étudiant{{ students_count|pluralize }} inscrit{{ students_count|pluralize }}</span>
             </div>
             <div class="stat-ticker-pill">
-                <span class="text-amber-300 font-black text-xs uppercase tracking-wider">Pass semestre</span>
+                <span class="text-amber-300 font-black text-xs uppercase tracking-wider">
+                    {% if passes_count > 0 %}{{ passes_count }} Pass semestre actif{{ passes_count|pluralize }}{% else %}Pass semestre disponible{% endif %}
+                </span>
             </div>
             <div class="stat-ticker-pill">
-                <span class="text-emerald-300 font-black text-xs uppercase tracking-wider">{{ schools_count|default:"1" }} Écoles & Universités</span>
+                <span class="text-emerald-300 font-black text-xs uppercase tracking-wider">{{ schools_count|default:"0" }} Université{{ schools_count|pluralize }} & École{{ schools_count|pluralize }}</span>
             </div>
         </div>
 
         <div class="marquee-content" aria-hidden="true">
             <div class="stat-ticker-pill">
-                <span class="text-white font-black text-sm">+{{ exams_count|default:"0" }}</span>
-                <span class="text-slate-200 text-xs font-bold">Épreuves disponibles</span>
+                <span class="text-white font-black text-sm">{{ exams_count|default:"0" }}</span>
+                <span class="text-slate-200 text-xs font-bold">Épreuve{{ exams_count|pluralize }} disponible{{ exams_count|pluralize }}</span>
             </div>
             <div class="stat-ticker-pill">
                 <span class="text-white font-black text-sm">{{ subjects_count|default:"0" }}</span>
-                <span class="text-slate-200 text-xs font-bold">Matières clés</span>
+                <span class="text-slate-200 text-xs font-bold">Matière{{ subjects_count|pluralize }} clé{{ subjects_count|pluralize }}</span>
             </div>
             <div class="stat-ticker-pill">
                 <span class="text-white font-black text-sm">{{ summaries_count|default:"0" }}</span>
-                <span class="text-slate-200 text-xs font-bold">Résumés de cours</span>
+                <span class="text-slate-200 text-xs font-bold">Résumé{{ summaries_count|pluralize }} de cours</span>
             </div>
             <div class="stat-ticker-pill">
                 <span class="text-white font-black text-sm">{{ students_count|default:"0" }}</span>
-                <span class="text-slate-200 text-xs font-bold">Étudiants inscrits</span>
+                <span class="text-slate-200 text-xs font-bold">Étudiant{{ students_count|pluralize }} inscrit{{ students_count|pluralize }}</span>
             </div>
             <div class="stat-ticker-pill">
-                <span class="text-amber-300 font-black text-xs uppercase tracking-wider">Pass semestre</span>
+                <span class="text-amber-300 font-black text-xs uppercase tracking-wider">
+                    {% if passes_count > 0 %}{{ passes_count }} Pass semestre actif{{ passes_count|pluralize }}{% else %}Pass semestre disponible{% endif %}
+                </span>
             </div>
             <div class="stat-ticker-pill">
-                <span class="text-emerald-300 font-black text-xs uppercase tracking-wider">{{ schools_count|default:"1" }} Écoles & Universités</span>
+                <span class="text-emerald-300 font-black text-xs uppercase tracking-wider">{{ schools_count|default:"0" }} Université{{ schools_count|pluralize }} & École{{ schools_count|pluralize }}</span>
             </div>
         </div>
     </div>

@@ -21,17 +21,14 @@ def home_view(request):
     cached_data = cache.get(cache_key)
 
     if not cached_data:
-        config = SiteConfiguration.objects.first()
-        if not config:
-            config = SiteConfiguration.objects.create()
-
-        schools_count = School.objects.filter(is_active=True).count() + config.base_schools_count
+        schools_count = School.objects.filter(is_active=True).count()
         filieres_count = Filiere.objects.count()
-        subjects_count = Subject.objects.count() + config.base_subjects_count
-        exams_count = Exam.objects.filter(is_published=True).count() + config.base_exams_count
-        summaries_count = Summary.objects.filter(publication_status="PUBLISHED").count() + config.base_summaries_count
+        subjects_count = Subject.objects.count()
+        exams_count = Exam.objects.filter(is_published=True).count()
+        summaries_count = Summary.objects.filter(publication_status="PUBLISHED").count()
         guides_count = Guide.objects.filter(publication_status="PUBLISHED").count()
-        students_count = User.objects.filter(is_staff=False).count() + config.base_students_count
+        students_count = User.objects.filter(is_staff=False).count()
+        passes_count = SemesterAccess.objects.filter(activated_at__isnull=False).count()
 
         featured_filieres = list(
             Filiere.objects.select_related("school", "level").annotate(
@@ -59,12 +56,13 @@ def home_view(request):
             "summaries_count": summaries_count,
             "guides_count": guides_count,
             "students_count": students_count,
+            "passes_count": passes_count,
             "featured_filieres": featured_filieres,
             "latest_exams": latest_exams,
             "latest_summaries": latest_summaries,
         }
-        # Mise en cache pour 180 secondes (3 minutes)
-        cache.set(cache_key, cached_data, 180)
+        # Mise en cache courte (60 secondes) pour refléter fidèlement les ajouts réels
+        cache.set(cache_key, cached_data, 60)
 
     context = dict(cached_data)
     return render(request, "academics/home.html", context)

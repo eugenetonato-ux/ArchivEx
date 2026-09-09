@@ -70,8 +70,24 @@ def logout_view(request):
 @login_required
 def dashboard_view(request):
     profile = getattr(request.user, "profile", None)
+    if not profile:
+        # Garantir qu'un profil étudiant existe pour tout utilisateur connecté (y compris administrateurs / staff qui consultent l'espace étudiant)
+        from academics.models import Filiere, School, Level
+        default_filiere = Filiere.objects.first()
+        if default_filiere:
+            default_school = default_filiere.school or School.objects.first()
+            default_level = default_filiere.level or Level.objects.first()
+            if default_school and default_level:
+                profile, _ = StudentProfile.objects.get_or_create(
+                    user=request.user,
+                    defaults={
+                        "school": default_school,
+                        "filiere": default_filiere,
+                        "level": default_level,
+                    }
+                )
 
-    # Initialiser toutes les variables pour éviter UnboundLocalError
+    # Initialiser toutes les variables
     active_semester = None
     user_ues = []
     semester_subjects_count = 0
@@ -91,6 +107,7 @@ def dashboard_view(request):
     from subscriptions.models import UserSubscription
     from subscriptions.services import can_user_access
     from content.models import Summary, Guide, Article
+    from academics.models import Semester, Subject, Filiere
 
     user_subscriptions = UserSubscription.objects.filter(
         user=request.user, is_active=True
@@ -101,23 +118,62 @@ def dashboard_view(request):
         "exam", "exam__subject", "exam__filiere"
     ).order_by("-created_at")[:6]
 
-    # Personalized UEs & Content matching student's academic context
+    # Filière active de l'étudiant
+    filiere = None
     if profile and profile.filiere:
-        from academics.models import Semester, Subject
-        active_semester = Semester.objects.filter(filiere=profile.filiere).first()
-        if active_semester:
-            semester_subjects_count = Subject.objects.filter(semester=active_semester).count()
-            semester_exams_count = Exam.objects.filter(semester=active_semester, is_published=True).count()
-            semester_summaries_count = Summary.objects.filter(subject__semester=active_semester, publication_status="PUBLISHED").count()
-            semester_guides_count = Guide.objects.filter(subject__semester=active_semester, publication_status="PUBLISHED").count()
+        filiere = profile.filiere
+    else:
+        active_access = active_accesses.first()
+        if active_access and active_access.filiere:
+            filiere = active_access.filiere
+        else:
+            filiere = Filiere.objects.first()
 
-            user_ues = Subject.objects.filter(semester=active_semester).annotate(
-                exams_num=Count("exams")
-            )[:6]
+    available_semesters = Semester.objects.filter(filiere=filiere) if filiere else Semester.objects.all()
+    selected_semester_id = request.GET.get("semester")
+    if selected_semester_id:
+        active_semester = available_semesters.filter(id=selected_semester_id).first()
+    if not active_semester:
+        active_access = active_accesses.first()
+        if active_access and active_access.semester and active_access.semester in available_semesters:
+            active_semester = active_access.semester
+        else:
+            active_semester = available_semesters.first()
+
+    # Calcul des métriques réelles depuis la base de données
+    if active_semester:
+        semester_subjects_count = Subject.objects.filter(semester=active_semester, is_active=True).count()
+        semester_exams_count = Exam.objects.filter(semester=active_semester, is_published=True).count()
+        semester_summaries_count = Summary.objects.filter(subject__semester=active_semester, publication_status="PUBLISHED").count()
+        semester_guides_count = Guide.objects.filter(subject__semester=active_semester, publication_status="PUBLISHED").count()
+
+        user_ues = Subject.objects.filter(semester=active_semester, is_active=True).annotate(
+            exams_num=Count("exams", filter=Q(exams__is_published=True))
+        )
         recent_exams = Exam.objects.filter(
-            filiere=profile.filiere, is_published=True
+            semester=active_semester, is_published=True
+        ).select_related("subject", "semester", "filiere")[:6]
+    elif filiere:
+        semester_subjects_count = Subject.objects.filter(semester__filiere=filiere, is_active=True).count()
+        semester_exams_count = Exam.objects.filter(filiere=filiere, is_published=True).count()
+        semester_summaries_count = Summary.objects.filter(subject__semester__filiere=filiere, publication_status="PUBLISHED").count()
+        semester_guides_count = Guide.objects.filter(subject__semester__filiere=filiere, publication_status="PUBLISHED").count()
+
+        user_ues = Subject.objects.filter(semester__filiere=filiere, is_active=True).annotate(
+            exams_num=Count("exams", filter=Q(exams__is_published=True))
+        )
+        recent_exams = Exam.objects.filter(
+            filiere=filiere, is_published=True
         ).select_related("subject", "semester", "filiere")[:6]
     else:
+        semester_subjects_count = Subject.objects.filter(is_active=True).count()
+        semester_exams_count = Exam.objects.filter(is_published=True).count()
+        semester_summaries_count = Summary.objects.filter(publication_status="PUBLISHED").count()
+        semester_guides_count = Guide.objects.filter(publication_status="PUBLISHED").count()
+
+        user_ues = Subject.objects.filter(is_active=True).annotate(
+            exams_num=Count("exams", filter=Q(exams__is_published=True))
+        )[:8]
         recent_exams = Exam.objects.filter(
             is_published=True
         ).select_related("subject", "semester", "filiere")[:6]
@@ -139,13 +195,12 @@ def dashboard_view(request):
     active_pass = active_accesses.exists() or user_subscriptions.filter(is_active=True).exists()
 
     # Chart data: distribution des documents par filière (spécialité académique)
-    from academics.models import Filiere
     student_school = profile.school if profile and profile.school else None
     filieres_qs = Filiere.objects.filter(school=student_school) if student_school else Filiere.objects.all()
     filieres_qs = filieres_qs.annotate(
-        exams_cnt=Count('exams', distinct=True),
-        summaries_cnt=Count('semesters__subjects__summaries', distinct=True),
-        guides_cnt=Count('semesters__subjects__guides', distinct=True)
+        exams_cnt=Count('exams', filter=Q(exams__is_published=True), distinct=True),
+        summaries_cnt=Count('semesters__subjects__summaries', filter=Q(semesters__subjects__summaries__publication_status="PUBLISHED"), distinct=True),
+        guides_cnt=Count('semesters__subjects__guides', filter=Q(semesters__subjects__guides__publication_status="PUBLISHED"), distinct=True)
     )
 
     chart_labels = []
@@ -171,6 +226,8 @@ def dashboard_view(request):
 
     context = {
         "profile": profile,
+        "filiere": filiere,
+        "available_semesters": available_semesters,
         "active_accesses": active_accesses,
         "user_subscriptions": user_subscriptions,
         "active_pass": active_pass,

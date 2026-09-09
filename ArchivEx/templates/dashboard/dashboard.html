@@ -22,13 +22,13 @@
                 <!-- ACADEMIC CONTEXT BADGES -->
                 <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
                     <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-[#2563EB] border border-blue-100">
-                        {% if profile and profile.school %}{{ profile.school.name }}{% else %}Établissement{% endif %}
+                        {% if profile and profile.school %}{{ profile.school.name }}{% elif filiere and filiere.school %}{{ filiere.school.name }}{% else %}ENEAM{% endif %}
                     </span>
                     <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                        {% if profile and profile.level %}{{ profile.level.name }}{% else %}Niveau L1{% endif %}
+                        {% if profile and profile.level %}{{ profile.level.name }}{% elif filiere and filiere.level %}{{ filiere.level.name }}{% else %}Licence 1{% endif %}
                     </span>
                     <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                        {% if profile and profile.filiere %}{{ profile.filiere.name }}{% else %}Filière{% endif %}
+                        {% if profile and profile.filiere %}{{ profile.filiere.name }}{% elif filiere %}{{ filiere.name }}{% else %}Informatique{% endif %}
                     </span>
                 </div>
 
@@ -80,25 +80,37 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
         <!-- MAIN COLUMN (8 COLS ON DESKTOP) -->
-        <div class="lg:col-span-8 spac            <!-- MA FILIÈRE & CURRENT SEMESTER CARD -->
+        <div class="lg:col-span-8 space-y-8">
+            <!-- MA FILIÈRE & CURRENT SEMESTER CARD -->
             <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
-                <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 mb-6 gap-3">
                     <div>
                         <span class="text-[10px] font-black uppercase tracking-wider text-[#2563EB] bg-blue-50 px-2.5 py-0.5 rounded-full">
                             Ma Filière Universitaire
                         </span>
                         <h2 class="text-xl font-black text-[#071A49] mt-2">
-                            {% if profile and profile.filiere %}{{ profile.filiere.name }}{% else %}Filière universitaire{% endif %}
+                            {% if profile and profile.filiere %}{{ profile.filiere.name }}{% elif filiere %}{{ filiere.name }}{% else %}Filière universitaire{% endif %}
                         </h2>
                     </div>
 
-                    <a href="{% url 'academics:filieres' %}" class="text-xs font-extrabold text-[#2563EB] hover:underline flex items-center">
-                        <span>Voir tout mon semestre</span>
-                        <i class="fa-solid fa-arrow-right ml-1"></i>
-                    </a>
+                    <div class="flex items-center space-x-2">
+                        {% if available_semesters|length > 1 %}
+                            <div class="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl">
+                                {% for sem in available_semesters %}
+                                    <a href="?semester={{ sem.id }}" class="px-2.5 py-1 rounded-lg text-xs font-black transition-all {% if active_semester and active_semester.id == sem.id %}bg-[#2563EB] text-white shadow-xs{% else %}text-slate-600 hover:text-[#071A49]{% endif %}">
+                                        {{ sem.label }}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <a href="{% url 'academics:filieres' %}" class="text-xs font-extrabold text-[#2563EB] hover:underline flex items-center shrink-0">
+                            <span>Voir tout</span>
+                            <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
                 </div>
 
-                <!-- SEMESTER METRICS ROW -->
+                <!-- SEMESTER METRICS ROW (VALEURS STRICTEMENT RÉELLES DE LA BASE DE DONNÉES) -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                     <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-center">
                         <span class="text-xs font-bold text-slate-500 block mb-0.5">Semestre</span>
@@ -107,17 +119,17 @@
 
                     <div class="p-3 rounded-2xl bg-blue-50/60 border border-blue-100 text-center">
                         <span class="text-xs font-bold text-blue-800 block mb-0.5">Matières (UE)</span>
-                        <span class="text-sm font-black text-[#2563EB]">{{ semester_subjects_count|default:user_ues|length }}</span>
+                        <span class="text-sm font-black text-[#2563EB]">{{ semester_subjects_count }}</span>
                     </div>
 
                     <div class="p-3 rounded-2xl bg-amber-50/60 border border-amber-100 text-center">
                         <span class="text-xs font-bold text-amber-800 block mb-0.5">Épreuves</span>
-                        <span class="text-sm font-black text-amber-600">{{ semester_exams_count|default:"0" }}</span>
+                        <span class="text-sm font-black text-amber-600">{{ semester_exams_count }}</span>
                     </div>
 
                     <div class="p-3 rounded-2xl bg-emerald-50/60 border border-emerald-100 text-center">
                         <span class="text-xs font-bold text-emerald-800 block mb-0.5">Résumés</span>
-                        <span class="text-sm font-black text-emerald-600">{{ semester_summaries_count|default:"0" }}</span>
+                        <span class="text-sm font-black text-emerald-600">{{ semester_summaries_count }}</span>
                     </div>
                 </div>
 

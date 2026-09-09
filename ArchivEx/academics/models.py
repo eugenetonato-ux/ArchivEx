@@ -128,12 +128,12 @@ class Subject(models.Model):
     def exams_count(self, value):
         self._exams_count = value
 class SiteConfiguration(models.Model):
-    # Offsets virtuels pour afficher des statistiques plus intéressantes quand la plateforme débute
-    base_students_count = models.PositiveIntegerField(default=5000, help_text="Valeur de base pour Étudiants inscrits")
-    base_exams_count = models.PositiveIntegerField(default=1200, help_text="Valeur de base pour Épreuves disponibles")
-    base_summaries_count = models.PositiveIntegerField(default=450, help_text="Valeur de base pour Résumés de cours")
-    base_schools_count = models.PositiveIntegerField(default=15, help_text="Valeur de base pour Écoles & Universités")
-    base_subjects_count = models.PositiveIntegerField(default=300, help_text="Valeur de base pour Matières clés")
+    # Paramètres de configuration (valeurs par défaut à 0 pour refléter strictement la base de données réelle)
+    base_students_count = models.PositiveIntegerField(default=0, help_text="Valeur de base pour Étudiants inscrits")
+    base_exams_count = models.PositiveIntegerField(default=0, help_text="Valeur de base pour Épreuves disponibles")
+    base_summaries_count = models.PositiveIntegerField(default=0, help_text="Valeur de base pour Résumés de cours")
+    base_schools_count = models.PositiveIntegerField(default=0, help_text="Valeur de base pour Écoles & Universités")
+    base_subjects_count = models.PositiveIntegerField(default=0, help_text="Valeur de base pour Matières clés")
 
     class Meta:
         verbose_name = "Configuration Globale (Statistiques)"
