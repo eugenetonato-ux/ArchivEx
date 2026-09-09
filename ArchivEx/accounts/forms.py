@@ -10,15 +10,15 @@ User = get_user_model()
 class StudentRegistrationForm(forms.ModelForm):
     first_name = forms.CharField(max_length=50, required=True, label="Prénom", widget=forms.TextInput(attrs={
         'class': 'w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]',
-        'placeholder': 'Jacques'
+        'placeholder': 'Sophia'
     }))
     last_name = forms.CharField(max_length=50, required=True, label="Nom", widget=forms.TextInput(attrs={
         'class': 'w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]',
-        'placeholder': 'AKAKPO'
+        'placeholder': 'Lokossou'
     }))
     email = forms.EmailField(required=True, label="Adresse Email", widget=forms.EmailInput(attrs={
         'class': 'w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]',
-        'placeholder': 'etudiant@gmail.com'
+        'placeholder': 'sophia.lokossou@universite.fr'
     }))
     password = forms.CharField(widget=forms.PasswordInput(attrs={
         'class': 'w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]',

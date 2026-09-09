@@ -10,7 +10,7 @@ class SupportRequestForm(forms.ModelForm):
         label="Votre nom complet",
         widget=forms.TextInput(attrs={
             "class": "w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#2563EB]",
-            "placeholder": "Ex: Jean Dupont",
+            "placeholder": "Ex: Sophia Lokossou",
             "id": "support-guest-name",
         }),
     )
@@ -19,7 +19,7 @@ class SupportRequestForm(forms.ModelForm):
         label="Votre adresse email",
         widget=forms.EmailInput(attrs={
             "class": "w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#2563EB]",
-            "placeholder": "Ex: jean.dupont@gmail.com",
+            "placeholder": "Ex: sophialokossou@gmail.com",
             "id": "support-guest-email",
         }),
     )
