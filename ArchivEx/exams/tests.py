@@ -342,8 +342,91 @@ class ArchivExFlowTest(TestCase):
         res_sum = self.client.get(reverse("exams:student_viewer", kwargs={"pk": self.exam_premium.id}) + "?type=summary")
         self.assertEqual(res_sum.status_code, 200)
 
-    def test_parcours_7_logout_relogin_pass_remains_active(self):
-        """7. Déconnexion puis reconnexion d'un étudiant ayant un Pass actif -> accès premium toujours disponible."""
+    def test_parcours_1_gratuit_epreuves_ue_annee_ressource(self):
+        """Gratuit -> Épreuves -> UE -> année -> ressource."""
+        self.client.logout()
+        res = self.client.get(reverse("exams:free_liste") + "?category=epreuves")
+        self.assertEqual(res.status_code, 200)
+        # Vérification de la présence de l'UE et de l'année
+        ue_item = next((ue for ue in res.context["ue_list"] if ue["subject"].id == self.subject.id), None)
+        self.assertIsNotNone(ue_item)
+        self.assertTrue(len(ue_item["years"]) > 0)
+        # Consultation
+        v_url = ue_item["years"][0]["viewer_url"]
+        res_view = self.client.get(v_url)
+        self.assertEqual(res_view.status_code, 200)
+
+    def test_parcours_2_gratuit_corrections_ue_annee_ressource(self):
+        """Gratuit -> Épreuves corrigées -> UE -> année -> ressource."""
+        # Marquer la correction comme gratuite
+        self.exam_free.is_free_correction = True
+        self.exam_free.save()
+        self.client.logout()
+        res = self.client.get(reverse("exams:free_liste") + "?category=corrections")
+        self.assertEqual(res.status_code, 200)
+        ue_item = next((ue for ue in res.context["ue_list"] if ue["subject"].id == self.subject.id), None)
+        self.assertIsNotNone(ue_item)
+        self.assertTrue(len(ue_item["years"]) > 0)
+        v_url = ue_item["years"][0]["viewer_url"]
+        res_view = self.client.get(v_url)
+        self.assertEqual(res_view.status_code, 200)
+
+    def test_parcours_3_gratuit_resumes_ue_annee_ressource(self):
+        """Gratuit -> Résumés -> UE -> année -> ressource."""
+        self.exam_free.is_free_correction = True
+        self.exam_free.save()
+        self.client.logout()
+        res = self.client.get(reverse("exams:free_liste") + "?category=resumes")
+        self.assertEqual(res.status_code, 200)
+        ue_item = next((ue for ue in res.context["ue_list"] if ue["subject"].id == self.subject.id), None)
+        self.assertIsNotNone(ue_item)
+        self.assertTrue(len(ue_item["years"]) > 0)
+        v_url = ue_item["years"][0]["viewer_url"]
+        res_view = self.client.get(v_url)
+        self.assertEqual(res_view.status_code, 200)
+
+    def test_parcours_4_premium_sans_pass_epreuves_verrouillees(self):
+        """Premium sans Pass -> Épreuves -> UE -> année -> ressource verrouillée."""
+        self.client.login(username="student@univ.edu", password="Password123!")
+        res = self.client.get(reverse("exams:premium_liste") + "?category=epreuves")
+        self.assertEqual(res.status_code, 200)
+        ue_item = next((ue for ue in res.context["ue_list"] if ue["subject"].id == self.subject.id), None)
+        self.assertIsNotNone(ue_item)
+        prem_year = next((y for y in ue_item["years"] if y.get("exam_id") == self.exam_premium.id), None)
+        self.assertIsNotNone(prem_year)
+        self.assertTrue(prem_year["is_locked"])
+        # Tentative d'accès -> redirection vers le Pass
+        res_view = self.client.get(prem_year["viewer_url"])
+        self.assertRedirects(res_view, reverse("payments:pass_semestre", kwargs={"semester_id": self.semester.id}))
+
+    def test_parcours_5_premium_sans_pass_corrections_verrouillees(self):
+        """Premium sans Pass -> Épreuves corrigées -> UE -> année -> ressource verrouillée."""
+        self.client.login(username="student@univ.edu", password="Password123!")
+        res = self.client.get(reverse("exams:premium_liste") + "?category=corrections")
+        self.assertEqual(res.status_code, 200)
+        ue_item = next((ue for ue in res.context["ue_list"] if ue["subject"].id == self.subject.id), None)
+        self.assertIsNotNone(ue_item)
+        prem_year = next((y for y in ue_item["years"] if y.get("exam_id") == self.exam_premium.id), None)
+        self.assertIsNotNone(prem_year)
+        self.assertTrue(prem_year["is_locked"])
+        res_view = self.client.get(prem_year["viewer_url"])
+        self.assertRedirects(res_view, reverse("payments:pass_semestre", kwargs={"semester_id": self.semester.id}))
+
+    def test_parcours_6_premium_sans_pass_resumes_verrouillees(self):
+        """Premium sans Pass -> Résumés -> UE -> année -> ressource verrouillée."""
+        self.client.login(username="student@univ.edu", password="Password123!")
+        res = self.client.get(reverse("exams:premium_liste") + "?category=resumes")
+        self.assertEqual(res.status_code, 200)
+        ue_item = next((ue for ue in res.context["ue_list"] if ue["subject"].id == self.subject.id), None)
+        self.assertIsNotNone(ue_item)
+        prem_year = next((y for y in ue_item["years"] if y.get("exam_id") == self.exam_premium.id), None)
+        self.assertIsNotNone(prem_year)
+        self.assertTrue(prem_year["is_locked"])
+        res_view = self.client.get(prem_year["viewer_url"])
+        self.assertRedirects(res_view, reverse("payments:pass_semestre", kwargs={"semester_id": self.semester.id}))
+
+    def test_parcours_7_8_9_premium_avec_pass_consultation(self):
+        """Premium avec Pass -> Épreuves, Corrections, Résumés -> UE -> année -> consultation immédiate."""
         SemesterAccess.objects.create(
             user=self.student,
             school=self.school,
@@ -353,18 +436,104 @@ class ArchivExFlowTest(TestCase):
             semester=self.semester,
             activated_at=timezone.now()
         )
-        # Connexion 1
         self.client.login(username="student@univ.edu", password="Password123!")
-        res1 = self.client.get(reverse("exams:student_viewer", kwargs={"pk": self.exam_premium.id}) + "?type=exam")
-        self.assertEqual(res1.status_code, 200)
 
-        # Déconnexion
-        self.client.logout()
+        # 7. Épreuves
+        res = self.client.get(reverse("exams:premium_liste") + "?category=epreuves")
+        ue_item = next(ue for ue in res.context["ue_list"] if ue["subject"].id == self.subject.id)
+        prem_year = next(y for y in ue_item["years"] if y.get("exam_id") == self.exam_premium.id)
+        self.assertFalse(prem_year["is_locked"])
+        res_view = self.client.get(prem_year["viewer_url"])
+        self.assertEqual(res_view.status_code, 200)
 
-        # Reconnexion 2
-        self.client.login(username="student@univ.edu", password="Password123!")
-        res2 = self.client.get(reverse("exams:student_viewer", kwargs={"pk": self.exam_premium.id}) + "?type=exam")
-        self.assertEqual(res2.status_code, 200)
+        # 8. Corrections
+        res_corr = self.client.get(reverse("exams:premium_liste") + "?category=corrections")
+        ue_item_c = next(ue for ue in res_corr.context["ue_list"] if ue["subject"].id == self.subject.id)
+        prem_year_c = next(y for y in ue_item_c["years"] if y.get("exam_id") == self.exam_premium.id)
+        self.assertFalse(prem_year_c["is_locked"])
+        res_view_c = self.client.get(prem_year_c["viewer_url"])
+        self.assertEqual(res_view_c.status_code, 200)
+
+        # 9. Résumés
+        res_res = self.client.get(reverse("exams:premium_liste") + "?category=resumes")
+        ue_item_r = next(ue for ue in res_res.context["ue_list"] if ue["subject"].id == self.subject.id)
+        prem_year_r = next(y for y in ue_item_r["years"] if y.get("exam_id") == self.exam_premium.id)
+        self.assertFalse(prem_year_r["is_locked"])
+        res_view_r = self.client.get(prem_year_r["viewer_url"])
+        self.assertEqual(res_view_r.status_code, 200)
+
+    def test_multi_years_grouping_and_descending_sort(self):
+        """Vérifie que les années d'une même UE sont regroupées et triées de la plus récente à la plus ancienne."""
+        year_2024 = AcademicYear.objects.create(label="2023-2024")
+        pdf_data = make_valid_pdf_content("Test 2023-2024")
+        Exam.objects.create(
+            title="Ancienne épreuve Algo",
+            subject=self.subject,
+            semester=self.semester,
+            filiere=self.filiere,
+            level=self.level,
+            academic_year=year_2024,
+            exam_type="examen",
+            year=2023,
+            is_free=True,
+            is_published=True,
+            file=ContentFile(pdf_data, name="algo_2023.pdf"),
+        )
+        res = self.client.get(reverse("exams:free_liste") + "?category=epreuves")
+        ue_item = next(ue for ue in res.context["ue_list"] if ue["subject"].id == self.subject.id)
+        
+        # Les années doivent être triées décroissantes : 2025-2026 avant 2023-2024
+        sort_years = [y["sort_year"] for y in ue_item["years"]]
+        self.assertEqual(sort_years, sorted(sort_years, reverse=True))
+
+    def test_ue_isolation_no_resource_leak(self):
+        """Vérifie qu'aucune ressource ne se retrouve mélangée entre deux UE distinctes."""
+        subject2 = Subject.objects.create(semester=self.semester, name="Microéconomie", is_free=True)
+        pdf_data = make_valid_pdf_content("Microeconomics Exam")
+        Exam.objects.create(
+            title="Épreuve Microéconomie",
+            subject=subject2,
+            semester=self.semester,
+            filiere=self.filiere,
+            level=self.level,
+            academic_year=self.year,
+            exam_type="examen",
+            year=2025,
+            is_free=True,
+            is_published=True,
+            file=ContentFile(pdf_data, name="micro_2025.pdf"),
+        )
+        res = self.client.get(reverse("exams:free_liste") + "?category=epreuves")
+        ue_map = {ue["subject"].id: ue for ue in res.context["ue_list"]}
+        
+        self.assertIn(self.subject.id, ue_map)
+        self.assertIn(subject2.id, ue_map)
+        
+        # Aucun fichier de subject2 dans self.subject
+        algo_files = [y["exam"].file.name for y in ue_map[self.subject.id]["years"]]
+        self.assertFalse(any("micro" in f for f in algo_files))
+        
+        # Aucun fichier de self.subject dans subject2
+        micro_files = [y["exam"].file.name for y in ue_map[subject2.id]["years"]]
+        self.assertTrue(any("micro" in f for f in micro_files))
+        self.assertFalse(any("algo" in f for f in micro_files))
+
+    def test_multi_criteria_search_and_filter(self):
+        """Vérifie le filtrage par UE, filière, semestre, année académique et type."""
+        # 1. Filtre par subject ID
+        res_subj = self.client.get(reverse("exams:free_liste") + f"?subject={self.subject.id}")
+        self.assertEqual(len(res_subj.context["ue_list"]), 1)
+        self.assertEqual(res_subj.context["ue_list"][0]["subject"].id, self.subject.id)
+
+        # 2. Filtre par filière
+        res_fil = self.client.get(reverse("exams:free_liste") + f"?filiere={self.filiere.id}")
+        self.assertGreaterEqual(len(res_fil.context["ue_list"]), 1)
+
+        # 3. Filtre par texte q
+        res_q = self.client.get(reverse("exams:free_liste") + "?q=Algorithmique")
+        self.assertEqual(len(res_q.context["ue_list"]), 1)
+        self.assertEqual(res_q.context["ue_list"][0]["subject"].name, "Algorithmique")
+
 
 
 

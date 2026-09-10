@@ -1,4 +1,5 @@
 import os
+import re
 import unicodedata
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
@@ -7,13 +8,12 @@ from django.http import HttpResponseForbidden, FileResponse, Http404, JsonRespon
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.db.models import Q
-
 from django.utils import timezone
 
 from .models import Exam
 from accounts.models import Favorite
 from payments.models import SemesterAccess
-from academics.models import Subject
+from academics.models import Subject, Filiere, Semester, AcademicYear
 
 
 from subscriptions.services import (
@@ -21,7 +21,42 @@ from subscriptions.services import (
     can_user_access_exam_pdf,
     can_user_access_correction,
     can_user_access_summary,
+    has_user_valid_pass,
 )
+
+
+def parse_sort_year(academic_year=None, exam_year=None, date_val=None):
+    """Extrait une année entière numérique pour garantir le tri strict de la plus récente à la plus ancienne."""
+    if academic_year and getattr(academic_year, "label", None):
+        m = re.search(r"(\d{4})", str(academic_year.label))
+        if m:
+            return int(m.group(1))
+    if exam_year:
+        try:
+            return int(exam_year)
+        except (ValueError, TypeError):
+            pass
+    if date_val:
+        return date_val.year
+    return 0
+
+
+def format_academic_year(academic_year=None, exam_year=None, date_val=None):
+    """Formate l'affichage de l'année académique de manière sobre et naturelle (ex: 2024–2025)."""
+    if academic_year and getattr(academic_year, "label", None):
+        return str(academic_year.label).replace("-", "–")
+    if exam_year:
+        try:
+            y = int(exam_year)
+            if y > 2000:
+                return f"{y - 1}–{y}"
+            return str(y)
+        except (ValueError, TypeError):
+            return str(exam_year)
+    if date_val:
+        y = date_val.year
+        return f"{y - 1}–{y}"
+    return "Année récente"
 
 
 def resources_view(request, mode=None):
@@ -29,7 +64,7 @@ def resources_view(request, mode=None):
     Espace central 'Ressources' d'ArchivEx :
     - 2 modes principaux : 'free' (Ressources gratuites) ou 'premium' (Ressources premium)
     - 3 catégories par mode : 'epreuves', 'corrections', 'resumes'
-    - Regroupement systématique par UE / Matière, puis par années disponibles.
+    - Regroupement systématique par UE / Matière, puis par années disponibles (triées de la plus récente à la plus ancienne).
     """
     mode = mode or request.GET.get("mode")
     if request.resolver_match and request.resolver_match.url_name == "free_liste":
@@ -43,8 +78,13 @@ def resources_view(request, mode=None):
     if category not in ("epreuves", "corrections", "resumes"):
         category = "epreuves"
 
+    # Paramètres de recherche et filtrage multi-critères
     q = request.GET.get("q", "").strip()
     selected_subject_id = request.GET.get("subject", "").strip()
+    selected_filiere_id = request.GET.get("filiere", "").strip()
+    selected_semester_id = request.GET.get("semester", "").strip()
+    selected_year = request.GET.get("year", "").strip()
+    selected_type = request.GET.get("exam_type", "").strip()
 
     subjects_map = {}
 
@@ -62,10 +102,20 @@ def resources_view(request, mode=None):
                 Q(subject__name__icontains=q) |
                 Q(subject__code__icontains=q) |
                 Q(title__icontains=q) |
-                Q(subject__semester__filiere__name__icontains=q)
+                Q(subject__semester__filiere__name__icontains=q) |
+                Q(subject__semester__label__icontains=q) |
+                Q(academic_year__label__icontains=q)
             )
         if selected_subject_id:
             exams = exams.filter(subject_id=selected_subject_id)
+        if selected_filiere_id:
+            exams = exams.filter(subject__semester__filiere_id=selected_filiere_id)
+        if selected_semester_id:
+            exams = exams.filter(subject__semester_id=selected_semester_id)
+        if selected_year:
+            exams = exams.filter(Q(academic_year__label__icontains=selected_year) | Q(academic_year_id=selected_year) | Q(year__icontains=selected_year))
+        if selected_type:
+            exams = exams.filter(exam_type=selected_type)
 
         for exam in exams:
             subj = exam.subject
@@ -78,13 +128,8 @@ def resources_view(request, mode=None):
                     "seen_keys": set(),
                 }
 
-            year_label = ""
-            if exam.academic_year and exam.academic_year.label:
-                year_label = exam.academic_year.label
-            elif exam.year:
-                year_label = f"{exam.year - 1}–{exam.year}" if exam.year > 2000 else str(exam.year)
-            else:
-                year_label = "Année récente"
+            year_label = format_academic_year(exam.academic_year, exam.year)
+            sort_year = parse_sort_year(exam.academic_year, exam.year)
 
             session_label = exam.get_exam_type_display() or "Examen"
             unique_key = f"{year_label}_{session_label}_{exam.id}"
@@ -99,7 +144,7 @@ def resources_view(request, mode=None):
             viewer_url = reverse("exams:student_viewer", kwargs={"pk": exam.id}) + "?type=exam"
             subjects_map[subj.id]["years"].append({
                 "year_label": year_label,
-                "sort_year": exam.year or 0,
+                "sort_year": sort_year,
                 "title": exam.title,
                 "session": session_label,
                 "exam_id": exam.id,
@@ -122,10 +167,20 @@ def resources_view(request, mode=None):
                 Q(subject__name__icontains=q) |
                 Q(subject__code__icontains=q) |
                 Q(title__icontains=q) |
-                Q(subject__semester__filiere__name__icontains=q)
+                Q(subject__semester__filiere__name__icontains=q) |
+                Q(subject__semester__label__icontains=q) |
+                Q(academic_year__label__icontains=q)
             )
         if selected_subject_id:
             exams = exams.filter(subject_id=selected_subject_id)
+        if selected_filiere_id:
+            exams = exams.filter(subject__semester__filiere_id=selected_filiere_id)
+        if selected_semester_id:
+            exams = exams.filter(subject__semester_id=selected_semester_id)
+        if selected_year:
+            exams = exams.filter(Q(academic_year__label__icontains=selected_year) | Q(academic_year_id=selected_year) | Q(year__icontains=selected_year))
+        if selected_type:
+            exams = exams.filter(exam_type=selected_type)
 
         for exam in exams:
             subj = exam.subject
@@ -138,13 +193,8 @@ def resources_view(request, mode=None):
                     "seen_keys": set(),
                 }
 
-            year_label = ""
-            if exam.academic_year and exam.academic_year.label:
-                year_label = exam.academic_year.label
-            elif exam.year:
-                year_label = f"{exam.year - 1}–{exam.year}" if exam.year > 2000 else str(exam.year)
-            else:
-                year_label = "Année récente"
+            year_label = format_academic_year(exam.academic_year, exam.year)
+            sort_year = parse_sort_year(exam.academic_year, exam.year)
 
             session_label = exam.get_exam_type_display() or "Correction"
             unique_key = f"{year_label}_{session_label}_{exam.id}"
@@ -159,7 +209,7 @@ def resources_view(request, mode=None):
             viewer_url = reverse("exams:student_viewer", kwargs={"pk": exam.id}) + "?type=correction"
             subjects_map[subj.id]["years"].append({
                 "year_label": year_label,
-                "sort_year": exam.year or 0,
+                "sort_year": sort_year,
                 "title": f"Correction — {exam.title}",
                 "session": f"{session_label} corrigée",
                 "exam_id": exam.id,
@@ -185,10 +235,18 @@ def resources_view(request, mode=None):
                 Q(subject__name__icontains=q) |
                 Q(subject__code__icontains=q) |
                 Q(title__icontains=q) |
-                Q(subject__semester__filiere__name__icontains=q)
+                Q(subject__semester__filiere__name__icontains=q) |
+                Q(subject__semester__label__icontains=q) |
+                Q(academic_year__label__icontains=q)
             )
         if selected_subject_id:
             exam_summaries = exam_summaries.filter(subject_id=selected_subject_id)
+        if selected_filiere_id:
+            exam_summaries = exam_summaries.filter(subject__semester__filiere_id=selected_filiere_id)
+        if selected_semester_id:
+            exam_summaries = exam_summaries.filter(subject__semester_id=selected_semester_id)
+        if selected_year:
+            exam_summaries = exam_summaries.filter(Q(academic_year__label__icontains=selected_year) | Q(academic_year_id=selected_year) | Q(year__icontains=selected_year))
 
         for exam in exam_summaries:
             subj = exam.subject
@@ -201,13 +259,8 @@ def resources_view(request, mode=None):
                     "seen_keys": set(),
                 }
 
-            year_label = ""
-            if exam.academic_year and exam.academic_year.label:
-                year_label = exam.academic_year.label
-            elif exam.year:
-                year_label = f"{exam.year - 1}–{exam.year}" if exam.year > 2000 else str(exam.year)
-            else:
-                year_label = "Fiche méthodologique"
+            year_label = format_academic_year(exam.academic_year, exam.year)
+            sort_year = parse_sort_year(exam.academic_year, exam.year)
 
             unique_key = f"{year_label}_exam_{exam.id}"
             if unique_key in subjects_map[subj.id]["seen_keys"]:
@@ -221,7 +274,7 @@ def resources_view(request, mode=None):
             viewer_url = reverse("exams:student_viewer", kwargs={"pk": exam.id}) + "?type=summary"
             subjects_map[subj.id]["years"].append({
                 "year_label": year_label,
-                "sort_year": exam.year or 0,
+                "sort_year": sort_year,
                 "title": f"Fiche résumé — {exam.title}",
                 "session": "Fiche de synthèse",
                 "exam_id": exam.id,
@@ -242,10 +295,19 @@ def resources_view(request, mode=None):
                 Q(subject__name__icontains=q) |
                 Q(subject__code__icontains=q) |
                 Q(title__icontains=q) |
-                Q(subject__semester__filiere__name__icontains=q)
+                Q(subject__semester__filiere__name__icontains=q) |
+                Q(subject__semester__label__icontains=q)
             )
         if selected_subject_id:
             course_summaries = course_summaries.filter(subject_id=selected_subject_id)
+        if selected_filiere_id:
+            course_summaries = course_summaries.filter(subject__semester__filiere_id=selected_filiere_id)
+        if selected_semester_id:
+            course_summaries = course_summaries.filter(subject__semester_id=selected_semester_id)
+        if selected_year:
+            m = re.search(r"(\d{4})", selected_year)
+            if m:
+                course_summaries = course_summaries.filter(created_at__year=int(m.group(1)))
 
         for cs in course_summaries:
             subj = cs.subject
@@ -258,11 +320,8 @@ def resources_view(request, mode=None):
                     "seen_keys": set(),
                 }
 
-            year_label = "Fiche complète"
-            sort_year = 0
-            if cs.created_at:
-                sort_year = cs.created_at.year
-                year_label = f"{sort_year - 1}–{sort_year}"
+            year_label = format_academic_year(None, None, cs.created_at)
+            sort_year = parse_sort_year(None, None, cs.created_at)
 
             unique_key = f"{year_label}_cs_{cs.id}"
             if unique_key in subjects_map[subj.id]["seen_keys"]:
@@ -286,13 +345,37 @@ def resources_view(request, mode=None):
                 "summary_obj": cs,
             })
 
-    # Trier les années par ordre décroissant pour chaque UE
+    # Trier les années de chaque UE de la plus récente à la plus ancienne
     ue_list = []
     for subj_id, data in subjects_map.items():
         data["years"].sort(key=lambda x: (x["sort_year"], x["year_label"]), reverse=True)
         data["years_count"] = len(data["years"])
         data["has_locked"] = any(y["is_locked"] for y in data["years"])
         data["all_locked"] = all(y["is_locked"] for y in data["years"]) if data["years"] else False
+
+        # Regroupement propre par année académique pour affichage ergonomique
+        grouped_dict = {}
+        for y in data["years"]:
+            lbl = y["year_label"]
+            if lbl not in grouped_dict:
+                grouped_dict[lbl] = {
+                    "year_label": lbl,
+                    "sort_year": y["sort_year"],
+                    "items": [],
+                    "has_locked": False,
+                    "all_locked": True,
+                }
+            grouped_dict[lbl]["items"].append(y)
+            if y["is_locked"]:
+                grouped_dict[lbl]["has_locked"] = True
+            else:
+                grouped_dict[lbl]["all_locked"] = False
+
+        data["years_grouped"] = sorted(
+            grouped_dict.values(),
+            key=lambda x: (x["sort_year"], x["year_label"]),
+            reverse=True
+        )
         ue_list.append(data)
 
     # Trier les UE par ordre alphabétique
@@ -300,16 +383,30 @@ def resources_view(request, mode=None):
 
     total_resources_count = sum(item["years_count"] for item in ue_list)
 
-    paginator = Paginator(ue_list, 15)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+    # Liste des matières disponibles pour la sélection rapide
+    available_subjects_nav = [
+        {
+            "id": item["subject"].id,
+            "name": item["subject"].name,
+            "code": item["subject"].code,
+            "years_count": item["years_count"],
+        }
+        for item in ue_list
+    ]
+
+    # Pagination : si une UE précise est demandée, on l'affiche directement sans la tronquer
+    if selected_subject_id:
+        page_obj = ue_list
+    else:
+        paginator = Paginator(ue_list, 12)
+        page_number = request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
 
     user_has_any_pass = False
     if request.user.is_authenticated:
         if request.user.is_staff or request.user.is_superuser:
             user_has_any_pass = True
         else:
-            from payments.models import SemesterAccess
             now = timezone.now()
             user_has_any_pass = SemesterAccess.objects.filter(
                 user=request.user
@@ -334,13 +431,23 @@ def resources_view(request, mode=None):
         "category": category,
         "page_obj": page_obj,
         "ue_list": page_obj,
+        "all_ue_list": ue_list,
+        "available_subjects_nav": available_subjects_nav,
         "exams": all_exams,
         "total_ue_count": len(ue_list),
         "total_resources_count": total_resources_count,
         "q": q,
         "selected_subject": selected_subject,
         "selected_subject_id": selected_subject_id,
+        "selected_filiere_id": selected_filiere_id,
+        "selected_semester_id": selected_semester_id,
+        "selected_year": selected_year,
+        "selected_type": selected_type,
         "user_has_any_pass": user_has_any_pass,
+        "available_filieres": Filiere.objects.filter(is_active=True).select_related("school").order_by("school__name", "name"),
+        "available_semesters": Semester.objects.filter(is_active=True).select_related("filiere").order_by("number", "label"),
+        "available_academic_years": AcademicYear.objects.all().order_by("-label"),
+        "exam_types": Exam.EXAM_TYPE_CHOICES,
     }
     return render(request, "exams/liste.html", context)
 
