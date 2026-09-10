@@ -7,10 +7,10 @@
 {% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 
     <!-- BREADCRUMB NAVIGATION -->
-    <nav class="flex items-center text-xs font-semibold text-slate-500 space-x-2 mb-6 flex-wrap gap-y-1">
+    <nav class="flex items-center text-xs font-semibold text-slate-500 space-x-2 mb-5 flex-wrap gap-y-1" aria-label="Fil d'ariane">
         <a href="{% url 'academics:home' %}" class="hover:text-[#2563EB] transition-colors">Accueil</a>
         <span>/</span>
         <span class="text-slate-600">Ressources</span>
@@ -22,457 +22,266 @@
         <span class="text-[#071A49] font-black">
             {% if category == 'corrections' %}Épreuves corrigées{% elif category == 'resumes' %}Résumés{% else %}Épreuves{% endif %}
         </span>
-        {% if selected_subject %}
-            <span>/</span>
-            <span class="text-[#2563EB] font-bold">{{ selected_subject.name }}</span>
-        {% endif %}
     </nav>
 
-    <!-- BANNIERE D'ACCUEIL DE L'ESPACE RESSOURCES -->
-    <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 mb-8 shadow-xs">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div class="space-y-2 max-w-2xl">
-                <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider {% if is_free_mode %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-blue-50 text-[#2563EB] border border-blue-200{% endif %}">
+    <!-- BANNIÈRE CHAPEAU DE L'ESPACE RESSOURCES (COMPACTE) -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 mb-6 shadow-xs">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+            <div class="space-y-1.5 max-w-2xl">
+                <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider {% if is_free_mode %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-blue-50 text-[#2563EB] border border-blue-200{% endif %}">
                     {% if is_free_mode %}
-                        <i class="fa-solid fa-unlock text-[10px]"></i>
+                        <i class="fa-solid fa-unlock text-[10px]" aria-hidden="true"></i>
                         <span>Accès libre</span>
                     {% else %}
-                        <i class="fa-solid fa-crown text-[10px] text-amber-500"></i>
+                        <i class="fa-solid fa-crown text-[10px] text-amber-500" aria-hidden="true"></i>
                         <span>Bibliothèque complète</span>
                     {% endif %}
                 </div>
-                <h1 class="text-2xl sm:text-3xl font-black text-[#071A49] tracking-tight">
+                <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">
                     {% if is_free_mode %}Ressources gratuites{% else %}Ressources premium{% endif %}
                 </h1>
                 <p class="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
                     {% if is_free_mode %}
-                        Consultez librement les épreuves, corrections et fiches méthodologiques mises à disposition sans frais.
+                        Consultez librement les épreuves, corrections et fiches méthodologiques mises à disposition en accès libre.
                     {% else %}
-                        Accédez à l'ensemble des annales, corrigés détaillés et fiches de révision d'ArchivEx regroupés par matière et années académiques.
+                        Accédez à l'ensemble des annales, corrigés détaillés et fiches de révision d'ArchivEx classés par unité d'enseignement.
                     {% endif %}
                 </p>
             </div>
 
-            <!-- SELECTEUR PRINCIPAL (GRATUIT VS PREMIUM) -->
-            <div class="inline-flex p-1.5 rounded-2xl bg-slate-100 border border-slate-200 shrink-0 self-start lg:self-center">
-                <a href="{% url 'exams:free_liste' %}?category={{ category }}{% if q %}&q={{ q }}{% endif %}{% if selected_subject_id %}&subject={{ selected_subject_id }}{% endif %}{% if selected_filiere_id %}&filiere={{ selected_filiere_id }}{% endif %}{% if selected_semester_id %}&semester={{ selected_semester_id }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}"
-                   class="px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center space-x-2 {% if is_free_mode %}bg-emerald-600 text-white shadow-md{% else %}text-slate-600 hover:text-[#071A49]{% endif %}">
-                    <i class="fa-solid fa-unlock text-xs"></i>
+            <!-- SÉLECTEUR ACCÈS (GRATUIT VS PREMIUM) -->
+            <div class="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200 shrink-0 self-start lg:self-center">
+                <a href="{% url 'exams:free_liste' %}?category={{ category }}{% if q %}&q={{ q }}{% endif %}"
+                   class="px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 {% if is_free_mode %}bg-emerald-600 text-white shadow-xs{% else %}text-slate-600 hover:text-[#071A49]{% endif %}">
+                    <i class="fa-solid fa-unlock text-[11px]" aria-hidden="true"></i>
                     <span>Ressources gratuites</span>
                 </a>
-                <a href="{% url 'exams:premium_liste' %}?category={{ category }}{% if q %}&q={{ q }}{% endif %}{% if selected_subject_id %}&subject={{ selected_subject_id }}{% endif %}{% if selected_filiere_id %}&filiere={{ selected_filiere_id }}{% endif %}{% if selected_semester_id %}&semester={{ selected_semester_id }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}"
-                   class="px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center space-x-2 {% if not is_free_mode %}bg-[#071A49] text-white shadow-md{% else %}text-slate-600 hover:text-[#071A49]{% endif %}">
-                    <i class="fa-solid fa-crown text-xs {% if not is_free_mode %}text-amber-400{% else %}text-slate-400{% endif %}"></i>
+                <a href="{% url 'exams:premium_liste' %}?category={{ category }}{% if q %}&q={{ q }}{% endif %}"
+                   class="px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 {% if not is_free_mode %}bg-[#071A49] text-white shadow-xs{% else %}text-slate-600 hover:text-[#071A49]{% endif %}">
+                    <i class="fa-solid fa-crown text-[11px] {% if not is_free_mode %}text-amber-400{% else %}text-slate-400{% endif %}" aria-hidden="true"></i>
                     <span>Ressources premium</span>
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- ONGLETS DES 3 CATEGORIES (ÉPREUVES, ÉPREUVES CORRIGÉES, RÉSUMÉS) -->
-    <div class="flex flex-wrap items-center gap-2 sm:gap-3 mb-6">
-        <a href="?mode={{ mode }}&category=epreuves{% if q %}&q={{ q }}{% endif %}{% if selected_subject_id %}&subject={{ selected_subject_id }}{% endif %}{% if selected_filiere_id %}&filiere={{ selected_filiere_id }}{% endif %}{% if selected_semester_id %}&semester={{ selected_semester_id }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}"
-           class="px-4 sm:px-5 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center space-x-2 border {% if category == 'epreuves' %}bg-[#071A49] text-white border-[#071A49] shadow-md{% else %}bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50{% endif %}">
-            <i class="fa-solid fa-file-lines {% if category == 'epreuves' %}text-blue-300{% else %}text-slate-400{% endif %}"></i>
+    <!-- ONGLETS DE CATÉGORIES (ÉPREUVES, ÉPREUVES CORRIGÉES, RÉSUMÉS) -->
+    <div class="flex flex-wrap items-center gap-2 mb-5">
+        <a href="?mode={{ mode }}&category=epreuves{% if q %}&q={{ q }}{% endif %}"
+           class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center space-x-1.5 border {% if category == 'epreuves' %}bg-[#071A49] text-white border-[#071A49] shadow-xs{% else %}bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50{% endif %}">
+            <i class="fa-solid fa-file-lines {% if category == 'epreuves' %}text-blue-300{% else %}text-slate-400{% endif %}" aria-hidden="true"></i>
             <span>Épreuves</span>
         </a>
 
-        <a href="?mode={{ mode }}&category=corrections{% if q %}&q={{ q }}{% endif %}{% if selected_subject_id %}&subject={{ selected_subject_id }}{% endif %}{% if selected_filiere_id %}&filiere={{ selected_filiere_id }}{% endif %}{% if selected_semester_id %}&semester={{ selected_semester_id }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}"
-           class="px-4 sm:px-5 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center space-x-2 border {% if category == 'corrections' %}bg-[#071A49] text-white border-[#071A49] shadow-md{% else %}bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50{% endif %}">
-            <i class="fa-solid fa-square-check {% if category == 'corrections' %}text-emerald-300{% else %}text-emerald-500{% endif %}"></i>
+        <a href="?mode={{ mode }}&category=corrections{% if q %}&q={{ q }}{% endif %}"
+           class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center space-x-1.5 border {% if category == 'corrections' %}bg-[#071A49] text-white border-[#071A49] shadow-xs{% else %}bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50{% endif %}">
+            <i class="fa-solid fa-square-check {% if category == 'corrections' %}text-emerald-300{% else %}text-emerald-500{% endif %}" aria-hidden="true"></i>
             <span>Épreuves corrigées</span>
         </a>
 
-        <a href="?mode={{ mode }}&category=resumes{% if q %}&q={{ q }}{% endif %}{% if selected_subject_id %}&subject={{ selected_subject_id }}{% endif %}{% if selected_filiere_id %}&filiere={{ selected_filiere_id }}{% endif %}{% if selected_semester_id %}&semester={{ selected_semester_id }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}"
-           class="px-4 sm:px-5 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center space-x-2 border {% if category == 'resumes' %}bg-[#071A49] text-white border-[#071A49] shadow-md{% else %}bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50{% endif %}">
-            <i class="fa-solid fa-book-open {% if category == 'resumes' %}text-amber-300{% else %}text-amber-500{% endif %}"></i>
+        <a href="?mode={{ mode }}&category=resumes{% if q %}&q={{ q }}{% endif %}"
+           class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center space-x-1.5 border {% if category == 'resumes' %}bg-[#071A49] text-white border-[#071A49] shadow-xs{% else %}bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50{% endif %}">
+            <i class="fa-solid fa-book-open {% if category == 'resumes' %}text-amber-300{% else %}text-amber-500{% endif %}" aria-hidden="true"></i>
             <span>Résumés</span>
         </a>
     </div>
 
-    <!-- MOTEUR DE RECHERCHE ET FILTRES RAPIDES (UE, FILIÈRE, SEMESTRE, ANNÉE, TYPE) -->
-    <div class="bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 mb-6 shadow-xs">
-        <form method="get" action="" class="space-y-4">
+    <!-- CHAMP DE RECHERCHE SIMPLE ET ÉPURÉ (SANS PANNEAU DE FILTRES ACADÉMIQUES) -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 mb-6 shadow-xs">
+        <form method="get" action="" class="flex items-center gap-2">
             <input type="hidden" name="mode" value="{{ mode }}">
             <input type="hidden" name="category" value="{{ category }}">
-            {% if selected_subject_id %}
-                <input type="hidden" name="subject" value="{{ selected_subject_id }}">
+
+            <div class="relative w-full flex-grow">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs" aria-hidden="true"></i>
+                <input type="text"
+                       name="q"
+                       value="{{ q }}"
+                       placeholder="Rechercher une matière ou un cours..."
+                       class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]">
+            </div>
+
+            <button type="submit" class="bg-[#2563EB] hover:bg-blue-700 text-white font-black text-xs px-4 py-2 rounded-xl transition-all shrink-0 flex items-center space-x-1.5 shadow-xs">
+                <span>Rechercher</span>
+            </button>
+
+            {% if q %}
+                <a href="?mode={{ mode }}&category={{ category }}" class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs px-3 py-2 font-bold rounded-xl shrink-0 transition-colors" title="Effacer la recherche">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </a>
             {% endif %}
-
-            <!-- Champ principal de recherche texte -->
-            <div class="flex flex-col sm:flex-row items-center gap-3">
-                <div class="relative w-full flex-grow">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    <input type="text"
-                           name="q"
-                           value="{{ q }}"
-                           placeholder="Rechercher une matière, une filière, un sujet ou une année..."
-                           class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]">
-                </div>
-                <div class="flex items-center space-x-2 w-full sm:w-auto shrink-0">
-                    <button type="submit" class="btn-primary w-full sm:w-auto text-xs px-5 py-2.5 font-black whitespace-nowrap">
-                        Rechercher
-                    </button>
-                    {% if q or selected_filiere_id or selected_semester_id or selected_year or selected_type or selected_subject_id %}
-                        <a href="?mode={{ mode }}&category={{ category }}" class="btn-secondary text-xs px-3.5 py-2.5 font-bold whitespace-nowrap" title="Effacer les filtres">
-                            <i class="fa-solid fa-xmark"></i>
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Filtres complémentaires (Filière, Semestre, Année académique, Type) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-slate-100 text-xs">
-                <!-- Filtre Filière -->
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Filière</label>
-                    <select name="filiere" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#071A49] focus:outline-none focus:ring-2 focus:ring-[#2563EB]">
-                        <option value="">Toutes les filières</option>
-                        {% for fil in available_filieres %}
-                            <option value="{{ fil.id }}" {% if selected_filiere_id == fil.id|stringformat:"s" %}selected{% endif %}>
-                                {{ fil.name }} ({{ fil.school.code|default:fil.school.name }})
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <!-- Filtre Semestre -->
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Semestre</label>
-                    <select name="semester" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#071A49] focus:outline-none focus:ring-2 focus:ring-[#2563EB]">
-                        <option value="">Tous les semestres</option>
-                        {% for sem in available_semesters %}
-                            <option value="{{ sem.id }}" {% if selected_semester_id == sem.id|stringformat:"s" %}selected{% endif %}>
-                                {{ sem.label }} ({{ sem.filiere.name }})
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <!-- Filtre Année académique -->
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Année académique</label>
-                    <select name="year" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#071A49] focus:outline-none focus:ring-2 focus:ring-[#2563EB]">
-                        <option value="">Toutes les années</option>
-                        {% for yr in available_academic_years %}
-                            <option value="{{ yr.label }}" {% if selected_year == yr.label %}selected{% endif %}>
-                                {{ yr.label }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <!-- Filtre Type de session -->
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Type de ressource</label>
-                    <select name="exam_type" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#071A49] focus:outline-none focus:ring-2 focus:ring-[#2563EB]">
-                        <option value="">Tous les types</option>
-                        {% for type_val, type_label in exam_types %}
-                            <option value="{{ type_val }}" {% if selected_type == type_val %}selected{% endif %}>
-                                {{ type_label }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
         </form>
     </div>
 
-    <!-- NAVIGATION RAPIDE DES MATIÈRES / UE DISPONIBLES (CLIQUEZ POUR FILTRER) -->
-    {% if available_subjects_nav %}
-        <div class="mb-8">
-            <div class="flex items-center justify-between mb-3">
-                <p class="text-xs font-black text-slate-500 uppercase tracking-wider">
-                    Matières disponibles ({% if is_free_mode %}accès libre{% else %}bibliothèque complète{% endif %}) :
-                </p>
-                {% if selected_subject_id %}
-                    <a href="?mode={{ mode }}&category={{ category }}{% if q %}&q={{ q }}{% endif %}{% if selected_filiere_id %}&filiere={{ selected_filiere_id }}{% endif %}{% if selected_semester_id %}&semester={{ selected_semester_id }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}"
-                       class="text-xs font-bold text-[#2563EB] hover:underline inline-flex items-center space-x-1">
-                        <i class="fa-solid fa-arrow-left text-[10px]"></i>
-                        <span>Afficher toutes les matières</span>
+    <!-- LISTE DES MATIÈRES / UE SOUS FORME DE PETITES CARTES COMPACTES ET VISUELLES -->
+    {% if ue_list %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            {% for ue in ue_list %}
+                <div id="ue-card-{{ ue.subject.id }}"
+                     class="bg-white border border-slate-200 hover:border-blue-300 rounded-2xl overflow-hidden shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between">
+
+                    <!-- HAUT DE LA PETITE CARTE UE (VIGNETTE DE LA MATIÈRE) -->
+                    <div class="relative w-full h-24 bg-slate-100 overflow-hidden shrink-0">
+                        {% if ue.subject.image %}
+                            <img src="{{ ue.subject.image.url }}"
+                                 alt="{{ ue.subject.name }}"
+                                 loading="lazy"
+                                 class="w-full h-full object-cover" />
+                        {% else %}
+                            <div class="w-full h-full bg-gradient-to-br from-[#071A49] via-[#0F2C6E] to-[#1E3A8A] flex items-center justify-center p-3 text-center">
+                                <div class="w-8 h-8 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center text-white font-black text-xs">
+                                    <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+                                </div>
+                            </div>
+                        {% endif %}
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+
+                        <!-- BADGE CODE UE -->
+                        <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-[#071A49]/90 text-white text-[10px] font-extrabold backdrop-blur-xs border border-white/10">
+                            {{ ue.subject.code|default:"UE" }}
+                        </span>
+
+                        <!-- BADGE NOMBRE D'ANNÉES DISPONIBLES -->
+                        <span class="absolute bottom-2 left-2 text-[10px] font-black text-white drop-shadow-xs">
+                            {{ ue.years_count }} ressource{{ ue.years_count|pluralize }}
+                        </span>
+                    </div>
+
+                    <!-- CORPS DE LA PETITE CARTE UE -->
+                    <div class="p-3.5 flex-grow flex flex-col justify-between">
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-500 truncate mb-0.5">
+                                {{ ue.subject.semester.filiere.school.code|default:ue.subject.semester.filiere.school.name|default:"Université" }} · {{ ue.subject.semester.filiere.name }}
+                            </p>
+                            <h3 class="text-xs sm:text-sm font-black text-[#071A49] leading-snug line-clamp-2">
+                                {{ ue.subject.name }}
+                            </h3>
+                        </div>
+
+                        <!-- BOUTON D'EXPANSION DES ANNÉES ACADÉMIQUES -->
+                        <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+                            <span class="text-[10px] font-bold text-slate-600">
+                                {{ ue.subject.semester.label|default:"Semestre" }}
+                            </span>
+                            <button type="button"
+                                    onclick="toggleUeYears({{ ue.subject.id }})"
+                                    id="ue-btn-{{ ue.subject.id }}"
+                                    class="px-3 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-[#2563EB] text-[11px] font-black transition-colors flex items-center space-x-1">
+                                <span>Voir les années</span>
+                                <i class="fa-solid fa-chevron-down text-[9px] transition-transform duration-200" id="ue-icon-{{ ue.subject.id }}" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ACCORDEON / TIROIR DES ANNÉES ACADÉMIQUES DE LA MATIÈRE -->
+                    <div id="ue-years-{{ ue.subject.id }}" class="hidden border-t border-slate-100 bg-slate-50/70 p-3 text-xs">
+                        <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">
+                            Années académiques disponibles :
+                        </p>
+                        <div class="space-y-2">
+                            {% for year_group in ue.years_grouped %}
+                                <div class="bg-white border border-slate-200 rounded-xl p-2.5 flex flex-col justify-between">
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <span class="text-xs font-black text-[#071A49] flex items-center space-x-1">
+                                            <i class="fa-regular fa-calendar text-[10px] text-[#2563EB]" aria-hidden="true"></i>
+                                            <span>{{ year_group.year_label }}</span>
+                                        </span>
+                                        {% if year_group.all_locked %}
+                                            <span class="text-[9px] font-black text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded flex items-center space-x-0.5">
+                                                <i class="fa-solid fa-lock text-[8px]" aria-hidden="true"></i>
+                                                <span>Pass requis</span>
+                                            </span>
+                                        {% else %}
+                                            <span class="text-[9px] font-black text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded flex items-center space-x-0.5">
+                                                <i class="fa-solid fa-check text-[8px]" aria-hidden="true"></i>
+                                                <span>Disponible</span>
+                                            </span>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- RESSOURCES DE L'ANNÉE -->
+                                    <div class="space-y-1">
+                                        {% for item in year_group.items %}
+                                            <div class="flex items-center justify-between pt-1 text-[11px]">
+                                                <span class="font-medium text-slate-700 truncate max-w-[140px]" title="{{ item.title }}">
+                                                    {{ item.session }}
+                                                </span>
+                                                {% if item.is_locked %}
+                                                    <button type="button"
+                                                            onclick="openPassLockedModal('{{ ue.subject.name|escapejs }}', '{{ item.year_label|escapejs }} — {{ item.session|escapejs }}', '{% url 'payments:pass_semestre' semester_id=ue.subject.semester_id %}')"
+                                                            class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold text-[10px] transition-colors inline-flex items-center space-x-1">
+                                                        <i class="fa-solid fa-lock text-[8px] text-amber-600" aria-hidden="true"></i>
+                                                        <span>Activer Pass</span>
+                                                    </button>
+                                                {% else %}
+                                                    <a href="{{ item.viewer_url }}"
+                                                       class="px-2.5 py-1 rounded-lg bg-[#071A49] hover:bg-[#2563EB] text-white font-bold text-[10px] transition-colors inline-flex items-center space-x-1">
+                                                        <span>Ouvrir</span>
+                                                        <i class="fa-solid fa-arrow-right text-[8px]" aria-hidden="true"></i>
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- PAGINATION POUR LA NAVIGATION FLUIDE -->
+        {% if page_obj.has_other_pages %}
+            <div class="flex justify-center items-center space-x-2 mb-8">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}&mode={{ mode }}&category={{ category }}{% if q %}&q={{ q }}{% endif %}"
+                       class="px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-colors">
+                        Précédent
+                    </a>
+                {% endif %}
+
+                <span class="text-xs font-bold text-slate-500 px-2">
+                    Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}&mode={{ mode }}&category={{ category }}{% if q %}&q={{ q }}{% endif %}"
+                       class="px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-colors">
+                        Suivant
                     </a>
                 {% endif %}
             </div>
-
-            <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-                <!-- Pastille Toutes les matières -->
-                <a href="?mode={{ mode }}&category={{ category }}{% if q %}&q={{ q }}{% endif %}{% if selected_filiere_id %}&filiere={{ selected_filiere_id }}{% endif %}{% if selected_semester_id %}&semester={{ selected_semester_id }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}"
-                   class="px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border {% if not selected_subject_id %}bg-[#071A49] text-white border-[#071A49] shadow-xs{% else %}bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50{% endif %}">
-                    Toutes les matières ({{ total_ue_count }})
-                </a>
-
-                <!-- Pastilles par matière -->
-                {% for sub in available_subjects_nav %}
-                    <a href="?mode={{ mode }}&category={{ category }}&subject={{ sub.id }}{% if q %}&q={{ q }}{% endif %}{% if selected_filiere_id %}&filiere={{ selected_filiere_id }}{% endif %}{% if selected_semester_id %}&semester={{ selected_semester_id }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}"
-                       class="px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border flex items-center space-x-1.5 {% if selected_subject_id == sub.id|stringformat:'s' %}bg-[#2563EB] text-white border-[#2563EB] shadow-xs{% else %}bg-white text-slate-700 border-slate-200 hover:border-blue-300 hover:bg-blue-50/50{% endif %}">
-                        <span>{{ sub.name }}</span>
-                        <span class="text-[10px] px-1.5 py-0.2 rounded-full {% if selected_subject_id == sub.id|stringformat:'s' %}bg-white/20 text-white{% else %}bg-slate-100 text-slate-500{% endif %}">
-                            {{ sub.years_count }}
-                        </span>
-                    </a>
-                {% endfor %}
-            </div>
-        </div>
-    {% endif %}
-
-    <!-- AFFICHAGE DES RESSOURCES REGROUPÉES PAR MATIÈRE ET ANNÉES -->
-    {% if page_obj %}
-
-        <!-- CAS 1 : UNE MATIÈRE SPÉCIFIQUE EST SÉLECTIONNÉE -->
-        {% if selected_subject %}
-            <div class="mb-10">
-                {% for ue in page_obj %}
-                    <div class="bg-white border-2 border-blue-500/30 rounded-3xl p-6 sm:p-8 shadow-sm">
-                        <!-- En-tête de la matière sélectionnée -->
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-                            <div>
-                                <div class="flex items-center space-x-2 flex-wrap gap-y-1 mb-1">
-                                    <span class="px-2.5 py-0.5 rounded-lg bg-blue-50 text-[#2563EB] text-[10px] font-black uppercase">
-                                        {{ ue.subject.code|default:"UE" }}
-                                    </span>
-                                    <span class="text-xs font-bold text-slate-500">
-                                        {{ ue.subject.semester.filiere.school.name|default:"Université" }} · {{ ue.subject.semester.filiere.name }} ({{ ue.subject.semester.label }})
-                                    </span>
-                                </div>
-                                <h2 class="text-xl sm:text-2xl font-black text-[#071A49]">
-                                    {{ ue.subject.name }}
-                                </h2>
-                            </div>
-
-                            <div class="flex items-center space-x-3 shrink-0">
-                                <span class="px-3.5 py-1.5 rounded-full bg-blue-50 text-[#2563EB] font-black text-xs">
-                                    {{ ue.years_count }} ressource{{ ue.years_count|pluralize }} disponible{{ ue.years_count|pluralize }}
-                                </span>
-                                <a href="?mode={{ mode }}&category={{ category }}{% if q %}&q={{ q }}{% endif %}{% if selected_filiere_id %}&filiere={{ selected_filiere_id }}{% endif %}{% if selected_semester_id %}&semester={{ selected_semester_id }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}"
-                                   class="btn-secondary text-xs px-4 py-2 rounded-xl font-bold inline-flex items-center space-x-1.5">
-                                    <i class="fa-solid fa-arrow-left text-[11px]"></i>
-                                    <span>Toutes les matières</span>
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Années académiques disponibles triées de la plus récente à la plus ancienne -->
-                        <div class="pt-6">
-                            <p class="text-xs font-black text-slate-500 uppercase tracking-wider mb-4">
-                                Années disponibles (sélectionnez une année pour consulter) :
-                            </p>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
-                                {% for year_group in ue.years_grouped %}
-                                    <div class="rounded-2xl p-4 border transition-all flex flex-col justify-between {% if year_group.all_locked %}bg-slate-50/80 border-slate-200 hover:border-amber-300{% else %}bg-slate-50/50 hover:bg-blue-50/40 border-slate-200 hover:border-blue-300{% endif %}">
-                                        <div>
-                                            <div class="flex items-center justify-between mb-2">
-                                                <span class="text-sm font-black text-[#071A49] flex items-center space-x-1.5">
-                                                    <i class="fa-regular fa-calendar text-xs text-[#2563EB]"></i>
-                                                    <span>{{ year_group.year_label }}</span>
-                                                </span>
-                                                {% if year_group.all_locked %}
-                                                    <span class="text-[10px] font-black text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md flex items-center space-x-1">
-                                                        <i class="fa-solid fa-lock text-[9px]"></i>
-                                                        <span>Pass requis</span>
-                                                    </span>
-                                                {% else %}
-                                                    <span class="text-[10px] font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md flex items-center space-x-1">
-                                                        <i class="fa-solid fa-check text-[9px]"></i>
-                                                        <span>Disponible</span>
-                                                    </span>
-                                                {% endif %}
-                                            </div>
-
-                                            <!-- Sessions ou sujets disponibles pour cette année -->
-                                            <div class="space-y-1.5 mb-4">
-                                                {% for item in year_group.items %}
-                                                    <div class="text-xs text-slate-600 font-medium flex items-center space-x-1.5">
-                                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
-                                                        <span class="truncate" title="{{ item.title }}">{{ item.session }}</span>
-                                                    </div>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-
-                                        <!-- Boutons d'accès ou d'activation -->
-                                        <div class="space-y-1.5 pt-2 border-t border-slate-200/60">
-                                            {% for item in year_group.items %}
-                                                {% if item.is_locked %}
-                                                    <button type="button"
-                                                            onclick="openPassLockedModal('{{ ue.subject.name|escapejs }}', '{{ item.year_label|escapejs }} — {{ item.session|escapejs }}', '{% url 'payments:pass_semestre' semester_id=ue.subject.semester_id %}')"
-                                                            class="w-full py-2.5 bg-white hover:bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-black transition-colors flex items-center justify-center space-x-1.5 shadow-2xs">
-                                                        <i class="fa-solid fa-lock text-[10px] text-amber-600"></i>
-                                                        <span>Activer mon Pass</span>
-                                                    </button>
-                                                {% else %}
-                                                    <a href="{{ item.viewer_url }}"
-                                                       class="w-full py-2.5 bg-[#071A49] hover:bg-[#2563EB] text-white rounded-xl text-xs font-black transition-colors inline-flex items-center justify-center space-x-1.5 shadow-xs">
-                                                        <span>Consulter</span>
-                                                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                                                    </a>
-                                                {% endif %}
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-
-        <!-- CAS 2 : VUE D'ENSEMBLE DES MATIÈRES / UE -->
-        {% else %}
-            <div class="space-y-6 mb-10">
-                {% for ue in page_obj %}
-                    <div class="bg-white border border-slate-200 hover:border-blue-300 rounded-3xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-all">
-                        <!-- En-tête de l'UE -->
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
-                            <div>
-                                <div class="flex items-center space-x-2 flex-wrap gap-y-1 mb-1">
-                                    <span class="px-2.5 py-0.5 rounded-lg bg-blue-50 text-[#2563EB] text-[10px] font-black uppercase">
-                                        {{ ue.subject.code|default:"UE" }}
-                                    </span>
-                                    <span class="text-xs font-bold text-slate-500">
-                                        {{ ue.subject.semester.filiere.school.name|default:"Université" }} · {{ ue.subject.semester.filiere.name }} ({{ ue.subject.semester.label }})
-                                    </span>
-                                </div>
-                                <h2 class="text-base sm:text-lg font-black text-[#071A49]">
-                                    <a href="?mode={{ mode }}&category={{ category }}&subject={{ ue.subject.id }}{% if q %}&q={{ q }}{% endif %}{% if selected_filiere_id %}&filiere={{ selected_filiere_id }}{% endif %}{% if selected_semester_id %}&semester={{ selected_semester_id }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}" class="hover:text-[#2563EB] transition-colors">
-                                        {{ ue.subject.name }}
-                                    </a>
-                                </h2>
-                            </div>
-
-                            <div class="flex items-center space-x-2 shrink-0">
-                                <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 font-extrabold text-[11px]">
-                                    {{ ue.years_count }} ressource{{ ue.years_count|pluralize }}
-                                </span>
-                                <a href="?mode={{ mode }}&category={{ category }}&subject={{ ue.subject.id }}{% if q %}&q={{ q }}{% endif %}{% if selected_filiere_id %}&filiere={{ selected_filiere_id }}{% endif %}{% if selected_semester_id %}&semester={{ selected_semester_id }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}"
-                                   class="text-xs font-bold text-[#2563EB] hover:underline inline-flex items-center space-x-1">
-                                    <span>Sélectionner</span>
-                                    <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Années académiques disponibles triées de la plus récente à la plus ancienne -->
-                        <div class="pt-4">
-                            <p class="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-3">
-                                Années disponibles :
-                            </p>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
-                                {% for year_group in ue.years_grouped %}
-                                    <div class="rounded-2xl p-3 border transition-all flex flex-col justify-between {% if year_group.all_locked %}bg-slate-50/80 border-slate-200 hover:border-amber-300{% else %}bg-slate-50/50 hover:bg-blue-50/40 border-slate-200 hover:border-blue-300{% endif %}">
-                                        <div class="mb-2">
-                                            <div class="flex items-center justify-between">
-                                                <span class="text-xs font-black text-[#071A49] flex items-center space-x-1.5">
-                                                    <i class="fa-regular fa-calendar text-[11px] text-[#2563EB]"></i>
-                                                    <span>{{ year_group.year_label }}</span>
-                                                </span>
-                                                {% if year_group.all_locked %}
-                                                    <span class="text-[10px] font-black text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md flex items-center space-x-1">
-                                                        <i class="fa-solid fa-lock text-[9px]"></i>
-                                                        <span>Pass</span>
-                                                    </span>
-                                                {% else %}
-                                                    <span class="text-[10px] font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md flex items-center space-x-1">
-                                                        <i class="fa-solid fa-check text-[9px]"></i>
-                                                        <span>Inclus</span>
-                                                    </span>
-                                                {% endif %}
-                                            </div>
-                                            <!-- Sessions répertoriées -->
-                                            <div class="mt-1 space-y-0.5">
-                                                {% for item in year_group.items %}
-                                                    <p class="text-[11px] text-slate-500 font-medium truncate" title="{{ item.title }}">
-                                                        {{ item.session }}
-                                                    </p>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-
-                                        <!-- Actions directes de consultation ou d'activation -->
-                                        <div class="space-y-1 pt-1.5 border-t border-slate-200/50">
-                                            {% for item in year_group.items %}
-                                                {% if item.is_locked %}
-                                                    <button type="button"
-                                                            onclick="openPassLockedModal('{{ ue.subject.name|escapejs }}', '{{ item.year_label|escapejs }} — {{ item.session|escapejs }}', '{% url 'payments:pass_semestre' semester_id=ue.subject.semester_id %}')"
-                                                            class="w-full py-2 bg-white hover:bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-black transition-colors flex items-center justify-center space-x-1.5 shadow-2xs">
-                                                        <i class="fa-solid fa-lock text-[10px] text-amber-600"></i>
-                                                        <span>Activer mon Pass</span>
-                                                    </button>
-                                                {% else %}
-                                                    <a href="{{ item.viewer_url }}"
-                                                       class="w-full py-2 bg-[#071A49] hover:bg-[#2563EB] text-white rounded-xl text-xs font-black transition-colors inline-flex items-center justify-center space-x-1.5 shadow-xs">
-                                                        <span>Consulter</span>
-                                                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                                                    </a>
-                                                {% endif %}
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-
-            <!-- PAGINATION -->
-            {% if page_obj.has_other_pages %}
-                <div class="flex justify-center items-center space-x-3 mb-10">
-                    {% if page_obj.has_previous %}
-                        <a href="?page={{ page_obj.previous_page_number }}&mode={{ mode }}&category={{ category }}{% if q %}&q={{ q }}{% endif %}{% if selected_filiere_id %}&filiere={{ selected_filiere_id }}{% endif %}{% if selected_semester_id %}&semester={{ selected_semester_id }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}{% if selected_type %}&exam_type={{ selected_type }}{% endif %}"
-                           class="btn-secondary text-xs px-4 py-2 font-bold inline-flex items-center space-x-1.5">
-                            <i class="fa-solid fa-arrow-left text-xs"></i>
-                            <span>Précédent</span>
-                        </a>
-                    {% endif %}
-
-                    <span class="text-xs font-bold text-slate-500">
-                        Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
-                    </span>
-
-                    {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}&mode={{ mode }}&category={{ category }}{% if q %}&q={{ q }}{% endif %}{% if selected_filiere_id %}&filiere={{ selected_filiere_id }}{% endif %}{% if selected_semester_id %}&semester={{ selected_semester_id }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}{% if selected_type %}&exam_type={{ selected_type }}{% endif %}"
-                           class="btn-secondary text-xs px-4 py-2 font-bold inline-flex items-center space-x-1.5">
-                            <span>Suivant</span>
-                            <i class="fa-solid fa-arrow-right text-xs"></i>
-                        </a>
-                    {% endif %}
-                </div>
-            {% endif %}
         {% endif %}
 
     {% else %}
-        <!-- ETAT VIDE (MESSAGE SOBRE ET NATUREL) -->
-        <div class="bg-white border border-slate-200 rounded-3xl p-8 sm:p-12 text-center shadow-xs max-w-xl mx-auto my-6">
-            <div class="w-14 h-14 rounded-2xl bg-blue-50 text-[#2563EB] flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
-                <i class="fa-solid fa-folder-open"></i>
+        <!-- ÉTAT VIDE -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-8 sm:p-10 text-center shadow-xs max-w-md mx-auto my-6">
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center mx-auto mb-3 text-xl">
+                <i class="fa-solid fa-folder-open" aria-hidden="true"></i>
             </div>
 
-            {% if q or selected_filiere_id or selected_semester_id or selected_year or selected_type or selected_subject_id %}
-                <h3 class="text-base sm:text-lg font-black text-[#071A49] mb-2">Aucun résultat trouvé</h3>
-                <p class="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed mb-6">
-                    Aucune matière ou ressource ne correspond à vos critères actuels. Essayez d'élargir votre recherche ou de réinitialiser les filtres.
+            {% if q %}
+                <h3 class="text-sm font-black text-[#071A49] mb-1">Aucune ressource trouvée</h3>
+                <p class="text-xs text-slate-500 font-medium leading-relaxed mb-4">
+                    Aucune matière ne correspond à votre recherche « {{ q }} ».
                 </p>
-                <a href="?mode={{ mode }}&category={{ category }}" class="btn-secondary text-xs px-5 py-2.5 font-bold inline-flex items-center space-x-2">
-                    <i class="fa-solid fa-rotate-right text-xs"></i>
-                    <span>Réinitialiser les filtres</span>
+                <a href="?mode={{ mode }}&category={{ category }}" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold inline-block transition-colors">
+                    Réinitialiser la recherche
                 </a>
             {% elif is_free_mode %}
-                <h3 class="text-base sm:text-lg font-black text-[#071A49] mb-2">Aucune ressource gratuite disponible actuellement</h3>
-                <p class="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed mb-6">
-                    Aucune ressource n'est actuellement publiée en accès libre dans la catégorie 
-                    <strong>{% if category == 'corrections' %}Épreuves corrigées{% elif category == 'resumes' %}Résumés{% else %}Épreuves{% endif %}</strong>.
-                    Vous pouvez explorer la bibliothèque complète dans les ressources premium pour accéder à l'ensemble des sujets et fiches.
+                <h3 class="text-sm font-black text-[#071A49] mb-1">Aucune ressource gratuite disponible</h3>
+                <p class="text-xs text-slate-500 font-medium leading-relaxed mb-4">
+                    Toutes les épreuves de cette catégorie sont accessibles dans la bibliothèque complète.
                 </p>
-                <a href="{% url 'exams:premium_liste' %}?category={{ category }}" class="btn-primary text-xs px-6 py-3 font-bold inline-flex items-center space-x-2 rounded-xl shadow-md">
-                    <span>Découvrir les ressources premium</span>
-                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                <a href="{% url 'exams:premium_liste' %}?category={{ category }}" class="px-4 py-2 bg-[#071A49] hover:bg-[#2563EB] text-white rounded-xl text-xs font-bold inline-block transition-colors shadow-xs">
+                    Consulter les ressources premium
                 </a>
             {% else %}
-                <h3 class="text-base sm:text-lg font-black text-[#071A49] mb-2">Aucune ressource disponible</h3>
-                <p class="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed mb-6">
-                    Les ressources de cette catégorie seront publiées prochainement par les enseignants et contributeurs.
+                <h3 class="text-sm font-black text-[#071A49] mb-1">Aucune ressource disponible</h3>
+                <p class="text-xs text-slate-500 font-medium leading-relaxed">
+                    Les ressources de cette catégorie seront prochainement mises en ligne.
                 </p>
             {% endif %}
         </div>
@@ -480,30 +289,30 @@
 
 </div>
 
-<!-- MODAL D'ACTIVATION DU PASS POUR LES RESSOURCES VERROUILLEES -->
-<div id="pass-locked-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity" onclick="closePassLockedModal()">
-    <div class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 max-w-md w-full shadow-2xl relative animate-in fade-in zoom-in-95 duration-150" onclick="event.stopPropagation()">
-        <button type="button" onclick="closePassLockedModal()" aria-label="Fermer" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors">
-            <i class="fa-solid fa-xmark text-sm"></i>
+<!-- MODAL D'ACTIVATION DU PASS POUR LES RESSOURCES VERROUILLÉES -->
+<div id="pass-locked-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 transition-opacity" onclick="closePassLockedModal()">
+    <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 max-w-sm w-full shadow-xl relative" onclick="event.stopPropagation()">
+        <button type="button" onclick="closePassLockedModal()" aria-label="Fermer" class="absolute top-3.5 right-3.5 w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors">
+            <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
         </button>
 
-        <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mb-4 text-xl shadow-inner">
-            <i class="fa-solid fa-lock"></i>
+        <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center mb-3 text-lg">
+            <i class="fa-solid fa-lock" aria-hidden="true"></i>
         </div>
 
-        <h3 class="text-lg font-black text-[#071A49] mb-1">Ressource réservée aux abonnés Pass</h3>
+        <h3 class="text-sm font-black text-[#071A49] mb-0.5">Ressource réservée aux abonnés Pass</h3>
         <p id="modal-ue-info" class="text-xs font-bold text-[#2563EB] mb-3"></p>
 
-        <p class="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed mb-6">
-            Pour consulter cette ressource (ainsi que toutes les épreuves, corrections et fiches résumés de votre semestre), vous devez activer votre Pass Semestre.
+        <p class="text-xs text-slate-600 font-medium leading-relaxed mb-5">
+            Activer votre Pass Semestre pour débloquer l'accès à l'ensemble des épreuves, corrections et fiches de révision de ce semestre.
         </p>
 
-        <div class="space-y-2.5">
-            <a id="modal-pass-btn" href="#" class="btn-primary w-full py-3 text-xs font-black flex items-center justify-center space-x-2 rounded-xl shadow-md">
-                <i class="fa-solid fa-bolt text-xs text-amber-400"></i>
+        <div class="space-y-2">
+            <a id="modal-pass-btn" href="#" class="w-full py-2.5 bg-[#071A49] hover:bg-[#2563EB] text-white text-xs font-black flex items-center justify-center space-x-1.5 rounded-xl shadow-xs transition-colors">
+                <i class="fa-solid fa-bolt text-xs text-amber-400" aria-hidden="true"></i>
                 <span>Activer mon Pass</span>
             </a>
-            <button type="button" onclick="closePassLockedModal()" class="btn-secondary w-full py-2.5 text-xs font-bold rounded-xl">
+            <button type="button" onclick="closePassLockedModal()" class="w-full py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
                 Continuer à explorer
             </button>
         </div>
@@ -511,6 +320,41 @@
 </div>
 
 <script>
+    function toggleUeYears(ueId) {
+        const yearsDiv = document.getElementById('ue-years-' + ueId);
+        const icon = document.getElementById('ue-icon-' + ueId);
+        const btn = document.getElementById('ue-btn-' + ueId);
+
+        if (yearsDiv) {
+            const isHidden = yearsDiv.classList.contains('hidden');
+            if (isHidden) {
+                yearsDiv.classList.remove('hidden');
+                if (icon) icon.classList.add('rotate-180');
+                if (btn) btn.classList.replace('bg-blue-50', 'bg-blue-100');
+                // Preserve position via Hash without jump
+                if (history.replaceState) {
+                    history.replaceState(null, null, '#ue-card-' + ueId);
+                }
+            } else {
+                yearsDiv.classList.add('hidden');
+                if (icon) icon.classList.remove('rotate-180');
+                if (btn) btn.classList.replace('bg-blue-100', 'bg-blue-50');
+            }
+        }
+    }
+
+    // Auto-expand card if URL hash matches #ue-card-{id}
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.location.hash && window.location.hash.startsWith('#ue-card-')) {
+            const ueId = window.location.hash.replace('#ue-card-', '');
+            toggleUeYears(ueId);
+            const card = document.getElementById('ue-card-' + ueId);
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    });
+
     function openPassLockedModal(subjectName, details, passUrl) {
         const modal = document.getElementById('pass-locked-modal');
         const info = document.getElementById('modal-ue-info');

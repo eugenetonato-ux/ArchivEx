@@ -654,16 +654,31 @@ def exam_toggle_status_view(request, pk):
 
 @contributor_required
 def exam_delete_view(request, pk):
-    """Supprimer une épreuve d'examen."""
+    """Supprimer une épreuve d'examen de manière sécurisée."""
     if request.method == "POST":
-        exam = get_object_or_404(Exam.objects.select_related("filiere", "filiere__school"), pk=pk)
-        if not check_school_permission(request.user, exam.filiere.school):
+        exam = get_object_or_404(
+            Exam.objects.select_related("filiere", "filiere__school", "subject", "subject__semester", "subject__semester__filiere", "subject__semester__filiere__school"),
+            pk=pk
+        )
+        
+        school = None
+        if exam.filiere and exam.filiere.school:
+            school = exam.filiere.school
+        elif exam.subject and exam.subject.semester and exam.subject.semester.filiere and exam.subject.semester.filiere.school:
+            school = exam.subject.semester.filiere.school
+
+        if school and not check_school_permission(request.user, school):
             raise PermissionDenied("Vous n'êtes pas autorisé à supprimer cette épreuve.")
 
         title = exam.title
-        exam.delete()
-        messages.success(request, f"Épreuve « {title} » supprimée avec succès.")
+        try:
+            exam.delete()
+            messages.success(request, f"Épreuve « {title} » supprimée avec succès.")
+        except Exception as e:
+            messages.error(request, f"Impossible de supprimer l'épreuve « {title} » : {str(e)}")
+
     return redirect("contributors:exam_list")
+
 
 
 # ==========================================

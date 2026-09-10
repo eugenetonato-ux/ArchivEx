@@ -93,49 +93,7 @@
                 </div>
             </div>
 
-            <!-- INCLUDED SUBJECTS PREVIEW -->
-            {% if sample_subjects %}
-            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-                <h3 class="text-sm font-extrabold text-[#071A49] uppercase tracking-wider mb-3">
-                    Matières (UE) incluses dans ton Pass :
-                </h3>
-                <div class="flex flex-wrap gap-2">
-                    {% for subj in sample_subjects %}
-                    <span class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-800 text-xs font-bold border border-slate-200">
-                        {{ subj.name }}
-                    </span>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
 
-            <!-- FEATURED EXAMS SAMPLE PREVIEW -->
-            {% if sample_exams %}
-            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-                <h3 class="text-sm font-extrabold text-[#071A49] uppercase tracking-wider mb-4">
-                    Exemples d'épreuves accessibles :
-                </h3>
-                <div class="space-y-2.5">
-                    {% for ex in sample_exams %}
-                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
-                        <div class="flex items-center space-x-3">
-                            <span class="w-7 h-7 rounded-lg bg-blue-100 text-[#2563EB] font-bold text-xs flex items-center justify-center">
-                                PDF
-                            </span>
-                            <div>
-                                <h4 class="text-xs font-bold text-[#071A49]">{{ ex.title }}</h4>
-                                <p class="text-[10px] text-slate-500 font-medium">{{ ex.subject.name }} · {{ ex.year }}</p>
-                            </div>
-                        </div>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 flex items-center space-x-1">
-                            <i class="fa-solid fa-lock text-[9px]"></i>
-                            <span>Débloqué avec le Pass</span>
-                        </span>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
 
         </div>
 
@@ -257,10 +215,6 @@
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             <span>Celtiis Cash</span>
                         </span>
-                        <span class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-xl text-slate-800 flex items-center space-x-1">
-                            <i class="fa-solid fa-credit-card text-[10px] text-slate-600"></i>
-                            <span>Carte bancaire</span>
-                        </span>
                     </div>
                     <div class="flex items-center justify-center space-x-1.5 text-[11px] text-slate-400 font-medium">
                         <i class="fa-solid fa-shield-halved text-emerald-500 text-xs" aria-hidden="true"></i>
@@ -289,11 +243,11 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs leading-relaxed">
             <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
                 <h4 class="font-black text-[#071A49] flex items-center space-x-2 text-xs">
-                    <i class="fa-solid fa-credit-card text-[#2563EB]"></i>
+                    <i class="fa-solid fa-mobile-retro text-[#2563EB]"></i>
                     <span>Quels sont les moyens de paiement acceptés ?</span>
                 </h4>
                 <p class="text-slate-600 font-medium leading-relaxed pt-1">
-                    Le règlement est 100% sécurisé et prend en charge tous les réseaux Mobile Money (<strong>MTN MoMo, Moov Money, Celtiis Cash, Wave</strong>) ainsi que les <strong>Cartes bancaires (Visa, Mastercard)</strong>.
+                    Le règlement est 100% sécurisé et prend en charge tous les réseaux Mobile Money (<strong>MTN MoMo, Moov Money, Celtiis Cash, Wave</strong>).
                 </p>
             </div>
 
@@ -303,7 +257,7 @@
                     <span>L'accès au Pass est-il vraiment instantané ?</span>
                 </h4>
                 <p class="text-slate-600 font-medium leading-relaxed pt-1">
-                    Oui ! Dès la validation de ton transfert Mobile Money ou paiement par carte, ton Pass Semestre est déverrouillé automatiquement et tu as accès à toutes les épreuves, corrections et fiches de révision.
+                    Oui ! Dès la validation de ton transfert Mobile Money, ton Pass Semestre est déverrouillé automatiquement et tu as accès à toutes les épreuves, corrections et fiches de révision.
                 </p>
             </div>
 
