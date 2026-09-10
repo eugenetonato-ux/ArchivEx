@@ -8,6 +8,8 @@ from django.core.paginator import Paginator
 from django.contrib import messages
 from django.db.models import Q
 
+from django.utils import timezone
+
 from .models import Exam
 from accounts.models import Favorite
 from payments.models import SemesterAccess
@@ -22,94 +24,333 @@ from subscriptions.services import (
 )
 
 
-@login_required
-def exam_list(request):
-    """Vue des épreuves d'une UE ou de recherche d'épreuves (Connexion requise)."""
-    mode = request.GET.get("mode", "premium")  # 'free' or 'premium'
+def resources_view(request, mode=None):
+    """
+    Espace central 'Ressources' d'ArchivEx :
+    - 2 modes principaux : 'free' (Ressources gratuites) ou 'premium' (Ressources premium)
+    - 3 catégories par mode : 'epreuves', 'corrections', 'resumes'
+    - Regroupement systématique par UE / Matière, puis par années disponibles.
+    """
+    mode = mode or request.GET.get("mode")
     if request.resolver_match and request.resolver_match.url_name == "free_liste":
         mode = "free"
+    elif request.resolver_match and request.resolver_match.url_name == "premium_liste":
+        mode = "premium"
+    elif not mode:
+        mode = "premium"
 
-    exams = Exam.objects.filter(is_published=True).select_related(
-        "subject", "filiere", "level", "academic_year", "semester", "filiere__school", "summary"
-    ).order_by("-created_at")
+    category = request.GET.get("category", "epreuves").strip().lower()
+    if category not in ("epreuves", "corrections", "resumes"):
+        category = "epreuves"
 
-    if mode == "free":
-        exams = exams.filter(is_free=True)
+    q = request.GET.get("q", "").strip()
+    selected_subject_id = request.GET.get("subject", "").strip()
 
-    # Search query
-    q = request.GET.get("q")
-    if q:
-        exams = exams.filter(
-            Q(title__icontains=q) |
-            Q(subject__name__icontains=q) |
-            Q(description__icontains=q)
+    subjects_map = {}
+
+    if category == "epreuves":
+        exams = Exam.objects.filter(is_published=True).select_related(
+            "subject", "subject__semester", "subject__semester__filiere", "subject__semester__filiere__school", "academic_year"
+        ).filter(
+            (Q(file__isnull=False) & ~Q(file="")) | Q(cloud_file__isnull=False)
         )
+        if mode == "free":
+            exams = exams.filter(Q(is_free=True) | Q(subject__is_free=True))
 
-    # Filter by exam type
-    exam_type = request.GET.get("type")
-    if exam_type:
-        exams = exams.filter(exam_type=exam_type)
+        if q:
+            exams = exams.filter(
+                Q(subject__name__icontains=q) |
+                Q(subject__code__icontains=q) |
+                Q(title__icontains=q) |
+                Q(subject__semester__filiere__name__icontains=q)
+            )
+        if selected_subject_id:
+            exams = exams.filter(subject_id=selected_subject_id)
 
-    # Filter by year
-    year = request.GET.get("year")
-    if year:
-        exams = exams.filter(year=year)
+        for exam in exams:
+            subj = exam.subject
+            if not subj:
+                continue
+            if subj.id not in subjects_map:
+                subjects_map[subj.id] = {
+                    "subject": subj,
+                    "years": [],
+                    "seen_keys": set(),
+                }
 
-    # Filter by subject (UE)
-    subject_id = request.GET.get("subject")
-    selected_subject = None
-    if subject_id:
-        selected_subject = Subject.objects.filter(pk=subject_id).select_related(
-            "semester", "semester__filiere", "semester__filiere__school", "semester__filiere__level"
-        ).first()
-        if selected_subject:
-            exams = exams.filter(subject=selected_subject)
-            if request.user.is_authenticated:
-                from academics.models import record_ue_consultation
-                record_ue_consultation(request.user, selected_subject)
+            year_label = ""
+            if exam.academic_year and exam.academic_year.label:
+                year_label = exam.academic_year.label
+            elif exam.year:
+                year_label = f"{exam.year - 1}–{exam.year}" if exam.year > 2000 else str(exam.year)
+            else:
+                year_label = "Année récente"
 
-    # Filter by semester
-    semester_id = request.GET.get("semester")
-    if semester_id:
-        exams = exams.filter(semester_id=semester_id)
+            session_label = exam.get_exam_type_display() or "Examen"
+            unique_key = f"{year_label}_{session_label}_{exam.id}"
+            if unique_key in subjects_map[subj.id]["seen_keys"]:
+                continue
+            subjects_map[subj.id]["seen_keys"].add(unique_key)
 
-    # Filter by filiere
-    filiere_id = request.GET.get("filiere")
-    if filiere_id:
-        exams = exams.filter(filiere_id=filiere_id)
+            is_locked = False
+            if mode == "premium":
+                is_locked = not can_user_access_exam_pdf(request.user, exam)
 
-    # Pagination
-    paginator = Paginator(exams, 12)
+            viewer_url = reverse("exams:student_viewer", kwargs={"pk": exam.id}) + "?type=exam"
+            subjects_map[subj.id]["years"].append({
+                "year_label": year_label,
+                "sort_year": exam.year or 0,
+                "title": exam.title,
+                "session": session_label,
+                "exam_id": exam.id,
+                "is_locked": is_locked,
+                "viewer_url": viewer_url,
+                "exam": exam,
+            })
+
+    elif category == "corrections":
+        exams = Exam.objects.filter(is_published=True).select_related(
+            "subject", "subject__semester", "subject__semester__filiere", "subject__semester__filiere__school", "academic_year"
+        ).filter(
+            (Q(correction_file__isnull=False) & ~Q(correction_file="")) | Q(cloud_correction_file__isnull=False)
+        )
+        if mode == "free":
+            exams = exams.filter(Q(is_free_correction=True) | Q(subject__is_free_correction=True))
+
+        if q:
+            exams = exams.filter(
+                Q(subject__name__icontains=q) |
+                Q(subject__code__icontains=q) |
+                Q(title__icontains=q) |
+                Q(subject__semester__filiere__name__icontains=q)
+            )
+        if selected_subject_id:
+            exams = exams.filter(subject_id=selected_subject_id)
+
+        for exam in exams:
+            subj = exam.subject
+            if not subj:
+                continue
+            if subj.id not in subjects_map:
+                subjects_map[subj.id] = {
+                    "subject": subj,
+                    "years": [],
+                    "seen_keys": set(),
+                }
+
+            year_label = ""
+            if exam.academic_year and exam.academic_year.label:
+                year_label = exam.academic_year.label
+            elif exam.year:
+                year_label = f"{exam.year - 1}–{exam.year}" if exam.year > 2000 else str(exam.year)
+            else:
+                year_label = "Année récente"
+
+            session_label = exam.get_exam_type_display() or "Correction"
+            unique_key = f"{year_label}_{session_label}_{exam.id}"
+            if unique_key in subjects_map[subj.id]["seen_keys"]:
+                continue
+            subjects_map[subj.id]["seen_keys"].add(unique_key)
+
+            is_locked = False
+            if mode == "premium":
+                is_locked = not can_user_access_correction(request.user, exam)
+
+            viewer_url = reverse("exams:student_viewer", kwargs={"pk": exam.id}) + "?type=correction"
+            subjects_map[subj.id]["years"].append({
+                "year_label": year_label,
+                "sort_year": exam.year or 0,
+                "title": f"Correction — {exam.title}",
+                "session": f"{session_label} corrigée",
+                "exam_id": exam.id,
+                "is_locked": is_locked,
+                "viewer_url": viewer_url,
+                "exam": exam,
+            })
+
+    elif category == "resumes":
+        from content.models import Summary as CourseSummary
+
+        # A. Fiches résumés issues des épreuves
+        exam_summaries = Exam.objects.filter(is_published=True).select_related(
+            "subject", "subject__semester", "subject__semester__filiere", "academic_year"
+        ).filter(
+            (Q(summary_file__isnull=False) & ~Q(summary_file="")) | Q(cloud_summary_file__isnull=False)
+        )
+        if mode == "free":
+            exam_summaries = exam_summaries.filter(Q(is_free_correction=True) | Q(subject__is_free_correction=True))
+
+        if q:
+            exam_summaries = exam_summaries.filter(
+                Q(subject__name__icontains=q) |
+                Q(subject__code__icontains=q) |
+                Q(title__icontains=q) |
+                Q(subject__semester__filiere__name__icontains=q)
+            )
+        if selected_subject_id:
+            exam_summaries = exam_summaries.filter(subject_id=selected_subject_id)
+
+        for exam in exam_summaries:
+            subj = exam.subject
+            if not subj:
+                continue
+            if subj.id not in subjects_map:
+                subjects_map[subj.id] = {
+                    "subject": subj,
+                    "years": [],
+                    "seen_keys": set(),
+                }
+
+            year_label = ""
+            if exam.academic_year and exam.academic_year.label:
+                year_label = exam.academic_year.label
+            elif exam.year:
+                year_label = f"{exam.year - 1}–{exam.year}" if exam.year > 2000 else str(exam.year)
+            else:
+                year_label = "Fiche méthodologique"
+
+            unique_key = f"{year_label}_exam_{exam.id}"
+            if unique_key in subjects_map[subj.id]["seen_keys"]:
+                continue
+            subjects_map[subj.id]["seen_keys"].add(unique_key)
+
+            is_locked = False
+            if mode == "premium":
+                is_locked = not can_user_access_summary(request.user, exam)
+
+            viewer_url = reverse("exams:student_viewer", kwargs={"pk": exam.id}) + "?type=summary"
+            subjects_map[subj.id]["years"].append({
+                "year_label": year_label,
+                "sort_year": exam.year or 0,
+                "title": f"Fiche résumé — {exam.title}",
+                "session": "Fiche de synthèse",
+                "exam_id": exam.id,
+                "is_locked": is_locked,
+                "viewer_url": viewer_url,
+                "exam": exam,
+            })
+
+        # B. Résumés rédigés de cours
+        course_summaries = CourseSummary.objects.filter(publication_status="PUBLISHED").select_related(
+            "subject", "subject__semester", "subject__semester__filiere"
+        )
+        if mode == "free":
+            course_summaries = course_summaries.filter(Q(access_type="FREE") | Q(subject__is_free_correction=True))
+
+        if q:
+            course_summaries = course_summaries.filter(
+                Q(subject__name__icontains=q) |
+                Q(subject__code__icontains=q) |
+                Q(title__icontains=q) |
+                Q(subject__semester__filiere__name__icontains=q)
+            )
+        if selected_subject_id:
+            course_summaries = course_summaries.filter(subject_id=selected_subject_id)
+
+        for cs in course_summaries:
+            subj = cs.subject
+            if not subj:
+                continue
+            if subj.id not in subjects_map:
+                subjects_map[subj.id] = {
+                    "subject": subj,
+                    "years": [],
+                    "seen_keys": set(),
+                }
+
+            year_label = "Fiche complète"
+            sort_year = 0
+            if cs.created_at:
+                sort_year = cs.created_at.year
+                year_label = f"{sort_year - 1}–{sort_year}"
+
+            unique_key = f"{year_label}_cs_{cs.id}"
+            if unique_key in subjects_map[subj.id]["seen_keys"]:
+                continue
+            subjects_map[subj.id]["seen_keys"].add(unique_key)
+
+            is_locked = False
+            if mode == "premium":
+                is_locked = not (cs.is_free or has_user_valid_pass(request.user, cs))
+
+            viewer_url = reverse("content:summary_detail", kwargs={"pk": cs.id})
+            subjects_map[subj.id]["years"].append({
+                "year_label": year_label,
+                "sort_year": sort_year,
+                "title": cs.title,
+                "session": "Résumé de cours",
+                "exam_id": None,
+                "summary_id": cs.id,
+                "is_locked": is_locked,
+                "viewer_url": viewer_url,
+                "summary_obj": cs,
+            })
+
+    # Trier les années par ordre décroissant pour chaque UE
+    ue_list = []
+    for subj_id, data in subjects_map.items():
+        data["years"].sort(key=lambda x: (x["sort_year"], x["year_label"]), reverse=True)
+        data["years_count"] = len(data["years"])
+        data["has_locked"] = any(y["is_locked"] for y in data["years"])
+        data["all_locked"] = all(y["is_locked"] for y in data["years"]) if data["years"] else False
+        ue_list.append(data)
+
+    # Trier les UE par ordre alphabétique
+    ue_list.sort(key=lambda x: x["subject"].name)
+
+    total_resources_count = sum(item["years_count"] for item in ue_list)
+
+    paginator = Paginator(ue_list, 15)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    user_favorites = set(
-        Favorite.objects.filter(user=request.user).values_list("exam_id", flat=True)
-    )
+    user_has_any_pass = False
+    if request.user.is_authenticated:
+        if request.user.is_staff or request.user.is_superuser:
+            user_has_any_pass = True
+        else:
+            from payments.models import SemesterAccess
+            now = timezone.now()
+            user_has_any_pass = SemesterAccess.objects.filter(
+                user=request.user
+            ).filter(Q(activated_at__isnull=False) | Q(payments__status="reussi")).exists()
+            if not user_has_any_pass:
+                from subscriptions.models import UserSubscription
+                user_has_any_pass = UserSubscription.objects.filter(
+                    user=request.user, is_active=True, start_date__lte=now
+                ).filter(Q(end_date__isnull=True) | Q(end_date__gte=now)).exists()
 
-    for exam in page_obj:
-        exam.user_has_access = can_user_access_exam_pdf(request.user, exam)
-        exam.user_has_correction_access = can_user_access_correction(request.user, exam)
-        exam.user_has_summary_access = can_user_access_summary(request.user, exam)
-        exam.is_favorited = exam.id in user_favorites
+    selected_subject = None
+    if selected_subject_id:
+        selected_subject = Subject.objects.filter(pk=selected_subject_id).select_related(
+            "semester", "semester__filiere", "semester__filiere__school"
+        ).first()
+
+    all_exams = [y["exam"] for ue in ue_list for y in ue["years"] if y.get("exam")]
 
     context = {
-        "page_obj": page_obj,
-        "exams": page_obj,
-        "selected_subject": selected_subject,
-        "q": q or "",
-        "selected_type": exam_type or "",
-        "selected_year": year or "",
-        "exam_types": Exam.EXAM_TYPE_CHOICES,
         "mode": mode,
         "is_free_mode": mode == "free",
+        "category": category,
+        "page_obj": page_obj,
+        "ue_list": page_obj,
+        "exams": all_exams,
+        "total_ue_count": len(ue_list),
+        "total_resources_count": total_resources_count,
+        "q": q,
+        "selected_subject": selected_subject,
+        "selected_subject_id": selected_subject_id,
+        "user_has_any_pass": user_has_any_pass,
     }
     return render(request, "exams/liste.html", context)
 
 
-@login_required
+# Alias pour la compatibilité avec le code existant
+exam_list = resources_view
+
+
 def exam_detail(request, pk):
-    """Page de détail d'une épreuve (Connexion requise)."""
+    """Page de détail d'une épreuve."""
     exam = get_object_or_404(
         Exam.objects.select_related(
             "subject", "semester", "filiere", "level", "academic_year", "filiere__school", "summary"
@@ -125,7 +366,7 @@ def exam_detail(request, pk):
     has_access = can_user_access_exam_pdf(request.user, exam)
     has_correction_access = can_user_access_correction(request.user, exam)
     has_summary_access = can_user_access_summary(request.user, exam)
-    is_favorited = Favorite.objects.filter(user=request.user, exam=exam).exists()
+    is_favorited = Favorite.objects.filter(user=request.user, exam=exam).exists() if request.user.is_authenticated else False
 
     exams_count = 0
     summaries_count = 0
@@ -358,7 +599,6 @@ def _render_pdf_error_response(message="Ce fichier PDF n'est pas encore disponib
     return HttpResponse(html_content, content_type="text/html", status=200)
 
 
-@login_required
 def student_viewer_view(request, pk):
     """Page dédiée du Lecteur Académique (Viewer sécurisé avec iframe et anti-copie)."""
     exam = get_object_or_404(Exam, pk=pk, is_published=True)
@@ -395,6 +635,9 @@ def student_viewer_view(request, pk):
             return redirect("exams:detail", pk=exam.pk)
 
     if not has_access:
+        if not request.user.is_authenticated:
+            messages.info(request, "Veuillez vous connecter et activer votre Pass pour consulter cette ressource.")
+            return redirect(f"{reverse('accounts:login')}?next={request.get_full_path()}")
         messages.warning(
             request,
             "Cette ressource est réservée aux étudiants disposant du Pass actif pour ce semestre."
@@ -417,7 +660,6 @@ def student_viewer_view(request, pk):
     return render(request, "exams/viewer.html", context)
 
 
-@login_required
 def stream_watermarked_pdf_view(request, pk):
     """Sert le fichier PDF dynamique tatoué/filigrané au nom et horodatage de l'étudiant."""
     from .services import apply_student_watermark

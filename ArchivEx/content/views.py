@@ -37,7 +37,6 @@ def summary_list(request):
     return render(request, "content/summary_list.html", context)
 
 
-@login_required
 def summary_detail(request, pk):
     """Lecture directe d'un résumé de cours avec contrôle d'accès."""
     summary = get_object_or_404(

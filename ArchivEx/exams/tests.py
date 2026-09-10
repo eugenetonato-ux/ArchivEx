@@ -282,6 +282,91 @@ class ArchivExFlowTest(TestCase):
         res = self.client.get(url_viewer)
         self.assertRedirects(res, reverse("payments:pass_semestre", kwargs={"semester_id": self.semester.id}))
 
+    def test_parcours_1_unauthenticated_free_resources_viewer(self):
+        """1. Étudiant non connecté -> Ressources gratuites -> Épreuves -> UE -> année -> consultation."""
+        self.client.logout()
+        res_list = self.client.get(reverse("exams:free_liste") + "?category=epreuves")
+        self.assertEqual(res_list.status_code, 200)
+        self.assertTrue(any("algo_free" in y["exam"].file.name for ue in res_list.context["ue_list"] for y in ue["years"]))
+
+        # Consultation directe autorisée
+        viewer_url = reverse("exams:student_viewer", kwargs={"pk": self.exam_free.id}) + "?type=exam"
+        res_view = self.client.get(viewer_url)
+        self.assertEqual(res_view.status_code, 200)
+
+    def test_parcours_2_authenticated_without_pass_free_consultation(self):
+        """2. Étudiant connecté sans Pass -> Ressources gratuites -> consultation d'une ressource gratuite."""
+        self.client.login(username="student@univ.edu", password="Password123!")
+        viewer_url = reverse("exams:student_viewer", kwargs={"pk": self.exam_free.id}) + "?type=exam"
+        res_view = self.client.get(viewer_url)
+        self.assertEqual(res_view.status_code, 200)
+
+    def test_parcours_3_authenticated_without_pass_locked_premium(self):
+        """3. Étudiant connecté sans Pass -> Ressources premium -> ressource verrouillée -> invitation à activer le Pass."""
+        self.client.login(username="student@univ.edu", password="Password123!")
+        res_list = self.client.get(reverse("exams:premium_liste") + "?category=epreuves")
+        self.assertEqual(res_list.status_code, 200)
+        
+        # Vérification que la ressource premium est marquée verrouillée
+        premium_years = [y for ue in res_list.context["ue_list"] for y in ue["years"] if y.get("exam_id") == self.exam_premium.id]
+        self.assertTrue(len(premium_years) > 0)
+        self.assertTrue(premium_years[0]["is_locked"])
+
+        # Tentative de consultation -> redirection vers activation du Pass
+        viewer_url = reverse("exams:student_viewer", kwargs={"pk": self.exam_premium.id}) + "?type=exam"
+        res_view = self.client.get(viewer_url)
+        self.assertRedirects(res_view, reverse("payments:pass_semestre", kwargs={"semester_id": self.semester.id}))
+
+    def test_parcours_4_5_6_active_pass_full_access(self):
+        """4, 5, 6. Étudiant avec Pass actif -> Épreuves, Corrections, Résumés -> consultation immédiate."""
+        SemesterAccess.objects.create(
+            user=self.student,
+            school=self.school,
+            level=self.level,
+            filiere=self.filiere,
+            academic_year=self.year,
+            semester=self.semester,
+            activated_at=timezone.now()
+        )
+        self.client.login(username="student@univ.edu", password="Password123!")
+
+        # 4. Épreuves
+        res_exam = self.client.get(reverse("exams:student_viewer", kwargs={"pk": self.exam_premium.id}) + "?type=exam")
+        self.assertEqual(res_exam.status_code, 200)
+
+        # 5. Épreuves corrigées
+        res_corr = self.client.get(reverse("exams:student_viewer", kwargs={"pk": self.exam_premium.id}) + "?type=correction")
+        self.assertEqual(res_corr.status_code, 200)
+
+        # 6. Résumés
+        res_sum = self.client.get(reverse("exams:student_viewer", kwargs={"pk": self.exam_premium.id}) + "?type=summary")
+        self.assertEqual(res_sum.status_code, 200)
+
+    def test_parcours_7_logout_relogin_pass_remains_active(self):
+        """7. Déconnexion puis reconnexion d'un étudiant ayant un Pass actif -> accès premium toujours disponible."""
+        SemesterAccess.objects.create(
+            user=self.student,
+            school=self.school,
+            level=self.level,
+            filiere=self.filiere,
+            academic_year=self.year,
+            semester=self.semester,
+            activated_at=timezone.now()
+        )
+        # Connexion 1
+        self.client.login(username="student@univ.edu", password="Password123!")
+        res1 = self.client.get(reverse("exams:student_viewer", kwargs={"pk": self.exam_premium.id}) + "?type=exam")
+        self.assertEqual(res1.status_code, 200)
+
+        # Déconnexion
+        self.client.logout()
+
+        # Reconnexion 2
+        self.client.login(username="student@univ.edu", password="Password123!")
+        res2 = self.client.get(reverse("exams:student_viewer", kwargs={"pk": self.exam_premium.id}) + "?type=exam")
+        self.assertEqual(res2.status_code, 200)
+
+
 
 
 
