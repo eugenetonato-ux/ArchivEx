@@ -113,62 +113,76 @@
         </form>
     </div>
 
-    <!-- LISTE DES MATIÈRES / UE SOUS FORME DE PETITES CARTES COMPACTES ET VISUELLES -->
+    <!-- LISTE DES MATIÈRES / UE — MÊME STYLE DE PETITE CARTE CARRÉE QUE matieres.html -->
     {% if ue_list %}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4 lg:gap-5 mb-8">
             {% for ue in ue_list %}
                 <div id="ue-card-{{ ue.subject.id }}"
-                     class="bg-white border border-slate-200 hover:border-blue-300 rounded-2xl overflow-hidden shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between">
+                     class="group relative flex flex-col bg-white rounded-2xl border border-slate-200/90 hover:border-blue-400/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden text-left">
 
-                    <!-- HAUT DE LA PETITE CARTE UE (VIGNETTE DE LA MATIÈRE) -->
-                    <div class="relative w-full h-24 bg-slate-100 overflow-hidden shrink-0">
+                    <!-- TOP IMAGE CONTAINER (Aspect ~ 4:3, identique à matieres.html) -->
+                    <div class="relative w-full aspect-[4/3] overflow-hidden bg-slate-100 shrink-0">
                         {% if ue.subject.image %}
                             <img src="{{ ue.subject.image.url }}"
                                  alt="{{ ue.subject.name }}"
                                  loading="lazy"
-                                 class="w-full h-full object-cover" />
+                                 class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out" />
                         {% else %}
-                            <div class="w-full h-full bg-gradient-to-br from-[#071A49] via-[#0F2C6E] to-[#1E3A8A] flex items-center justify-center p-3 text-center">
-                                <div class="w-8 h-8 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center text-white font-black text-xs">
-                                    <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+                            <div class="w-full h-full bg-gradient-to-br from-[#071A49] via-[#0F2C6E] to-[#1E3A8A] flex items-center justify-center p-4 text-center">
+                                <div class="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-blue-200">
+                                    <i class="fa-solid fa-graduation-cap text-xl" aria-hidden="true"></i>
                                 </div>
                             </div>
                         {% endif %}
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#071A49]/35 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" aria-hidden="true"></div>
 
-                        <!-- BADGE CODE UE -->
-                        <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-[#071A49]/90 text-white text-[10px] font-extrabold backdrop-blur-xs border border-white/10">
+                        <!-- BADGE CODE UE (haut-gauche) -->
+                        <span class="absolute top-2 left-2 sm:top-2.5 sm:left-2.5 px-2 py-0.5 rounded-md bg-[#071A49]/80 backdrop-blur-md text-[9px] sm:text-[10px] font-black text-white tracking-wider border border-white/10 shadow-sm">
                             {{ ue.subject.code|default:"UE" }}
                         </span>
 
-                        <!-- BADGE NOMBRE D'ANNÉES DISPONIBLES -->
-                        <span class="absolute bottom-2 left-2 text-[10px] font-black text-white drop-shadow-xs">
+                        <!-- BADGE STATUT (haut-droite), identique à matieres.html -->
+                        {% if is_free_mode %}
+                            <span class="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-emerald-500/90 backdrop-blur-md text-[9px] sm:text-[10px] font-black text-white shadow-sm flex items-center space-x-1">
+                                <i class="fa-solid fa-gift text-[8px] sm:text-[9px]" aria-hidden="true"></i>
+                                <span class="hidden xs:inline">Gratuit</span>
+                            </span>
+                        {% else %}
+                            <span class="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 px-1.5 sm:px-2 py-0.5 rounded-md bg-amber-500/90 backdrop-blur-md text-[9px] sm:text-[10px] font-black text-white shadow-sm flex items-center space-x-1">
+                                <i class="fa-solid fa-crown text-[8px] sm:text-[9px]" aria-hidden="true"></i>
+                                <span class="hidden xs:inline">Premium</span>
+                            </span>
+                        {% endif %}
+
+                        <!-- NOMBRE DE RESSOURCES (bas-gauche) -->
+                        <span class="absolute bottom-2 left-2 sm:bottom-2.5 sm:left-2.5 text-[9px] sm:text-[10px] font-black text-white drop-shadow-xs">
                             {{ ue.years_count }} ressource{{ ue.years_count|pluralize }}
                         </span>
                     </div>
 
-                    <!-- CORPS DE LA PETITE CARTE UE -->
-                    <div class="p-3.5 flex-grow flex flex-col justify-between">
+                    <!-- BOTTOM CONTENT CONTAINER, identique à matieres.html -->
+                    <div class="p-3 sm:p-4 flex flex-col justify-between flex-1 bg-white">
                         <div>
                             <p class="text-[10px] font-bold text-slate-500 truncate mb-0.5">
                                 {{ ue.subject.semester.filiere.school.code|default:ue.subject.semester.filiere.school.name|default:"Université" }} · {{ ue.subject.semester.filiere.name }}
                             </p>
-                            <h3 class="text-xs sm:text-sm font-black text-[#071A49] leading-snug line-clamp-2">
+                            <h3 class="font-extrabold text-xs sm:text-[14px] text-[#071A49] group-hover:text-[#2563EB] transition-colors leading-snug line-clamp-2 mb-2.5" title="{{ ue.subject.name }}">
                                 {{ ue.subject.name }}
                             </h3>
                         </div>
 
                         <!-- BOUTON D'EXPANSION DES ANNÉES ACADÉMIQUES -->
-                        <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
-                            <span class="text-[10px] font-bold text-slate-600">
-                                {{ ue.subject.semester.label|default:"Semestre" }}
+                        <div class="pt-2 sm:pt-2.5 border-t border-slate-100 flex items-center justify-between mt-auto">
+                            <span class="inline-flex items-center space-x-1.5 text-[10px] sm:text-[11px] font-semibold text-slate-500">
+                                <i class="fa-regular fa-calendar text-slate-400 text-[10px] sm:text-xs" aria-hidden="true"></i>
+                                <span>{{ ue.subject.semester.label|default:"Semestre" }}</span>
                             </span>
                             <button type="button"
                                     onclick="toggleUeYears({{ ue.subject.id }})"
                                     id="ue-btn-{{ ue.subject.id }}"
-                                    class="px-3 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-[#2563EB] text-[11px] font-black transition-colors flex items-center space-x-1">
-                                <span>Voir les années</span>
-                                <i class="fa-solid fa-chevron-down text-[9px] transition-transform duration-200" id="ue-icon-{{ ue.subject.id }}" aria-hidden="true"></i>
+                                    class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-50 hover:bg-blue-100 text-slate-400 hover:text-[#2563EB] flex items-center justify-center transition-colors text-[9px] sm:text-[10px] shrink-0"
+                                    aria-label="Voir les années">
+                                <i class="fa-solid fa-chevron-down transition-transform duration-200" id="ue-icon-{{ ue.subject.id }}" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
@@ -330,7 +344,10 @@
             if (isHidden) {
                 yearsDiv.classList.remove('hidden');
                 if (icon) icon.classList.add('rotate-180');
-                if (btn) btn.classList.replace('bg-blue-50', 'bg-blue-100');
+                if (btn) {
+                    btn.classList.remove('bg-slate-50', 'text-slate-400');
+                    btn.classList.add('bg-blue-100', 'text-[#2563EB]');
+                }
                 // Preserve position via Hash without jump
                 if (history.replaceState) {
                     history.replaceState(null, null, '#ue-card-' + ueId);
@@ -338,7 +355,10 @@
             } else {
                 yearsDiv.classList.add('hidden');
                 if (icon) icon.classList.remove('rotate-180');
-                if (btn) btn.classList.replace('bg-blue-100', 'bg-blue-50');
+                if (btn) {
+                    btn.classList.remove('bg-blue-100', 'text-[#2563EB]');
+                    btn.classList.add('bg-slate-50', 'text-slate-400');
+                }
             }
         }
     }
