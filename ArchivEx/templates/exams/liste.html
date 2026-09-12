@@ -118,7 +118,8 @@
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4 lg:gap-5 mb-8 items-start">
             {% for ue in ue_list %}
                 <div id="ue-card-{{ ue.subject.id }}"
-                     class="group relative flex flex-col bg-white rounded-2xl border border-slate-200/90 hover:border-blue-400/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden text-left">
+                     onclick="toggleUeYears({{ ue.subject.id }})"
+                     class="group relative flex flex-col bg-white rounded-2xl border border-slate-200/90 hover:border-blue-400/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden text-left cursor-pointer">
 
                     <!-- TOP IMAGE CONTAINER (Aspect ~ 4:3, identique à matieres.html) -->
                     <div class="relative w-full aspect-[4/3] overflow-hidden bg-slate-100 shrink-0">
@@ -189,7 +190,7 @@
                     </div>
 
                     <!-- ACCORDEON / TIROIR DES ANNÉES ACADÉMIQUES DE LA MATIÈRE -->
-                    <div id="ue-years-{{ ue.subject.id }}" class="hidden border-t border-slate-100 bg-slate-50/70 p-3 text-xs">
+                    <div id="ue-years-{{ ue.subject.id }}" onclick="event.stopPropagation()" class="hidden border-t border-slate-100 bg-slate-50/70 p-3 text-xs">
                         <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">
                             Années académiques disponibles :
                         </p>
@@ -335,7 +336,7 @@
 </div>
 
 <script>
-    function toggleUeYears(ueId) {
+    window.toggleUeYears = function(ueId) {
         const yearsDiv = document.getElementById('ue-years-' + ueId);
         const icon = document.getElementById('ue-icon-' + ueId);
         const btn = document.getElementById('ue-btn-' + ueId);
@@ -365,7 +366,7 @@
                     btn.classList.remove('bg-slate-50', 'text-slate-400');
                     btn.classList.add('bg-blue-100', 'text-[#2563EB]');
                 }
-                // Preserve position via Hash without jump
+                // Préserver la position via URL sans recharger ni sauter
                 if (history.replaceState) {
                     history.replaceState(null, null, '#ue-card-' + ueId);
                 }
@@ -378,19 +379,42 @@
                 }
             }
         }
-    }
+    };
 
-    // Auto-expand card if URL hash matches #ue-card-{id}
-    document.addEventListener('DOMContentLoaded', function() {
+    function initUeAutoExpand() {
+        {% if selected_subject_id %}
+            const selId = "{{ selected_subject_id }}";
+            window.toggleUeYears(selId);
+            const selCard = document.getElementById('ue-card-' + selId);
+            if (selCard) {
+                setTimeout(() => selCard.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60);
+            }
+        {% elif selected_subject %}
+            const selId = "{{ selected_subject.id }}";
+            window.toggleUeYears(selId);
+            const selCard = document.getElementById('ue-card-' + selId);
+            if (selCard) {
+                setTimeout(() => selCard.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60);
+            }
+        {% endif %}
+
         if (window.location.hash && window.location.hash.startsWith('#ue-card-')) {
             const ueId = window.location.hash.replace('#ue-card-', '');
-            toggleUeYears(ueId);
+            window.toggleUeYears(ueId);
             const card = document.getElementById('ue-card-' + ueId);
             if (card) {
-                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60);
             }
         }
-    });
+    }
+
+    // Exécuter à la fois lors du premier chargement et lors des transitions SPA
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initUeAutoExpand);
+    } else {
+        initUeAutoExpand();
+    }
+    window.addEventListener('archivex:page-loaded', initUeAutoExpand);
 
     function openPassLockedModal(subjectName, details, passUrl) {
         const modal = document.getElementById('pass-locked-modal');
