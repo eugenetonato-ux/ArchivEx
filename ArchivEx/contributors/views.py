@@ -1915,6 +1915,48 @@ def exam_bulk_delete_published_view(request):
 
 
 @contributor_required
+def exam_bulk_delete_selected_view(request):
+    """
+    Supprime les épreuves sélectionnées par cases à cocher.
+    PROTECTION ABSOLUE DU CLOUD STORAGE : Les fichiers originaux Cloud restent 100% intacts.
+    """
+    if request.method == "POST":
+        exam_ids = request.POST.getlist("exam_ids")
+        if not exam_ids:
+            messages.warning(request, "Aucune épreuve n'a été sélectionnée pour la suppression.")
+            return redirect("contributors:exam_list")
+
+        active_school, active_filiere, active_semester = get_active_academic_context(request)
+        qs = Exam.objects.filter(pk__in=exam_ids)
+        if active_school:
+            qs = qs.filter(filiere__school=active_school)
+        if active_filiere:
+            qs = qs.filter(filiere=active_filiere)
+        if active_semester:
+            qs = qs.filter(semester=active_semester)
+
+        # Restriction de sécurité selon les établissements autorisés pour les contributeurs
+        if not request.user.is_superuser:
+            profile = getattr(request.user, "contributor_profile", None)
+            if profile and profile.role != "SUPER_ADMIN":
+                allowed_schools = profile.schools.all()
+                if allowed_schools.exists():
+                    qs = qs.filter(filiere__school__in=allowed_schools)
+
+        count = qs.count()
+        if count > 0:
+            qs.delete()
+            messages.success(
+                request,
+                f"{count} épreuve{'s' if count > 1 else ''} sélectionnée{'s' if count > 1 else ''} supprimée{'s' if count > 1 else ''} du site public. Les fichiers originaux du Cloud Storage restent 100% conservés et intacts."
+            )
+        else:
+            messages.info(request, "Aucune épreuve correspondante trouvée à supprimer.")
+
+    return redirect("contributors:exam_list")
+
+
+@contributor_required
 def library_exam_detail_view(request, pk):
     """Page de détail d'un fichier dans la Bibliothèque Cloud."""
     active_school, active_filiere, active_semester = get_active_academic_context(request)

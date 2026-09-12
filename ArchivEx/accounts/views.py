@@ -101,7 +101,7 @@ def dashboard_view(request):
 
     # Active accesses (Legacy & V2)
     active_accesses = SemesterAccess.objects.filter(
-        Q(user=request.user) & (Q(activated_at__isnull=False) | Q(payments__status="reussi"))
+        Q(user=request.user) & (Q(activated_at__isnull=False) | Q(payments__status__in=["APPROVED", "reussi", "approved", "success"]))
     ).select_related("semester", "filiere", "level", "school").distinct()
 
     from subscriptions.models import UserSubscription
@@ -268,6 +268,7 @@ def dashboard_view(request):
         "active_accesses": active_accesses,
         "user_subscriptions": user_subscriptions,
         "active_pass": active_pass,
+        "has_semester_access": active_pass,
         "active_semester": active_semester,
         "semester_subjects_count": semester_subjects_count,
         "semester_exams_count": semester_exams_count,
@@ -291,7 +292,7 @@ def dashboard_view(request):
 def favorites_list_view(request):
     user_accesses = set(
         SemesterAccess.objects.filter(
-            Q(user=request.user) & (Q(activated_at__isnull=False) | Q(payments__status="reussi"))
+            Q(user=request.user) & (Q(activated_at__isnull=False) | Q(payments__status__in=["APPROVED", "reussi", "approved", "success"]))
         ).values_list("semester_id", flat=True)
     )
     favorites = Favorite.objects.filter(user=request.user).select_related(
@@ -340,7 +341,7 @@ def profile_view(request):
         })
 
     active_accesses = SemesterAccess.objects.filter(
-        Q(user=request.user) & (Q(activated_at__isnull=False) | Q(payments__status="reussi"))
+        Q(user=request.user) & (Q(activated_at__isnull=False) | Q(payments__status__in=["APPROVED", "reussi", "approved", "success"]))
     ).select_related("semester", "filiere", "level", "school").distinct()
 
     context = {

@@ -99,7 +99,7 @@ def filiere_list_view(request):
         semester = Semester.objects.filter(filiere=profile.filiere).first()
     else:
         active_access = SemesterAccess.objects.filter(
-            Q(user=request.user) & (Q(activated_at__isnull=False) | Q(payments__status="reussi"))
+            Q(user=request.user) & (Q(activated_at__isnull=False) | Q(payments__status__in=["APPROVED", "reussi", "approved", "success"]))
         ).select_related("filiere", "semester").first()
         if active_access:
             filiere = active_access.filiere

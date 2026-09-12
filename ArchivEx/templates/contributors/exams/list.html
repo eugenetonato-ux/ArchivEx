@@ -9,17 +9,53 @@
     <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">Gestion des Épreuves</h1>
-            <p class="text-xs text-slate-500 font-medium">Consultez, recherchez, dépubliez ou ajoutez des épreuves d'examens.</p>
+            <p class="text-xs text-slate-500 font-medium">Consultez, recherchez, filtrez, dépubliez ou supprimez des épreuves d'examens.</p>
         </div>
-        <div class="flex items-center space-x-3 shrink-0">
-            <button type="button" onclick='openDeleteModal("{% url "contributors:exam_bulk_delete_published" %}", "Toutes les épreuves actuellement publiées", "Tout supprimer les épreuves publiées ?", "Toutes les épreuves publiées seront retirées du site public. Les fichiers originaux du Cloud Storage resteront 100% INTACTS et conservés.")' class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl transition-colors shadow-sm inline-flex items-center space-x-2">
+        <div class="flex items-center space-x-3 shrink-0 flex-wrap gap-2">
+            <!-- BOUTON SUPPRIMER LA SÉLECTION (DYNAMIQUE) -->
+            <button type="button"
+                    id="btn-bulk-delete-selected"
+                    onclick="confirmBulkDeleteSelection()"
+                    class="hidden px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-sm items-center space-x-2 animate-fade-in">
                 <i class="fa-solid fa-trash-can text-xs" aria-hidden="true"></i>
+                <span>Supprimer la sélection (<span id="selected-badge-count">0</span>)</span>
+            </button>
+
+            <!-- BOUTON TOUT SUPPRIMER -->
+            <button type="button" onclick='openDeleteModal("{% url "contributors:exam_bulk_delete_published" %}", "Toutes les épreuves actuellement publiées", "Tout supprimer les épreuves publiées ?", "Toutes les épreuves publiées seront retirées du site public. Les fichiers originaux du Cloud Storage resteront 100% INTACTS et conservés.")' class="px-4 py-2.5 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 font-extrabold text-xs rounded-xl transition-colors shadow-xs inline-flex items-center space-x-2">
+                <i class="fa-solid fa-dumpster-fire text-xs" aria-hidden="true"></i>
                 <span>Tout supprimer</span>
             </button>
             <a href="{% url 'contributors:exam_create' %}" class="btn-primary text-xs px-5 py-2.5 font-extrabold rounded-xl shadow-sm flex items-center justify-center space-x-2 shrink-0">
                 <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i>
                 <span>Ajouter une épreuve</span>
             </a>
+        </div>
+    </div>
+
+    <!-- BANDEAU D'ACTIONS MULTIPLES (S'AFFICHE QUAND DES CASES SONT COCHÉES) -->
+    <div id="selection-action-bar" class="hidden bg-rose-50/80 border border-rose-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+        <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center text-xs font-black shrink-0">
+                <span id="banner-count-number">0</span>
+            </div>
+            <div>
+                <p class="text-xs font-black text-rose-950" id="banner-count-text">0 épreuve sélectionnée</p>
+                <p class="text-[11px] text-rose-700 font-medium">Les fichiers originaux PDF sur le Cloud Storage resteront 100% intacts.</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2 flex-wrap gap-1.5 shrink-0">
+            <button type="button" onclick="selectOnlyPublished()" class="px-3 py-1.5 rounded-xl border border-rose-200 bg-white hover:bg-rose-100/60 text-rose-800 text-xs font-bold transition-colors inline-flex items-center space-x-1">
+                <i class="fa-solid fa-filter text-[10px]" aria-hidden="true"></i>
+                <span>Uniquement les publiées</span>
+            </button>
+            <button type="button" onclick="deselectAll()" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold transition-colors">
+                Désélectionner
+            </button>
+            <button type="button" onclick="confirmBulkDeleteSelection()" class="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl transition-colors shadow-xs inline-flex items-center space-x-1.5">
+                <i class="fa-solid fa-trash-can text-xs" aria-hidden="true"></i>
+                <span>Supprimer la sélection</span>
+            </button>
         </div>
     </div>
 
@@ -39,9 +75,16 @@
     <!-- EXAMS TABLE / CARDS -->
     <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs min-w-[700px]">
+            <table class="w-full text-left text-xs min-w-[750px]">
                 <thead>
                     <tr class="border-b border-slate-200 text-slate-400 font-bold uppercase text-[10px]">
+                        <th class="py-3 px-3 w-10 text-center">
+                            <input type="checkbox"
+                                   id="select-all-header"
+                                   onchange="toggleSelectAll(this)"
+                                   class="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer"
+                                   title="Tout cocher / décocher">
+                        </th>
                         <th class="py-3 px-3">Titre de l'épreuve</th>
                         <th class="py-3 px-3">Matière / UE</th>
                         <th class="py-3 px-3">Semestre & Filière</th>
@@ -53,7 +96,15 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 font-medium">
                     {% for ex in exams %}
-                        <tr class="hover:bg-slate-50/80 transition-colors">
+                        <tr class="hover:bg-slate-50/80 transition-colors" id="row-exam-{{ ex.pk }}">
+                            <td class="py-3.5 px-3 text-center">
+                                <input type="checkbox"
+                                       name="exam_ids"
+                                       value="{{ ex.pk }}"
+                                       data-is-published="{% if ex.is_published %}1{% else %}0{% endif %}"
+                                       class="exam-checkbox w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer"
+                                       onchange="onExamCheckboxChange()">
+                            </td>
                             <td class="py-3.5 px-3">
                                 <p class="font-extrabold text-[#071A49] text-xs mb-0.5">{{ ex.title }}</p>
                                 <span class="text-[10px] text-slate-400 font-semibold">Année académique : {{ ex.academic_year.label|default:ex.year }} · {{ ex.get_exam_type_display|default:"EXAM" }}</span>
@@ -108,7 +159,7 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="7" class="py-8 text-center text-slate-400 font-medium">
+                            <td colspan="8" class="py-8 text-center text-slate-400 font-medium">
                                 Aucune épreuve trouvée dans ce contexte.
                             </td>
                         </tr>
@@ -119,4 +170,119 @@
     </div>
 
 </div>
+
+<script>
+    function getCheckedCheckboxes() {
+        return Array.from(document.querySelectorAll('.exam-checkbox:checked'));
+    }
+
+    function onExamCheckboxChange() {
+        const checked = getCheckedCheckboxes();
+        const count = checked.length;
+        const total = document.querySelectorAll('.exam-checkbox').length;
+
+        // Header select-all checkbox state
+        const selectAllHeader = document.getElementById('select-all-header');
+        if (selectAllHeader) {
+            selectAllHeader.checked = (count > 0 && count === total);
+            selectAllHeader.indeterminate = (count > 0 && count < total);
+        }
+
+        // Header bulk delete button
+        const headerBtn = document.getElementById('btn-bulk-delete-selected');
+        const badgeCount = document.getElementById('selected-badge-count');
+        if (headerBtn && badgeCount) {
+            badgeCount.textContent = count;
+            if (count > 0) {
+                headerBtn.classList.remove('hidden');
+                headerBtn.classList.add('inline-flex');
+            } else {
+                headerBtn.classList.remove('inline-flex');
+                headerBtn.classList.add('hidden');
+            }
+        }
+
+        // Selection action banner
+        const banner = document.getElementById('selection-action-bar');
+        const bannerNum = document.getElementById('banner-count-number');
+        const bannerText = document.getElementById('banner-count-text');
+        if (banner && bannerNum && bannerText) {
+            bannerNum.textContent = count;
+            bannerText.textContent = count + ' épreuve' + (count > 1 ? 's' : '') + ' sélectionnée' + (count > 1 ? 's' : '');
+            if (count > 0) {
+                banner.classList.remove('hidden');
+            } else {
+                banner.classList.add('hidden');
+            }
+        }
+
+        // Highlight selected rows
+        document.querySelectorAll('.exam-checkbox').forEach(cb => {
+            const row = document.getElementById('row-exam-' + cb.value);
+            if (row) {
+                if (cb.checked) {
+                    row.classList.add('bg-rose-50/50');
+                } else {
+                    row.classList.remove('bg-rose-50/50');
+                }
+            }
+        });
+    }
+
+    function toggleSelectAll(masterCb) {
+        document.querySelectorAll('.exam-checkbox').forEach(cb => {
+            cb.checked = masterCb.checked;
+        });
+        onExamCheckboxChange();
+    }
+
+    function deselectAll() {
+        const selectAllHeader = document.getElementById('select-all-header');
+        if (selectAllHeader) selectAllHeader.checked = false;
+        document.querySelectorAll('.exam-checkbox').forEach(cb => {
+            cb.checked = false;
+        });
+        onExamCheckboxChange();
+    }
+
+    function selectOnlyPublished() {
+        document.querySelectorAll('.exam-checkbox').forEach(cb => {
+            cb.checked = (cb.getAttribute('data-is-published') === '1');
+        });
+        onExamCheckboxChange();
+    }
+
+    function confirmBulkDeleteSelection() {
+        const checked = getCheckedCheckboxes();
+        if (checked.length === 0) {
+            alert("Veuillez sélectionner au moins une épreuve à supprimer.");
+            return;
+        }
+
+        const count = checked.length;
+        const countLabel = count + " épreuve" + (count > 1 ? "s" : "") + " sélectionnée" + (count > 1 ? "s" : "");
+
+        const form = document.getElementById('delete-modal-form');
+        if (form) {
+            // Remove previous dynamically inserted inputs if any
+            form.querySelectorAll('input[name="exam_ids"]').forEach(el => el.remove());
+
+            // Add an input for each selected exam
+            checked.forEach(cb => {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'exam_ids';
+                hiddenInput.value = cb.value;
+                form.appendChild(hiddenInput);
+            });
+
+            openDeleteModal(
+                "{% url 'contributors:exam_bulk_delete_selected' %}",
+                countLabel,
+                "Supprimer " + countLabel + " ?",
+                "Toutes les épreuves sélectionnées seront retirées du site public. Les fichiers PDF originaux du Cloud Storage restent 100% conservés et intacts."
+            );
+        }
+    }
+</script>
 {% endblock %}

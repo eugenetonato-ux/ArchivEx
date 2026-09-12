@@ -567,7 +567,8 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </section>
 
-<!-- 6. ARCHIVEX PASS SECTION -->
+<!-- 6. ARCHIVEX PASS SECTION (Masqué pour les étudiants disposant déjà du pass) -->
+{% if not user_has_active_pass %}
 <section class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="bg-gradient-to-br from-amber-50/80 via-white to-white border-2 border-amber-200 rounded-3xl p-8 sm:p-12 shadow-sm grid grid-cols-1 lg:grid-cols-12 gap-8 items-center transition-all hover:shadow-md">
         <div class="lg:col-span-8 space-y-4">
@@ -608,6 +609,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 </section>
+{% endif %}
 
 <!-- 7. STUDENT GUIDANCE / KNOWLEDGE CENTER -->
 <section class="py-16 bg-[#071A49] text-white">

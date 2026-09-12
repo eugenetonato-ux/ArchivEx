@@ -26,6 +26,7 @@ urlpatterns = [
     path("epreuves/", views.exam_list_view, name="exam_list"),
     path("epreuves/ajouter/", views.exam_create_view, name="exam_create"),
     path("epreuves/tout-supprimer/", views.exam_bulk_delete_published_view, name="exam_bulk_delete_published"),
+    path("epreuves/supprimer-selection/", views.exam_bulk_delete_selected_view, name="exam_bulk_delete_selected"),
 
     path("epreuves/<int:pk>/modifier/", views.exam_edit_view, name="exam_edit"),
     path("epreuves/<int:pk>/statut/", views.exam_toggle_status_view, name="exam_toggle_status"),

@@ -3,9 +3,40 @@ from django.db.models import Q
 from payments.models import SemesterAccess
 
 
-def has_user_valid_pass(user, resource):
+def get_user_active_accesses(user):
+    """Retourne le QuerySet de tous les SemesterAccess actifs de l'utilisateur."""
+    if not user or not user.is_authenticated:
+        return SemesterAccess.objects.none()
+    legacy_query = Q(user=user) & (
+        Q(activated_at__isnull=False) |
+        Q(payments__status__in=["APPROVED", "reussi", "approved", "success"])
+    )
+    return SemesterAccess.objects.filter(legacy_query).distinct()
+
+
+def user_has_any_active_pass(user):
+    """Vérifie si l'utilisateur possède n'importe quel Pass actif sur la plateforme."""
+    if not user or not user.is_authenticated:
+        return False
+    if user.is_superuser or user.is_staff or getattr(user, "contributor_profile", None):
+        return True
+
+    if get_user_active_accesses(user).exists():
+        return True
+
+    from subscriptions.models import UserSubscription
+    now = timezone.now()
+    return UserSubscription.objects.filter(
+        user=user,
+        is_active=True,
+        start_date__lte=now,
+    ).filter(Q(end_date__isnull=True) | Q(end_date__gte=now)).exists()
+
+
+def has_user_valid_pass(user, resource=None):
     """
     Vérifie si l'utilisateur possède un Pass Semestre / Filière / École actif.
+    Prend en charge tous types d'objets (Semester, Filiere, Subject, Exam, Summary, Guide) ou None.
     Seuls les superutilisateurs/staff et les étudiants avec un Pass valide retournent True.
     """
     if not user or not user.is_authenticated:
@@ -14,24 +45,41 @@ def has_user_valid_pass(user, resource):
     if user.is_superuser or user.is_staff or getattr(user, "contributor_profile", None):
         return True
 
+    if resource is None:
+        return user_has_any_active_pass(user)
+
     now = timezone.now()
 
     # Extraire le contexte académique de la ressource
+    from academics.models import Semester, Filiere, Subject, School
+
     res_subject = getattr(resource, "subject", None)
+    if isinstance(resource, Subject):
+        res_subject = resource
+
     res_semester = getattr(resource, "semester", None)
-    if not res_semester and res_subject:
+    if isinstance(resource, Semester):
+        res_semester = resource
+    elif not res_semester and res_subject:
         res_semester = getattr(res_subject, "semester", None)
 
     res_filiere = getattr(resource, "filiere", None)
-    if not res_filiere and res_semester:
+    if isinstance(resource, Filiere):
+        res_filiere = resource
+    elif not res_filiere and res_semester:
         res_filiere = getattr(res_semester, "filiere", None)
 
     res_school = getattr(resource, "school", None)
-    if not res_school and res_filiere:
+    if isinstance(resource, School):
+        res_school = resource
+    elif not res_school and res_filiere:
         res_school = getattr(res_filiere, "school", None)
 
-    # 1. Vérification SemesterAccess (Legacy V1)
-    legacy_query = Q(user=user) & (Q(activated_at__isnull=False) | Q(payments__status="reussi"))
+    # 1. Vérification SemesterAccess (Legacy V1 & Paiements approuvés)
+    legacy_query = Q(user=user) & (
+        Q(activated_at__isnull=False) |
+        Q(payments__status__in=["APPROVED", "reussi", "approved", "success"])
+    )
     if res_semester:
         if SemesterAccess.objects.filter(legacy_query & Q(semester=res_semester)).exists():
             return True

@@ -402,20 +402,8 @@ def resources_view(request, mode=None):
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number)
 
-    user_has_any_pass = False
-    if request.user.is_authenticated:
-        if request.user.is_staff or request.user.is_superuser:
-            user_has_any_pass = True
-        else:
-            now = timezone.now()
-            user_has_any_pass = SemesterAccess.objects.filter(
-                user=request.user
-            ).filter(Q(activated_at__isnull=False) | Q(payments__status="reussi")).exists()
-            if not user_has_any_pass:
-                from subscriptions.models import UserSubscription
-                user_has_any_pass = UserSubscription.objects.filter(
-                    user=request.user, is_active=True, start_date__lte=now
-                ).filter(Q(end_date__isnull=True) | Q(end_date__gte=now)).exists()
+    from subscriptions.services import user_has_any_active_pass
+    user_has_any_pass = user_has_any_active_pass(request.user) if request.user.is_authenticated else False
 
     selected_subject = None
     if selected_subject_id:

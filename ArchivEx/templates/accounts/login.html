@@ -35,7 +35,7 @@
         </div>
 
         <!-- LOGIN FORM -->
-        <form method="post" action="{% url 'accounts:login' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}" class="space-y-5">
+        <form method="post" action="{% url 'accounts:login' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}" onsubmit="sessionStorage.removeItem('archivex_pwa_session_shown');" class="space-y-5">
             {% csrf_token %}
 
             <!-- NON-FIELD FORM ERRORS -->

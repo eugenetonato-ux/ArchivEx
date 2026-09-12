@@ -115,7 +115,7 @@
 
     <!-- LISTE DES MATIÈRES / UE — MÊME STYLE DE PETITE CARTE CARRÉE QUE matieres.html -->
     {% if ue_list %}
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4 lg:gap-5 mb-8">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4 lg:gap-5 mb-8 items-start">
             {% for ue in ue_list %}
                 <div id="ue-card-{{ ue.subject.id }}"
                      class="group relative flex flex-col bg-white rounded-2xl border border-slate-200/90 hover:border-blue-400/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden text-left">
@@ -172,13 +172,14 @@
                         </div>
 
                         <!-- BOUTON D'EXPANSION DES ANNÉES ACADÉMIQUES -->
-                        <div class="pt-2 sm:pt-2.5 border-t border-slate-100 flex items-center justify-between mt-auto">
+                        <div class="pt-2 sm:pt-2.5 border-t border-slate-100 flex items-center justify-between mt-auto cursor-pointer select-none"
+                             onclick="toggleUeYears({{ ue.subject.id }})">
                             <span class="inline-flex items-center space-x-1.5 text-[10px] sm:text-[11px] font-semibold text-slate-500">
                                 <i class="fa-regular fa-calendar text-slate-400 text-[10px] sm:text-xs" aria-hidden="true"></i>
                                 <span>{{ ue.subject.semester.label|default:"Semestre" }}</span>
                             </span>
                             <button type="button"
-                                    onclick="toggleUeYears({{ ue.subject.id }})"
+                                    onclick="event.stopPropagation(); toggleUeYears({{ ue.subject.id }})"
                                     id="ue-btn-{{ ue.subject.id }}"
                                     class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-50 hover:bg-blue-100 text-slate-400 hover:text-[#2563EB] flex items-center justify-center transition-colors text-[9px] sm:text-[10px] shrink-0"
                                     aria-label="Voir les années">
@@ -341,6 +342,22 @@
 
         if (yearsDiv) {
             const isHidden = yearsDiv.classList.contains('hidden');
+
+            // Fermer tous les autres tiroirs ouverts afin que seule cette UE soit dépliée
+            document.querySelectorAll('[id^="ue-years-"]').forEach(el => {
+                if (el.id !== 'ue-years-' + ueId && !el.classList.contains('hidden')) {
+                    el.classList.add('hidden');
+                    const otherId = el.id.replace('ue-years-', '');
+                    const otherIcon = document.getElementById('ue-icon-' + otherId);
+                    const otherBtn = document.getElementById('ue-btn-' + otherId);
+                    if (otherIcon) otherIcon.classList.remove('rotate-180');
+                    if (otherBtn) {
+                        otherBtn.classList.remove('bg-blue-100', 'text-[#2563EB]');
+                        otherBtn.classList.add('bg-slate-50', 'text-slate-400');
+                    }
+                }
+            });
+
             if (isHidden) {
                 yearsDiv.classList.remove('hidden');
                 if (icon) icon.classList.add('rotate-180');
