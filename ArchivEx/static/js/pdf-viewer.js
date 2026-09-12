@@ -116,9 +116,9 @@
                 });
             }
 
-            // Viewport Scroll Container
+            // Viewport Scroll Container (Quasi plein écran, défilement fluide)
             this.scrollContainer = document.createElement('div');
-            this.scrollContainer.className = 'flex-grow overflow-auto p-2 sm:p-4 flex flex-col items-center bg-slate-950 relative';
+            this.scrollContainer.className = 'flex-grow overflow-auto p-1 sm:p-2 flex flex-col items-center bg-slate-950 relative';
             this.scrollContainer.style.webkitOverflowScrolling = 'touch';
 
             // Loading state
@@ -133,10 +133,10 @@
 
             // Canvas wrapper
             this.canvasWrapper = document.createElement('div');
-            this.canvasWrapper.className = 'relative shadow-2xl rounded-lg overflow-hidden bg-white my-auto';
+            this.canvasWrapper.className = 'relative shadow-2xl rounded-lg overflow-hidden bg-white my-auto max-w-full';
             
             this.canvas = document.createElement('canvas');
-            this.canvas.className = 'block max-w-full';
+            this.canvas.className = 'block mx-auto max-w-full';
             this.canvasWrapper.appendChild(this.canvas);
 
             this.scrollContainer.appendChild(this.canvasWrapper);
@@ -204,9 +204,9 @@
             try {
                 const page = await this.pdfDoc.getPage(this.pageNum);
                 
-                // Calculate Scale
+                // Calculate Scale (Maximise l'espace sombre pour une lecture sans contrainte)
                 const unscaledViewport = page.getViewport({ scale: 1.0 });
-                const containerWidth = Math.max(300, (this.scrollContainer.clientWidth || window.innerWidth) - 24);
+                const containerWidth = Math.max(300, (this.scrollContainer.clientWidth || window.innerWidth) - 10);
 
                 if (this.scaleMode === 'page-width') {
                     this.scale = containerWidth / unscaledViewport.width;

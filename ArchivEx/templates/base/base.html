@@ -831,40 +831,40 @@
   });
   </script>
 
-  <!-- GLOBAL INTEGRATED PDF QUICK PREVIEW MODAL -->
-  <div id="global-pdf-preview-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 transition-all duration-300">
-      <div id="global-pdf-preview-card" class="bg-white dark:bg-[#121824] rounded-3xl border border-slate-200 dark:border-[#1e293b] shadow-2xl max-w-5xl w-full h-[90vh] flex flex-col transform transition-all scale-95 opacity-0 duration-300">
+  <!-- GLOBAL INTEGRATED PDF QUICK PREVIEW MODAL (QUASI PLEIN ÉCRAN PAR DÉFAUT) -->
+  <div id="global-pdf-preview-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-1 sm:p-2 lg:p-3 transition-all duration-300">
+      <div id="global-pdf-preview-card" class="bg-white dark:bg-[#121824] rounded-2xl border border-slate-200 dark:border-[#1e293b] shadow-2xl w-full max-w-[99vw] sm:max-w-[98vw] lg:max-w-[96vw] h-[95vh] sm:h-[97vh] flex flex-col transform transition-all scale-95 opacity-0 duration-300">
           
-          <!-- Modal Header -->
-          <div class="px-6 py-4 border-b border-slate-100 dark:border-[#1e293b] flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-800/20">
+          <!-- Modal Header (Compact & Épuré) -->
+          <div class="px-4 py-2.5 sm:px-6 sm:py-3 border-b border-slate-100 dark:border-[#1e293b] flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-800/20">
               <div class="flex items-center space-x-2.5 min-w-0">
-                  <div class="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                      <i class="fa-solid fa-file-pdf text-sm"></i>
+                  <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                      <i class="fa-solid fa-file-pdf text-xs sm:text-sm"></i>
                   </div>
                   <div class="min-w-0">
                       <h3 id="global-pdf-modal-title" class="text-xs sm:text-sm font-black text-[#071A49] dark:text-slate-100 truncate">
                           Aperçu du document
                       </h3>
-                      <p class="text-[9px] text-slate-400 dark:text-slate-500 font-medium">Lecteur PDF intégré</p>
+                      <p class="text-[9px] text-slate-400 dark:text-slate-500 font-medium">Lecteur PDF immersif haute lisibilité</p>
                   </div>
               </div>
-              <div class="flex items-center space-x-2">
-                  <button type="button" onclick="togglePdfFullscreen()" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-extrabold transition-colors flex items-center space-x-1" title="Agrandir en plein écran">
+              <div class="flex items-center space-x-1.5 sm:space-x-2">
+                  <button type="button" onclick="togglePdfFullscreen()" class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-extrabold transition-colors flex items-center space-x-1" title="Agrandir en plein écran">
                       <i id="pdf-fullscreen-icon" class="fa-solid fa-expand text-[9px]"></i>
                       <span id="pdf-fullscreen-text" class="hidden sm:inline">Plein écran</span>
                   </button>
-                  <a id="global-pdf-modal-newtab" href="#" target="_blank" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-extrabold transition-colors flex items-center space-x-1" title="Ouvrir dans un nouvel onglet">
+                  <a id="global-pdf-modal-newtab" href="#" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-extrabold transition-colors flex items-center space-x-1" title="Ouvrir dans un nouvel onglet">
                       <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
                       <span class="hidden sm:inline">Nouvel onglet</span>
                   </a>
-                  <button type="button" onclick="closePdfPreview()" class="w-8 h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center transition-colors">
+                  <button type="button" onclick="closePdfPreview()" class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center transition-colors" title="Fermer">
                       <i class="fa-solid fa-xmark text-sm"></i>
                   </button>
               </div>
           </div>
 
-          <!-- Modal Body (PDF.js Container) -->
-          <div class="flex-grow p-1 bg-slate-950 relative overflow-hidden flex flex-col">
+          <!-- Modal Body (PDF.js Container Spacieux) -->
+          <div class="flex-grow p-0.5 sm:p-1 bg-slate-950 relative overflow-hidden flex flex-col">
               <div id="global-pdf-mount" class="w-full h-full relative"></div>
           </div>
       </div>
@@ -873,6 +873,7 @@
   <script src="{% static 'js/pdf-viewer.js' %}"></script>
   <script>
   let activeGlobalPdfViewer = null;
+  const MODAL_WINDOWED_CLASS = "bg-white dark:bg-[#121824] rounded-2xl border border-slate-200 dark:border-[#1e293b] shadow-2xl w-full max-w-[99vw] sm:max-w-[98vw] lg:max-w-[96vw] h-[95vh] sm:h-[97vh] flex flex-col transform transition-all duration-300 scale-100 opacity-100";
 
   function openPdfPreview(url, title) {
       const modal = document.getElementById('global-pdf-preview-modal');
@@ -911,15 +912,15 @@
           const isFullscreen = card.classList.contains('h-screen');
 
           if (isFullscreen) {
-              // Return to normal windowed mode
-              modal.classList.add('p-4');
-              card.className = "bg-white dark:bg-[#121824] rounded-3xl border border-slate-200 dark:border-[#1e293b] shadow-2xl max-w-5xl w-full h-[90vh] flex flex-col transform transition-all duration-300 scale-100 opacity-100";
+              // Return to normal wide windowed mode
+              modal.className = "fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-1 sm:p-2 lg:p-3 transition-all duration-300";
+              card.className = MODAL_WINDOWED_CLASS;
               if (icon) icon.className = "fa-solid fa-expand text-[9px]";
               if (text) text.textContent = "Plein écran";
           } else {
-              // Go to fullscreen covering entire navigation viewport
-              modal.classList.remove('p-4');
-              card.className = "bg-white dark:bg-[#121824] w-full h-screen flex flex-col transform transition-all duration-300 scale-100 opacity-100";
+              // Go to 100% edge-to-edge fullscreen
+              modal.className = "fixed inset-0 bg-slate-950/90 z-[100] flex items-center justify-center p-0 transition-all duration-300";
+              card.className = "bg-white dark:bg-[#121824] w-full h-screen rounded-none flex flex-col transform transition-all duration-300 scale-100 opacity-100";
               if (icon) icon.className = "fa-solid fa-compress text-[9px]";
               if (text) text.textContent = "Réduire";
           }
@@ -934,8 +935,8 @@
       const text = document.getElementById('pdf-fullscreen-text');
 
       if (modal && card) {
-          modal.classList.add('p-4');
-          card.className = "bg-white dark:bg-[#121824] rounded-3xl border border-slate-200 dark:border-[#1e293b] shadow-2xl max-w-5xl w-full h-[90vh] flex flex-col transform transition-all scale-100 opacity-100";
+          modal.className = "fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-1 sm:p-2 lg:p-3 transition-all duration-300";
+          card.className = MODAL_WINDOWED_CLASS;
           if (mount) mount.innerHTML = '';
           activeGlobalPdfViewer = null;
 
