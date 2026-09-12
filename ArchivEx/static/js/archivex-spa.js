@@ -248,11 +248,30 @@
 
             stopProgress();
 
-            // Fermer tout menu mobile ou dropdown éventuellement resté ouvert
+            // Fermer tout menu mobile ou sheet éventuellement resté ouvert
             const mobileMenu = document.getElementById('mobile-menu');
             if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
                 mobileMenu.classList.add('hidden');
             }
+            const resSheet = document.getElementById('mobile-resources-sheet');
+            if (resSheet && !resSheet.classList.contains('hidden')) {
+                resSheet.classList.add('hidden');
+            }
+
+            // Mettre à jour l'état actif de la barre de navigation mobile du bas (Dock)
+            document.querySelectorAll('.dock-item').forEach(item => {
+                const href = item.getAttribute('href');
+                if (href) {
+                    try {
+                        const itemUrl = new URL(href, window.location.origin);
+                        if (itemUrl.pathname === targetUrl.pathname) {
+                            item.classList.add('dock-item-active');
+                        } else {
+                            item.classList.remove('dock-item-active');
+                        }
+                    } catch (e) {}
+                }
+            });
 
             // Déclencher un événement global pour que les composants de la page se réinitialisent
             window.dispatchEvent(new CustomEvent('archivex:page-loaded', {

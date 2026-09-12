@@ -142,6 +142,64 @@
             this.scrollContainer.appendChild(this.canvasWrapper);
             this.rootWrapper.appendChild(this.scrollContainer);
             this.container.appendChild(this.rootWrapper);
+
+            // Gestes tactiles mobiles immersifs : Pinch-to-zoom & Double tap
+            let touchDist = 0;
+            let initialScale = 1.0;
+            let lastTap = 0;
+
+            this.scrollContainer.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 2) {
+                    touchDist = Math.hypot(
+                        e.touches[0].pageX - e.touches[1].pageX,
+                        e.touches[0].pageY - e.touches[1].pageY
+                    );
+                    initialScale = this.scale;
+                } else if (e.touches.length === 1) {
+                    const now = Date.now();
+                    if (now - lastTap < 300) {
+                        this.scaleMode = (this.scaleMode === 'page-width') ? 'custom' : 'page-width';
+                        if (this.scaleMode === 'custom') {
+                            this.scale = this.scale * 1.5;
+                        }
+                        this.renderCurrentPage();
+                    }
+                    lastTap = now;
+                }
+            }, { passive: true });
+
+            this.scrollContainer.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2 && touchDist > 0) {
+                    const dist = Math.hypot(
+                        e.touches[0].pageX - e.touches[1].pageX,
+                        e.touches[0].pageY - e.touches[1].pageY
+                    );
+                    const factor = dist / touchDist;
+                    const newScale = Math.max(0.65, Math.min(3.2, initialScale * factor));
+                    if (this.canvasWrapper) {
+                        const temp = newScale / this.scale;
+                        this.canvasWrapper.style.transform = `scale(${temp})`;
+                        this.canvasWrapper.style.transformOrigin = 'center top';
+                    }
+                }
+            }, { passive: true });
+
+            this.scrollContainer.addEventListener('touchend', (e) => {
+                if (touchDist > 0 && e.touches.length < 2) {
+                    if (this.canvasWrapper && this.canvasWrapper.style.transform) {
+                        const match = this.canvasWrapper.style.transform.match(/scale\(([^)]+)\)/);
+                        if (match) {
+                            const temp = parseFloat(match[1]);
+                            this.scaleMode = 'custom';
+                            this.scale = Math.max(0.65, Math.min(3.2, this.scale * temp));
+                        }
+                        this.canvasWrapper.style.transform = '';
+                        this.canvasWrapper.style.transformOrigin = '';
+                        this.renderCurrentPage();
+                    }
+                    touchDist = 0;
+                }
+            }, { passive: true });
         }
 
         async loadDocument() {

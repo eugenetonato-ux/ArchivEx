@@ -372,7 +372,73 @@
         document.getElementById('pdf-fallback-frame').classList.remove('hidden');
     }
 
-    // 1. SMART TAB SWITCH PROTECTION (FLOUTAGE LORSQU'ON QUITTE L'ONGLET)
+    // 1. GESTES MOBILES TACTILES NATURELS (PINCH-TO-ZOOM & DOUBLE TAP)
+    const viewerContainer = document.getElementById('viewer-container');
+    let touchStartDist = 0;
+    let touchStartScale = scale;
+    let lastTapTime = 0;
+
+    if (viewerContainer) {
+        viewerContainer.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                touchStartDist = Math.hypot(
+                    e.touches[0].pageX - e.touches[1].pageX,
+                    e.touches[0].pageY - e.touches[1].pageY
+                );
+                touchStartScale = scale;
+            } else if (e.touches.length === 1) {
+                const now = Date.now();
+                if (now - lastTapTime < 300) {
+                    // Double tap : alterner entre ajustement optimal et zoom confort 1.5x
+                    if (pdfDoc) {
+                        pdfDoc.getPage(pageNum).then(function(page) {
+                            const optimal = calculateOptimalScale(page);
+                            scale = (Math.abs(scale - optimal) < 0.15) ? optimal * 1.5 : optimal;
+                            queueRenderPage(pageNum);
+                        });
+                    }
+                }
+                lastTapTime = now;
+            }
+        }, { passive: true });
+
+        viewerContainer.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && touchStartDist > 0) {
+                const currentDist = Math.hypot(
+                    e.touches[0].pageX - e.touches[1].pageX,
+                    e.touches[0].pageY - e.touches[1].pageY
+                );
+                const factor = currentDist / touchStartDist;
+                const newScale = Math.max(0.65, Math.min(3.2, touchStartScale * factor));
+                
+                const canvasWrapper = document.getElementById('canvas-wrapper');
+                if (canvasWrapper) {
+                    const tempScale = newScale / scale;
+                    canvasWrapper.style.transform = `scale(${tempScale})`;
+                    canvasWrapper.style.transformOrigin = 'center top';
+                }
+            }
+        }, { passive: true });
+
+        viewerContainer.addEventListener('touchend', (e) => {
+            if (touchStartDist > 0 && e.touches.length < 2) {
+                const canvasWrapper = document.getElementById('canvas-wrapper');
+                if (canvasWrapper && canvasWrapper.style.transform) {
+                    const match = canvasWrapper.style.transform.match(/scale\(([^)]+)\)/);
+                    if (match) {
+                        const tempScale = parseFloat(match[1]);
+                        scale = Math.max(0.65, Math.min(3.2, scale * tempScale));
+                    }
+                    canvasWrapper.style.transform = '';
+                    canvasWrapper.style.transformOrigin = '';
+                    queueRenderPage(pageNum);
+                }
+                touchStartDist = 0;
+            }
+        }, { passive: true });
+    }
+
+    // 2. SMART TAB SWITCH PROTECTION (FLOUTAGE LORSQU'ON QUITTE L'ONGLET)
     const tabBlurMask = document.getElementById('tab-blur-mask');
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
@@ -382,7 +448,7 @@
         }
     });
 
-    // 2. BLOCK SENSITIVE KEYBOARD SHORTCUTS (PRINT, SAVE, INSPECT)
+    // 3. BLOCK SENSITIVE KEYBOARD SHORTCUTS (PRINT, SAVE, INSPECT)
     document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S' || e.key === 'u' || e.key === 'U')) {
             e.preventDefault();
