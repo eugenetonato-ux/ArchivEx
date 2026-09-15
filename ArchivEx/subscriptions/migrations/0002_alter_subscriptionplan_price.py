@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="subscriptionplan",
             name="price",
-            field=models.PositiveIntegerField(default=4500, help_text="Prix en FCFA"),
+            field=models.PositiveIntegerField(default=3800, help_text="Prix en FCFA"),
         ),
     ]
