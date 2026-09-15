@@ -18,11 +18,11 @@ class StudentRegistrationForm(forms.ModelForm):
     }))
     email = forms.EmailField(required=True, label="Adresse Email", widget=forms.EmailInput(attrs={
         'class': 'w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]',
-        'placeholder': 'sophia.lokossou@universite.fr'
+        'placeholder': 'sophialokossou@gmail.com'
     }))
     password = forms.CharField(widget=forms.PasswordInput(attrs={
         'class': 'w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]',
-        'placeholder': '••••••••'
+        'placeholder': 'Tapez un mot de passe'
     }), label="Mot de passe")
 
     school = forms.ModelChoiceField(queryset=School.objects.filter(is_active=True), label="École / Université", widget=forms.Select(attrs={
