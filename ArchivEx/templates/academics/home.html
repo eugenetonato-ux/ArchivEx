@@ -242,32 +242,41 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5">
+            <div class="flex flex-col sm:flex-row flex-wrap items-center justify-center lg:justify-start gap-3.5">
                 {% if user.is_authenticated and user.is_staff or user.is_authenticated and user.is_superuser or user.is_authenticated and user.contributor_profile %}
                     <a href="{% url 'contributors:admin_dashboard' %}" class="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm px-7 py-3.5 rounded-2xl shadow-lg shadow-amber-500/25 flex items-center justify-center space-x-2.5 transition-all">
                         <i class="fa-solid fa-user-shield"></i>
                         <span>Espace d'administration</span>
                     </a>
-                {% else %}
+                {% elif user.is_authenticated %}
                     <a href="{% url 'academics:filieres' %}" class="w-full sm:w-auto bg-[#2563EB] hover:bg-blue-700 text-white font-black text-sm px-7 py-3.5 rounded-2xl shadow-lg shadow-blue-500/25 flex items-center justify-center space-x-2.5 transition-all">
                         <i class="fa-solid fa-graduation-cap"></i>
                         <span>Explorer les matières</span>
                         <i class="fa-solid fa-chevron-right text-xs"></i>
                     </a>
+                    <a href="{% url 'academics:about' %}" class="w-full sm:w-auto bg-white hover:bg-slate-50 text-[#071A49] border-2 border-slate-200 font-black text-sm px-6 py-3.5 rounded-2xl shadow-xs flex items-center justify-center space-x-2.5 transition-all">
+                        <div class="w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center text-[10px]">
+                            <i class="fa-solid fa-play text-[8px] text-[#071A49] ml-0.5"></i>
+                        </div>
+                        <span>Découvrir la plateforme</span>
+                    </a>
+                {% else %}
+                    <!-- BOUTONS DIRECTS POUR VISITEUR : S'INSCRIRE OU SE CONNECTER -->
+                    <a href="{% url 'accounts:register' %}" class="w-full sm:w-auto bg-gradient-to-r from-[#2563EB] to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-sm px-7 py-3.5 rounded-2xl shadow-xl shadow-blue-600/30 flex items-center justify-center space-x-2.5 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                        <i class="fa-solid fa-user-plus text-base"></i>
+                        <span>S'inscrire gratuitement</span>
+                    </a>
+
+                    <a href="{% url 'accounts:login' %}" class="w-full sm:w-auto bg-white hover:bg-slate-50 text-[#071A49] border-2 border-slate-200 hover:border-[#2563EB] font-black text-sm px-6 py-3.5 rounded-2xl shadow-xs flex items-center justify-center space-x-2.5 transition-all">
+                        <i class="fa-solid fa-arrow-right-to-bracket text-[#2563EB]"></i>
+                        <span>Se connecter</span>
+                    </a>
+
+                    <a href="{% url 'exams:free_liste' %}" class="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs sm:text-sm px-5 py-3.5 rounded-2xl flex items-center justify-center space-x-2 transition-all">
+                        <i class="fa-solid fa-book-open text-blue-600"></i>
+                        <span>Épreuves gratuites</span>
+                    </a>
                 {% endif %}
-
-                <a href="{% url 'academics:about' %}" class="w-full sm:w-auto bg-white hover:bg-slate-50 text-[#071A49] border-2 border-slate-200 font-black text-sm px-6 py-3.5 rounded-2xl shadow-xs flex items-center justify-center space-x-2.5 transition-all">
-                    <div class="w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center text-[10px]">
-                        <i class="fa-solid fa-play text-[8px] text-[#071A49] ml-0.5"></i>
-                    </div>
-                    <span>Découvrir la plateforme</span>
-                </a>
-
-                <!-- BOUTON DE TÉLÉCHARGEMENT PWA HERO -->
-                <button type="button" class="pwa-install-trigger w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm px-6 py-3.5 rounded-2xl shadow-lg shadow-emerald-600/25 flex items-center justify-center space-x-2.5 transition-all hover:scale-[1.02]">
-                    <i class="fa-solid fa-cloud-arrow-down text-base"></i>
-                    <span>Installer l'application</span>
-                </button>
             </div>
         </div>
 
@@ -602,9 +611,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     Consulter mon pass
                 </a>
             {% else %}
-                <a href="{% url 'accounts:register' %}" class="btn-primary text-xs px-6 py-3 font-black rounded-xl w-full text-center">
-                    Créer un compte pour activer
+                <a href="{% url 'accounts:register' %}" class="btn-primary text-xs px-6 py-3.5 font-black rounded-xl w-full text-center block shadow-md">
+                    <i class="fa-solid fa-user-plus mr-1.5"></i>
+                    <span>S'inscrire pour activer</span>
                 </a>
+                <p class="text-[11px] text-slate-500 mt-2.5 font-medium">
+                    Déjà un compte ? <a href="{% url 'accounts:login' %}" class="font-bold text-[#2563EB] hover:underline">Se connecter</a>
+                </p>
             {% endif %}
         </div>
     </div>
@@ -702,9 +715,16 @@ document.addEventListener('DOMContentLoaded', function() {
         Rejoignez les étudiants qui utilisent ArchivEx pour organiser leurs révisions et aborder leurs examens en toute confiance.
     </p>
     {% if not user.is_authenticated %}
-        <a href="{% url 'accounts:register' %}" class="btn-primary text-xs sm:text-sm px-8 py-3.5 font-black rounded-xl inline-block shadow-md">
-            Créer un compte gratuitement
-        </a>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5">
+            <a href="{% url 'accounts:register' %}" class="w-full sm:w-auto btn-primary text-xs sm:text-sm px-8 py-4 font-black rounded-xl shadow-lg flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>Créer un compte gratuitement</span>
+            </a>
+            <a href="{% url 'accounts:login' %}" class="w-full sm:w-auto bg-white hover:bg-slate-50 text-[#071A49] border-2 border-slate-200 hover:border-[#2563EB] font-black text-xs sm:text-sm px-7 py-4 rounded-xl shadow-xs flex items-center justify-center space-x-2 transition-all">
+                <i class="fa-solid fa-arrow-right-to-bracket text-[#2563EB]"></i>
+                <span>J'ai déjà un compte</span>
+            </a>
+        </div>
     {% else %}
         <a href="{% url 'academics:filieres' %}" class="btn-primary text-xs sm:text-sm px-8 py-3.5 font-black rounded-xl inline-block shadow-md">
             Accéder à mes matières

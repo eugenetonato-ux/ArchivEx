@@ -225,7 +225,7 @@ LOGGING = {
     },
 }
 
-PASS_SEMESTRE_PRIX_DEFAUT = config("PASS_SEMESTRE_PRIX_DEFAUT", default=4500, cast=int)
+PASS_SEMESTRE_PRIX_DEFAUT = config("PASS_SEMESTRE_PRIX_DEFAUT", default=3800, cast=int)
 
 # Chariow Payment Gateway Configuration (https://chariow.dev)
 CHARIOW_API_KEY = config("CHARIOW_API_KEY", default="")

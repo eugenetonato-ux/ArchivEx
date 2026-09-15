@@ -6,14 +6,14 @@ Ce document décrit la configuration, le fonctionnement et la maintenance du sys
 
 ## 1. Vue d'Ensemble de l'Intégration
 
-ArchivEx utilise l'API officielle **Chariow Checkout** et le système de webhooks **Pulses** pour encaisser les paiements des Pass Semestre (4 500 FCFA) et activer automatiquement l'accès aux examens, résumés et guides.
+ArchivEx utilise l'API officielle **Chariow Checkout** et le système de webhooks **Pulses** pour encaisser les paiements des Pass Semestre (3 800 FCFA) et activer automatiquement l'accès aux examens, résumés et guides.
 
 ### Flux de Paiement Sécurisé
 
 ```
 Étudiant connecté sur ArchivEx
        ↓
-Sélectionne « Pass Semestre (4 500 FCFA) » et saisit son numéro de téléphone
+Sélectionne « Pass Semestre (3 800 FCFA) » et saisit son numéro de téléphone
        ↓
 Django enregistre un Payment en statut 'PENDING'
        ↓
@@ -46,7 +46,7 @@ Dans votre fichier `.env` sur le serveur, configurez les variables suivantes :
 
 ```ini
 # === TARIF PASS SEMESTRE ===
-PASS_SEMESTRE_PRIX_DEFAUT=4500
+PASS_SEMESTRE_PRIX_DEFAUT=3800
 
 
 # === PASSERELLE DE PAIEMENT CHARIOW ===
@@ -79,7 +79,7 @@ CHARIOW_CURRENCY=XOF
 3. Renseignez :
    - **Nom** : `Pass Semestre ArchivEx`
    - **Type de produit** : Produit numérique / Accès (compatible avec l'API Checkout)
-   - **Prix** : `4 500 FCFA` (Devise `XOF`)
+   - **Prix** : `3 800 FCFA` (Devise `XOF`)
    - **Statut** : **Publié** (Published)
 4. Copiez l'**ID du produit** (ex: `prd_abc123xyz` ou le slug) et collez-le dans `CHARIOW_PRODUCT_ID` dans votre `.env`.
 

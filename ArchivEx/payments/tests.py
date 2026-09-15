@@ -29,7 +29,7 @@ User = get_user_model()
     CHARIOW_PULSE_SECRET="chariow_pulse_secret_test_123",
     CHARIOW_BASE_URL="https://api.chariow.com/v1",
     CHARIOW_CURRENCY="XOF",
-    PASS_SEMESTRE_PRIX_DEFAUT=4500,
+    PASS_SEMESTRE_PRIX_DEFAUT=3800,
 )
 class ChariowIntegrationTests(TestCase):
     def setUp(self):
@@ -54,7 +54,7 @@ class ChariowIntegrationTests(TestCase):
         self.assertTrue(hasattr(settings, "CHARIOW_PRODUCT_ID"))
         self.assertTrue(hasattr(settings, "CHARIOW_PULSE_SECRET"))
         self.assertEqual(settings.CHARIOW_CURRENCY, "XOF")
-        self.assertEqual(settings.PASS_SEMESTRE_PRIX_DEFAUT, 4500)
+        self.assertEqual(settings.PASS_SEMESTRE_PRIX_DEFAUT, 3800)
 
     def test_phone_number_normalization(self):
         """Les numéros béninois sont correctement normalisés."""
@@ -86,7 +86,7 @@ class ChariowIntegrationTests(TestCase):
         self.client.login(username="etudiant_test", password="Password123!")
         res = self.client.get(reverse("payments:pass_semestre", kwargs={"semester_id": self.semester.id}))
         self.assertEqual(res.status_code, 200)
-        self.assertContains(res, "4500")
+        self.assertContains(res, "3800")
 
     @patch("payments.services.requests.post")
     def test_initiate_payment_success_redirects_to_chariow_checkout_url(self, mock_post):
@@ -108,7 +108,7 @@ class ChariowIntegrationTests(TestCase):
 
         payment = Payment.objects.filter(user=self.student, semester=self.semester).first()
         self.assertIsNotNone(payment)
-        self.assertEqual(payment.amount, 4500)
+        self.assertEqual(payment.amount, 3800)
         self.assertEqual(payment.status, Payment.STATUS_PENDING)
         self.assertEqual(payment.chariow_sale_id, "sal_abc789")
         self.assertEqual(payment.chariow_checkout_url, "https://payment.chariow.com/checkout?session=sess_123456")
@@ -141,7 +141,7 @@ class ChariowIntegrationTests(TestCase):
         Payment.objects.create(
             user=self.student,
             semester=self.semester,
-            amount=4500,
+            amount=3800,
             currency="XOF",
             external_reference="ARCHIVEX-TEST-PENDING",
             status=Payment.STATUS_PENDING,
@@ -153,7 +153,7 @@ class ChariowIntegrationTests(TestCase):
         Payment.objects.create(
             user=self.student,
             semester=self.semester,
-            amount=4500,
+            amount=3800,
             currency="XOF",
             external_reference="ARCHIVEX-TEST-REJECTED",
             status=Payment.STATUS_REJECTED,
@@ -165,7 +165,7 @@ class ChariowIntegrationTests(TestCase):
         payment = Payment.objects.create(
             user=self.student,
             semester=self.semester,
-            amount=4500,
+            amount=3800,
             currency="XOF",
             external_reference="ARCHIVEX-TEST-APPROVED",
             status=Payment.STATUS_APPROVED,
@@ -181,7 +181,7 @@ class ChariowIntegrationTests(TestCase):
         payment = Payment.objects.create(
             user=self.student,
             semester=self.semester,
-            amount=4500,
+            amount=3800,
             currency="XOF",
             external_reference="ARCHIVEX-TEST-IDEMP",
             status=Payment.STATUS_APPROVED,
@@ -210,7 +210,7 @@ class ChariowIntegrationTests(TestCase):
         payment = Payment.objects.create(
             user=self.student,
             semester=self.semester,
-            amount=4500,
+            amount=3800,
             currency="XOF",
             external_reference="ARCHIVEX-PASS-2026-WBK01",
             status=Payment.STATUS_PENDING,
@@ -221,7 +221,7 @@ class ChariowIntegrationTests(TestCase):
             "data": {
                 "sale": {
                     "id": "sal_998877",
-                    "amount": 4500,
+                    "amount": 3800,
                     "currency": "XOF",
                     "custom_metadata": {
                         "archivex_user_id": str(self.student.id),
@@ -257,7 +257,7 @@ class ChariowIntegrationTests(TestCase):
         payment = Payment.objects.create(
             user=self.student,
             semester=self.semester,
-            amount=4500,
+            amount=3800,
             currency="XOF",
             external_reference="ARCHIVEX-PASS-2026-WBK-IDEMP",
             status=Payment.STATUS_PENDING,
@@ -268,7 +268,7 @@ class ChariowIntegrationTests(TestCase):
             "data": {
                 "sale": {
                     "id": "sal_dupl123",
-                    "amount": 4500,
+                    "amount": 3800,
                     "currency": "XOF",
                     "custom_metadata": {
                         "external_reference": payment.external_reference,
@@ -306,7 +306,7 @@ class ChariowIntegrationTests(TestCase):
         payment = Payment.objects.create(
             user=self.student,
             semester=self.semester,
-            amount=4500,
+            amount=3800,
             currency="XOF",
             external_reference="ARCHIVEX-PASS-FAIL-01",
             status=Payment.STATUS_PENDING,
@@ -363,7 +363,7 @@ class ChariowIntegrationTests(TestCase):
         payment = Payment.objects.create(
             user=self.student,
             semester=self.semester,
-            amount=4500,
+            amount=3800,
             currency="XOF",
             external_reference="ARCHIVEX-PASS-NOSEC",
             status=Payment.STATUS_PENDING,

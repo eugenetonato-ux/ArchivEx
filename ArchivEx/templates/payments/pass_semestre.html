@@ -16,18 +16,22 @@
     </nav>
 
     <!-- HERO PRODUCT BANNER -->
-    <div class="bg-gradient-to-br from-[#071A49] via-[#0E2461] to-[#1D4ED8] rounded-3xl p-6 sm:p-10 text-white shadow-2xl border border-blue-900/40 relative overflow-hidden mb-10">
+    <div
+        class="bg-gradient-to-br from-[#071A49] via-[#0E2461] to-[#1D4ED8] rounded-3xl p-6 sm:p-10 text-white shadow-2xl border border-blue-900/40 relative overflow-hidden mb-10">
         <!-- Radial ambient glow -->
-        <div class="absolute -top-24 -right-24 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl pointer-events-none">
+        </div>
 
         <div class="relative z-10 max-w-3xl">
             <!-- BADGES -->
             <div class="flex flex-wrap items-center gap-2 mb-4">
-                <span class="px-3.5 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-xs font-black uppercase tracking-wider flex items-center space-x-1.5">
+                <span
+                    class="px-3.5 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-xs font-black uppercase tracking-wider flex items-center space-x-1.5">
                     <i class="fa-solid fa-bolt text-amber-400"></i>
                     <span>ARCHIVEX PASS {{ semester.label }}</span>
                 </span>
-                <span class="px-3.5 py-1 rounded-full bg-white/10 text-slate-200 border border-white/20 text-xs font-bold flex items-center space-x-1.5">
+                <span
+                    class="px-3.5 py-1 rounded-full bg-white/10 text-slate-200 border border-white/20 text-xs font-bold flex items-center space-x-1.5">
                     <i class="fa-solid fa-graduation-cap"></i>
                     <span>{{ semester.filiere.school.name }} · {{ semester.filiere.level.name|default:"L1" }}</span>
                 </span>
@@ -38,10 +42,12 @@
             </h1>
 
             <p class="text-sm sm:text-base text-blue-100 font-medium leading-relaxed mb-6 max-w-2xl">
-                Accède immédiatement à l'ensemble des épreuves, corrigés détaillés et résumés de cours de <strong class="text-white font-extrabold">{{ semester.filiere.name }}</strong>.
+                Accède immédiatement à l'ensemble des épreuves, corrigés détaillés et résumés de cours de <strong
+                    class="text-white font-extrabold">{{ semester.filiere.name }}</strong>.
             </p>
 
-            <div class="flex items-center space-x-2 text-xs font-bold text-amber-300 bg-amber-400/10 border border-amber-400/20 px-4 py-2.5 rounded-2xl w-fit">
+            <div
+                class="flex items-center space-x-2 text-xs font-bold text-amber-300 bg-amber-400/10 border border-amber-400/20 px-4 py-2.5 rounded-2xl w-fit">
                 <i class="fa-solid fa-circle-check text-emerald-400"></i>
                 <span>100% conforme à tes cours</span>
             </div>
@@ -53,7 +59,7 @@
 
         <!-- LEFT COLUMN: DYNAMIC RESOURCE PACKAGE (7 COLS) -->
         <div class="lg:col-span-7 space-y-8">
-            
+
             <!-- DYNAMIC RESOURCE STATS CARD -->
             <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
                 <h2 class="text-lg font-black text-[#071A49] mb-1">
@@ -67,11 +73,13 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {% if exams_count > 0 %}
                     <div class="p-4 rounded-2xl bg-blue-50/70 border border-blue-100 flex items-start space-x-3">
-                        <div class="w-10 h-10 rounded-xl bg-[#2563EB] text-white flex items-center justify-center font-black text-lg flex-shrink-0">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-[#2563EB] text-white flex items-center justify-center font-black text-lg flex-shrink-0">
                             <i class="fa-solid fa-file-lines text-sm"></i>
                         </div>
                         <div>
-                            <span class="text-2xl font-black text-[#071A49] block leading-none mb-1">{{ exams_count }}</span>
+                            <span class="text-2xl font-black text-[#071A49] block leading-none mb-1">{{ exams_count
+                                }}</span>
                             <span class="text-xs font-extrabold text-[#2563EB] block">Épreuves d'examens</span>
                             <span class="text-[11px] text-slate-500 font-medium">Sujets récents avec corrigés</span>
                         </div>
@@ -80,13 +88,16 @@
 
                     {% if summaries_count > 0 %}
                     <div class="p-4 rounded-2xl bg-amber-50/70 border border-amber-100 flex items-start space-x-3">
-                        <div class="w-10 h-10 rounded-xl bg-[#F59E0B] text-white flex items-center justify-center font-black text-lg flex-shrink-0">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-[#F59E0B] text-white flex items-center justify-center font-black text-lg flex-shrink-0">
                             <i class="fa-solid fa-book text-sm"></i>
                         </div>
                         <div>
-                            <span class="text-2xl font-black text-[#071A49] block leading-none mb-1">{{ summaries_count }}</span>
+                            <span class="text-2xl font-black text-[#071A49] block leading-none mb-1">{{ summaries_count
+                                }}</span>
                             <span class="text-xs font-extrabold text-amber-800 block">Résumés de cours</span>
-                            <span class="text-[11px] text-slate-500 font-medium">Fiches essentielles directement lisibles</span>
+                            <span class="text-[11px] text-slate-500 font-medium">Fiches essentielles directement
+                                lisibles</span>
                         </div>
                     </div>
                     {% endif %}
@@ -99,9 +110,10 @@
 
         <!-- RIGHT COLUMN: PRICE & ACTION CARD (5 COLS) -->
         <div class="lg:col-span-5 space-y-6 sticky top-20">
-            
-            <div class="bg-white border-2 border-[#2563EB]/20 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
-                
+
+            <div
+                class="bg-white border-2 border-[#2563EB]/20 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+
                 <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
                     <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Pass Semestriel</span>
                     <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">
@@ -111,36 +123,42 @@
 
                 <!-- PRICE -->
                 <div class="mb-6">
-                    <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block mb-1">Tarif unique du semestre</span>
+                    <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block mb-1">Tarif unique du
+                        semestre</span>
                     <div class="flex items-baseline space-x-2">
                         <span class="text-4xl sm:text-5xl font-black text-[#071A49] tracking-tight">{{ price }}</span>
                         <span class="text-lg font-black text-[#2563EB]">FCFA</span>
                     </div>
-                    <p class="text-[11px] text-slate-400 font-medium mt-1">Paiement unique sans abonnement ni renouvellement automatique.</p>
+                    <p class="text-[11px] text-slate-400 font-medium mt-1">Paiement unique sans abonnement ni
+                        renouvellement automatique.</p>
                 </div>
 
                 <!-- VALUE BULLETS -->
                 <div class="space-y-3 mb-8 text-xs font-bold text-slate-700">
                     <div class="flex items-center space-x-2.5">
-                        <span class="w-5 h-5 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-xs font-black">
+                        <span
+                            class="w-5 h-5 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-xs font-black">
                             <i class="fa-solid fa-check text-[10px]"></i>
                         </span>
                         <span>Accès illimité à toutes les épreuves du semestre</span>
                     </div>
                     <div class="flex items-center space-x-2.5">
-                        <span class="w-5 h-5 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-xs font-black">
+                        <span
+                            class="w-5 h-5 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-xs font-black">
                             <i class="fa-solid fa-check text-[10px]"></i>
                         </span>
                         <span>Consultation directe web + téléchargement PDF</span>
                     </div>
                     <div class="flex items-center space-x-2.5">
-                        <span class="w-5 h-5 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-xs font-black">
+                        <span
+                            class="w-5 h-5 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-xs font-black">
                             <i class="fa-solid fa-check text-[10px]"></i>
                         </span>
                         <span>Résumés de cours & fiches de synthèse inclus</span>
                     </div>
                     <div class="flex items-center space-x-2.5">
-                        <span class="w-5 h-5 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-xs font-black">
+                        <span
+                            class="w-5 h-5 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-xs font-black">
                             <i class="fa-solid fa-check text-[10px]"></i>
                         </span>
                         <span>Optimal pour smartphone, tablette et PC</span>
@@ -149,69 +167,76 @@
 
                 <!-- ACTION BUTTON / ALREADY ACTIVE STATE -->
                 {% if already_active %}
-                    <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
-                        <p class="text-xs font-extrabold text-emerald-900 mb-1 flex items-center justify-center space-x-1.5">
-                            <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                            <span>Ton Pass Semestre est actif !</span>
-                        </p>
-                        <p class="text-[11px] text-emerald-700 mb-3">Tu as déjà accès à l'intégralité des ressources de ce semestre.</p>
-                        <a href="{% url 'academics:filieres' %}" class="btn-primary w-full text-xs py-3.5 font-extrabold block text-center">
-                            Accéder à mes cours et épreuves
-                        </a>
-                    </div>
+                <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
+                    <p
+                        class="text-xs font-extrabold text-emerald-900 mb-1 flex items-center justify-center space-x-1.5">
+                        <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                        <span>Ton Pass Semestre est actif !</span>
+                    </p>
+                    <p class="text-[11px] text-emerald-700 mb-3">Tu as déjà accès à l'intégralité des ressources de ce
+                        semestre.</p>
+                    <a href="{% url 'academics:filieres' %}"
+                        class="btn-primary w-full text-xs py-3.5 font-extrabold block text-center">
+                        Accéder à mes épreuves
+                    </a>
+                </div>
                 {% else %}
-                    <form method="post" action="{% url 'payments:initier_paiement' semester_id=semester.id %}" class="space-y-4">
-                        {% csrf_token %}
+                <form method="post" action="{% url 'payments:initier_paiement' semester_id=semester.id %}"
+                    class="space-y-4">
+                    {% csrf_token %}
 
-                        <!-- PHONE NUMBER INPUT -->
-                        <div>
-                            <label for="phone_number" class="text-xs font-extrabold text-[#071A49] block mb-1.5">
-                                Numéro de téléphone (Mobile Money) :
-                            </label>
-                            
-                            <!-- Input group with permanent +229 prefix -->
-                            <div class="flex rounded-2xl border-2 border-slate-200 bg-white overflow-hidden focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-sm">
-                                <div class="px-3.5 py-3 bg-slate-100 border-r border-slate-200 flex items-center select-none shrink-0">
-                                    <span class="text-xs font-black text-[#071A49] tracking-wider">+229</span>
-                                </div>
-                                <input type="tel" 
-                                       id="phone_number" 
-                                       name="phone_number" 
-                                       required 
-                                       maxlength="10" 
-                                       pattern="01[0-9]{8}"
-                                       placeholder="01XXXXXXXX" 
-                                       autocomplete="tel-national"
-                                       oninput="handlePhoneInput(this.value)" 
-                                       class="w-full px-3.5 py-3 bg-transparent text-sm font-black text-[#071A49] placeholder-slate-400 outline-none tracking-widest">
+                    <!-- PHONE NUMBER INPUT -->
+                    <div>
+                        <label for="phone_number" class="text-xs font-extrabold text-[#071A49] block mb-1.5">
+                            Numéro de téléphone (Mobile Money) :
+                        </label>
+
+                        <!-- Input group with permanent +229 prefix -->
+                        <div
+                            class="flex rounded-2xl border-2 border-slate-200 bg-white overflow-hidden focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-sm">
+                            <div
+                                class="px-3.5 py-3 bg-slate-100 border-r border-slate-200 flex items-center select-none shrink-0">
+                                <span class="text-xs font-black text-[#071A49] tracking-wider">+229</span>
                             </div>
-                            <p class="text-[11px] text-slate-500 mt-1.5 font-medium flex items-center justify-between">
-                                <span>Saisissez vos 10 chiffres (ex : <strong class="text-slate-700 font-bold">0150196407</strong>)</span>
-                                <span class="text-slate-400 text-[10px]">+229 inclus</span>
-                            </p>
+                            <input type="tel" id="phone_number" name="phone_number" required maxlength="10"
+                                pattern="01[0-9]{8}" placeholder="01XXXXXXXX" autocomplete="tel-national"
+                                oninput="handlePhoneInput(this.value)"
+                                class="w-full px-3.5 py-3 bg-transparent text-sm font-black text-[#071A49] placeholder-slate-400 outline-none tracking-widest">
                         </div>
+                        <p class="text-[11px] text-slate-500 mt-1.5 font-medium flex items-center justify-between">
+                            <span>Saisissez vos 10 chiffres (ex : <strong
+                                    class="text-slate-700 font-bold">01XXXXXXXX</strong>)</span>
+                            <span class="text-slate-400 text-[10px]">+229 inclus</span>
+                        </p>
+                    </div>
 
 
-                        <button type="submit" class="btn-gold w-full text-xs sm:text-sm py-4 font-black shadow-lg shadow-amber-500/30 hover:scale-[1.02] transition-all rounded-2xl block text-center cursor-pointer flex items-center justify-center space-x-2">
-                            <i class="fa-solid fa-lock text-xs" aria-hidden="true"></i>
-                            <span>Payer maintenant ({{ price }} FCFA)</span>
-                        </button>
-                    </form>
+                    <button type="submit"
+                        class="btn-gold w-full text-xs sm:text-sm py-4 font-black shadow-lg shadow-amber-500/30 hover:scale-[1.02] transition-all rounded-2xl block text-center cursor-pointer flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-lock text-xs" aria-hidden="true"></i>
+                        <span>Payer maintenant ({{ price }} FCFA)</span>
+                    </button>
+                </form>
                 {% endif %}
 
                 <!-- PAYMENT CHANNELS & SECURITY -->
                 <div class="mt-6 pt-4 border-t border-slate-100 text-center space-y-3">
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Moyens de paiement supportés</p>
-                    <div class="flex flex-wrap items-center justify-center gap-2 text-[11px] font-extrabold text-slate-700">
-                        <span class="px-2.5 py-1 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 flex items-center space-x-1">
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Moyens de paiement
+                        supportés</p>
+                    <div
+                        class="flex flex-wrap items-center justify-center gap-2 text-[11px] font-extrabold text-slate-700">
+                        <span
+                            class="px-2.5 py-1 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 flex items-center space-x-1">
                             <span class="w-2 h-2 rounded-full bg-amber-500"></span>
                             <span>MTN MoMo</span>
                         </span>
-                        <span class="px-2.5 py-1 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 flex items-center space-x-1">
+                        <span
+                            class="px-2.5 py-1 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 flex items-center space-x-1">
                             <span class="w-2 h-2 rounded-full bg-blue-600"></span>
                             <span>Moov Money</span>
                         </span>
-                        <span class="px-2.5 py-1 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 flex items-center space-x-1">
+                        <span
+                            class="px-2.5 py-1 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 flex items-center space-x-1">
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             <span>Celtiis Cash</span>
                         </span>
@@ -231,13 +256,15 @@
     <!-- STUDENT REASSURANCE / FAQ ACCORDION SECTION -->
     <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-sm">
         <div class="text-center max-w-xl mx-auto mb-8">
-            <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100 text-[10px] font-black uppercase tracking-wider mb-2 inline-block">
+            <span
+                class="px-3 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100 text-[10px] font-black uppercase tracking-wider mb-2 inline-block">
                 Toutes tes questions
             </span>
             <h3 class="text-xl sm:text-2xl font-black text-[#071A49]">
                 Questions fréquentes des étudiants
             </h3>
-            <p class="text-xs text-slate-500 font-medium mt-1">Des réponses claires pour t'accompagner dans la préparation de tes révisions.</p>
+            <p class="text-xs text-slate-500 font-medium mt-1">Des réponses claires pour t'accompagner dans la
+                préparation de tes révisions.</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs leading-relaxed">
@@ -247,7 +274,8 @@
                     <span>Quels sont les moyens de paiement acceptés ?</span>
                 </h4>
                 <p class="text-slate-600 font-medium leading-relaxed pt-1">
-                    Le règlement est 100% sécurisé et prend en charge tous les réseaux Mobile Money (<strong>MTN MoMo, Moov Money, Celtiis Cash, Wave</strong>).
+                    Le règlement est 100% sécurisé et prend en charge tous les réseaux Mobile Money (<strong>MTN MoMo,
+                        Moov Money, Celtiis Cash, Wave</strong>).
                 </p>
             </div>
 
@@ -257,7 +285,8 @@
                     <span>L'accès au Pass est-il vraiment instantané ?</span>
                 </h4>
                 <p class="text-slate-600 font-medium leading-relaxed pt-1">
-                    Oui ! Dès la validation de ton transfert Mobile Money, ton Pass Semestre est déverrouillé automatiquement et tu as accès à toutes les épreuves, corrections et fiches de révision.
+                    Oui ! Dès la validation de ton transfert Mobile Money, ton Pass Semestre est déverrouillé
+                    automatiquement et tu as accès à toutes les épreuves, corrections et fiches de révision.
                 </p>
             </div>
 
@@ -267,7 +296,8 @@
                     <span>Combien de temps dure l'accès à mon Pass ?</span>
                 </h4>
                 <p class="text-slate-600 font-medium leading-relaxed pt-1">
-                    Ton Pass Semestre reste valide et illimité pendant toute la durée de ton semestre académique (180 jours). Tu peux réviser sereinement jusqu'aux examens et rattrapages.
+                    Ton Pass Semestre reste valide et illimité pendant toute la durée de ton semestre académique (180
+                    jours). Tu peux réviser sereinement jusqu'aux examens et rattrapages.
                 </p>
             </div>
 
@@ -277,7 +307,8 @@
                     <span>Puis-je lire et réviser sur mon téléphone ?</span>
                 </h4>
                 <p class="text-slate-600 font-medium leading-relaxed pt-1">
-                    Absolument ! La plateforme est 100% adaptée et optimisée pour smartphone. Tu peux lire les fiches et annales directement en ligne avec la visionneuse.
+                    Absolument ! La plateforme est 100% adaptée et optimisée pour smartphone. Tu peux lire les fiches et
+                    annales directement en ligne avec la visionneuse.
                 </p>
             </div>
 
@@ -287,7 +318,8 @@
                     <span>Que contient exactement l'Espace Premium ?</span>
                 </h4>
                 <p class="text-slate-600 font-medium leading-relaxed pt-1">
-                    Tu débloques l'intégralité des sujets d'examens et devoirs des années antérieures, leurs corrections méthodologiques rédigées pas à pas et les fiches synthétiques de ton semestre.
+                    Tu débloques l'intégralité des sujets d'examens et devoirs des années antérieures, leurs corrections
+                    méthodologiques rédigées pas à pas et les fiches synthétiques de ton semestre.
                 </p>
             </div>
 
@@ -297,7 +329,8 @@
                     <span>Que faire en cas de souci lors du paiement ?</span>
                 </h4>
                 <p class="text-slate-600 font-medium leading-relaxed pt-1">
-                    Notre équipe d'assistance est joignable. Si une coupure réseau survient lors de ton transfert, ton paiement est automatiquement réconcilié et peut être vérifié en quelques secondes.
+                    Notre équipe d'assistance est joignable. Si une coupure réseau survient lors de ton transfert, ton
+                    paiement est automatiquement réconcilié et peut être vérifié en quelques secondes.
                 </p>
             </div>
         </div>

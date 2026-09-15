@@ -37,7 +37,7 @@ def pass_semestre(request, semester_id):
         Semester.objects.select_related("filiere", "filiere__school", "filiere__level", "academic_year"),
         pk=semester_id
     )
-    price = getattr(settings, "PASS_SEMESTRE_PRIX_DEFAUT", 4500)
+    price = getattr(settings, "PASS_SEMESTRE_PRIX_DEFAUT", 3800)
 
     already_active = SemesterAccess.objects.filter(
         user=request.user, semester=semester, activated_at__isnull=False
@@ -84,7 +84,7 @@ def initier_paiement(request, semester_id):
         Semester.objects.select_related("filiere", "filiere__school", "filiere__level", "academic_year"),
         pk=semester_id
     )
-    price = getattr(settings, "PASS_SEMESTRE_PRIX_DEFAUT", 4500)
+    price = getattr(settings, "PASS_SEMESTRE_PRIX_DEFAUT", 3800)
 
     already_active = SemesterAccess.objects.filter(
         user=request.user, semester=semester, activated_at__isnull=False

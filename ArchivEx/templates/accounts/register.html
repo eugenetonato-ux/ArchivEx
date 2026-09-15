@@ -25,6 +25,18 @@
             <p class="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed max-w-sm mx-auto">Rejoignez ArchivEx pour accéder à l'ensemble des épreuves et corrigés universitaires.</p>
         </div>
 
+        <!-- AUTH SWITCHER TABS -->
+        <div class="grid grid-cols-2 p-1.5 bg-slate-100 rounded-2xl mb-7 text-xs font-black">
+            <a href="{% url 'accounts:login' %}" class="py-2.5 px-3 rounded-xl text-slate-500 hover:text-[#071A49] hover:bg-slate-200/50 text-center flex items-center justify-center space-x-2 transition-all">
+                <i class="fa-solid fa-arrow-right-to-bracket text-slate-400"></i>
+                <span>Se connecter</span>
+            </a>
+            <div class="py-2.5 px-3 rounded-xl bg-white text-[#071A49] shadow-sm text-center flex items-center justify-center space-x-2 border border-slate-200/60">
+                <i class="fa-solid fa-user-plus text-[#2563EB]"></i>
+                <span>Créer un compte</span>
+            </div>
+        </div>
+
         <form method="post" action="{% url 'accounts:register' %}" class="space-y-5">
             {% csrf_token %}
 
