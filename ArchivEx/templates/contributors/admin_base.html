@@ -251,26 +251,150 @@
     <!-- SKIP TO MAIN CONTENT LINK FOR ACCESSIBILITY (a11y) -->
     <a href="#admin-main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-4 focus:py-2 focus:bg-[#2563EB] focus:text-white focus:font-extrabold focus:rounded-xl focus:shadow-2xl focus:outline-none transition-all">Aller au contenu principal</a>
 
-    <!-- TOP CONTEXT BAR & NAVIGATION HEADER (FUSION MODERN) -->
-    <header role="banner" class="bg-[#10121a] border-b border-slate-800/80 sticky top-0 z-40 text-white shadow-lg w-full max-w-full">
+    <!-- MOBILE BACKDROP OVERLAY -->
+    <div id="admin-sidebar-backdrop" onclick="toggleAdminSidebar()" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-40 hidden md:hidden transition-opacity"></div>
+
+    <!-- SIDEBAR NAVIGATION: 100% FIXE, TOUTE LA HAUTEUR DE L'ÉCRAN (FUSION STYLE) -->
+    <aside id="admin-sidebar" class="fixed inset-y-0 left-0 top-0 bottom-0 w-72 md:w-[17rem] h-screen bg-[#10121a] border-r border-slate-800/80 z-50 hidden md:flex flex-col justify-between overflow-y-auto custom-scrollbar p-4 select-none shadow-2xl md:shadow-none">
+        <div class="space-y-5">
+            
+            <!-- BRAND LOGO DANS LA SIDEBAR (REMPLISSAGE COMPLET & COINS ARRONDIS) -->
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 px-1 pt-1">
+                <a href="{% url 'contributors:admin_dashboard' %}" class="flex items-center space-x-3 group">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500 via-purple-600 to-indigo-600 p-[2px] shadow-lg shadow-purple-500/25 group-hover:scale-105 transition-transform shrink-0">
+                        <img src="{% static 'icons/icon-192.png' %}" alt="ArchivEx" class="w-full h-full object-cover rounded-[14px]">
+                    </div>
+                    <div class="flex items-center space-x-1.5">
+                        <span class="text-lg font-black tracking-tight text-white">Archiv<span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400">Ex</span></span>
+                        <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-300 border border-pink-500/30">Staff</span>
+                    </div>
+                </a>
+                <button type="button" onclick="toggleAdminSidebar()" class="md:hidden p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10" aria-label="Fermer le menu">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+
+            <!-- SECTION: GESTION PRINCIPALE -->
+            <div class="space-y-1">
+                <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 px-3 pb-1">Gestion principale</p>
+                
+                <a href="{% url 'contributors:admin_dashboard' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                    <i class="fa-solid fa-gauge w-4 text-center {% if request.resolver_match.url_name == 'admin_dashboard' %}text-purple-400{% endif %}" aria-hidden="true"></i>
+                    <span class="flex-1">Tableau de bord</span>
+                    {% if request.resolver_match.url_name == 'admin_dashboard' %}
+                        <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                    {% endif %}
+                </a>
+
+                <a href="{% url 'contributors:library_index' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'library' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                    <i class="fa-solid fa-cloud w-4 text-center text-sky-400" aria-hidden="true"></i>
+                    <span>Bibliothèque cloud</span>
+                </a>
+
+                <a href="{% url 'contributors:exam_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'epreuves' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                    <i class="fa-solid fa-file-lines w-4 text-center text-blue-400" aria-hidden="true"></i>
+                    <span>Épreuves publiées</span>
+                </a>
+
+                <a href="{% url 'contributors:completeness_overview' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'completeness' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                    <i class="fa-solid fa-chart-pie w-4 text-center text-amber-400" aria-hidden="true"></i>
+                    <span>Complétude</span>
+                </a>
+
+                <a href="{% url 'contributors:summary_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'resumes' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                    <i class="fa-solid fa-book-open w-4 text-center text-emerald-400" aria-hidden="true"></i>
+                    <span>Résumés de cours</span>
+                </a>
+
+                <a href="{% url 'contributors:subject_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'matieres' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                    <i class="fa-solid fa-layer-group w-4 text-center text-indigo-400" aria-hidden="true"></i>
+                    <span>Matières et UE</span>
+                </a>
+            </div>
+
+            <!-- SECTION: STRUCTURE & SUIVI -->
+            <div class="space-y-1 pt-2 border-t border-slate-800/80">
+                <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 px-3 pb-1">Structure & suivi</p>
+
+                <a href="{% url 'contributors:structure_overview' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'structure' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                    <i class="fa-solid fa-sitemap w-4 text-center text-slate-400" aria-hidden="true"></i>
+                    <span>Structure académique</span>
+                </a>
+
+                <a href="{% url 'contributors:student_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'etudiants' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                    <i class="fa-solid fa-user-graduate w-4 text-center text-slate-400" aria-hidden="true"></i>
+                    <span>Étudiants inscrits</span>
+                </a>
+
+                <a href="{% url 'contributors:payment_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'paiements' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                    <i class="fa-solid fa-credit-card w-4 text-center text-slate-400" aria-hidden="true"></i>
+                    <span>Pass & paiements</span>
+                </a>
+
+                <a href="{% url 'contributors:notification_create' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'notifications' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                    <i class="fa-solid fa-paper-plane w-4 text-center text-slate-400" aria-hidden="true"></i>
+                    <span>Notifications</span>
+                </a>
+
+                <a href="{% url 'contributors:admin_support_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'support' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                    <i class="fa-solid fa-headset w-4 text-center text-rose-400" aria-hidden="true"></i>
+                    <span class="flex-1">Support</span>
+                    {% if unread_notifications_count %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white animate-pulse">{{ unread_notifications_count }}</span>
+                    {% endif %}
+                </a>
+
+                <a href="{% url 'contributors:site_logs_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'site-logs' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                    <i class="fa-solid fa-clock-rotate-left w-4 text-center text-indigo-400" aria-hidden="true"></i>
+                    <span>Journal d'audit</span>
+                </a>
+            </div>
+
+            <!-- SECTION: PARAMÈTRES -->
+            <div class="space-y-1 pt-2 border-t border-slate-800/80">
+                <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 px-3 pb-1">Paramètres</p>
+
+                <a href="{% url 'contributors:admin_settings' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'parametres' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                    <i class="fa-solid fa-sliders w-4 text-center text-purple-400" aria-hidden="true"></i>
+                    <span class="flex-1">Paramètres du site</span>
+                </a>
+            </div>
+
+        </div>
+
+        <!-- CARTE FUSION "UPGRADE TO PRO" ADAPTÉE STAFF EN BAS -->
+        <div class="pt-4 border-t border-slate-800/80 mt-4">
+            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[#181a26] to-[#12141f] border border-purple-500/20 p-3.5 space-y-2.5 shadow-lg">
+                <div class="absolute -right-4 -top-4 w-16 h-16 bg-purple-500/10 rounded-full blur-xl pointer-events-none"></div>
+                <div class="flex items-center space-x-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="text-[11px] font-black uppercase tracking-wider text-purple-300">✦ Espace Staff</span>
+                </div>
+                <p class="text-[11px] text-slate-400 leading-tight">
+                    Portail officiel ArchivEx
+                </p>
+                <a href="{% url 'academics:home' %}" class="block w-full py-2 px-3 text-center rounded-xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:via-purple-700 hover:to-indigo-700 text-white text-xs font-black tracking-wide shadow-md shadow-purple-600/30 transition-all transform hover:-translate-y-0.5">
+                    Voir le site public
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- TOP CONTEXT BAR & NAVIGATION HEADER (FUSION MODERN, AVEC DÉCALAGE DESKTOP md:pl-[17rem]) -->
+    <header role="banner" class="bg-[#10121a] border-b border-slate-800/80 sticky top-0 z-40 text-white shadow-lg w-full max-w-full md:pl-[17rem] transition-all">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-auto min-h-[3.75rem] py-2 sm:py-0 sm:h-16 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 w-full max-w-full">
             
-            <!-- BRAND & SIDEBAR TOGGLE -->
+            <!-- BRAND & SIDEBAR TOGGLE SUR MOBILE -->
             <div class="flex items-center space-x-3 shrink-0">
                 <button type="button" onclick="toggleAdminSidebar()" aria-label="Menu administration" class="md:hidden p-2 text-slate-300 hover:text-white rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
                     <i class="fa-solid fa-bars text-base" aria-hidden="true"></i>
                 </button>
                 
-                <a href="{% url 'contributors:admin_dashboard' %}" class="flex items-center space-x-2.5 group">
-                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-pink-500 via-purple-600 to-indigo-600 p-[1.5px] shadow-md shadow-purple-500/20 group-hover:scale-105 transition-transform shrink-0">
-                        <div class="w-full h-full bg-[#10121a] rounded-[10px] flex items-center justify-center overflow-hidden">
-                            <img src="{% static 'icons/icon-192.png' %}" alt="ArchivEx" class="w-5 h-5 object-cover">
-                        </div>
+                <a href="{% url 'contributors:admin_dashboard' %}" class="md:hidden flex items-center space-x-2 group">
+                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-pink-500 via-purple-600 to-indigo-600 p-[1.5px] shadow-sm shrink-0">
+                        <img src="{% static 'icons/icon-192.png' %}" alt="ArchivEx" class="w-full h-full object-cover rounded-[10px]">
                     </div>
-                    <div class="flex items-center space-x-1.5">
-                        <span class="text-base sm:text-lg font-black tracking-tight text-white">Archiv<span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400">Ex</span></span>
-                        <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-300 border border-pink-500/30">Staff</span>
-                    </div>
+                    <span class="text-base font-black tracking-tight text-white">Archiv<span class="text-pink-400">Ex</span></span>
                 </a>
             </div>
 
@@ -345,134 +469,26 @@
         </div>
     </header>
 
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-5 pb-10 flex-grow w-full md:grid md:grid-cols-[16.5rem_1fr] md:gap-6 items-start">
-        
-        <!-- SIDEBAR NAVIGATION (FUSION DEEP DARK MONOLITHIC SIDEBAR) -->
-        <aside id="admin-sidebar" class="hidden md:block w-[16.5rem] md:sticky md:top-20 md:self-start md:h-[calc(100vh-6rem)] md:overflow-y-auto pr-1 select-none custom-scrollbar">
-            <div class="bg-[#10121a] border border-slate-800/80 rounded-3xl p-4 shadow-xl text-slate-300 space-y-5">
-                
-                <!-- SECTION: GESTION PRINCIPALE -->
-                <div class="space-y-1">
-                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 px-3 pb-1">Gestion principale</p>
-                    
-                    <a href="{% url 'contributors:admin_dashboard' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
-                        <i class="fa-solid fa-gauge w-4 text-center {% if request.resolver_match.url_name == 'admin_dashboard' %}text-purple-400{% endif %}" aria-hidden="true"></i>
-                        <span class="flex-1">Tableau de bord</span>
-                        {% if request.resolver_match.url_name == 'admin_dashboard' %}
-                            <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
-                        {% endif %}
-                    </a>
-
-                    <a href="{% url 'contributors:library_index' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'library' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
-                        <i class="fa-solid fa-cloud w-4 text-center text-sky-400" aria-hidden="true"></i>
-                        <span>Bibliothèque cloud</span>
-                    </a>
-
-                    <a href="{% url 'contributors:exam_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'epreuves' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
-                        <i class="fa-solid fa-file-lines w-4 text-center text-blue-400" aria-hidden="true"></i>
-                        <span>Épreuves publiées</span>
-                    </a>
-
-                    <a href="{% url 'contributors:completeness_overview' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'completeness' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
-                        <i class="fa-solid fa-chart-pie w-4 text-center text-amber-400" aria-hidden="true"></i>
-                        <span>Complétude</span>
-                    </a>
-
-                    <a href="{% url 'contributors:summary_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'resumes' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
-                        <i class="fa-solid fa-book-open w-4 text-center text-emerald-400" aria-hidden="true"></i>
-                        <span>Résumés de cours</span>
-                    </a>
-
-                    <a href="{% url 'contributors:subject_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'matieres' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
-                        <i class="fa-solid fa-layer-group w-4 text-center text-indigo-400" aria-hidden="true"></i>
-                        <span>Matières et UE</span>
-                    </a>
-                </div>
-
-                <!-- SECTION: STRUCTURE & SUIVI -->
-                <div class="space-y-1 pt-2 border-t border-slate-800/80">
-                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 px-3 pb-1">Structure & suivi</p>
-
-                    <a href="{% url 'contributors:structure_overview' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'structure' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
-                        <i class="fa-solid fa-sitemap w-4 text-center text-slate-400" aria-hidden="true"></i>
-                        <span>Structure académique</span>
-                    </a>
-
-                    <a href="{% url 'contributors:student_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'etudiants' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
-                        <i class="fa-solid fa-user-graduate w-4 text-center text-slate-400" aria-hidden="true"></i>
-                        <span>Étudiants inscrits</span>
-                    </a>
-
-                    <a href="{% url 'contributors:payment_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'paiements' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
-                        <i class="fa-solid fa-credit-card w-4 text-center text-slate-400" aria-hidden="true"></i>
-                        <span>Pass & paiements</span>
-                    </a>
-
-                    <a href="{% url 'contributors:notification_create' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'notifications' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
-                        <i class="fa-solid fa-paper-plane w-4 text-center text-slate-400" aria-hidden="true"></i>
-                        <span>Notifications</span>
-                    </a>
-
-                    <a href="{% url 'contributors:admin_support_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'support' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
-                        <i class="fa-solid fa-headset w-4 text-center text-rose-400" aria-hidden="true"></i>
-                        <span class="flex-1">Support</span>
-                        {% if unread_notifications_count %}
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white animate-pulse">{{ unread_notifications_count }}</span>
-                        {% endif %}
-                    </a>
-
-                    <a href="{% url 'contributors:site_logs_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'site-logs' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
-                        <i class="fa-solid fa-clock-rotate-left w-4 text-center text-indigo-400" aria-hidden="true"></i>
-                        <span>Journal d'audit</span>
-                    </a>
-                </div>
-
-                <!-- SECTION: PARAMÈTRES -->
-                <div class="space-y-1 pt-2 border-t border-slate-800/80">
-                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 px-3 pb-1">Paramètres</p>
-
-                    <a href="{% url 'contributors:admin_settings' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'parametres' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
-                        <i class="fa-solid fa-sliders w-4 text-center text-purple-400" aria-hidden="true"></i>
-                        <span class="flex-1">Paramètres du site</span>
-                    </a>
-                </div>
-
-                <!-- CARTE FUSION "UPGRADE TO PRO" ADAPTÉE STAFF -->
-                <div class="pt-3">
-                    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[#181a26] to-[#12141f] border border-purple-500/20 p-4 space-y-3 shadow-lg">
-                        <div class="absolute -right-4 -top-4 w-20 h-20 bg-purple-500/10 rounded-full blur-xl pointer-events-none"></div>
-                        <div class="flex items-center space-x-2">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                            <span class="text-[11px] font-black uppercase tracking-wider text-purple-300">✦ Espace Staff</span>
-                        </div>
-                        <p class="text-[11px] text-slate-400 leading-relaxed">
-                            Accédez en un clic au portail public et aux fiches récapitulatives.
-                        </p>
-                        <a href="{% url 'academics:home' %}" class="block w-full py-2.5 px-3 text-center rounded-xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:via-purple-700 hover:to-indigo-700 text-white text-xs font-extrabold tracking-wide shadow-md shadow-purple-600/30 transition-all transform hover:-translate-y-0.5">
-                            Voir le site public
-                        </a>
+    <!-- MAIN CONTENT CONTAINER (AVEC DÉCALAGE DESKTOP md:pl-[17rem]) -->
+    <div class="md:pl-[17rem] flex-grow w-full max-w-full">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-5 pb-12 w-full max-w-full">
+            
+            <main id="admin-main-content" tabindex="-1" role="main" class="w-full max-w-full overflow-x-hidden outline-none">
+                {% if messages %}
+                    <div class="mb-4 space-y-2">
+                        {% for message in messages %}
+                            <div class="p-3.5 rounded-xl text-xs font-bold flex items-center space-x-2 border shadow-sm {% if message.tags == 'error' %}bg-rose-50 border-rose-200 text-rose-700{% elif message.tags == 'success' %}bg-emerald-50 border-emerald-200 text-emerald-700{% else %}bg-blue-50 border-blue-200 text-blue-700{% endif %}">
+                                <i class="fa-solid fa-info-circle text-sm" aria-hidden="true"></i>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
                     </div>
-                </div>
+                {% endif %}
 
-            </div>
-        </aside>
+                {% block admin_content %}{% endblock %}
+            </main>
 
-        <!-- MAIN CONTENT CONTAINER -->
-        <main id="admin-main-content" tabindex="-1" role="main" class="flex-grow min-w-0 w-full max-w-full overflow-x-hidden outline-none">
-            {% if messages %}
-                <div class="mb-4 space-y-2">
-                    {% for message in messages %}
-                        <div class="p-3.5 rounded-xl text-xs font-bold flex items-center space-x-2 border shadow-sm {% if message.tags == 'error' %}bg-rose-50 border-rose-200 text-rose-700{% elif message.tags == 'success' %}bg-emerald-50 border-emerald-200 text-emerald-700{% else %}bg-blue-50 border-blue-200 text-blue-700{% endif %}">
-                            <i class="fa-solid fa-info-circle text-sm" aria-hidden="true"></i>
-                            <span>{{ message }}</span>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-
-            {% block admin_content %}{% endblock %}
-        </main>
-
+        </div>
     </div>
 
     <!-- GLOBAL ARCHIVEX DELETE CONFIRMATION MODAL -->
@@ -507,8 +523,13 @@
     <script>
         function toggleAdminSidebar() {
             const sidebar = document.getElementById('admin-sidebar');
+            const backdrop = document.getElementById('admin-sidebar-backdrop');
             if (sidebar) {
                 sidebar.classList.toggle('hidden');
+                sidebar.classList.toggle('flex');
+            }
+            if (backdrop) {
+                backdrop.classList.toggle('hidden');
             }
         }
 
