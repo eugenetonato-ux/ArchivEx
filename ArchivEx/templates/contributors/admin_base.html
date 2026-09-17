@@ -251,57 +251,62 @@
     <!-- SKIP TO MAIN CONTENT LINK FOR ACCESSIBILITY (a11y) -->
     <a href="#admin-main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-4 focus:py-2 focus:bg-[#2563EB] focus:text-white focus:font-extrabold focus:rounded-xl focus:shadow-2xl focus:outline-none transition-all">Aller au contenu principal</a>
 
-    <!-- TOP CONTEXT BAR & NAVIGATION HEADER -->
-    <header role="banner" class="bg-[#071A49] border-b border-blue-900/60 sticky top-0 z-40 text-white shadow-sm w-full max-w-full">
-        <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 h-auto min-h-[3.5rem] py-1.5 sm:py-0 sm:h-16 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 w-full max-w-full">
+    <!-- TOP CONTEXT BAR & NAVIGATION HEADER (FUSION MODERN) -->
+    <header role="banner" class="bg-[#10121a] border-b border-slate-800/80 sticky top-0 z-40 text-white shadow-lg w-full max-w-full">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-auto min-h-[3.75rem] py-2 sm:py-0 sm:h-16 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 w-full max-w-full">
             
             <!-- BRAND & SIDEBAR TOGGLE -->
-            <div class="flex items-center space-x-2 shrink-0">
-                <button type="button" onclick="toggleAdminSidebar()" aria-label="Menu administration" class="md:hidden p-1.5 text-slate-200 hover:text-white rounded-lg hover:bg-white/10 transition-colors">
-                    <i class="fa-solid fa-bars text-base sm:text-lg" aria-hidden="true"></i>
+            <div class="flex items-center space-x-3 shrink-0">
+                <button type="button" onclick="toggleAdminSidebar()" aria-label="Menu administration" class="md:hidden p-2 text-slate-300 hover:text-white rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+                    <i class="fa-solid fa-bars text-base" aria-hidden="true"></i>
                 </button>
                 
-                <a href="{% url 'contributors:admin_dashboard' %}" class="flex items-center space-x-2">
-                    <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg overflow-hidden border border-white/20 bg-[#071A49] flex items-center justify-center shadow-sm shrink-0">
-                        <img src="{% static 'icons/icon-192.png' %}" alt="ArchivEx" class="w-full h-full object-cover">
+                <a href="{% url 'contributors:admin_dashboard' %}" class="flex items-center space-x-2.5 group">
+                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-pink-500 via-purple-600 to-indigo-600 p-[1.5px] shadow-md shadow-purple-500/20 group-hover:scale-105 transition-transform shrink-0">
+                        <div class="w-full h-full bg-[#10121a] rounded-[10px] flex items-center justify-center overflow-hidden">
+                            <img src="{% static 'icons/icon-192.png' %}" alt="ArchivEx" class="w-5 h-5 object-cover">
+                        </div>
                     </div>
-                    <span class="hidden sm:inline-block text-base sm:text-lg font-black tracking-tight text-white">Archiv<span class="text-[#3B82F6]">Ex</span> <span class="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/30 text-blue-200 ml-1">Staff</span></span>
+                    <div class="flex items-center space-x-1.5">
+                        <span class="text-base sm:text-lg font-black tracking-tight text-white">Archiv<span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400">Ex</span></span>
+                        <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-300 border border-pink-500/30">Staff</span>
+                    </div>
                 </a>
             </div>
 
             <!-- ACTIVE ACADEMIC CONTEXT BADGE & DUAL SWITCHER (ÉCOLE, FILIÈRE & SEMESTRE) -->
-            <div class="flex items-center bg-white/10 px-1.5 sm:px-3 py-1 rounded-xl border border-white/20 text-xs font-bold shrink min-w-0 max-w-full overflow-x-auto no-scrollbar my-1 sm:my-0">
-                <form id="admin-context-form" method="get" action="{% url 'contributors:set_context' %}" class="flex items-center space-x-1 sm:space-x-1.5 overflow-x-auto no-scrollbar">
+            <div class="flex items-center bg-[#171926] px-2 sm:px-3 py-1.5 rounded-2xl border border-slate-700/60 text-xs font-bold shrink min-w-0 max-w-full overflow-x-auto no-scrollbar my-1 sm:my-0 shadow-inner">
+                <form id="admin-context-form" method="get" action="{% url 'contributors:set_context' %}" class="flex items-center space-x-1.5 sm:space-x-2 overflow-x-auto no-scrollbar">
                     <!-- SÉLECTEUR ÉCOLE -->
-                    <div class="flex items-center space-x-1 shrink-0">
-                        <i class="fa-solid fa-building-columns text-[#FBBF24] text-[11px]" aria-hidden="true" title="Université active"></i>
-                        <select name="school_id" id="admin-school-select" onchange="handleSchoolSelectChange(this)" class="bg-[#071A49] text-white text-[11px] font-bold border border-white/30 rounded-lg px-1 sm:px-2 py-0.5 focus:outline-none focus:border-amber-400 max-w-[70px] sm:max-w-[160px] truncate">
-                            <option value="all" {% if not active_school %}selected{% endif %}>Toutes Écoles</option>
+                    <div class="flex items-center space-x-1.5 shrink-0 bg-white/5 px-2 py-1 rounded-xl border border-white/10">
+                        <i class="fa-solid fa-building-columns text-amber-400 text-xs" aria-hidden="true" title="Université active"></i>
+                        <select name="school_id" id="admin-school-select" onchange="handleSchoolSelectChange(this)" class="bg-transparent text-white text-[11px] font-bold border-0 focus:outline-none focus:ring-0 max-w-[85px] sm:max-w-[170px] truncate cursor-pointer">
+                            <option value="all" class="bg-[#171926] text-white" {% if not active_school %}selected{% endif %}>Toutes Écoles</option>
                             {% for sch in available_schools %}
-                                <option value="{{ sch.id }}" {% if active_school and active_school.id == sch.id %}selected{% endif %}>{{ sch.name }}</option>
+                                <option value="{{ sch.id }}" class="bg-[#171926] text-white" {% if active_school and active_school.id == sch.id %}selected{% endif %}>{{ sch.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
 
                     <!-- SÉLECTEUR FILIÈRE -->
-                    <div class="flex items-center space-x-1 shrink-0">
-                        <i class="fa-solid fa-graduation-cap text-blue-400 text-[11px]" aria-hidden="true" title="Filière d'études active"></i>
-                        <select name="filiere_id" id="admin-filiere-select" onchange="handleFiliereSelectChange(this)" class="bg-[#071A49] text-white text-[11px] font-bold border border-white/30 rounded-lg px-1 sm:px-2 py-0.5 focus:outline-none focus:border-blue-400 max-w-[70px] sm:max-w-[160px] truncate">
-                            <option value="all" {% if not active_filiere %}selected{% endif %}>Toutes Filières</option>
+                    <div class="flex items-center space-x-1.5 shrink-0 bg-white/5 px-2 py-1 rounded-xl border border-white/10">
+                        <i class="fa-solid fa-graduation-cap text-sky-400 text-xs" aria-hidden="true" title="Filière active"></i>
+                        <select name="filiere_id" id="admin-filiere-select" onchange="handleFiliereSelectChange(this)" class="bg-transparent text-white text-[11px] font-bold border-0 focus:outline-none focus:ring-0 max-w-[85px] sm:max-w-[170px] truncate cursor-pointer">
+                            <option value="all" class="bg-[#171926] text-white" {% if not active_filiere %}selected{% endif %}>Toutes Filières</option>
                             {% for fil in available_filieres %}
-                                <option value="{{ fil.id }}" {% if active_filiere and active_filiere.id == fil.id %}selected{% endif %}>{{ fil.name }}</option>
+                                <option value="{{ fil.id }}" class="bg-[#171926] text-white" {% if active_filiere and active_filiere.id == fil.id %}selected{% endif %}>{{ fil.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
 
                     <!-- SÉLECTEUR SEMESTRE -->
                     {% if available_semesters %}
-                    <div class="hidden md:flex items-center space-x-1 shrink-0">
-                        <i class="fa-solid fa-calendar-days text-emerald-400 text-[11px]" aria-hidden="true" title="Semestre actif"></i>
-                        <select name="semester_id" id="admin-semester-select" onchange="this.form.submit()" class="bg-[#071A49] text-white text-[11px] font-bold border border-white/30 rounded-lg px-1 sm:px-2 py-0.5 focus:outline-none focus:border-emerald-400 max-w-[110px] truncate">
-                            <option value="all" {% if not active_semester %}selected{% endif %}>Tous Semestres</option>
+                    <div class="hidden md:flex items-center space-x-1.5 shrink-0 bg-white/5 px-2 py-1 rounded-xl border border-white/10">
+                        <i class="fa-solid fa-calendar-days text-emerald-400 text-xs" aria-hidden="true" title="Semestre actif"></i>
+                        <select name="semester_id" id="admin-semester-select" onchange="this.form.submit()" class="bg-transparent text-white text-[11px] font-bold border-0 focus:outline-none focus:ring-0 max-w-[110px] truncate cursor-pointer">
+                            <option value="all" class="bg-[#171926] text-white" {% if not active_semester %}selected{% endif %}>Tous Semestres</option>
                             {% for sem in available_semesters %}
-                                <option value="{{ sem.id }}" {% if active_semester and active_semester.id == sem.id %}selected{% endif %}>{{ sem.label }}</option>
+                                <option value="{{ sem.id }}" class="bg-[#171926] text-white" {% if active_semester and active_semester.id == sem.id %}selected{% endif %}>{{ sem.label }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -310,130 +315,145 @@
             </div>
 
             <!-- USER INFO, LOGOUT & EXIT TO PUBLIC SITE -->
-            <div class="flex items-center space-x-1.5 sm:space-x-2 text-xs shrink-0">
-                <div class="hidden lg:flex items-center space-x-2 text-slate-300 bg-white/5 px-2.5 py-1 rounded-lg border border-white/10">
-                    <i class="fa-solid fa-user-shield text-amber-400 text-xs" aria-hidden="true"></i>
-                    <span class="font-bold text-white">{{ user.first_name|default:user.username }}</span>
+            <div class="flex items-center space-x-2 text-xs shrink-0">
+                <div class="hidden lg:flex items-center space-x-2 text-slate-300 bg-[#171926] px-3 py-1.5 rounded-xl border border-slate-700/60">
+                    <div class="w-5 h-5 rounded-full bg-gradient-to-tr from-amber-400 to-orange-500 flex items-center justify-center text-[10px] text-slate-950 font-black">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <span class="font-extrabold text-white">{{ user.first_name|default:user.username }}</span>
                 </div>
                 
                 <!-- COMFORT / DARK MODE TOGGLE -->
-                <button type="button" onclick="toggleDarkMode()" class="p-1.5 sm:px-3 sm:py-1.5 font-bold rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-colors flex items-center space-x-1.5 shrink-0" title="Mode Confort (Thème Sombre)">
+                <button type="button" onclick="toggleDarkMode()" class="p-2 sm:px-3 sm:py-1.5 font-extrabold rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-colors flex items-center space-x-1.5 shrink-0" title="Mode Confort">
                     <i class="fa-solid fa-moon text-amber-300 dark:hidden text-xs"></i>
                     <i class="fa-solid fa-sun text-yellow-400 hidden dark:block text-xs"></i>
-                    <span class="hidden sm:inline">Mode Confort</span>
+                    <span class="hidden sm:inline text-[11px]">Confort</span>
                 </button>
                 
-                <!-- BOUTON RETOUR SITE PUBLIC (STYLE IDENTIQUE AU BOUTON D'ADMINISTRATION DU SITE PUBLIC) -->
-                <a href="{% url 'academics:home' %}" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 border border-blue-400/40 text-blue-300 hover:text-white font-extrabold text-xs flex items-center space-x-1.5 transition-colors shrink-0 shadow-sm" title="Accéder au site public">
+                <!-- BOUTON RETOUR SITE PUBLIC -->
+                <a href="{% url 'academics:home' %}" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-500/20 to-indigo-500/20 hover:from-blue-500/30 hover:to-indigo-500/30 border border-blue-500/30 text-blue-300 hover:text-white font-extrabold text-[11px] flex items-center space-x-1.5 transition-all shadow-sm shrink-0">
                     <i class="fa-solid fa-globe text-xs" aria-hidden="true"></i>
                     <span>Site public</span>
                 </a>
                 
-                <a href="{% url 'contributors:admin_logout' %}" class="p-1.5 sm:px-3 sm:py-1.5 font-bold rounded-xl bg-rose-600/80 hover:bg-rose-600 text-white border border-rose-500/50 transition-colors flex items-center space-x-1.5 shrink-0" title="Déconnexion de l'espace staff">
+                <!-- BOUTON DECONNEXION -->
+                <a href="{% url 'contributors:admin_logout' %}" class="p-2 sm:px-3 sm:py-1.5 font-bold rounded-xl bg-rose-500/10 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 transition-all flex items-center space-x-1.5 shrink-0" title="Déconnexion staff">
                     <i class="fa-solid fa-power-off text-xs" aria-hidden="true"></i>
-                    <span class="hidden sm:inline">Déconnexion</span>
+                    <span class="hidden sm:inline text-[11px]">Quitter</span>
                 </a>
             </div>
         </div>
     </header>
 
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 pb-8 flex-grow w-full md:grid md:grid-cols-[16rem_1fr] md:gap-6 items-start">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-5 pb-10 flex-grow w-full md:grid md:grid-cols-[16.5rem_1fr] md:gap-6 items-start">
         
-        <!-- SIDEBAR NAVIGATION (FIXE & STICKY EN MD/LG) -->
-        <aside id="admin-sidebar" class="hidden md:block w-64 space-y-3 md:sticky md:top-20 md:self-start md:h-[calc(100vh-5.5rem)] md:overflow-y-auto pr-2 select-none custom-scrollbar">
-            <div class="bg-white dark:bg-[#121824] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-4 shadow-sm space-y-1">
-                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 pb-2 border-b border-slate-100 dark:border-[#1e293b]">Gestion principale</p>
+        <!-- SIDEBAR NAVIGATION (FUSION DEEP DARK MONOLITHIC SIDEBAR) -->
+        <aside id="admin-sidebar" class="hidden md:block w-[16.5rem] md:sticky md:top-20 md:self-start md:h-[calc(100vh-6rem)] md:overflow-y-auto pr-1 select-none custom-scrollbar">
+            <div class="bg-[#10121a] border border-slate-800/80 rounded-3xl p-4 shadow-xl text-slate-300 space-y-5">
                 
-                <a href="{% url 'contributors:admin_dashboard' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
-                    <i class="fa-solid fa-gauge w-4 text-center" aria-hidden="true"></i>
-                    <span>Tableau de bord</span>
-                </a>
+                <!-- SECTION: GESTION PRINCIPALE -->
+                <div class="space-y-1">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 px-3 pb-1">Gestion principale</p>
+                    
+                    <a href="{% url 'contributors:admin_dashboard' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                        <i class="fa-solid fa-gauge w-4 text-center {% if request.resolver_match.url_name == 'admin_dashboard' %}text-purple-400{% endif %}" aria-hidden="true"></i>
+                        <span class="flex-1">Tableau de bord</span>
+                        {% if request.resolver_match.url_name == 'admin_dashboard' %}
+                            <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                        {% endif %}
+                    </a>
 
-                <a href="{% url 'contributors:library_index' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'library' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
-                    <i class="fa-solid fa-cloud w-4 text-center text-sky-500" aria-hidden="true"></i>
-                    <span>Bibliothèque cloud</span>
-                </a>
+                    <a href="{% url 'contributors:library_index' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'library' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                        <i class="fa-solid fa-cloud w-4 text-center text-sky-400" aria-hidden="true"></i>
+                        <span>Bibliothèque cloud</span>
+                    </a>
 
-                <a href="{% url 'contributors:exam_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'epreuves' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
-                    <i class="fa-solid fa-file-lines w-4 text-center text-blue-600" aria-hidden="true"></i>
-                    <span>Épreuves publiées</span>
-                </a>
+                    <a href="{% url 'contributors:exam_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'epreuves' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                        <i class="fa-solid fa-file-lines w-4 text-center text-blue-400" aria-hidden="true"></i>
+                        <span>Épreuves publiées</span>
+                    </a>
 
-                <a href="{% url 'contributors:completeness_overview' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'completeness' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
-                    <i class="fa-solid fa-chart-pie w-4 text-center text-amber-500" aria-hidden="true"></i>
-                    <span>Complétude des ressources</span>
-                </a>
+                    <a href="{% url 'contributors:completeness_overview' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'completeness' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                        <i class="fa-solid fa-chart-pie w-4 text-center text-amber-400" aria-hidden="true"></i>
+                        <span>Complétude</span>
+                    </a>
 
-                <a href="{% url 'contributors:summary_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'resumes' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
-                    <i class="fa-solid fa-book-open w-4 text-center text-emerald-600" aria-hidden="true"></i>
-                    <span>Résumés de cours</span>
-                </a>
+                    <a href="{% url 'contributors:summary_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'resumes' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                        <i class="fa-solid fa-book-open w-4 text-center text-emerald-400" aria-hidden="true"></i>
+                        <span>Résumés de cours</span>
+                    </a>
 
-                <a href="{% url 'contributors:subject_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'matieres' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
-                    <i class="fa-solid fa-layer-group w-4 text-center text-indigo-600" aria-hidden="true"></i>
-                    <span>Matières et UE</span>
-                </a>
-            </div>
+                    <a href="{% url 'contributors:subject_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'matieres' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                        <i class="fa-solid fa-layer-group w-4 text-center text-indigo-400" aria-hidden="true"></i>
+                        <span>Matières et UE</span>
+                    </a>
+                </div>
 
-            <div class="bg-white dark:bg-[#121824] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-4 shadow-sm space-y-1">
-                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 pb-2 border-b border-slate-100 dark:border-[#1e293b]">Structure & suivi</p>
+                <!-- SECTION: STRUCTURE & SUIVI -->
+                <div class="space-y-1 pt-2 border-t border-slate-800/80">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 px-3 pb-1">Structure & suivi</p>
 
-                <a href="{% url 'contributors:structure_overview' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'structure' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
-                    <i class="fa-solid fa-sitemap w-4 text-center text-slate-500" aria-hidden="true"></i>
-                    <span>Structure académique</span>
-                </a>
+                    <a href="{% url 'contributors:structure_overview' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'structure' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                        <i class="fa-solid fa-sitemap w-4 text-center text-slate-400" aria-hidden="true"></i>
+                        <span>Structure académique</span>
+                    </a>
 
-                <a href="{% url 'contributors:student_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'etudiants' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
-                    <i class="fa-solid fa-user-graduate w-4 text-center text-slate-500" aria-hidden="true"></i>
-                    <span>Étudiants inscrits</span>
-                </a>
+                    <a href="{% url 'contributors:student_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'etudiants' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                        <i class="fa-solid fa-user-graduate w-4 text-center text-slate-400" aria-hidden="true"></i>
+                        <span>Étudiants inscrits</span>
+                    </a>
 
-                <a href="{% url 'contributors:payment_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'paiements' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
-                    <i class="fa-solid fa-credit-card w-4 text-center text-slate-500" aria-hidden="true"></i>
-                    <span>Pass & paiements</span>
-                </a>
+                    <a href="{% url 'contributors:payment_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'paiements' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                        <i class="fa-solid fa-credit-card w-4 text-center text-slate-400" aria-hidden="true"></i>
+                        <span>Pass & paiements</span>
+                    </a>
 
-                <a href="{% url 'contributors:notification_create' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'notifications' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
-                    <i class="fa-solid fa-paper-plane w-4 text-center text-slate-500" aria-hidden="true"></i>
-                    <span>Diffuser une notification</span>
-                </a>
+                    <a href="{% url 'contributors:notification_create' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'notifications' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                        <i class="fa-solid fa-paper-plane w-4 text-center text-slate-400" aria-hidden="true"></i>
+                        <span>Notifications</span>
+                    </a>
 
-                <a href="{% url 'contributors:admin_support_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'support' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
-                    <i class="fa-solid fa-headset w-4 text-center text-rose-500" aria-hidden="true"></i>
-                    <span class="flex-1">Support</span>
-                    {% if unread_notifications_count %}
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white animate-pulse">{{ unread_notifications_count }}</span>
-                    {% endif %}
-                </a>
+                    <a href="{% url 'contributors:admin_support_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'support' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                        <i class="fa-solid fa-headset w-4 text-center text-rose-400" aria-hidden="true"></i>
+                        <span class="flex-1">Support</span>
+                        {% if unread_notifications_count %}
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white animate-pulse">{{ unread_notifications_count }}</span>
+                        {% endif %}
+                    </a>
 
-                <a href="{% url 'contributors:site_logs_list' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'site-logs' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
-                    <i class="fa-solid fa-clock-rotate-left w-4 text-center text-indigo-500" aria-hidden="true"></i>
-                    <span>Journal des actions</span>
-                </a>
-            </div>
+                    <a href="{% url 'contributors:site_logs_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'site-logs' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                        <i class="fa-solid fa-clock-rotate-left w-4 text-center text-indigo-400" aria-hidden="true"></i>
+                        <span>Journal d'audit</span>
+                    </a>
+                </div>
 
-            <div class="bg-white dark:bg-[#121824] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-4 shadow-sm space-y-1">
-                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 pb-2 border-b border-slate-100 dark:border-[#1e293b]">Paramètres</p>
+                <!-- SECTION: PARAMÈTRES -->
+                <div class="space-y-1 pt-2 border-t border-slate-800/80">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 px-3 pb-1">Paramètres</p>
 
-                <a href="{% url 'contributors:admin_settings' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold transition-colors {% if 'parametres' in request.path %}bg-ax-accent text-white shadow-md shadow-ax-glow{% else %}text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60{% endif %}">
-                    <i class="fa-solid fa-sliders w-4 text-center text-ax-accent" aria-hidden="true"></i>
-                    <span class="flex-1">Paramètres du site</span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-ax-accent inline-block shadow-sm"></span>
-                </a>
-            </div>
+                    <a href="{% url 'contributors:admin_settings' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'parametres' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                        <i class="fa-solid fa-sliders w-4 text-center text-purple-400" aria-hidden="true"></i>
+                        <span class="flex-1">Paramètres du site</span>
+                    </a>
+                </div>
 
-            <div class="bg-white dark:bg-[#121824] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-4 shadow-sm space-y-1">
-                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 pb-2 border-b border-slate-100 dark:border-[#1e293b]">Navigation externe</p>
+                <!-- CARTE FUSION "UPGRADE TO PRO" ADAPTÉE STAFF -->
+                <div class="pt-3">
+                    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[#181a26] to-[#12141f] border border-purple-500/20 p-4 space-y-3 shadow-lg">
+                        <div class="absolute -right-4 -top-4 w-20 h-20 bg-purple-500/10 rounded-full blur-xl pointer-events-none"></div>
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span class="text-[11px] font-black uppercase tracking-wider text-purple-300">✦ Espace Staff</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-relaxed">
+                            Accédez en un clic au portail public et aux fiches récapitulatives.
+                        </p>
+                        <a href="{% url 'academics:home' %}" class="block w-full py-2.5 px-3 text-center rounded-xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:via-purple-700 hover:to-indigo-700 text-white text-xs font-extrabold tracking-wide shadow-md shadow-purple-600/30 transition-all transform hover:-translate-y-0.5">
+                            Voir le site public
+                        </a>
+                    </div>
+                </div>
 
-                <a href="{% url 'academics:home' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors">
-                    <i class="fa-solid fa-globe w-4 text-center text-blue-500" aria-hidden="true"></i>
-                    <span>Accéder au site public</span>
-                </a>
-
-                <a href="{% url 'contributors:admin_logout' %}" class="flex md:hidden items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-extrabold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors">
-                    <i class="fa-solid fa-power-off w-4 text-center text-rose-500" aria-hidden="true"></i>
-                    <span>Déconnexion</span>
-                </a>
             </div>
         </aside>
 
