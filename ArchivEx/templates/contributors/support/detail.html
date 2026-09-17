@@ -109,6 +109,72 @@
         </div>
     </div>
 
+    <!-- GESTION DU COMPTE ÉTUDIANT & RÉINITIALISATION DE MOT DE PASSE -->
+    {% if target_student %}
+    <div class="bg-gradient-to-br from-blue-50/80 via-white to-indigo-50/50 border-2 border-blue-200/80 rounded-2xl p-5 sm:p-6 mb-5 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-blue-100 mb-4">
+            <div class="flex items-center space-x-2.5">
+                <span class="w-8 h-8 rounded-xl bg-[#2563EB] text-white flex items-center justify-center text-xs font-black shadow-xs">
+                    <i class="fa-solid fa-key"></i>
+                </span>
+                <div>
+                    <h3 class="text-sm font-black text-[#071A49]">Gestion de l'accès étudiant</h3>
+                    <p class="text-[11px] text-slate-500 font-medium">Réinitialisation rapide et sécurisée du mot de passe</p>
+                </div>
+            </div>
+            <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-100 text-[#2563EB] border border-blue-200 self-start sm:self-auto">
+                Compte identifié
+            </span>
+        </div>
+
+        <!-- Student details strip -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 text-xs">
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+                <span class="text-[10px] font-bold text-slate-400 block uppercase">Identifiant / Username</span>
+                <span class="font-black text-[#071A49] text-sm block">{{ target_student.username }}</span>
+            </div>
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+                <span class="text-[10px] font-bold text-slate-400 block uppercase">Adresse E-mail</span>
+                <span class="font-black text-[#071A49] text-xs block truncate" title="{{ target_student.email }}">{{ target_student.email|default:"Non renseigné" }}</span>
+            </div>
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+                <span class="text-[10px] font-bold text-slate-400 block uppercase">Statut du compte</span>
+                <span class="font-black text-emerald-600 text-xs flex items-center space-x-1 mt-0.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>Actif</span>
+                </span>
+            </div>
+        </div>
+
+        {% if last_temp_pwd %}
+        <!-- Mot de passe généré récemment -->
+        <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-circle-check text-emerald-500 text-lg"></i>
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase text-emerald-800 block">Dernier mot de passe temporaire généré :</span>
+                    <span class="font-mono text-base font-black text-emerald-900 tracking-wider bg-white px-3 py-1 rounded-lg border border-emerald-300 inline-block mt-0.5">{{ last_temp_pwd }}</span>
+                </div>
+            </div>
+            <button type="button" onclick="navigator.clipboard.writeText('{{ last_temp_pwd }}'); alert('Mot de passe copié dans le presse-papier !');" class="text-xs font-bold px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors flex items-center space-x-1 shadow-xs">
+                <i class="fa-solid fa-copy text-xs"></i>
+                <span>Copier</span>
+            </button>
+        </div>
+        {% endif %}
+
+        <!-- Formulaire d'action en 1 clic -->
+        <form method="post" action="{% url 'contributors:admin_support_detail' pk=support_request.pk %}" onsubmit="return confirm('Confirmez-vous la réinitialisation du mot de passe pour cet étudiant ? Un mot de passe temporaire sera généré et envoyé à {{ target_student.email }}.');">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="reset_temp_password">
+            <button type="submit" class="w-full sm:w-auto bg-gradient-to-r from-[#071A49] to-[#2563EB] hover:from-[#0E2461] hover:to-blue-700 text-white text-xs font-black px-5 py-3 rounded-xl shadow-md transition-all flex items-center justify-center space-x-2 active:scale-95 cursor-pointer">
+                <i class="fa-solid fa-rotate-right text-amber-400"></i>
+                <span>Générer un mot de passe temporaire (ArchivEx-XXXX) &amp; Envoyer par e-mail</span>
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
     <!-- EXISTING REPLIES -->
     {% if replies %}
         <div class="space-y-3 mb-5">

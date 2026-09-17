@@ -28,7 +28,17 @@ def support_create_view(request):
     Une notification d'administration et un email sont automatiquement envoyés.
     """
     is_auth = request.user.is_authenticated
-    form = SupportRequestForm(request.POST or None, is_authenticated=is_auth)
+    initial_data = {}
+    cat_param = request.GET.get("category")
+    if cat_param:
+        initial_data["category"] = cat_param
+        if cat_param == "recuperation_mot_de_passe":
+            initial_data["message"] = "Bonjour, j'ai oublié mon mot de passe et je n'arrive plus à me connecter à mon compte ArchivEx. Merci de m'aider à le réinitialiser."
+    email_param = request.GET.get("email")
+    if email_param:
+        initial_data["guest_email"] = email_param
+
+    form = SupportRequestForm(request.POST or None, initial=initial_data, is_authenticated=is_auth)
 
     if request.method == "POST" and form.is_valid():
         support_req = form.save(commit=False)
@@ -37,9 +47,13 @@ def support_create_view(request):
             student_identity = request.user.get_full_name() or request.user.username
             student_email = request.user.email
         else:
-            support_req.user = None
             student_identity = support_req.guest_name or "Visiteur"
             student_email = support_req.guest_email or "Non renseigné"
+            if support_req.guest_email:
+                matching_user = User.objects.filter(email__iexact=support_req.guest_email.strip()).first()
+                support_req.user = matching_user
+            else:
+                support_req.user = None
 
         support_req.status = "non_lu"
         support_req.save()
@@ -201,6 +215,10 @@ def admin_support_detail_view(request, pk):
 
     form = SupportReplyForm()
 
+    target_student = support_request.user
+    if not target_student and support_request.guest_email:
+        target_student = User.objects.filter(email__iexact=support_request.guest_email.strip()).first()
+
     if request.method == "POST":
         action = request.POST.get("action", "reply")
 
@@ -250,6 +268,71 @@ Merci d'utiliser ArchivEx !
                 messages.success(request, "Réponse enregistrée et envoyée avec succès.")
                 return redirect("contributors:admin_support_detail", pk=pk)
 
+        elif action == "reset_temp_password":
+            if not target_student:
+                messages.error(request, "Aucun compte étudiant correspondant n'a été trouvé pour cette demande.")
+                return redirect("contributors:admin_support_detail", pk=pk)
+
+            from accounts.services import generate_temporary_password, send_password_reset_email
+
+            temp_pwd = generate_temporary_password()
+            target_student.set_password(temp_pwd)
+            target_student.save(update_fields=["password"])
+
+            # Création automatique de la réponse dans le ticket
+            reply_msg = (
+                f"Bonjour {target_student.get_full_name() or target_student.username},\n\n"
+                f"Suite à votre demande au support, votre mot de passe a été réinitialisé.\n\n"
+                f"Vos identifiants de connexion :\n"
+                f"- Identifiant : {target_student.username}\n"
+                f"- Mot de passe temporaire : {temp_pwd}\n\n"
+                f"Un e-mail récapitulatif vous a également été envoyé. "
+                f"Veuillez vous connecter dès maintenant sur ArchivEx et modifier ce mot de passe temporaire dans votre profil.\n\n"
+                f"L'équipe Support ArchivEx"
+            )
+            SupportReply.objects.create(
+                request=support_request,
+                admin_user=request.user,
+                message=reply_msg,
+            )
+
+            support_request.status = "repondu"
+            support_request.save(update_fields=["status"])
+
+            # Notification interne pour l'étudiant
+            try:
+                Notification.objects.create(
+                    recipient=target_student,
+                    notification_type="SUPPORT_REPLY",
+                    title="Mot de passe réinitialisé",
+                    message=f"Votre mot de passe temporaire est : {temp_pwd}. Connectez-vous pour le modifier.",
+                    link=reverse("accounts:login"),
+                )
+            except Exception as err:
+                logger.error(f"Erreur création notification réinitialisation : {err}")
+
+            # Envoi de l'e-mail officiel avec template HTML
+            email_sent, email_info = send_password_reset_email(
+                user=target_student,
+                temp_password=temp_pwd,
+                request=request,
+                admin_user=request.user,
+            )
+
+            if email_sent:
+                messages.success(
+                    request,
+                    f"Succès ! Mot de passe temporaire ({temp_pwd}) activé et envoyé par e-mail à {target_student.email}."
+                )
+            else:
+                messages.warning(
+                    request,
+                    f"Mot de passe temporaire ({temp_pwd}) activé sur le compte, mais l'envoi d'e-mail a échoué ({email_info}). Le mot de passe reste utilisable."
+                )
+
+            request.session[f"last_temp_pwd_{pk}"] = temp_pwd
+            return redirect("contributors:admin_support_detail", pk=pk)
+
         elif action == "set_status":
             new_status = request.POST.get("status")
             valid_statuses = [s[0] for s in SupportRequest.STATUS_CHOICES]
@@ -259,11 +342,15 @@ Merci d'utiliser ArchivEx !
                 messages.info(request, f"Statut mis à jour : {support_request.get_status_display()}")
             return redirect("contributors:admin_support_detail", pk=pk)
 
+    last_temp_pwd = request.session.pop(f"last_temp_pwd_{pk}", None)
+
     context = {
         "support_request": support_request,
         "replies": support_request.replies.select_related("admin_user"),
         "form": form,
         "status_choices": SupportRequest.STATUS_CHOICES,
         "page_title": f"Demande #{pk} — {support_request.get_category_display()}",
+        "target_student": target_student,
+        "last_temp_pwd": last_temp_pwd,
     }
     return render(request, "contributors/support/detail.html", context)

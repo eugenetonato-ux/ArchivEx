@@ -54,7 +54,7 @@
                     <div class="flex flex-wrap items-center gap-2.5 self-start lg:self-center">
                         <span class="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold text-white">
                             <i class="fa-regular fa-calendar text-xs text-amber-300"></i>
-                            <span>{% now "l d F Y" %}</span>
+                            <span>{% now "l j F Y" as cur_date %}{{ cur_date|capfirst }}</span>
                         </span>
                         <a href="{% url 'academics:filieres' %}" class="px-4 py-2.5 rounded-xl bg-white hover:bg-blue-50 text-[#071A49] font-black text-xs transition-all shadow-md flex items-center space-x-1.5 hover:scale-105 active:scale-95">
                             <i class="fa-solid fa-graduation-cap text-[#2563EB]"></i>

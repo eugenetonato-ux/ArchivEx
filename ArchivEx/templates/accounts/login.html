@@ -80,7 +80,7 @@
                     <label for="id_password_field" class="block text-[11px] font-black tracking-wider text-[#071A49] uppercase">
                         Mot de passe
                     </label>
-                    <a href="#" onclick="alert('Pour réinitialiser votre mot de passe, veuillez contacter le support académique ArchivEx.'); return false;" class="text-[11px] text-[#2563EB] font-bold hover:underline">
+                    <a href="{% url 'support:create' %}?category=recuperation_mot_de_passe" onclick="redirectToForgotPassword(event);" class="text-[11px] text-[#2563EB] font-bold hover:underline" title="Récupérer l'accès à votre compte via le support">
                         Mot de passe oublié ?
                     </a>
                 </div>
@@ -145,6 +145,17 @@
                 eyeIcon.classList.add('fa-eye');
             }
         }
+    }
+
+    function redirectToForgotPassword(e) {
+        if (e) e.preventDefault();
+        const input = document.getElementById('id_username_field');
+        const val = input ? encodeURIComponent(input.value.trim()) : '';
+        let target = "{% url 'support:create' %}?category=recuperation_mot_de_passe";
+        if (val) {
+            target += "&email=" + val;
+        }
+        window.location.href = target;
     }
 </script>
 {% endblock %}

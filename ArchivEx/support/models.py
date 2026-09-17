@@ -13,6 +13,7 @@ class SupportRequest(models.Model):
     ]
 
     CATEGORY_CHOICES = [
+        ("recuperation_mot_de_passe", "Récupération de mot de passe"),
         ("question", "Question"),
         ("probleme_epreuve", "Problème avec une épreuve"),
         ("probleme_compte", "Problème de compte"),
