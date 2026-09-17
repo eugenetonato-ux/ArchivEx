@@ -5,3 +5,4 @@ pypdf>=5.1.0
 reportlab>=4.2.5
 Pillow>=10.4.0
 requests>=2.32.0
+pymysql>=1.1.0
