@@ -71,6 +71,20 @@
 
                 <!-- DYNAMIC GRID COUNTS -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {% if subjects_count > 0 or subjects %}
+                    <div class="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-100 flex items-start space-x-3">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-[#071A49] text-white flex items-center justify-center font-black text-lg flex-shrink-0">
+                            <i class="fa-solid fa-graduation-cap text-sm"></i>
+                        </div>
+                        <div>
+                            <span class="text-2xl font-black text-[#071A49] block leading-none mb-1">{{ subjects_count|default:subjects|length }}</span>
+                            <span class="text-xs font-extrabold text-[#071A49] block">Matières (UE)</span>
+                            <span class="text-[11px] text-slate-500 font-medium">Programme complet du semestre</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     {% if exams_count > 0 %}
                     <div class="p-4 rounded-2xl bg-blue-50/70 border border-blue-100 flex items-start space-x-3">
                         <div
@@ -78,8 +92,7 @@
                             <i class="fa-solid fa-file-lines text-sm"></i>
                         </div>
                         <div>
-                            <span class="text-2xl font-black text-[#071A49] block leading-none mb-1">{{ exams_count
-                                }}</span>
+                            <span class="text-2xl font-black text-[#071A49] block leading-none mb-1">{{ exams_count }}</span>
                             <span class="text-xs font-extrabold text-[#2563EB] block">Épreuves d'examens</span>
                             <span class="text-[11px] text-slate-500 font-medium">Sujets récents avec corrigés</span>
                         </div>
@@ -93,16 +106,70 @@
                             <i class="fa-solid fa-book text-sm"></i>
                         </div>
                         <div>
-                            <span class="text-2xl font-black text-[#071A49] block leading-none mb-1">{{ summaries_count
-                                }}</span>
+                            <span class="text-2xl font-black text-[#071A49] block leading-none mb-1">{{ summaries_count }}</span>
                             <span class="text-xs font-extrabold text-amber-800 block">Résumés de cours</span>
-                            <span class="text-[11px] text-slate-500 font-medium">Fiches essentielles directement
-                                lisibles</span>
+                            <span class="text-[11px] text-slate-500 font-medium">Fiches essentielles directement lisibles</span>
                         </div>
                     </div>
                     {% endif %}
                 </div>
             </div>
+
+            <!-- INCLUDED SUBJECTS PREVIEW -->
+            {% if subjects or sample_subjects %}
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-extrabold text-[#071A49] uppercase tracking-wider flex items-center space-x-2">
+                        <i class="fa-solid fa-layer-group text-[#2563EB]"></i>
+                        <span>Matières (UE) incluses dans ton Pass :</span>
+                    </h3>
+                    <span class="px-2.5 py-0.5 rounded-full bg-blue-50 text-[#2563EB] text-[11px] font-black border border-blue-100">
+                        {{ subjects|default:sample_subjects|length }} UE
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {% for subj in subjects|default:sample_subjects %}
+                    <div class="p-3 rounded-2xl bg-slate-50/90 border border-slate-200/80 flex items-center space-x-3">
+                        <span class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-[#071A49] font-black text-[10px] tracking-wider shrink-0 shadow-xs">
+                            {{ subj.code|default:"UE" }}
+                        </span>
+                        <span class="text-xs font-bold text-[#071A49] line-clamp-1" title="{{ subj.name }}">
+                            {{ subj.name }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- FEATURED EXAMS SAMPLE PREVIEW -->
+            {% if sample_exams %}
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
+                <h3 class="text-sm font-extrabold text-[#071A49] uppercase tracking-wider mb-4 flex items-center space-x-2">
+                    <i class="fa-solid fa-file-circle-check text-emerald-600"></i>
+                    <span>Exemples d'épreuves accessibles :</span>
+                </h3>
+                <div class="space-y-2.5">
+                    {% for ex in sample_exams %}
+                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+                        <div class="flex items-center space-x-3 min-w-0">
+                            <span class="w-8 h-8 rounded-xl bg-blue-100 text-[#2563EB] font-black text-xs flex items-center justify-center shrink-0">
+                                PDF
+                            </span>
+                            <div class="min-w-0">
+                                <h4 class="text-xs font-bold text-[#071A49] truncate">{{ ex.title }}</h4>
+                                <p class="text-[10px] text-slate-500 font-medium truncate">{{ ex.subject.name }} · {{ ex.year }}</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 flex items-center space-x-1 shrink-0">
+                            <i class="fa-solid fa-lock text-[9px]"></i>
+                            <span>Inclus</span>
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
 
 
 
