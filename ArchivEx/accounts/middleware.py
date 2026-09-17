@@ -62,3 +62,38 @@ class SiteLoggingMiddleware:
                 log_user_action(request, "MODIFICATION", desc)
 
         return response
+
+
+class MustChangePasswordMiddleware:
+    """
+    Middleware de sécurité :
+    Si un utilisateur a le flag must_change_password = True,
+    il est immédiatement redirigé vers la page de modification obligatoire de mot de passe,
+    l'empêchant d'accéder au reste du site tant qu'il n'a pas défini son mot de passe personnel.
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        user = getattr(request, "user", None)
+        if user and user.is_authenticated and getattr(user, "must_change_password", False):
+            from django.urls import reverse
+            from django.shortcuts import redirect
+
+            path = request.path
+            allowed_paths = [
+                reverse("accounts:force_password_change"),
+                reverse("accounts:logout"),
+            ]
+
+            is_exempt = (
+                path in allowed_paths
+                or path.startswith("/static/")
+                or path.startswith("/media/")
+                or path.startswith("/favicon.ico")
+            )
+
+            if not is_exempt:
+                return redirect("accounts:force_password_change")
+
+        return self.get_response(request)

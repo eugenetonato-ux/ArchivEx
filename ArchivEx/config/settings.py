@@ -71,6 +71,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "accounts.middleware.SiteLoggingMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "accounts.middleware.MustChangePasswordMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 

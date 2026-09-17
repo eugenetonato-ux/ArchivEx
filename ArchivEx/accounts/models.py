@@ -2,8 +2,12 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 class User(AbstractUser):
- """Utilisateur ArchivEx (étudiant ou administrateur)."""
- pass
+    """Utilisateur ArchivEx (étudiant ou administrateur)."""
+    must_change_password = models.BooleanField(
+        default=False,
+        verbose_name="Doit modifier son mot de passe",
+        help_text="Forcer l'utilisateur à modifier son mot de passe dès sa prochaine connexion.",
+    )
 
 
 class StudentProfile(models.Model):
@@ -51,5 +55,3 @@ class SiteLog(models.Model):
     def __str__(self):
         user_str = self.user.username if self.user else "Anonyme"
         return f"[{self.get_action_type_display()}] {user_str} - {self.description[:50]}"
-
- 

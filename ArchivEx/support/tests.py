@@ -104,3 +104,52 @@ class PasswordResetSupportTests(TestCase):
         self.assertIsNotNone(match)
         temp_pwd = match.group(0)
         self.assertTrue(self.student.check_password(temp_pwd))
+        self.assertTrue(self.student.must_change_password)
+
+    def test_student_login_with_temp_password_forces_change(self):
+        # Set temp password and must_change_password flag
+        temp_pwd = generate_temporary_password()
+        self.student.set_password(temp_pwd)
+        self.student.must_change_password = True
+        self.student.save()
+
+        # 1. Login with temporary password
+        login_url = reverse("accounts:login")
+        login_res = self.client.post(login_url, {
+            "username": self.student.username,
+            "password": temp_pwd,
+        }, follow=False)
+
+        # Must be redirected to forced password change
+        self.assertEqual(login_res.status_code, 302)
+        self.assertIn(reverse("accounts:force_password_change"), login_res.url)
+
+        # Follow redirect
+        res = self.client.get(login_res.url)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("Définissez votre mot de passe", res.content.decode("utf-8"))
+
+        # 2. Try to bypass by going to dashboard directly -> Middleware intercepts!
+        dash_res = self.client.get(reverse("accounts:dashboard"), follow=False)
+        self.assertEqual(dash_res.status_code, 302)
+        self.assertEqual(dash_res.url, reverse("accounts:force_password_change"))
+
+        # 3. Submit new personal password
+        new_pwd = "MonNouveauSuperMotDePasse2026!"
+        change_res = self.client.post(reverse("accounts:force_password_change"), {
+            "new_password1": new_pwd,
+            "new_password2": new_pwd,
+        }, follow=True)
+
+        self.assertEqual(change_res.status_code, 200)
+
+        # 4. Check user status in DB
+        self.student.refresh_from_db()
+        self.assertFalse(self.student.must_change_password)
+        self.assertTrue(self.student.check_password(new_pwd))
+        self.assertFalse(self.student.check_password(temp_pwd), "Temporary password must no longer work!")
+
+        # 5. Dashboard is now accessible freely
+        dash_res_after = self.client.get(reverse("accounts:dashboard"))
+        self.assertEqual(dash_res_after.status_code, 200)
+

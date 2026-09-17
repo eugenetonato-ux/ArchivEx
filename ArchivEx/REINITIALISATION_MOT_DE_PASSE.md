@@ -51,6 +51,20 @@ sequenceDiagram
 3. L'étudiant indique son nom et précise son problème, puis clique sur **« Envoyer ma demande »**.
 4. Le système détecte l'adresse e-mail et rattache automatiquement le ticket au compte utilisateur correspondant dans la base de données.
 
+### Étape 3 : Connexion avec le mot de passe temporaire & Changement Forcé Immédiat 🔒
+1. L'étudiant reçoit son e-mail officiel contenant le code temporaire `ArchivEx-XXXX`.
+2. Il se connecte sur `/connexion/` avec son identifiant et ce mot de passe temporaire.
+3. Le système détecte le mot de passe temporaire et le **redirige immédiatement** vers la page :
+   ```
+   /accounts/modifier-mot-de-passe/
+   ```
+4. **Bouclier de sécurité anti-contournement (`MustChangePasswordMiddleware`)** :
+   - L'accès à tout le reste du site (tableau de bord, cours, épreuves, etc.) est bloqué tant que le nouveau mot de passe n'est pas choisi.
+5. Une fois le nouveau mot de passe saisi et validé :
+   - Le compte est définitivement sécurisé avec le mot de passe secret de l'étudiant.
+   - **Le code temporaire présent dans Gmail est instantanément désactivé et inutilisable.**
+   - L'étudiant est redirigé en toute sécurité vers son tableau de bord.
+
 ---
 
 ## 🛡️ 3. Parcours de l'Administrateur

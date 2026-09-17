@@ -7,7 +7,7 @@ from django.db.models import Q, Count
 from django.http import JsonResponse
 
 from exams.models import Exam
-from .forms import StudentRegistrationForm, StudentLoginForm, StudentProfileForm
+from .forms import StudentRegistrationForm, StudentLoginForm, StudentProfileForm, ForcePasswordChangeForm
 from .models import StudentProfile, Favorite, SiteLog
 from .utils import log_user_action
 from payments.models import SemesterAccess
@@ -35,6 +35,8 @@ def register_view(request):
 
 def login_view(request):
     if request.user.is_authenticated:
+        if getattr(request.user, "must_change_password", False):
+            return redirect("accounts:force_password_change")
         if request.user.is_staff or request.user.is_superuser or getattr(request.user, "contributor_profile", None):
             return redirect("contributors:admin_dashboard")
         return redirect("accounts:dashboard")
@@ -45,6 +47,15 @@ def login_view(request):
             user = form.get_user()
             login(request, user)
             log_user_action(request, "CONNECTION", f"Connexion réussie de l'utilisateur : {user.username}")
+            
+            # Vérification de sécurité : l'étudiant doit changer son mot de passe temporaire
+            if getattr(user, "must_change_password", False):
+                messages.warning(
+                    request,
+                    "Pour votre sécurité, veuillez définir votre nouveau mot de passe personnel avant de continuer."
+                )
+                return redirect("accounts:force_password_change")
+
             messages.success(request, f"Ravi de te revoir, {user.first_name or user.username} !")
             next_url = request.GET.get("next")
             from django.urls import reverse
@@ -59,6 +70,46 @@ def login_view(request):
         form = StudentLoginForm()
 
     return render(request, "accounts/login.html", {"form": form})
+
+
+@login_required
+def force_password_change_view(request):
+    """
+    Vue obligatoire lorsqu'un utilisateur s'est connecté avec un mot de passe temporaire
+    ou a le flag must_change_password activé.
+    """
+    if not getattr(request.user, "must_change_password", False):
+        return redirect("accounts:dashboard")
+
+    if request.method == "POST":
+        form = ForcePasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            form.save()
+            request.user.must_change_password = False
+            request.user.save(update_fields=["must_change_password"])
+
+            from django.contrib.auth import update_session_auth_hash
+            update_session_auth_hash(request, request.user)
+
+            log_user_action(
+                request,
+                "MODIFICATION",
+                "Mise à jour sécurisée du mot de passe temporaire suite à demande support"
+            )
+            messages.success(
+                request,
+                "Votre mot de passe personnel a été enregistré avec succès ! Le mot de passe temporaire n'est plus actif."
+            )
+            if request.user.is_staff or request.user.is_superuser or getattr(request.user, "contributor_profile", None):
+                return redirect("contributors:admin_dashboard")
+            return redirect("accounts:dashboard")
+        else:
+            messages.error(request, "Veuillez corriger les erreurs ci-dessous pour sécuriser votre mot de passe.")
+    else:
+        form = ForcePasswordChangeForm(user=request.user)
+
+    return render(request, "accounts/force_password_change.html", {"form": form})
+
 
 def logout_view(request):
     username = request.user.username if request.user.is_authenticated else "Anonyme"

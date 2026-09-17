@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, SetPasswordForm
 from academics.models import School, Level, Filiere
 from .models import StudentProfile
 
@@ -114,3 +114,27 @@ class StudentProfileForm(forms.ModelForm):
                 user.last_name = last_name
             user.save()
         return profile
+
+
+class ForcePasswordChangeForm(SetPasswordForm):
+    """Formulaire forçant l'étudiant à définir son nouveau mot de passe personnel."""
+
+    new_password1 = forms.CharField(
+        label="Nouveau mot de passe personnel",
+        widget=forms.PasswordInput(attrs={
+            'class': 'w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]',
+            'placeholder': 'Définissez votre nouveau mot de passe',
+            'autocomplete': 'new-password',
+            'id': 'id_new_password1',
+        }),
+        help_text="Votre mot de passe doit comporter au moins 8 caractères."
+    )
+    new_password2 = forms.CharField(
+        label="Confirmez le nouveau mot de passe",
+        widget=forms.PasswordInput(attrs={
+            'class': 'w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]',
+            'placeholder': 'Confirmez votre nouveau mot de passe',
+            'autocomplete': 'new-password',
+            'id': 'id_new_password2',
+        }),
+    )

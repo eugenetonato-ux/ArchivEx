@@ -277,7 +277,8 @@ Merci d'utiliser ArchivEx !
 
             temp_pwd = generate_temporary_password()
             target_student.set_password(temp_pwd)
-            target_student.save(update_fields=["password"])
+            target_student.must_change_password = True
+            target_student.save(update_fields=["password", "must_change_password"])
 
             # Création automatique de la réponse dans le ticket
             reply_msg = (
@@ -286,8 +287,9 @@ Merci d'utiliser ArchivEx !
                 f"Vos identifiants de connexion :\n"
                 f"- Identifiant : {target_student.username}\n"
                 f"- Mot de passe temporaire : {temp_pwd}\n\n"
-                f"Un e-mail récapitulatif vous a également été envoyé. "
-                f"Veuillez vous connecter dès maintenant sur ArchivEx et modifier ce mot de passe temporaire dans votre profil.\n\n"
+                f"Un e-mail officiel vous a également été envoyé. "
+                f"Pour votre sécurité, dès votre connexion avec ce mot de passe temporaire, "
+                f"vous serez immédiatement invité(e) à définir votre mot de passe personnel définitif.\n\n"
                 f"L'équipe Support ArchivEx"
             )
             SupportReply.objects.create(
