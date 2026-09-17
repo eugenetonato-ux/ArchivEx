@@ -1,147 +1,215 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% block title %}Créer un compte — ArchivEx (Espace Étudiant){% endblock %}
+{% block title %}Créer un compte — ArchivEx{% endblock %}
 
 {% block content %}
-<div class="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[#F8FAFC] via-[#F1F5F9] to-[#E2E8F0] relative overflow-hidden">
-    
-    <!-- DECORATIVE BACKGROUND BLOBS -->
-    <div class="absolute -top-32 -left-32 w-96 h-96 bg-blue-400/15 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
-    <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-indigo-400/15 rounded-full blur-3xl pointer-events-none animate-pulse" style="animation-duration: 4s;"></div>
+<!-- COSMIC DARK CONTAINER -->
+<div class="relative min-h-[calc(100vh-64px)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[#020510] overflow-hidden">
 
-    <!-- CENTERED REGISTRATION CARD -->
-    <div class="bg-white/95 backdrop-blur-2xl border border-slate-200/80 rounded-[2.5rem] p-8 sm:p-11 shadow-2xl shadow-slate-300/50 max-w-xl w-full relative transition-all duration-300 hover:shadow-3xl">
+    <!-- NEON BLUE ORBITAL BACKGROUND (MATCHING REFERENCE DESIGN) -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <!-- Ambient Radial Glow Orbs -->
+        <div class="absolute top-[12%] right-[10%] w-[550px] h-[550px] bg-gradient-to-br from-[#0066FF]/35 via-[#00D2FF]/20 to-transparent rounded-full blur-[130px] opacity-70"></div>
+        <div class="absolute bottom-[5%] left-[8%] w-[500px] h-[500px] bg-gradient-to-tr from-[#0044CC]/30 via-[#0099FF]/15 to-transparent rounded-full blur-[120px] opacity-60"></div>
+        <div class="absolute top-[45%] left-[48%] -translate-x-1/2 -translate-y-1/2 w-[750px] h-[750px] bg-[#0055ff]/15 rounded-full blur-[160px] pointer-events-none"></div>
 
-        <!-- CARD HEADER -->
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center mb-4">
-                <span class="text-[10px] font-black uppercase tracking-widest text-[#2563EB] bg-blue-50/80 px-4 py-1.5 rounded-full border border-blue-100 shadow-sm flex items-center space-x-1.5">
-                    <span class="w-2 h-2 rounded-full bg-[#2563EB] animate-ping mr-1"></span>
-                    INSCRIPTION ÉTUDIANT SÉCURISÉE
-                </span>
+        <!-- SVG Neon Curved Arcs & Ribbon -->
+        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 1000 1200" preserveAspectRatio="xMidYMid slice" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="regNeonArcGrad1" x1="250" y1="0" x2="850" y2="1200" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#00F0FF" stop-opacity="0.95" />
+                    <stop offset="35%" stop-color="#0088FF" stop-opacity="0.9" />
+                    <stop offset="70%" stop-color="#0055FF" stop-opacity="0.8" />
+                    <stop offset="100%" stop-color="#0022AA" stop-opacity="0.4" />
+                </linearGradient>
+
+                <linearGradient id="regNeonArcGrad2" x1="100" y1="300" x2="900" y2="1000" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.2" />
+                    <stop offset="50%" stop-color="#00C2FF" stop-opacity="0.75" />
+                    <stop offset="100%" stop-color="#1D4ED8" stop-opacity="0.1" />
+                </linearGradient>
+
+                <linearGradient id="regDiagonalRayGrad" x1="100" y1="220" x2="900" y2="980" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#38BDF8" stop-opacity="0" />
+                    <stop offset="35%" stop-color="#60A5FA" stop-opacity="0.35" />
+                    <stop offset="55%" stop-color="#93C5FD" stop-opacity="0.5" />
+                    <stop offset="100%" stop-color="#2563EB" stop-opacity="0" />
+                </linearGradient>
+
+                <filter id="regNeonFilterGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="6" result="coloredBlur1" />
+                    <feGaussianBlur stdDeviation="18" result="coloredBlur2" />
+                    <feMerge>
+                        <feMergeNode in="coloredBlur2" />
+                        <feMergeNode in="coloredBlur1" />
+                        <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                </filter>
+            </defs>
+
+            <!-- Diagonal Accent Line -->
+            <line x1="80" y1="200" x2="920" y2="980" stroke="url(#regDiagonalRayGrad)" stroke-width="1.8" />
+
+            <!-- Primary Outer Glowing Ambient Sweep -->
+            <path d="M 480 -60 C 820 180 890 520 560 700 C 260 870 380 1140 520 1260" 
+                  stroke="url(#regNeonArcGrad1)" stroke-width="14" stroke-linecap="round" opacity="0.45" filter="url(#regNeonFilterGlow)" />
+
+            <!-- Primary Razor-Sharp Electric Arc -->
+            <path d="M 480 -60 C 820 180 890 520 560 700 C 260 870 380 1140 520 1260" 
+                  stroke="url(#regNeonArcGrad1)" stroke-width="3.5" stroke-linecap="round" />
+
+            <!-- Secondary Inner Crescent Arc -->
+            <path d="M 160 1260 C 90 980 220 680 520 590" 
+                  stroke="url(#regNeonArcGrad2)" stroke-width="2.5" stroke-linecap="round" opacity="0.7" />
+        </svg>
+    </div>
+
+    <!-- CENTERED FROSTED GLASS REGISTRATION CARD -->
+    <div class="relative z-10 w-full max-w-[540px] mx-auto">
+        <div class="cosmic-glass-card rounded-[28px] p-7 sm:p-9 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85),0_0_40px_-10px_rgba(0,102,255,0.25)] border border-white/[0.14] bg-[#070D1E]/60 backdrop-blur-2xl transition-all duration-300">
+            
+            <!-- TITLE: "Register" (matching reference aesthetic) -->
+            <div class="text-center mb-7">
+                <h1 class="text-3xl sm:text-[32px] font-bold text-white tracking-tight">
+                    Register
+                </h1>
+                <p class="text-xs text-slate-400 mt-1">Créez votre compte étudiant pour accéder à toutes les épreuves</p>
             </div>
-            <h1 class="text-2xl sm:text-3xl font-black text-[#071A49] tracking-tight mb-2.5">Créer votre compte</h1>
-            <p class="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed max-w-sm mx-auto">Rejoignez ArchivEx pour accéder à l'ensemble des épreuves et corrigés universitaires.</p>
-        </div>
 
-        <!-- AUTH SWITCHER TABS -->
-        <div class="grid grid-cols-2 p-1.5 bg-slate-100 rounded-2xl mb-7 text-xs font-black">
-            <a href="{% url 'accounts:login' %}" class="py-2.5 px-3 rounded-xl text-slate-500 hover:text-[#071A49] hover:bg-slate-200/50 text-center flex items-center justify-center space-x-2 transition-all">
-                <i class="fa-solid fa-arrow-right-to-bracket text-slate-400"></i>
-                <span>Se connecter</span>
-            </a>
-            <div class="py-2.5 px-3 rounded-xl bg-white text-[#071A49] shadow-sm text-center flex items-center justify-center space-x-2 border border-slate-200/60">
-                <i class="fa-solid fa-user-plus text-[#2563EB]"></i>
-                <span>Créer un compte</span>
-            </div>
-        </div>
+            <!-- REGISTRATION FORM -->
+            <form method="post" action="{% url 'accounts:register' %}" class="space-y-4">
+                {% csrf_token %}
 
-        <form method="post" action="{% url 'accounts:register' %}" class="space-y-5">
-            {% csrf_token %}
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-[11px] font-black tracking-wider text-[#071A49] uppercase mb-2">Prénom</label>
-                    <div class="relative flex items-center">
-                        <div class="absolute left-4 pointer-events-none text-slate-400">
-                            <i class="fa-solid fa-user text-xs"></i>
-                        </div>
-                        {{ form.first_name }}
+                <!-- NON-FIELD ERRORS -->
+                {% if form.non_field_errors %}
+                    <div class="p-3.5 rounded-2xl bg-rose-950/70 border border-rose-500/40 text-rose-200 text-xs font-semibold flex items-center space-x-2.5 shadow-lg backdrop-blur-md">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm flex-shrink-0"></i>
+                        <span>{{ form.non_field_errors.0 }}</span>
                     </div>
-                    {% if form.first_name.errors %}
-                        <p class="text-xs text-rose-600 font-semibold mt-1.5 pl-1">{{ form.first_name.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
-                <div>
-                    <label class="block text-[11px] font-black tracking-wider text-[#071A49] uppercase mb-2">Nom</label>
-                    <div class="relative flex items-center">
-                        <div class="absolute left-4 pointer-events-none text-slate-400">
-                            <i class="fa-solid fa-user-tag text-xs"></i>
-                        </div>
-                        {{ form.last_name }}
-                    </div>
-                    {% if form.last_name.errors %}
-                        <p class="text-xs text-rose-600 font-semibold mt-1.5 pl-1">{{ form.last_name.errors.0 }}</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-[11px] font-black tracking-wider text-[#071A49] uppercase mb-2">Adresse Email</label>
-                <div class="relative flex items-center">
-                    <div class="absolute left-4 pointer-events-none text-slate-400">
-                        <i class="fa-solid fa-envelope text-xs"></i>
-                    </div>
-                    {{ form.email }}
-                </div>
-                {% if form.email.errors %}
-                    <p class="text-xs text-rose-600 font-semibold mt-1.5 pl-1">{{ form.email.errors.0 }}</p>
                 {% endif %}
-            </div>
 
-            <div>
-                <label class="block text-[11px] font-black tracking-wider text-[#071A49] uppercase mb-2">Mot de passe</label>
-                <div class="relative flex items-center">
-                    <div class="absolute left-4 pointer-events-none text-slate-400">
-                        <i class="fa-solid fa-lock text-xs"></i>
+                <!-- 1. FIRST NAME & LAST NAME ROW -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <div class="relative flex items-center">
+                            {{ form.first_name }}
+                        </div>
+                        {% if form.first_name.errors %}
+                            <p class="text-[11px] text-rose-400 font-semibold mt-1 pl-3">{{ form.first_name.errors.0 }}</p>
+                        {% endif %}
                     </div>
-                    {{ form.password }}
-                    <button type="button" onclick="toggleRegisterPasswordVisibility()" class="absolute right-4 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors" title="Afficher/Masquer le mot de passe">
-                        <i id="register-eye-icon" class="fa-solid fa-eye text-sm"></i>
+                    <div>
+                        <div class="relative flex items-center">
+                            {{ form.last_name }}
+                        </div>
+                        {% if form.last_name.errors %}
+                            <p class="text-[11px] text-rose-400 font-semibold mt-1 pl-3">{{ form.last_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 2. EMAIL INPUT -->
+                <div>
+                    <div class="relative flex items-center">
+                        {{ form.email }}
+                    </div>
+                    {% if form.email.errors %}
+                        <p class="text-[11px] text-rose-400 font-semibold mt-1 pl-3">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- 3. PASSWORD INPUT -->
+                <div>
+                    <div class="relative flex items-center">
+                        {{ form.password }}
+                        <button type="button" 
+                                onclick="toggleRegisterPasswordVisibility()" 
+                                class="absolute right-4 text-slate-400 hover:text-white focus:outline-none transition-colors" 
+                                title="Afficher/Masquer le mot de passe">
+                            <i id="register-eye-icon" class="fa-solid fa-eye text-xs"></i>
+                        </button>
+                    </div>
+                    {% if form.password.errors %}
+                        <p class="text-[11px] text-rose-400 font-semibold mt-1 pl-3">{{ form.password.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- 4. SCHOOL, LEVEL, FILIERE DROPDOWNS -->
+                <div class="space-y-3 pt-1">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 pl-3">
+                            École / Université
+                        </label>
+                        {{ form.school }}
+                        {% if form.school.errors %}
+                            <p class="text-[11px] text-rose-400 font-semibold mt-1 pl-3">{{ form.school.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 pl-3">
+                                Niveau
+                            </label>
+                            {{ form.level }}
+                            {% if form.level.errors %}
+                                <p class="text-[11px] text-rose-400 font-semibold mt-1 pl-3">{{ form.level.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 pl-3">
+                                Filière
+                            </label>
+                            {{ form.filiere }}
+                            {% if form.filiere.errors %}
+                                <p class="text-[11px] text-rose-400 font-semibold mt-1 pl-3">{{ form.filiere.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. WHITE PILL CTA BUTTON -->
+                <div class="pt-3">
+                    <button type="submit" 
+                            class="cosmic-btn-white w-full py-3.5 px-6 rounded-full bg-white hover:bg-slate-100 text-[#050814] font-bold text-sm tracking-wide shadow-[0_4px_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.6)] hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 cursor-pointer text-center block">
+                        Créer mon compte
                     </button>
                 </div>
-                {% if form.password.errors %}
-                    <p class="text-xs text-rose-600 font-semibold mt-1.5 pl-1">{{ form.password.errors.0 }}</p>
-                {% endif %}
+            </form>
+
+            <!-- 6. LOGIN LINK FOOTER -->
+            <div class="mt-6 text-center text-xs text-slate-400 font-medium">
+                <span>Already have an account?</span>
+                <a href="{% url 'accounts:login' %}" 
+                   class="text-white font-bold hover:text-cyan-300 transition-colors ml-1">
+                    Login
+                </a>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-[11px] font-black tracking-wider text-[#071A49] uppercase mb-2">École / Université</label>
-                    {{ form.school }}
-                    {% if form.school.errors %}
-                        <p class="text-xs text-rose-600 font-semibold mt-1.5 pl-1">{{ form.school.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
-                <div>
-                    <label class="block text-[11px] font-black tracking-wider text-[#071A49] uppercase mb-2">Niveau</label>
-                    {{ form.level }}
-                    {% if form.level.errors %}
-                        <p class="text-xs text-rose-600 font-semibold mt-1.5 pl-1">{{ form.level.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
-                <div>
-                    <label class="block text-[11px] font-black tracking-wider text-[#071A49] uppercase mb-2">Filière</label>
-                    {{ form.filiere }}
-                    {% if form.filiere.errors %}
-                        <p class="text-xs text-rose-600 font-semibold mt-1.5 pl-1">{{ form.filiere.errors.0 }}</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            {% if form.non_field_errors %}
-                <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold flex items-center space-x-2.5 shadow-sm">
-                    <i class="fa-solid fa-triangle-exclamation text-rose-600 text-base flex-shrink-0"></i>
-                    <span>{{ form.non_field_errors.0 }}</span>
-                </div>
-            {% endif %}
-
-            <button type="submit" class="w-full py-4 text-xs sm:text-sm font-black text-white bg-gradient-to-r from-[#2563EB] to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-2xl shadow-xl shadow-blue-600/30 hover:shadow-blue-600/50 transition-all duration-200 transform active:scale-[0.98] flex items-center justify-center space-x-2 mt-3">
-                <i class="fa-solid fa-user-plus text-sm"></i>
-                <span>Créer mon compte gratuit</span>
-            </button>
-        </form>
-
-        <div class="mt-8 pt-6 border-t border-slate-100 text-center text-xs text-slate-500 font-medium">
-            <span>Vous avez déjà un compte ?</span>
-            <a href="{% url 'accounts:login' %}" class="text-[#2563EB] font-black hover:underline ml-1">Se connecter</a>
         </div>
     </div>
+
 </div>
+
+<!-- SCOPED CSS FOR COSMIC REGISTER FORM -->
+<style>
+    .cosmic-btn-white {
+        background-color: #ffffff !important;
+        color: #040817 !important;
+    }
+    .cosmic-btn-white:hover {
+        background-color: #f1f5f9 !important;
+        color: #000000 !important;
+    }
+
+    /* Style for dark selects and dropdown options */
+    select option {
+        background-color: #080e22 !important;
+        color: #f8fafc !important;
+    }
+</style>
 
 <script>
     function toggleRegisterPasswordVisibility() {
@@ -160,52 +228,56 @@
         }
     }
 
-document.addEventListener("DOMContentLoaded", function() {
-    // Add padding classes to input fields generated by Django forms
-    const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"], select');
-    inputs.forEach(el => {
-        if (!el.classList.contains('pl-11')) {
-            el.classList.add('w-full', 'pl-11', 'pr-4', 'py-3.5', 'bg-slate-50/80', 'border', 'border-slate-200/90', 'rounded-2xl', 'text-xs', 'sm:text-sm', 'text-[#071A49]', 'placeholder-slate-400', 'focus:outline-none', 'focus:bg-white', 'focus:border-[#2563EB]', 'focus:ring-4', 'focus:ring-[#2563EB]/10', 'transition-all', 'font-semibold');
+    document.addEventListener("DOMContentLoaded", function() {
+        // Apply cosmic pill classes to all text, email, password inputs and selects
+        const formElements = document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"], select');
+        formElements.forEach(el => {
+            el.className = "w-full px-5 py-3 rounded-full text-xs sm:text-sm text-white placeholder-slate-400/80 bg-white/[0.05] border border-white/[0.18] focus:border-cyan-400 focus:bg-white/[0.08] focus:outline-none focus:ring-2 focus:ring-cyan-400/30 transition-all font-medium";
+        });
+
+        const pwdInput = document.getElementById("id_password");
+        if (pwdInput) {
+            pwdInput.classList.add("pr-11");
         }
-    });
 
-    const schoolSelect = document.getElementById("id_school");
-    const levelSelect = document.getElementById("id_level");
-    const filiereSelect = document.getElementById("id_filiere");
+        // Dependent dropdowns logic
+        const schoolSelect = document.getElementById("id_school");
+        const levelSelect = document.getElementById("id_level");
+        const filiereSelect = document.getElementById("id_filiere");
 
-    if (!schoolSelect || !levelSelect || !filiereSelect) return;
+        if (!schoolSelect || !levelSelect || !filiereSelect) return;
 
-    function updateFilieres() {
-        const schoolId = schoolSelect.value;
-        const levelId = levelSelect.value;
-        if (!schoolId) return;
+        function updateFilieres() {
+            const schoolId = schoolSelect.value;
+            const levelId = levelSelect.value;
+            if (!schoolId) return;
 
-        filiereSelect.disabled = true;
-        filiereSelect.innerHTML = '<option value="">Chargement en cours...</option>';
+            filiereSelect.disabled = true;
+            filiereSelect.innerHTML = '<option value="">Chargement en cours...</option>';
 
-        fetch("{% url 'accounts:api_filieres' %}?school_id=" + schoolId + "&level_id=" + (levelId || ''))
-            .then(res => res.json())
-            .then(data => {
-                const currentVal = filiereSelect.value;
-                filiereSelect.innerHTML = '<option value="">-- Choisir la filière --</option>';
-                data.filieres.forEach(item => {
-                    const opt = document.createElement("option");
-                    opt.value = item.id;
-                    opt.textContent = item.name;
-                    if (item.id == currentVal) opt.selected = true;
-                    filiereSelect.appendChild(opt);
+            fetch("{% url 'accounts:api_filieres' %}?school_id=" + schoolId + "&level_id=" + (levelId || ''))
+                .then(res => res.json())
+                .then(data => {
+                    const currentVal = filiereSelect.value;
+                    filiereSelect.innerHTML = '<option value="">-- Choisir la filière --</option>';
+                    data.filieres.forEach(item => {
+                        const opt = document.createElement("option");
+                        opt.value = item.id;
+                        opt.textContent = item.name;
+                        if (item.id == currentVal) opt.selected = true;
+                        filiereSelect.appendChild(opt);
+                    });
+                    filiereSelect.disabled = false;
+                })
+                .catch(() => {
+                    filiereSelect.innerHTML = '<option value="">-- Choisir la filière --</option>';
+                    filiereSelect.disabled = false;
                 });
-                filiereSelect.disabled = false;
-            })
-            .catch(() => {
-                filiereSelect.innerHTML = '<option value="">-- Choisir la filière --</option>';
-                filiereSelect.disabled = false;
-            });
-    }
+        }
 
-    schoolSelect.addEventListener("change", updateFilieres);
-    levelSelect.addEventListener("change", updateFilieres);
-});
+        schoolSelect.addEventListener("change", updateFilieres);
+        levelSelect.addEventListener("change", updateFilieres);
+    });
 </script>
 {% endblock %}
 
