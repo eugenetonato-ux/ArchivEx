@@ -203,10 +203,17 @@
                                             <span>{{ year_group.year_label }}</span>
                                         </span>
                                         {% if year_group.all_locked %}
-                                            <span class="text-[9px] font-black text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded flex items-center space-x-0.5">
-                                                <i class="fa-solid fa-lock text-[8px]" aria-hidden="true"></i>
-                                                <span>Pass requis</span>
-                                            </span>
+                                            {% if not user.is_authenticated %}
+                                                <span class="text-[9px] font-black text-rose-800 bg-rose-100 px-1.5 py-0.5 rounded flex items-center space-x-0.5">
+                                                    <i class="fa-solid fa-right-to-bracket text-[8px]" aria-hidden="true"></i>
+                                                    <span>Connexion requise</span>
+                                                </span>
+                                            {% else %}
+                                                <span class="text-[9px] font-black text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded flex items-center space-x-0.5">
+                                                    <i class="fa-solid fa-lock text-[8px]" aria-hidden="true"></i>
+                                                    <span>Pass requis</span>
+                                                </span>
+                                            {% endif %}
                                         {% else %}
                                             <span class="text-[9px] font-black text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded flex items-center space-x-0.5">
                                                 <i class="fa-solid fa-check text-[8px]" aria-hidden="true"></i>
@@ -223,12 +230,20 @@
                                                     {{ item.session }}
                                                 </span>
                                                 {% if item.is_locked %}
-                                                    <button type="button"
-                                                            onclick="openPassLockedModal('{{ ue.subject.name|escapejs }}', '{{ item.year_label|escapejs }} — {{ item.session|escapejs }}', '{% url 'payments:pass_semestre' semester_id=ue.subject.semester_id %}')"
-                                                            class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold text-[10px] transition-colors inline-flex items-center space-x-1">
-                                                        <i class="fa-solid fa-lock text-[8px] text-amber-600" aria-hidden="true"></i>
-                                                        <span>Activer Pass</span>
-                                                    </button>
+                                                    {% if not user.is_authenticated %}
+                                                        <a href="{% url 'accounts:login' %}?next={{ item.viewer_url|urlencode }}"
+                                                           class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 font-bold text-[10px] transition-colors inline-flex items-center space-x-1">
+                                                            <i class="fa-solid fa-right-to-bracket text-[8px] text-rose-600" aria-hidden="true"></i>
+                                                            <span>Se connecter</span>
+                                                        </a>
+                                                    {% else %}
+                                                        <button type="button"
+                                                                onclick="openPassLockedModal('{{ ue.subject.name|escapejs }}', '{{ item.year_label|escapejs }} — {{ item.session|escapejs }}', '{% url 'payments:pass_semestre' semester_id=ue.subject.semester_id %}')"
+                                                                class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold text-[10px] transition-colors inline-flex items-center space-x-1">
+                                                            <i class="fa-solid fa-lock text-[8px] text-amber-600" aria-hidden="true"></i>
+                                                            <span>Activer Pass</span>
+                                                        </button>
+                                                    {% endif %}
                                                 {% else %}
                                                     <a href="{{ item.viewer_url }}"
                                                        class="px-2.5 py-1 rounded-lg bg-[#071A49] hover:bg-[#2563EB] text-white font-bold text-[10px] transition-colors inline-flex items-center space-x-1">

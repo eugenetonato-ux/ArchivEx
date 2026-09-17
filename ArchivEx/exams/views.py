@@ -138,7 +138,9 @@ def resources_view(request, mode=None):
             subjects_map[subj.id]["seen_keys"].add(unique_key)
 
             is_locked = False
-            if mode == "premium":
+            if not request.user.is_authenticated:
+                is_locked = True
+            elif mode == "premium":
                 is_locked = not can_user_access_exam_pdf(request.user, exam)
 
             viewer_url = reverse("exams:student_viewer", kwargs={"pk": exam.id}) + "?type=exam"
@@ -203,7 +205,9 @@ def resources_view(request, mode=None):
             subjects_map[subj.id]["seen_keys"].add(unique_key)
 
             is_locked = False
-            if mode == "premium":
+            if not request.user.is_authenticated:
+                is_locked = True
+            elif mode == "premium":
                 is_locked = not can_user_access_correction(request.user, exam)
 
             viewer_url = reverse("exams:student_viewer", kwargs={"pk": exam.id}) + "?type=correction"
@@ -268,7 +272,9 @@ def resources_view(request, mode=None):
             subjects_map[subj.id]["seen_keys"].add(unique_key)
 
             is_locked = False
-            if mode == "premium":
+            if not request.user.is_authenticated:
+                is_locked = True
+            elif mode == "premium":
                 is_locked = not can_user_access_summary(request.user, exam)
 
             viewer_url = reverse("exams:student_viewer", kwargs={"pk": exam.id}) + "?type=summary"
@@ -329,7 +335,9 @@ def resources_view(request, mode=None):
             subjects_map[subj.id]["seen_keys"].add(unique_key)
 
             is_locked = False
-            if mode == "premium":
+            if not request.user.is_authenticated:
+                is_locked = True
+            elif mode == "premium":
                 is_locked = not (cs.is_free or has_user_valid_pass(request.user, cs))
 
             viewer_url = reverse("content:summary_detail", kwargs={"pk": cs.id})
@@ -446,6 +454,10 @@ exam_list = resources_view
 
 def exam_detail(request, pk):
     """Page de détail d'une épreuve."""
+    if not request.user.is_authenticated:
+        messages.info(request, "Connectez-vous pour consulter les détails de cette épreuve.")
+        return redirect(f"{reverse('accounts:login')}?next={request.get_full_path()}")
+
     exam = get_object_or_404(
         Exam.objects.select_related(
             "subject", "semester", "filiere", "level", "academic_year", "filiere__school", "summary"
@@ -696,6 +708,10 @@ def _render_pdf_error_response(message="Ce fichier PDF n'est pas encore disponib
 
 def student_viewer_view(request, pk):
     """Page dédiée du Lecteur Académique (Viewer sécurisé avec iframe et anti-copie)."""
+    if not request.user.is_authenticated:
+        messages.info(request, "Connectez-vous pour accéder au lecteur de documents.")
+        return redirect(f"{reverse('accounts:login')}?next={request.get_full_path()}")
+
     exam = get_object_or_404(Exam, pk=pk, is_published=True)
     res_type = request.GET.get("type", "exam")
 
@@ -757,6 +773,9 @@ def student_viewer_view(request, pk):
 
 def stream_watermarked_pdf_view(request, pk):
     """Sert le fichier PDF dynamique tatoué/filigrané au nom et horodatage de l'étudiant."""
+    if not request.user.is_authenticated:
+        return _render_pdf_error_response("Veuillez vous connecter pour accéder à ce document.")
+
     from .services import apply_student_watermark
 
     exam = get_object_or_404(Exam, pk=pk, is_published=True)

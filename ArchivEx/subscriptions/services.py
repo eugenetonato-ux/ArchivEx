@@ -115,13 +115,17 @@ def can_user_access(user, resource):
     Service centralisé de contrôle d'accès ArchivEx V2.
 
     Règles évaluées :
-    1. Si la ressource est gratuite (is_free=True ou access_type='FREE') -> Accès accordé.
-    2. Autrement -> nécessite un Pass valide ou statut Staff.
+    1. L'utilisateur DOIT être authentifié (connecté). Sans connexion -> Aucun accès aux ressources.
+    2. Si la ressource est gratuite (is_free=True ou access_type='FREE') -> Accès accordé pour l'étudiant connecté.
+    3. Autrement -> nécessite un Pass valide ou statut Staff.
     """
     if not resource:
         return False
 
-    # 1. Ressource gratuite
+    if not user or not user.is_authenticated:
+        return False
+
+    # 1. Ressource gratuite (réservée aux membres connectés)
     is_free_attr = getattr(resource, "is_free", False)
     if callable(is_free_attr):
         is_free = is_free_attr()
@@ -138,14 +142,16 @@ def can_user_access(user, resource):
 
 
 def can_user_access_exam_pdf(user, exam):
-    """Accès au PDF de l'épreuve principale : gratuit si exam.is_free, sinon Pass requis."""
+    """Accès au PDF de l'épreuve principale : nécessite une authentification."""
+    if not user or not user.is_authenticated:
+        return False
     return can_user_access(user, exam)
 
 
 def can_user_access_correction(user, exam):
-    """
-    Accès à la correction PDF : Gratuit si is_free_correction est True, sinon Pass valide requis.
-    """
+    """Accès à la correction PDF : nécessite une authentification."""
+    if not user or not user.is_authenticated:
+        return False
     if not exam:
         return False
     if getattr(exam, "is_free_correction", False):
@@ -156,9 +162,9 @@ def can_user_access_correction(user, exam):
 
 
 def can_user_access_summary(user, resource):
-    """
-    Accès au résumé / fiche PDF : Gratuit si is_free_correction est True, sinon Pass valide requis.
-    """
+    """Accès au résumé / fiche PDF : nécessite une authentification."""
+    if not user or not user.is_authenticated:
+        return False
     if not resource:
         return False
     if getattr(resource, "is_free_correction", False):
@@ -167,4 +173,5 @@ def can_user_access_summary(user, resource):
     if res_subj and getattr(res_subj, "is_free_correction", False):
         return True
     return has_user_valid_pass(user, resource)
+
 

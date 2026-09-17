@@ -39,6 +39,11 @@ def summary_list(request):
 
 def summary_detail(request, pk):
     """Lecture directe d'un résumé de cours avec contrôle d'accès."""
+    if not request.user.is_authenticated:
+        from django.urls import reverse
+        messages.info(request, "Connectez-vous pour consulter ce résumé de cours.")
+        return redirect(f"{reverse('accounts:login')}?next={request.get_full_path()}")
+
     summary = get_object_or_404(
         Summary.objects.select_related(
             "subject", "subject__semester", "subject__semester__filiere", "subject__semester__filiere__school", "author"
