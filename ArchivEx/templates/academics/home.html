@@ -18,9 +18,10 @@
             <p class="text-xs font-black text-[#071A49] dark:text-white leading-tight">
                 Kwabo, {{ user.first_name|default:user.username }} !
             </p>
-            <p class="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">
-                Ravi de vous revoir sur ArchivEx.
-            </p>
+            <a href="{% url 'accounts:dashboard' %}" class="inline-flex items-center space-x-1 text-[11px] font-extrabold text-[#2563EB] hover:underline mt-0.5">
+                <span>Accéder à mon tableau de bord</span>
+                <i class="fa-solid fa-arrow-right text-[9px]"></i>
+            </a>
         </div>
         <button type="button" onclick="dismissKwaboToast()" class="w-6 h-6 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center text-xs shrink-0 transition-colors" aria-label="Fermer">
             <i class="fa-solid fa-xmark"></i>
@@ -248,11 +249,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         <i class="fa-solid fa-user-shield"></i>
                         <span>Espace d'administration</span>
                     </a>
+                    <a href="{% url 'accounts:dashboard' %}" class="w-full sm:w-auto bg-gradient-to-r from-[#071A49] via-[#0E2461] to-[#1D4ED8] hover:scale-[1.02] active:scale-[0.98] text-white font-black text-sm px-7 py-3.5 rounded-2xl shadow-xl shadow-blue-900/25 border border-blue-400/30 flex items-center justify-center space-x-2.5 transition-all">
+                        <i class="fa-solid fa-gauge-high text-amber-400 text-base"></i>
+                        <span>Mon tableau de bord</span>
+                        <i class="fa-solid fa-arrow-right text-xs text-blue-200"></i>
+                    </a>
                 {% elif user.is_authenticated %}
-                    <a href="{% url 'academics:filieres' %}" class="w-full sm:w-auto bg-[#2563EB] hover:bg-blue-700 text-white font-black text-sm px-7 py-3.5 rounded-2xl shadow-lg shadow-blue-500/25 flex items-center justify-center space-x-2.5 transition-all">
+                    <a href="{% url 'accounts:dashboard' %}" class="w-full sm:w-auto bg-gradient-to-r from-[#071A49] via-[#0E2461] to-[#1D4ED8] hover:scale-[1.02] active:scale-[0.98] text-white font-black text-sm px-7 py-3.5 rounded-2xl shadow-xl shadow-blue-900/30 border border-blue-400/40 flex items-center justify-center space-x-2.5 transition-all group">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <i class="fa-solid fa-gauge-high text-amber-400 text-base group-hover:rotate-12 transition-transform"></i>
+                        <span>Mon tableau de bord</span>
+                        <i class="fa-solid fa-arrow-right text-xs text-blue-200 group-hover:translate-x-1 transition-transform"></i>
+                    </a>
+                    <a href="{% url 'academics:filieres' %}" class="w-full sm:w-auto bg-[#2563EB] hover:bg-blue-700 text-white font-black text-sm px-7 py-3.5 rounded-2xl shadow-lg shadow-blue-500/25 flex items-center justify-center space-x-2.5 transition-all hover:scale-[1.02] active:scale-[0.98]">
                         <i class="fa-solid fa-graduation-cap"></i>
                         <span>Explorer les matières</span>
-                        <i class="fa-solid fa-chevron-right text-xs"></i>
                     </a>
                     <a href="{% url 'academics:about' %}" class="w-full sm:w-auto bg-white hover:bg-slate-50 text-[#071A49] border-2 border-slate-200 font-black text-sm px-6 py-3.5 rounded-2xl shadow-xs flex items-center justify-center space-x-2.5 transition-all">
                         <div class="w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center text-[10px]">

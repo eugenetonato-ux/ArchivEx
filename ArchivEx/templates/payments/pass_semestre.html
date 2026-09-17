@@ -71,14 +71,14 @@
 
                 <!-- DYNAMIC GRID COUNTS -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {% if subjects_count > 0 or subjects %}
+                    {% if subjects_count > 0 %}
                     <div class="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-100 flex items-start space-x-3">
                         <div
                             class="w-10 h-10 rounded-xl bg-[#071A49] text-white flex items-center justify-center font-black text-lg flex-shrink-0">
                             <i class="fa-solid fa-graduation-cap text-sm"></i>
                         </div>
                         <div>
-                            <span class="text-2xl font-black text-[#071A49] block leading-none mb-1">{{ subjects_count|default:subjects|length }}</span>
+                            <span class="text-2xl font-black text-[#071A49] block leading-none mb-1">{{ subjects_count }}</span>
                             <span class="text-xs font-extrabold text-[#071A49] block">Matières (UE)</span>
                             <span class="text-[11px] text-slate-500 font-medium">Programme complet du semestre</span>
                         </div>
@@ -116,7 +116,7 @@
             </div>
 
             <!-- INCLUDED SUBJECTS PREVIEW -->
-            {% if subjects or sample_subjects %}
+            {% if subjects %}
             <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-sm font-extrabold text-[#071A49] uppercase tracking-wider flex items-center space-x-2">
@@ -124,11 +124,11 @@
                         <span>Matières (UE) incluses dans ton Pass :</span>
                     </h3>
                     <span class="px-2.5 py-0.5 rounded-full bg-blue-50 text-[#2563EB] text-[11px] font-black border border-blue-100">
-                        {{ subjects|default:sample_subjects|length }} UE
+                        {{ subjects_count }} UE
                     </span>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {% for subj in subjects|default:sample_subjects %}
+                    {% for subj in subjects %}
                     <div class="p-3 rounded-2xl bg-slate-50/90 border border-slate-200/80 flex items-center space-x-3">
                         <span class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-[#071A49] font-black text-[10px] tracking-wider shrink-0 shadow-xs">
                             {{ subj.code|default:"UE" }}

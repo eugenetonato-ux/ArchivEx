@@ -419,6 +419,12 @@
  </a>
  {% endif %}
 
+ <!-- TABLEAU DE BORD QUICK ACCESS BUTTON (AUTHENTICATED) -->
+ <a href="{% url 'accounts:dashboard' %}" class="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 border border-blue-400/40 text-white font-extrabold text-xs transition-all shadow-xs shrink-0 hover:scale-105 active:scale-95" title="Mon tableau de bord étudiant">
+     <i class="fa-solid fa-gauge-high text-amber-400 text-xs"></i>
+     <span>Tableau de bord</span>
+ </a>
+
  <!-- PROFILE MENU DROPDOWN -->
  <div class="relative group" id="profile-dropdown-wrapper">
  <button type="button" id="profile-menu-btn" onclick="toggleDropdown('profile-dropdown')" aria-expanded="false" aria-haspopup="true" aria-controls="profile-dropdown" aria-label="Menu profil" class="flex items-center space-x-2 p-1.5 rounded-xl bg-white/10 border border-white/20 hover:border-[#3B82F6] hover:bg-white/20 transition-all focus:outline-none">
