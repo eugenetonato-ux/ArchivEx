@@ -90,9 +90,7 @@
                         <i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm flex-shrink-0"></i>
                         <span>{{ form.non_field_errors.0 }}</span>
                     </div>
-                {% endif %}
-
-                <!-- 1. USERNAME / EMAIL PILL INPUT -->
+                {% endif                 <!-- 1. USERNAME / EMAIL PILL INPUT -->
                 <div>
                     <div class="relative flex items-center">
                         <input type="text" 
@@ -100,7 +98,7 @@
                                name="username" 
                                required 
                                value="{{ request.POST.username|default:'' }}" 
-                               placeholder="Username" 
+                               placeholder="Adresse e-mail ou identifiant" 
                                autocomplete="username"
                                class="cosmic-pill-input w-full px-5 py-3.5 rounded-full text-xs sm:text-sm text-white placeholder-slate-400/80 bg-white/[0.05] border border-white/[0.18] focus:border-cyan-400 focus:bg-white/[0.08] focus:outline-none focus:ring-2 focus:ring-cyan-400/30 transition-all font-medium">
                     </div>
@@ -116,7 +114,7 @@
                                id="id_password_field" 
                                name="password" 
                                required 
-                               placeholder="password" 
+                               placeholder="Mot de passe" 
                                autocomplete="current-password"
                                class="cosmic-pill-input w-full pl-5 pr-11 py-3.5 rounded-full text-xs sm:text-sm text-white placeholder-slate-400/80 bg-white/[0.05] border border-white/[0.18] focus:border-cyan-400 focus:bg-white/[0.08] focus:outline-none focus:ring-2 focus:ring-cyan-400/30 transition-all font-medium">
 
@@ -133,40 +131,40 @@
                     {% endif %}
                 </div>
 
-                <!-- 3. REMEMBER ME & FORGOT PASSWORD ROW (EXACT LAYOUT FROM PHOTO) -->
+                <!-- 3. REMEMBER ME & FORGOT PASSWORD ROW -->
                 <div class="flex items-center justify-between text-xs pt-1 px-1 text-slate-300">
                     <label class="inline-flex items-center space-x-2 cursor-pointer select-none">
                         <input type="checkbox" 
                                name="remember_me" 
                                class="w-3.5 h-3.5 rounded bg-white/10 border border-white/30 text-cyan-500 focus:ring-0 focus:ring-offset-0 transition-all cursor-pointer">
-                        <span class="text-slate-300 text-xs font-normal">Remember me</span>
+                        <span class="text-slate-300 text-xs font-normal">Se souvenir de moi</span>
                     </label>
 
                     <a href="{% url 'support:create' %}?category=recuperation_mot_de_passe" 
                        onclick="redirectToForgotPassword(event);" 
                        class="text-xs text-slate-300 hover:text-cyan-300 transition-colors" 
                        title="Récupérer l'accès à votre compte via le support">
-                        Forgot password?
+                        Mot de passe oublié ?
                     </a>
                 </div>
 
-                <!-- 4. WHITE PILL CTA BUTTON (EXACT STYLE FROM PHOTO) -->
+                <!-- 4. WHITE PILL CTA BUTTON -->
                 <div class="pt-2">
                     <button type="submit" 
-                            class="cosmic-btn-white w-full py-3 px-6 rounded-full bg-white hover:bg-slate-100 text-[#050814] font-bold text-sm tracking-wide shadow-[0_4px_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.6)] hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 cursor-pointer text-center block">
-                        Login
+                            class="cosmic-btn-white w-full py-3.5 px-6 rounded-full bg-white hover:bg-slate-100 text-[#050814] font-bold text-sm tracking-wide shadow-[0_4px_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.6)] hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 cursor-pointer text-center block">
+                        Se connecter
                     </button>
                 </div>
             </form>
 
-            <!-- 5. REGISTER LINK FOOTER (EXACT STYLE: "Don't have an account? Register") -->
+            <!-- 5. REGISTER LINK FOOTER -->
             <div class="mt-6 text-center text-xs text-slate-400 font-medium">
-                <span>Don't have an account?</span>
+                <span>Vous n'avez pas de compte ?</span>
                 <a href="{% url 'accounts:register' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}" 
                    class="text-white font-bold hover:text-cyan-300 transition-colors ml-1">
-                    Register
+                    S'inscrire
                 </a>
-            </div>
+            </div>  </div>
 
         </div>
     </div>
