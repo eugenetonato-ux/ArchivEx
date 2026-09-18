@@ -2320,6 +2320,20 @@ def export_logs_pdf_view(request):
 
 
 @contributor_required
+def clear_site_logs_view(request):
+    """Efface l'ensemble du journal d'activité / audit du site."""
+    if request.method == "POST":
+        try:
+            count = SiteLog.objects.count()
+            SiteLog.objects.all().delete()
+            messages.success(request, f"Le journal d'audit a été effacé avec succès ({count} entrées purgées).")
+        except Exception as e:
+            messages.error(request, f"Erreur lors de la purge du journal : {str(e)}")
+    next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or "contributors:site_logs_list"
+    return redirect(next_url)
+
+
+@contributor_required
 def bulk_operations_view(request):
     """
     Gère les actions groupées (publication, suppression, déplacement) pour une sélection de fichiers Cloud.

@@ -7,18 +7,17 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
 
     
-    <div class="relative overflow-hidden rounded-3xl p-6 sm:p-10 mb-10 shadow-lg border border-blue-200 dark:border-indigo-900/40 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-[#0b1120] dark:to-[#1e1b4b]/40 group transition-all duration-500 hover:shadow-xl">
-        <div class="absolute -top-24 -right-24 w-64 h-64 bg-blue-400/20 dark:bg-blue-600/10 rounded-full blur-3xl group-hover:bg-blue-400/30 dark:group-hover:bg-blue-600/20 transition-all duration-700"></div>
-        <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-400/20 dark:bg-indigo-600/10 rounded-full blur-3xl group-hover:bg-indigo-400/30 dark:group-hover:bg-indigo-600/20 transition-all duration-700"></div>
-        
-        <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div class="flex items-center space-x-5">
-                <div class="w-16 h-16 rounded-2xl bg-white dark:bg-[#151f38] text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-indigo-900/50 flex items-center justify-center font-black text-3xl shadow-sm transform group-hover:scale-105 transition-transform duration-300">
+    <div class="relative overflow-hidden rounded-3xl p-6 sm:p-8 mb-10 border border-blue-100 dark:border-indigo-900/40 bg-gradient-to-br from-blue-50 via-white to-indigo-50/60 dark:from-[#0b1120] dark:via-[#0b1120] dark:to-[#161331]">
+        <div class="absolute -top-16 -right-16 w-56 h-56 bg-blue-400/10 dark:bg-blue-600/10 rounded-full blur-3xl"></div>
+
+        <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 shrink-0 rounded-2xl bg-white dark:bg-[#151f38] text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-indigo-900/50 flex items-center justify-center font-black text-2xl shadow-sm">
                     {{ user.first_name|default:user.username|slice:":1"|upper }}
                 </div>
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-black text-blue-950 dark:text-slate-100 tracking-tight mb-1">Bonjour, {{ user.first_name|default:user.username }}</h1>
-                    <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium">
+                    <p class="text-sm text-slate-600 dark:text-slate-300 font-medium">
                         {% if profile and profile.filiere %}
                             {{ profile.school.name|default:"Université" }} · {{ profile.filiere.name }}
                         {% else %}
@@ -28,11 +27,11 @@
                 </div>
             </div>
 
-            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                <a href="{% url 'accounts:profile' %}" class="bg-white/80 dark:bg-[#151f38]/80 backdrop-blur border border-blue-200 dark:border-indigo-900/50 text-blue-900 dark:text-blue-200 text-xs font-bold px-5 py-2.5 rounded-xl hover:bg-white dark:hover:bg-[#1e293b] transition-all shadow-sm flex items-center justify-center">
+            <div class="flex items-center gap-3">
+                <a href="{% url 'accounts:profile' %}" class="bg-white dark:bg-[#151f38] border border-blue-200 dark:border-indigo-900/50 text-blue-900 dark:text-blue-200 text-xs font-bold px-5 py-2.5 rounded-xl hover:bg-blue-50 dark:hover:bg-[#1e293b] transition-colors flex items-center">
                     <i class="fa-solid fa-user-pen mr-2"></i> Mon profil
                 </a>
-                <a href="{% url 'accounts:logout' %}" class="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/30 text-rose-600 dark:text-rose-400 text-xs font-bold px-5 py-2.5 rounded-xl hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all shadow-sm flex items-center justify-center">
+                <a href="{% url 'accounts:logout' %}" class="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/30 text-rose-600 dark:text-rose-400 text-xs font-bold px-5 py-2.5 rounded-xl hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-colors flex items-center">
                     <i class="fa-solid fa-power-off mr-2"></i> Déconnexion
                 </a>
             </div>
@@ -40,72 +39,52 @@
     </div>
 
     <!-- METRICS CARDS -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-10">
         <!-- Consultations -->
-        <div class="group relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-800 border border-blue-400 dark:border-blue-500 shadow-lg hover:shadow-blue-500/30 transition-all duration-300 transform hover:-translate-y-1">
-            <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-500"></div>
-            
-            <div class="relative z-10 flex justify-between items-start mb-4">
-                <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md text-white border border-white/30 flex items-center justify-center shadow-inner">
-                    <i class="fa-solid fa-book-open text-lg"></i>
-                </div>
-                <span class="text-[10px] font-bold text-white/90 uppercase tracking-wider bg-black/10 px-2 py-1 rounded-lg backdrop-blur-sm border border-white/10">Consultations</span>
+        <div class="flex items-center gap-4 bg-white dark:bg-[#0b1120] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm hover:border-blue-200 dark:hover:border-blue-900/50 transition-colors">
+            <div class="w-12 h-12 shrink-0 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                <i class="fa-solid fa-book-open text-lg"></i>
             </div>
-            <div class="relative z-10">
-                <p class="text-3xl font-black text-white mb-1 tracking-tight drop-shadow-sm">14</p>
-                <p class="text-xs text-blue-100 font-medium">Sujets révisés</p>
+            <div class="min-w-0">
+                <p class="text-2xl font-black text-slate-900 dark:text-white leading-none">14</p>
+                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1.5 truncate">Sujets révisés</p>
             </div>
         </div>
 
         <!-- Favoris -->
-        <div class="group relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-amber-400 to-orange-500 dark:from-amber-500 dark:to-orange-700 border border-amber-300 dark:border-amber-500 shadow-lg hover:shadow-amber-500/30 transition-all duration-300 transform hover:-translate-y-1">
-            <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-500"></div>
-            
-            <div class="relative z-10 flex justify-between items-start mb-4">
-                <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md text-white border border-white/30 flex items-center justify-center shadow-inner">
-                    <i class="fa-solid fa-star text-lg"></i>
-                </div>
-                <span class="text-[10px] font-bold text-white/90 uppercase tracking-wider bg-black/10 px-2 py-1 rounded-lg backdrop-blur-sm border border-white/10">Favoris</span>
+        <div class="flex items-center gap-4 bg-white dark:bg-[#0b1120] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm hover:border-amber-200 dark:hover:border-amber-900/50 transition-colors">
+            <div class="w-12 h-12 shrink-0 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                <i class="fa-solid fa-star text-lg"></i>
             </div>
-            <div class="relative z-10">
-                <p class="text-3xl font-black text-white mb-1 tracking-tight drop-shadow-sm">{{ favorites|length|default:"0" }}</p>
-                <p class="text-xs text-amber-50 font-medium">Épreuves enregistrées</p>
+            <div class="min-w-0">
+                <p class="text-2xl font-black text-slate-900 dark:text-white leading-none">{{ favorites|length|default:"0" }}</p>
+                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1.5 truncate">Épreuves en favoris</p>
             </div>
         </div>
 
         <!-- Documents -->
-        <div class="group relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-emerald-400 to-teal-500 dark:from-emerald-500 dark:to-teal-700 border border-emerald-300 dark:border-emerald-500 shadow-lg hover:shadow-emerald-500/30 transition-all duration-300 transform hover:-translate-y-1">
-            <div class="absolute -left-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-500"></div>
-            
-            <div class="relative z-10 flex justify-between items-start mb-4">
-                <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md text-white border border-white/30 flex items-center justify-center shadow-inner">
-                    <i class="fa-solid fa-file-lines text-lg"></i>
-                </div>
-                <span class="text-[10px] font-bold text-white/90 uppercase tracking-wider bg-black/10 px-2 py-1 rounded-lg backdrop-blur-sm border border-white/10">Ressources</span>
+        <div class="flex items-center gap-4 bg-white dark:bg-[#0b1120] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm hover:border-emerald-200 dark:hover:border-emerald-900/50 transition-colors">
+            <div class="w-12 h-12 shrink-0 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <i class="fa-solid fa-file-lines text-lg"></i>
             </div>
-            <div class="relative z-10">
-                <p class="text-3xl font-black text-white mb-1 tracking-tight drop-shadow-sm">8</p>
-                <p class="text-xs text-emerald-50 font-medium">Documents ouverts</p>
+            <div class="min-w-0">
+                <p class="text-2xl font-black text-slate-900 dark:text-white leading-none">8</p>
+                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1.5 truncate">Documents ouverts</p>
             </div>
         </div>
 
         <!-- Abonnement Pass -->
-        <div class="group relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-purple-500 to-indigo-600 dark:from-purple-600 dark:to-indigo-800 border border-purple-400 dark:border-purple-500 shadow-lg hover:shadow-purple-500/30 transition-all duration-300 transform hover:-translate-y-1">
-            <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] opacity-50"></div>
-            
-            <div class="relative z-10 flex justify-between items-start mb-4">
-                <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md text-white border border-white/30 flex items-center justify-center shadow-inner">
-                    <i class="fa-solid fa-bolt text-lg"></i>
-                </div>
-                <span class="text-[10px] font-bold text-white/90 uppercase tracking-wider bg-black/10 px-2 py-1 rounded-lg backdrop-blur-sm border border-white/10">Abonnement</span>
+        <div class="flex items-center gap-4 bg-white dark:bg-[#0b1120] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm hover:border-purple-200 dark:hover:border-purple-900/50 transition-colors">
+            <div class="w-12 h-12 shrink-0 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                <i class="fa-solid fa-bolt text-lg"></i>
             </div>
-            <div class="relative z-10">
+            <div class="min-w-0">
                 {% if active_accesses %}
-                    <p class="text-2xl sm:text-3xl font-black text-white mb-1 tracking-tight drop-shadow-sm">Actif</p>
-                    <p class="text-xs text-purple-100 font-medium flex items-center"><i class="fa-solid fa-circle-check text-white mr-1.5 opacity-80"></i> Pass validé</p>
+                    <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400 leading-none">Actif</p>
+                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1.5 truncate">Pass validé</p>
                 {% else %}
-                    <p class="text-2xl sm:text-3xl font-black text-white mb-1 tracking-tight drop-shadow-sm">Inactif</p>
-                    <p class="text-xs text-white/80 font-medium flex items-center"><i class="fa-solid fa-lock mr-1.5 opacity-80"></i> Accès restreint</p>
+                    <p class="text-2xl font-black text-slate-900 dark:text-white leading-none">Inactif</p>
+                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1.5 truncate">Accès restreint</p>
                 {% endif %}
             </div>
         </div>
@@ -249,4 +228,3 @@
     </div>
 </div>
 {% endblock %}
-
