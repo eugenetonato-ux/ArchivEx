@@ -13,6 +13,8 @@ class SiteLoggingMiddleware:
             r'^/icons/',
             r'^/manifest\.json',
             r'^/service-worker\.js',
+            r'^/administration/site-logs/',
+            r'^/contributors/site-logs/',
         ]
 
     def __call__(self, request):

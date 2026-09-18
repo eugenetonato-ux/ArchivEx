@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, StudentProfile, Favorite
+from .models import User, StudentProfile, Favorite, SiteLog
 from contributors.models import ContributorProfile
 
 
@@ -38,3 +38,18 @@ class FavoriteAdmin(admin.ModelAdmin):
     list_display = ("user", "exam", "created_at")
     list_filter = ("created_at",)
     search_fields = ("user__username", "exam__title")
+
+
+@admin.register(SiteLog)
+class SiteLogAdmin(admin.ModelAdmin):
+    list_display = ("created_at", "action_type", "user", "ip_address", "path")
+    list_filter = ("action_type", "created_at")
+    search_fields = ("description", "user__username", "path", "ip_address")
+    readonly_fields = ("created_at",)
+    actions = ["clear_selected_logs"]
+
+    @admin.action(description="Supprimer les logs sélectionnés")
+    def clear_selected_logs(self, request, queryset):
+        count = queryset.count()
+        queryset.delete()
+        self.message_user(request, f"{count} entrées de journal ont été supprimées.")

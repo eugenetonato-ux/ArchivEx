@@ -2099,9 +2099,9 @@ def site_logs_list_view(request):
         "action_choices": getattr(SiteLog, "ACTION_CHOICES", ()),
     }
     template_names = [
-        "contributors/logs/list.html",
         "contributors/site_logs/list.html",
         "contributors/site_logs/index.html",
+        "contributors/logs/list.html",
     ]
     return render(request, template_names, context)
 
@@ -2329,7 +2329,12 @@ def clear_site_logs_view(request):
             messages.success(request, f"Le journal d'audit a été effacé avec succès ({count} entrées purgées).")
         except Exception as e:
             messages.error(request, f"Erreur lors de la purge du journal : {str(e)}")
+    else:
+        messages.warning(request, "L'effacement du journal requiert une confirmation par méthode POST.")
+
     next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or "contributors:site_logs_list"
+    if not (next_url.startswith("/") or next_url.startswith("http") or next_url.startswith("contributors:")):
+        next_url = "contributors:site_logs_list"
     return redirect(next_url)
 
 
@@ -2649,6 +2654,7 @@ __all__ = [
     "admin_support_detail_view",
     "site_logs_list_view",
     "export_logs_pdf_view",
+    "clear_site_logs_view",
     "bulk_operations_view",
     "extract_pdf_ocr_view",
     "extract_uploaded_pdf_ocr_view",

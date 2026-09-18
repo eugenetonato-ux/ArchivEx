@@ -25,6 +25,10 @@
         </div>
 
         <div class="flex items-center space-x-3 shrink-0">
+            <button type="button" onclick="openClearLogsModal()" class="px-3.5 py-2.5 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-black transition-all flex items-center space-x-2 cursor-pointer border border-rose-500/20 shadow-xs hover:scale-105">
+                <i class="fa-solid fa-trash-can text-xs" aria-hidden="true"></i>
+                <span>Effacer le journal</span>
+            </button>
             <a href="{% url 'contributors:exam_create' %}" class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:via-purple-700 hover:to-indigo-700 text-white text-xs font-black shadow-lg shadow-purple-500/25 transition-all transform hover:-translate-y-0.5 flex items-center space-x-2">
                 <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i>
                 <span>Ajouter une épreuve</span>
@@ -283,9 +287,15 @@
                     <i class="fa-solid fa-bolt text-amber-500 text-sm"></i>
                     <span>Activités récentes</span>
                 </h2>
-                <a href="{% url 'contributors:summary_list' %}" class="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline">
-                    Tout voir
-                </a>
+                <div class="flex items-center space-x-3">
+                    <a href="{% url 'contributors:site_logs_list' %}" class="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline">
+                        Journal
+                    </a>
+                    <button type="button" onclick="openClearLogsModal()" class="text-xs font-bold text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 inline-flex items-center space-x-1 transition-colors cursor-pointer" title="Effacer le journal d'activité">
+                        <i class="fa-solid fa-trash-can text-[10px]"></i>
+                        <span>Effacer journal</span>
+                    </button>
+                </div>
             </div>
 
             <!-- TIMELINE LIST -->
@@ -558,5 +568,59 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 });
+</script>
+
+<!-- MODAL DE CONFIRMATION D'EFFACEMENT DU JOURNAL -->
+<div id="clearLogsModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-200">
+    <div class="bg-white dark:bg-[#121824] border border-slate-200 dark:border-[#1e293b] rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 transform transition-all">
+        <div class="flex items-center space-x-3 text-rose-600 dark:text-rose-400">
+            <div class="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/40 flex items-center justify-center text-xl shrink-0">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <h3 class="text-base font-black text-slate-900 dark:text-white">Purger tout le journal ?</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Action irréversible</p>
+            </div>
+        </div>
+
+        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+            Êtes-vous sûr de vouloir effacer l'intégralité du journal d'activité ? Toutes les entrées d'audit, connexions, modifications et télémétries actuelles seront définitivement supprimées.
+        </p>
+
+        <form method="post" action="{% url 'contributors:clear_site_logs' %}" class="flex items-center justify-end space-x-3 pt-2">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'contributors:admin_dashboard' %}">
+            <button type="button" onclick="closeClearLogsModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors cursor-pointer">
+                Annuler
+            </button>
+            <button type="submit" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs transition-all shadow-md shadow-rose-600/25 inline-flex items-center space-x-2 cursor-pointer">
+                <i class="fa-solid fa-trash-can text-xs"></i>
+                <span>Confirmer la purge</span>
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openClearLogsModal() {
+        const modal = document.getElementById('clearLogsModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+    }
+    function closeClearLogsModal() {
+        const modal = document.getElementById('clearLogsModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeClearLogsModal();
+    });
+    document.getElementById('clearLogsModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeClearLogsModal();
+    });
 </script>
 {% endblock %}

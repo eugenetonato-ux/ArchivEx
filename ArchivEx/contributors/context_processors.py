@@ -38,6 +38,20 @@ def admin_academic_context(request):
     else:
         available_semesters = Semester.objects.none()
 
+    # Demandes de support étudiant non lues
+    unread_support_count = 0
+    latest_support_requests = []
+    try:
+        from support.models import SupportRequest
+        unread_support_count = SupportRequest.objects.filter(status="non_lu").count()
+        latest_support_requests = list(
+            SupportRequest.objects.filter(status="non_lu")
+            .select_related("user")
+            .order_by("-created_at")[:5]
+        )
+    except Exception:
+        pass
+
     return {
         "active_school": active_school,
         "active_filiere": active_filiere,
@@ -45,4 +59,6 @@ def admin_academic_context(request):
         "available_schools": available_schools,
         "available_filieres": available_filieres,
         "available_semesters": available_semesters,
+        "unread_support_count": unread_support_count,
+        "latest_support_requests": latest_support_requests,
     }

@@ -72,6 +72,7 @@ urlpatterns = [
     path("support/<int:pk>/", views.admin_support_detail_view, name="admin_support_detail"),
     path("site-logs/", views.site_logs_list_view, name="site_logs_list"),
     path("site-logs/export-pdf/", views.export_logs_pdf_view, name="export_logs_pdf"),
+    path("site-logs/clear/", views.clear_site_logs_view, name="clear_site_logs"),
     path("library/bulk/", views.bulk_operations_view, name="bulk_operations"),
     path("parametres/", views.admin_settings_view, name="admin_settings"),
 ]

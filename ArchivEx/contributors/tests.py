@@ -450,5 +450,45 @@ class Phase11AdministrationTests(TestCase):
         self.assertIsNone(Exam.objects.filter(title="Épreuve Sans Fichier").first())
 
 
+class SiteLogsClearTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_superuser(username="admin_logs", email="logs@test.com", password="Password123!")
+        self.client.login(username="admin_logs", password="Password123!")
+
+        from accounts.models import SiteLog
+        self.log1 = SiteLog.objects.create(
+            user=self.user,
+            action_type="CONNECTION",
+            description="Connexion au panel",
+            ip_address="127.0.0.1"
+        )
+        self.log2 = SiteLog.objects.create(
+            user=self.user,
+            action_type="MODIFICATION",
+            description="Modification examen",
+            ip_address="127.0.0.1"
+        )
+
+    def test_clear_logs_post_success(self):
+        from accounts.models import SiteLog
+        self.assertEqual(SiteLog.objects.count(), 2)
+
+        url = reverse("contributors:clear_site_logs")
+        res = self.client.post(url, {"next": reverse("contributors:site_logs_list")})
+        self.assertEqual(res.status_code, 302)
+        self.assertEqual(SiteLog.objects.count(), 0)
+
+    def test_clear_logs_get_does_not_delete(self):
+        from accounts.models import SiteLog
+        self.assertEqual(SiteLog.objects.count(), 2)
+
+        url = reverse("contributors:clear_site_logs")
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 302)
+        self.assertEqual(SiteLog.objects.count(), 2)
+
+
+
 
 
