@@ -83,4 +83,40 @@ class AccountsAndAcademicsTest(TestCase):
         self.assertEqual(res.context["profile"], profile_a)
         self.assertNotEqual(res.context["profile"], profile_b)
 
+    def test_login_unknown_identifier_proposes_registration(self):
+        """When an unrecognized user tries to log in, propose registration with their email prefilled."""
+        res = self.client.post(reverse("accounts:login"), {
+            "username": "inconnu@gmail.com",
+            "password": "RandomPassword123!"
+        })
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(res.context["form"].account_not_found)
+        self.assertFalse(res.context["form"].password_incorrect)
+        self.assertContains(res, "Identifiant non reconnu")
+        self.assertContains(res, "Créer un compte")
+        self.assertContains(res, "inconnu%40gmail.com")
+
+    def test_login_known_identifier_wrong_password_warns_incorrect_password(self):
+        """When a recognized user types a wrong password, show password incorrect without proposing registration as a new account."""
+        User.objects.create_user(
+            username="existant@gmail.com",
+            email="existant@gmail.com",
+            password="CorrectPassword123!"
+        )
+        res = self.client.post(reverse("accounts:login"), {
+            "username": "existant@gmail.com",
+            "password": "WrongPassword999!"
+        })
+        self.assertEqual(res.status_code, 200)
+        self.assertFalse(res.context["form"].account_not_found)
+        self.assertTrue(res.context["form"].password_incorrect)
+        self.assertContains(res, "Mot de passe incorrect")
+        self.assertNotContains(res, "Rejoignez-nous en 30 secondes")
+
+    def test_register_prefilled_email_from_query_param(self):
+        """Register form correctly prefills the email passed via GET parameter."""
+        res = self.client.get(reverse("accounts:register") + "?email=prefill.student@gmail.com")
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "prefill.student@gmail.com")
+
 

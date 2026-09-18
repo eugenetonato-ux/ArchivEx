@@ -3,16 +3,27 @@
 {% block title %}Résumés de cours — ArchivEx V2{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+    <!-- BREADCRUMB NAVIGATION -->
+    <nav class="flex items-center text-xs font-semibold text-slate-500 space-x-2 mb-6 flex-wrap gap-y-1" aria-label="Fil d'ariane">
+        <a href="{% url 'academics:home' %}" class="hover:text-[#2563EB] transition-colors">Accueil</a>
+        <span>/</span>
+        <a href="{% url 'exams:free_liste' %}" class="hover:text-[#2563EB] transition-colors">Ressources</a>
+        <span>/</span>
+        <span class="text-[#071A49] font-black">Fiches & Résumés de cours</span>
+    </nav>
+
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
         <div>
-            <h1 class="text-3xl font-black text-[#071A49]">Fiches & Résumés de Cours</h1>
+            <h1 class="text-2xl sm:text-3xl font-black text-[#071A49]">Fiches & Résumés de Cours</h1>
             <p class="text-sm text-slate-500 font-medium mt-1">Lisez vos résumés directement en ligne pour réviser efficacement vos UE</p>
         </div>
         <form method="get" class="flex gap-2">
             <input type="text" name="q" value="{{ q }}" placeholder="Rechercher un résumé..." class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#2563EB] outline-none">
             <button type="submit" class="px-4 py-2.5 bg-[#2563EB] text-white text-xs font-bold rounded-xl hover:bg-blue-700">Chercher</button>
         </form>
+    </div>
+
     {% if selected_subject %}
         <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-blue-50 text-[#2563EB] border border-blue-200 text-xs font-extrabold mb-6">
             <span>Filtre actif : {{ selected_subject.name }}</span>

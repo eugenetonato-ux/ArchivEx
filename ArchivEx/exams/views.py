@@ -708,10 +708,6 @@ def _render_pdf_error_response(message="Ce fichier PDF n'est pas encore disponib
 
 def student_viewer_view(request, pk):
     """Page dédiée du Lecteur Académique (Viewer sécurisé avec iframe et anti-copie)."""
-    if not request.user.is_authenticated:
-        messages.info(request, "Connectez-vous pour accéder au lecteur de documents.")
-        return redirect(f"{reverse('accounts:login')}?next={request.get_full_path()}")
-
     exam = get_object_or_404(Exam, pk=pk, is_published=True)
     res_type = request.GET.get("type", "exam")
 
@@ -772,10 +768,9 @@ def student_viewer_view(request, pk):
 
 
 def stream_watermarked_pdf_view(request, pk):
-    """Sert le fichier PDF dynamique tatoué/filigrané au nom et horodatage de l'étudiant."""
-    if not request.user.is_authenticated:
-        return _render_pdf_error_response("Veuillez vous connecter pour accéder à ce document.")
-
+    """Sert le fichier PDF dynamique tatoué/filigrané au nom et horodatage de l'étudiant.
+    Les ressources gratuites sont servies sans watermark pour les utilisateurs anonymes.
+    """
     from .services import apply_student_watermark
 
     exam = get_object_or_404(Exam, pk=pk, is_published=True)
@@ -812,14 +807,29 @@ def stream_watermarked_pdf_view(request, pk):
     subj_name = exam.subject.name if exam.subject else "Document"
     safe_filename = _sanitize_header_filename(f"ArchivEx_{res_type}_{subj_name}_{exam.year}") + ".pdf"
 
+    # Utilisateur anonyme sur ressource gratuite : servir le PDF brut, sans watermark
+    if not request.user.is_authenticated:
+        try:
+            if isinstance(file_obj, str) and os.path.exists(file_obj):
+                raw_io = open(file_obj, "rb")
+            elif hasattr(file_obj, "open"):
+                raw_io = file_obj.open("rb")
+            else:
+                return redirect(getattr(file_obj, "url", "/"))
+            response = FileResponse(raw_io, content_type="application/pdf")
+            response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
+            return response
+        except Exception:
+            return _render_pdf_error_response("Le fichier PDF n'a pas pu être lu par le serveur.")
+
     # 1. Vérification du cache serveur (réponse instantanée sous ~5ms)
     from django.core.cache import cache
+    from io import BytesIO
     file_mtime = 0
     if isinstance(file_obj, str) and os.path.exists(file_obj):
         file_mtime = int(os.path.getmtime(file_obj))
 
     cache_key = f"wm_pdf_{exam.id}_{res_type}_{request.user.id}_{file_mtime}"
-    from io import BytesIO
     cached_pdf = cache.get(cache_key)
     if cached_pdf:
         response = FileResponse(BytesIO(cached_pdf), content_type="application/pdf")

@@ -61,7 +61,7 @@ class StudentRegistrationForm(forms.ModelForm):
 
 
 class StudentLoginForm(AuthenticationForm):
-    username = forms.CharField(label="Adresse Email", widget=forms.TextInput(attrs={
+    username = forms.CharField(label="Adresse Email ou identifiant", widget=forms.TextInput(attrs={
         'class': 'w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]',
         'placeholder': 'etudiant@gmail.com'
     }))
@@ -69,6 +69,44 @@ class StudentLoginForm(AuthenticationForm):
         'class': 'w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]',
         'placeholder': '••••••••'
     }))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.account_not_found = False
+        self.password_incorrect = False
+        self.tried_identifier = ""
+
+    def clean(self):
+        username = self.cleaned_data.get("username", "").strip()
+        password = self.cleaned_data.get("password", "")
+        self.tried_identifier = username
+
+        if username and password:
+            from django.db.models import Q
+            from django.contrib.auth import authenticate
+            # Vérification de l'existence du compte dans la base de données
+            user_obj = User.objects.filter(Q(username__iexact=username) | Q(email__iexact=username)).first()
+
+            if not user_obj:
+                self.account_not_found = True
+                raise forms.ValidationError(
+                    "Identifiant non reconnu par la base de données. Vous n'avez pas encore de compte ?",
+                    code="account_not_found",
+                )
+
+            # Le compte existe : tentative d'authentification avec son nom d'utilisateur officiel
+            self.user_cache = authenticate(self.request, username=user_obj.username, password=password)
+
+            if self.user_cache is None:
+                self.password_incorrect = True
+                raise forms.ValidationError(
+                    "Votre identifiant est reconnu, mais le mot de passe saisi est incorrect.",
+                    code="password_incorrect",
+                )
+            else:
+                self.confirm_login_allowed(self.user_cache)
+
+        return self.cleaned_data
 
 
 class StudentProfileForm(forms.ModelForm):

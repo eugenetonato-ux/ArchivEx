@@ -17,7 +17,13 @@ def notify_target_students(school=None, level=None, filiere=None, notification_t
     if filiere:
         profiles = profiles.filter(filiere=filiere)
 
-    target_users = set(p.user for p in profiles if p.user.is_active)
+    target_users = set(
+        p.user for p in profiles 
+        if p.user.is_active 
+        and not p.user.is_staff 
+        and not getattr(p.user, 'is_superuser', False)
+        and not hasattr(p.user, 'contributor_profile')
+    )
 
     if not target_users:
         return 0

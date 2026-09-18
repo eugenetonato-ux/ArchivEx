@@ -73,7 +73,11 @@ def admin_login_view(request):
                 else:
                     error = "Accès refusé : ce compte ne dispose pas des autorisations staff/administrateur."
             else:
-                error = "Nom d'utilisateur ou mot de passe incorrect."
+                user_exists = User.objects.filter(Q(username__iexact=username_input) | Q(email__iexact=username_input)).exists()
+                if not user_exists:
+                    error = "Identifiant non reconnu par la base de données. Si vous êtes étudiant, connectez-vous ou inscrivez-vous sur l'espace étudiant."
+                else:
+                    error = "Identifiant reconnu, mais le mot de passe saisi est incorrect."
 
     context = {
         "error": error,

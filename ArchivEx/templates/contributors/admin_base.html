@@ -339,8 +339,8 @@
                 <a href="{% url 'contributors:admin_support_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'support' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
                     <i class="fa-solid fa-headset w-4 text-center text-rose-400" aria-hidden="true"></i>
                     <span class="flex-1">Support</span>
-                    {% if unread_notifications_count %}
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white animate-pulse">{{ unread_notifications_count }}</span>
+                    {% if unread_support_count %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white animate-pulse" title="{{ unread_support_count }} message(s) d'assistance non lu(s)">{{ unread_support_count }}</span>
                     {% endif %}
                 </a>
 
@@ -446,6 +446,77 @@
                     <span class="font-extrabold text-white">{{ user.first_name|default:user.username }}</span>
                 </div>
                 
+                <!-- CENTRE DE NOTIFICATIONS SUPPORT ÉTUDIANTS -->
+                <div class="relative" id="admin-support-dropdown-container">
+                    <button type="button" onclick="toggleSupportDropdown()" id="admin-support-dropdown-btn" class="relative p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer" title="Demandes d'assistance étudiants">
+                        <i class="fa-solid fa-headset text-rose-400 text-xs" aria-hidden="true"></i>
+                        {% if unread_support_count %}
+                            <span class="absolute -top-1 -right-1 min-w-[1.125rem] h-[1.125rem] px-1 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-md animate-pulse">
+                                {{ unread_support_count }}
+                            </span>
+                        {% endif %}
+                    </button>
+
+                    <!-- MENU DÉROULANT DES DEMANDES SUPPORT -->
+                    <div id="admin-support-dropdown-menu" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-[#121824] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden text-slate-800 dark:text-slate-100">
+                        <div class="p-3.5 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-headset text-rose-500 text-sm"></i>
+                                <span class="text-xs font-black text-slate-900 dark:text-white">Messages Support Étudiants</span>
+                            </div>
+                            {% if unread_support_count %}
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500/15 text-rose-600 dark:text-rose-400">
+                                    {{ unread_support_count }} non lu{{ unread_support_count|pluralize }}
+                                </span>
+                            {% else %}
+                                <span class="text-[10px] font-bold text-slate-400">Aucun message</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
+                            {% if latest_support_requests %}
+                                {% for req in latest_support_requests %}
+                                    <a href="{% url 'contributors:admin_support_detail' req.pk %}" class="block p-3 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <span class="text-[11px] font-extrabold text-slate-900 dark:text-white truncate max-w-[180px]">
+                                                {{ req.user.get_full_name|default:req.user.username|default:req.guest_name|default:"Étudiant" }}
+                                            </span>
+                                            <span class="text-[9px] font-semibold text-slate-400">
+                                                {{ req.created_at|timesince }}
+                                            </span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-tight">
+                                            {{ req.message }}
+                                        </p>
+                                        <div class="mt-1.5 flex items-center space-x-1.5">
+                                            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400">
+                                                {{ req.get_category_display }}
+                                            </span>
+                                            {% if req.guest_email %}
+                                                <span class="text-[9px] text-slate-400 font-mono truncate max-w-[150px]">
+                                                    {{ req.guest_email }}
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            {% else %}
+                                <div class="py-8 px-4 text-center text-slate-400 text-xs">
+                                    <i class="fa-solid fa-circle-check text-emerald-500 text-xl mb-2 block"></i>
+                                    Toutes les demandes de support ont été traitées !
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="p-2.5 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-100 dark:border-slate-800 text-center">
+                            <a href="{% url 'contributors:admin_support_list' %}" class="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline inline-flex items-center space-x-1">
+                                <span>Accéder à tout le support</span>
+                                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- COMFORT / DARK MODE TOGGLE -->
                 <button type="button" onclick="toggleDarkMode()" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-colors flex items-center justify-center shrink-0" title="Mode Confort">
                     <i class="fa-solid fa-moon text-amber-300 dark:hidden text-xs"></i>
@@ -481,6 +552,37 @@
                             </div>
                         {% endfor %}
                     </div>
+                {% endif %}
+
+                <!-- BANNIÈRE D'ALERTE DIRECTE DU SUPPORT ÉTUDIANT (Visible partout dans l'admin sauf dans la section support elle-même) -->
+                {% if unread_support_count > 0 and 'support' not in request.path %}
+                <div class="mb-6 relative overflow-hidden rounded-3xl p-5 sm:p-6 bg-gradient-to-r from-rose-500/10 via-amber-500/10 to-purple-500/10 border border-rose-500/30 dark:border-rose-500/20 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all">
+                    <div class="flex items-start sm:items-center space-x-4">
+                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-600 to-pink-500 text-white flex items-center justify-center text-xl shrink-0 shadow-lg shadow-rose-500/30 animate-pulse">
+                            <i class="fa-solid fa-headset"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-600 dark:text-rose-400">
+                                    <i class="fa-solid fa-bell mr-1"></i>Support Étudiant
+                                </span>
+                                <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Action requise</span>
+                            </div>
+                            <h2 class="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1">
+                                {{ unread_support_count }} nouveau{{ unread_support_count|pluralize:"x" }} message{{ unread_support_count|pluralize }} d'étudiant en attente
+                            </h2>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 font-medium mt-0.5">
+                                Un ou plusieurs étudiants nécessitent une réponse ou une assistance. Vous pouvez y répondre immédiatement sans chercher dans les menus.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3 shrink-0 self-end md:self-auto">
+                        <a href="{% url 'contributors:admin_support_list' %}?status=non_lu" class="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white text-xs font-black shadow-lg shadow-rose-600/25 transition-all transform hover:-translate-y-0.5 flex items-center space-x-2">
+                            <span>Traiter les messages ({{ unread_support_count }})</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </a>
+                    </div>
+                </div>
                 {% endif %}
 
                 {% block admin_content %}{% endblock %}
@@ -639,6 +741,29 @@
             },
             body: JSON.stringify(data)
         }).catch(err => console.log('Click logging skipped: ', err));
+    });
+
+    // Gestion du menu déroulant des messages support
+    function toggleSupportDropdown() {
+        const menu = document.getElementById('admin-support-dropdown-menu');
+        if (menu) {
+            menu.classList.toggle('hidden');
+        }
+    }
+
+    document.addEventListener('click', function(e) {
+        const container = document.getElementById('admin-support-dropdown-container');
+        const menu = document.getElementById('admin-support-dropdown-menu');
+        if (container && menu && !container.contains(e.target)) {
+            menu.classList.add('hidden');
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const menu = document.getElementById('admin-support-dropdown-menu');
+            if (menu) menu.classList.add('hidden');
+        }
     });
     </script>
     <script src="{% static 'js/drag_drop.js' %}"></script>

@@ -171,6 +171,14 @@ def admin_support_list_view(request):
     """
     Vue administration : liste de toutes les demandes de support étudiants.
     """
+    # Marquer les notifications de nouveau support comme lues pour l'admin connecté
+    if request.user.is_authenticated:
+        Notification.objects.filter(
+            recipient=request.user,
+            notification_type="NEW_SUPPORT",
+            is_read=False,
+        ).update(is_read=True)
+
     status_filter = request.GET.get("status", "").strip()
     support_requests = SupportRequest.objects.select_related("user").prefetch_related("replies").order_by("-created_at")
 
@@ -205,6 +213,11 @@ def admin_support_detail_view(request, pk):
     Vue administration : détail d'une demande + formulaire de réponse.
     """
     support_request = get_object_or_404(SupportRequest, pk=pk)
+
+    # Si la demande était non lue, la marquer comme étant prise en charge (en cours)
+    if support_request.status == "non_lu":
+        support_request.status = "en_cours"
+        support_request.save(update_fields=["status"])
 
     # Marquer les notifications liées comme lues pour cet administrateur
     Notification.objects.filter(

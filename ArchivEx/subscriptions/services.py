@@ -142,36 +142,55 @@ def can_user_access(user, resource):
 
 
 def can_user_access_exam_pdf(user, exam):
-    """Accès au PDF de l'épreuve principale : nécessite une authentification."""
+    """Accès au PDF de l'épreuve principale.
+    - Épreuve gratuite (is_free=True) : accessible même sans connexion.
+    - Épreuve premium : nécessite un Pass actif (connexion obligatoire).
+    """
+    if not exam:
+        return False
+    # Les épreuves gratuites sont accessibles à tous, connecté ou non
+    if getattr(exam, "is_free", False):
+        return True
+    # Pour le reste, il faut être connecté
     if not user or not user.is_authenticated:
         return False
     return can_user_access(user, exam)
 
 
 def can_user_access_correction(user, exam):
-    """Accès à la correction PDF : nécessite une authentification."""
-    if not user or not user.is_authenticated:
-        return False
+    """Accès à la correction PDF.
+    - Correction gratuite (is_free_correction=True) : accessible sans connexion.
+    - Correction premium : nécessite un Pass actif.
+    """
     if not exam:
         return False
+    # Correction explicitement gratuite -> accessible à tous
     if getattr(exam, "is_free_correction", False):
         return True
     if exam.subject and getattr(exam.subject, "is_free_correction", False):
         return True
+    # Pour le reste, connexion et Pass requis
+    if not user or not user.is_authenticated:
+        return False
     return has_user_valid_pass(user, exam)
 
 
 def can_user_access_summary(user, resource):
-    """Accès au résumé / fiche PDF : nécessite une authentification."""
-    if not user or not user.is_authenticated:
-        return False
+    """Accès au résumé / fiche PDF.
+    - Résumé gratuit (is_free_correction=True) : accessible sans connexion.
+    - Résumé premium : nécessite un Pass actif.
+    """
     if not resource:
         return False
+    # Résumé explicitement gratuit -> accessible à tous
     if getattr(resource, "is_free_correction", False):
         return True
     res_subj = getattr(resource, "subject", None)
     if res_subj and getattr(res_subj, "is_free_correction", False):
         return True
+    # Pour le reste, connexion et Pass requis
+    if not user or not user.is_authenticated:
+        return False
     return has_user_valid_pass(user, resource)
 
 

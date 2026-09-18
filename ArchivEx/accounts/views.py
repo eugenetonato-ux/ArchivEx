@@ -29,7 +29,8 @@ def register_view(request):
         else:
             messages.error(request, "Veuillez corriger les erreurs ci-dessous.")
     else:
-        form = StudentRegistrationForm()
+        initial_email = request.GET.get("email", "").strip()
+        form = StudentRegistrationForm(initial={"email": initial_email} if initial_email else None)
 
     return render(request, "accounts/register.html", {"form": form})
 
@@ -65,7 +66,18 @@ def login_view(request):
                 return redirect("accounts:dashboard")
             return redirect(next_url)
         else:
-            messages.error(request, "Email ou mot de passe incorrect.")
+            if getattr(form, "account_not_found", False):
+                messages.error(
+                    request,
+                    "Identifiant non reconnu dans la base de données. Vous n'avez pas de compte ? Nous vous invitons à vous inscrire."
+                )
+            elif getattr(form, "password_incorrect", False):
+                messages.error(
+                    request,
+                    "Identifiant reconnu, mais le mot de passe saisi est incorrect. Veuillez vérifier votre mot de passe."
+                )
+            else:
+                messages.error(request, "Email ou mot de passe incorrect.")
     else:
         form = StudentLoginForm()
 

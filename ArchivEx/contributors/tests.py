@@ -489,6 +489,118 @@ class SiteLogsClearTest(TestCase):
         self.assertEqual(SiteLog.objects.count(), 2)
 
 
+class SupportAndNotificationSeparationTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin = User.objects.create_superuser(username="admin_sep", email="admin_sep@test.com", password="Password123!")
+        self.student = User.objects.create_user(username="student_sep@test.com", password="Password123!")
+
+        from academics.models import School, Level, Filiere, Semester, AcademicYear, Subject
+        self.school = School.objects.create(name="ENEAM", code="ENEAM", slug="eneam", is_active=True)
+        self.level = Level.objects.create(name="L1", code="L1")
+        self.filiere = Filiere.objects.create(school=self.school, level=self.level, name="Informatique")
+        self.semester = Semester.objects.create(filiere=self.filiere, label="Semestre 1", number=1)
+        self.year = AcademicYear.objects.create(label="2025-2026")
+        self.subject = Subject.objects.create(semester=self.semester, name="Bases de données")
+
+        from accounts.models import StudentProfile
+        StudentProfile.objects.create(user=self.student, school=self.school, level=self.level, filiere=self.filiere)
+
+    def test_exam_publication_does_not_affect_support(self):
+        """Publishing or updating an exam must NOT create or affect SupportRequest or admin support count."""
+        from exams.models import Exam
+        from support.models import SupportRequest
+        from notifications.models import Notification
+
+        self.assertEqual(SupportRequest.objects.count(), 0)
+
+        # Admin logs in and creates/updates an exam
+        self.client.login(username="admin_sep", password="Password123!")
+        exam = Exam.objects.create(
+            title="Examen BD 2026",
+            subject=self.subject,
+            semester=self.semester,
+            filiere=self.filiere,
+            level=self.level,
+            academic_year=self.year,
+            exam_type="examen",
+            year=2026,
+            is_published=True
+        )
+
+        # Verify support requests remain 0
+        self.assertEqual(SupportRequest.objects.count(), 0)
+
+        # Verify admin dashboard has unread_support_count = 0
+        res = self.client.get(reverse("contributors:admin_dashboard"))
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.context["unread_support_count"], 0)
+        # Verify no support alert banner is shown
+        self.assertNotContains(res, "message d'étudiant en attente")
+
+    def test_student_support_message_shows_direct_admin_notification(self):
+        """When a student submits a support request, admin sees unread_support_count > 0 and alert banner."""
+        from support.models import SupportRequest
+
+        # Student creates a support message
+        req = SupportRequest.objects.create(
+            user=self.student,
+            category="question",
+            message="Bonjour, j'ai une question sur mon cours.",
+            status="non_lu"
+        )
+
+        # Admin visits the dashboard
+        self.client.login(username="admin_sep", password="Password123!")
+        res = self.client.get(reverse("contributors:admin_dashboard"))
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.context["unread_support_count"], 1)
+        self.assertContains(res, "1 nouveau message d'étudiant en attente")
+        self.assertContains(res, "Messages Support Étudiants")
+
+        # Admin visits exam list - banner must be immediately visible without going to support
+        res_exams = self.client.get(reverse("contributors:exam_list"))
+        self.assertEqual(res_exams.status_code, 200)
+        self.assertContains(res_exams, "1 nouveau message d'étudiant en attente")
+
+        # Admin visits summary list - banner must be immediately visible
+        res_summaries = self.client.get(reverse("contributors:summary_list"))
+        self.assertEqual(res_summaries.status_code, 200)
+        self.assertContains(res_summaries, "1 nouveau message d'étudiant en attente")
+
+        # When admin is inside the support page, the banner is hidden (they are already working on support)
+        res_support = self.client.get(reverse("contributors:admin_support_list"))
+        self.assertEqual(res_support.status_code, 200)
+        self.assertNotContains(res_support, "Un ou plusieurs étudiants nécessitent une réponse")
+
+    def test_staff_does_not_receive_exam_publication_notifications(self):
+        """Exams publication notifications must target students only and never staff or contributors."""
+        from exams.models import Exam
+        from notifications.models import Notification
+
+        self.client.login(username="admin_sep", password="Password123!")
+        Exam.objects.create(
+            title="Algèbre Linéaire",
+            subject=self.subject,
+            semester=self.semester,
+            filiere=self.filiere,
+            level=self.level,
+            academic_year=self.year,
+            exam_type="partiel",
+            year=2026,
+            is_published=True
+        )
+
+        # The student has received 1 notification
+        student_notifs = Notification.objects.filter(recipient=self.student, notification_type="NEW_EXAM")
+        self.assertEqual(student_notifs.count(), 1)
+
+        # The admin has NOT received any publication notification
+        admin_notifs = Notification.objects.filter(recipient=self.admin, notification_type="NEW_EXAM")
+        self.assertEqual(admin_notifs.count(), 0)
+
+
+
 
 
 

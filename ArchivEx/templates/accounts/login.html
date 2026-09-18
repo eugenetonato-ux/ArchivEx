@@ -84,8 +84,52 @@
             <form method="post" action="{% url 'accounts:login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}" onsubmit="sessionStorage.removeItem('archivex_pwa_session_shown');" class="space-y-4">
                 {% csrf_token %}
 
-                <!-- NON-FIELD FORM ERRORS -->
-                {% if form.non_field_errors %}
+                <!-- NON-FIELD FORM ERRORS & CONTEXTUAL FEEDBACK -->
+                {% if form.account_not_found %}
+                    <!-- ALERTE IDENTIFIANT NON RECONNU + PROPOSITION D'INSCRIPTION DIRECTE -->
+                    <div class="p-4 rounded-2xl bg-amber-950/80 border border-amber-500/40 text-amber-100 text-xs shadow-xl backdrop-blur-md space-y-3 animate-in fade-in duration-200">
+                        <div class="flex items-start space-x-2.5">
+                            <div class="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                                <i class="fa-solid fa-user-xmark text-sm"></i>
+                            </div>
+                            <div class="flex-grow">
+                                <p class="font-extrabold text-amber-300 text-xs uppercase tracking-wider">Identifiant non reconnu</p>
+                                <p class="text-[11px] text-slate-200 mt-1 leading-relaxed">
+                                    Aucun compte n'a été trouvé avec « <span class="font-bold text-white">{{ form.tried_identifier|default:request.POST.username }}</span> ». Vous n'avez pas encore de compte sur ArchivEx ?
+                                </p>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-t border-amber-500/20 flex flex-col sm:flex-row items-center justify-between gap-2">
+                            <span class="text-[11px] text-amber-200/80">Rejoignez-nous en 30 secondes :</span>
+                            <a href="{% url 'accounts:register' %}?email={{ form.tried_identifier|urlencode }}{% if request.GET.next %}&next={{ request.GET.next|urlencode }}{% endif %}" class="w-full sm:w-auto px-3.5 py-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-[#020510] font-black text-[11px] shadow-md shadow-cyan-500/30 transition-all transform hover:scale-105 text-center inline-flex items-center justify-center space-x-1 shrink-0">
+                                <span>Créer un compte</span>
+                                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                            </a>
+                        </div>
+                    </div>
+                {% elif form.password_incorrect %}
+                    <!-- ALERTE MOT DE PASSE INCORRECT + RECUPERATION DIRECTE -->
+                    <div class="p-4 rounded-2xl bg-rose-950/80 border border-rose-500/40 text-rose-100 text-xs shadow-xl backdrop-blur-md space-y-2.5 animate-in fade-in duration-200">
+                        <div class="flex items-start space-x-2.5">
+                            <div class="w-7 h-7 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 mt-0.5">
+                                <i class="fa-solid fa-key text-sm"></i>
+                            </div>
+                            <div class="flex-grow">
+                                <p class="font-extrabold text-rose-300 text-xs uppercase tracking-wider">Mot de passe incorrect</p>
+                                <p class="text-[11px] text-slate-200 mt-1 leading-relaxed">
+                                    Votre compte est bien reconnu, mais le mot de passe saisi est erroné. Veuillez vérifier la casse (majuscules/minuscules).
+                                </p>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-t border-rose-500/20 flex items-center justify-between">
+                            <span class="text-[11px] text-rose-200/80">Besoin d'aide ?</span>
+                            <a href="{% url 'support:create' %}?category=recuperation_mot_de_passe&email={{ form.tried_identifier|urlencode }}" class="text-[11px] font-bold text-cyan-300 hover:text-white underline inline-flex items-center space-x-1">
+                                <span>Réinitialiser mon mot de passe</span>
+                                <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                            </a>
+                        </div>
+                    </div>
+                {% elif form.non_field_errors %}
                     <div class="p-3.5 rounded-2xl bg-rose-950/70 border border-rose-500/40 text-rose-200 text-xs font-semibold flex items-center space-x-2.5 shadow-lg backdrop-blur-md">
                         <i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm flex-shrink-0"></i>
                         <span>{{ form.non_field_errors.0 }}</span>
