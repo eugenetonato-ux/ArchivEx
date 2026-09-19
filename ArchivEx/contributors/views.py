@@ -1584,8 +1584,15 @@ def cloud_file_create_view(request):
     if active_school and not check_school_permission(request.user, active_school):
         raise PermissionDenied("Vous n'êtes pas autorisé à déposer des fichiers pour cette université.")
 
+    subject_id = request.GET.get("subject")
+
     if request.method == "POST":
-        form = CloudFileAdminForm(request.POST, request.FILES)
+        form = CloudFileAdminForm(
+            request.POST, request.FILES,
+            active_school=active_school,
+            active_filiere=active_filiere,
+            active_semester=active_semester
+        )
         if form.is_valid():
             cloud_file = form.save(commit=False)
             if not cloud_file.school:
@@ -1600,11 +1607,19 @@ def cloud_file_create_view(request):
             messages.success(request, f"Fichier « {cloud_file.title} » conservé avec succès sur le Cloud Integrated (Non publié sur le site).")
             return redirect("contributors:library_index")
     else:
-        form = CloudFileAdminForm(initial={
+        initial_data = {
             "school": active_school,
             "filiere": active_filiere,
             "semester": active_semester,
-        })
+        }
+        if subject_id:
+            initial_data["subject"] = subject_id
+        form = CloudFileAdminForm(
+            initial=initial_data,
+            active_school=active_school,
+            active_filiere=active_filiere,
+            active_semester=active_semester
+        )
 
     context = {
         "active_school": active_school,
@@ -1639,7 +1654,13 @@ def cloud_file_edit_view(request, pk):
         raise PermissionDenied("Vous n'êtes pas autorisé à modifier ce fichier.")
 
     if request.method == "POST":
-        form = CloudFileAdminForm(request.POST, request.FILES, instance=cloud_file, active_filiere=active_filiere, active_semester=active_semester)
+        form = CloudFileAdminForm(
+            request.POST, request.FILES,
+            instance=cloud_file,
+            active_school=active_school,
+            active_filiere=active_filiere,
+            active_semester=active_semester
+        )
         if form.is_valid():
             cf = form.save(commit=False)
             if not cf.school and active_school:
@@ -1648,7 +1669,12 @@ def cloud_file_edit_view(request, pk):
             messages.success(request, f"Fichier Cloud « {cf.title} » mis à jour et renommé avec succès.")
             return redirect("contributors:library_index")
     else:
-        form = CloudFileAdminForm(instance=cloud_file, active_filiere=active_filiere, active_semester=active_semester)
+        form = CloudFileAdminForm(
+            instance=cloud_file,
+            active_school=active_school,
+            active_filiere=active_filiere,
+            active_semester=active_semester
+        )
 
     context = {
         "active_school": active_school,

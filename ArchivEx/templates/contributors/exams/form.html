@@ -175,8 +175,14 @@
  <input type="hidden" name="confirm_duplicate" id="id_confirm_duplicate" value="0">
 
  <div>
- <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200 mb-1.5">{{ form.title.label }}</label>
- {{ form.title }}
+  <div class="flex items-center justify-between mb-1.5">
+    <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200">{{ form.title.label }} *</label>
+    <button type="button" onclick="autoGenerateExamTitle()" class="text-xs font-bold text-[#2563EB] hover:underline inline-flex items-center gap-1">
+      <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
+      <span>Composer depuis l'UE</span>
+    </button>
+  </div>
+  {{ form.title }}
  <div id="live-duplicate-alert" class="hidden mt-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 text-xs text-amber-900 dark:text-amber-200 flex items-start justify-between gap-2 shadow-xs animate-fade-in">
    <div class="flex items-start space-x-2">
      <i class="fa-solid fa-triangle-exclamation text-amber-600 dark:text-amber-400 mt-0.5 shrink-0 text-sm"></i>
@@ -751,11 +757,48 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Auto-génération du libellé si vide lors du choix de l'UE
+  if (subjectSelect) {
+    subjectSelect.addEventListener('change', () => {
+      const titleInput = document.getElementById('id_title') || document.querySelector('input[name="title"]');
+      if (titleInput && (!titleInput.value || titleInput.value.includes('—') || titleInput.value.includes('Examen'))) {
+        autoGenerateExamTitle();
+      }
+    });
+  }
+
   // Vérification initiale
   if (subjectSelect && subjectSelect.value && yearInput && yearInput.value) {
     checkDuplicateAsync();
   }
 });
+
+function autoGenerateExamTitle() {
+  const subjectSelect = document.getElementById('id_subject_select') || document.querySelector('select[name="subject"]');
+  const newSubjInput = document.getElementById('id_new_subject_name');
+  const yearInput = document.getElementById('id_year') || document.querySelector('input[name="year"]');
+  const examTypeSelect = document.getElementById('id_exam_type') || document.querySelector('select[name="exam_type"]');
+  const titleInput = document.getElementById('id_title') || document.querySelector('input[name="title"]');
+
+  if (!titleInput) return;
+
+  let subjName = '';
+  if (subjectSelect && subjectSelect.selectedIndex > 0) {
+    subjName = subjectSelect.options[subjectSelect.selectedIndex].text.trim();
+  } else if (newSubjInput && newSubjInput.value.trim()) {
+    subjName = newSubjInput.value.trim();
+  }
+
+  if (!subjName) return;
+
+  const yearVal = yearInput ? yearInput.value.trim() : '';
+  const typeText = examTypeSelect && examTypeSelect.selectedIndex >= 0 ? examTypeSelect.options[examTypeSelect.selectedIndex].text.trim() : 'Examen';
+
+  const yearPart = yearVal ? ' ' + yearVal : '';
+  titleInput.value = `${subjName}${yearPart} — ${typeText}`;
+  titleInput.classList.add('ring-2', 'ring-blue-500');
+  setTimeout(() => titleInput.classList.remove('ring-2', 'ring-blue-500'), 1000);
+}
 </script>
 {% endblock %}
 

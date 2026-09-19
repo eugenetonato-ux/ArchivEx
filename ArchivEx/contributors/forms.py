@@ -33,26 +33,83 @@ class ContextSelectForm(forms.Form):
 
 
 class CloudFileAdminForm(forms.ModelForm):
-    """Formulaire pour le dépôt direct d'un fichier dans la Bibliothèque Cloud."""
+    """Formulaire pour le dépôt direct d'un fichier dans la Bibliothèque Cloud avec sélection sélective de l'UE."""
+    subject = forms.ModelChoiceField(
+        queryset=Subject.objects.none(),
+        required=False,
+        label="Matière / Unité d'Enseignement (UE)",
+        widget=forms.Select(attrs={
+            "class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49] focus:ring-2 focus:ring-blue-500 outline-none",
+            "id": "id_cloud_subject"
+        }),
+        empty_label="-- Sélectionner l'UE disponible --"
+    )
+
+    year = forms.CharField(
+        max_length=20,
+        required=False,
+        label="Année académique (ex: 2024-2025)",
+        widget=forms.TextInput(attrs={
+            "class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49] focus:ring-2 focus:ring-blue-500 outline-none",
+            "placeholder": "Ex: 2024-2025",
+            "id": "id_cloud_year"
+        })
+    )
+
     class Meta:
         model = CloudFile
         fields = ["title", "file_type", "file", "school", "filiere", "semester"]
         labels = {
-            "title": "Nom / Titre du document",
-            "file_type": "Type de ressource",
+            "title": "Libellé / Nom du document PDF",
+            "file_type": "Type de document",
             "file": "Fichier PDF (Stockage Cloud)",
             "school": "Université associée (optionnelle)",
             "filiere": "Filière associée (optionnelle)",
             "semester": "Semestre associé (optionnel)",
         }
         widgets = {
-            "title": forms.TextInput(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]", "placeholder": "Ex: Sujet Examen Math 2025.pdf"}),
-            "file_type": forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"}),
+            "title": forms.TextInput(attrs={
+                "class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49] focus:ring-2 focus:ring-blue-500 outline-none",
+                "placeholder": "Le libellé est généré automatiquement au choix de l'UE",
+                "id": "id_cloud_title"
+            }),
+            "file_type": forms.Select(attrs={
+                "class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49] focus:ring-2 focus:ring-blue-500 outline-none",
+                "id": "id_cloud_file_type"
+            }),
             "file": forms.FileInput(attrs={"class": "w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"}),
             "school": forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"}),
             "filiere": forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"}),
             "semester": forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"}),
         }
+
+    def __init__(self, *args, active_school=None, active_filiere=None, active_semester=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Proposer UNIQUEMENT les UE disponibles pour le contexte actif
+        subj_qs = Subject.objects.select_related("semester", "semester__filiere", "semester__filiere__school").filter(is_active=True)
+        if active_semester:
+            subj_qs = subj_qs.filter(semester=active_semester)
+        elif active_filiere:
+            subj_qs = subj_qs.filter(semester__filiere=active_filiere)
+        elif active_school:
+            subj_qs = subj_qs.filter(semester__filiere__school=active_school)
+        self.fields["subject"].queryset = subj_qs.order_by("name")
+
+        if active_school and not self.fields["school"].initial:
+            self.fields["school"].initial = active_school
+        if active_filiere and not self.fields["filiere"].initial:
+            self.fields["filiere"].initial = active_filiere
+        if active_semester and not self.fields["semester"].initial:
+            self.fields["semester"].initial = active_semester
+
+        # Si un fichier existant est édité, détecter l'UE
+        if self.instance and self.instance.pk and self.instance.title:
+            from academics.parser import parse_exam_filename
+            parsed = parse_exam_filename(self.instance.title, available_subjects=subj_qs)
+            if parsed.get("matched_subject"):
+                self.fields["subject"].initial = parsed["matched_subject"]
+            if parsed.get("detected_academic_year"):
+                self.fields["year"].initial = parsed["detected_academic_year"]
 
     def clean_file(self):
         file = self.cleaned_data.get("file")
@@ -63,6 +120,27 @@ class CloudFileAdminForm(forms.ModelForm):
             if file.size > 20 * 1024 * 1024:
                 raise forms.ValidationError("La taille du fichier ne doit pas dépasser 20 Mo.")
         return file
+
+    def clean(self):
+        cleaned_data = super().clean()
+        subject = cleaned_data.get("subject")
+        year = str(cleaned_data.get("year", "")).strip()
+        file_type = cleaned_data.get("file_type")
+        title = str(cleaned_data.get("title", "")).strip()
+
+        # Si le libellé n'est pas saisi manuellement mais qu'une UE est sélectionnée
+        if subject and not title:
+            type_suffix = ""
+            if file_type == "CORRECTION":
+                type_suffix = " - Corrigé"
+            elif file_type == "SUMMARY":
+                type_suffix = " - Résumé"
+            year_part = f" {year}" if year else ""
+            cleaned_data["title"] = f"{subject.name}{year_part}{type_suffix}.pdf"
+        elif not title and not subject:
+            self.add_error("title", "Veuillez sélectionner une UE disponible ou saisir un libellé.")
+
+        return cleaned_data
 
 
 class ExamAdminForm(forms.ModelForm):

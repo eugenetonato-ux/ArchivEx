@@ -35,7 +35,13 @@
             {% csrf_token %}
 
             <div>
-                <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200 mb-1.5">{{ form.title.label }} *</label>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200">{{ form.title.label }} *</label>
+                    <button type="button" onclick="autoGenerateSummaryTitle()" class="text-xs font-bold text-[#2563EB] hover:underline inline-flex items-center gap-1">
+                        <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
+                        <span>Composer depuis l'UE</span>
+                    </button>
+                </div>
                 {{ form.title }}
                 {% if form.title.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.title.errors.0 }}</p>{% endif %}
             </div>
@@ -98,4 +104,32 @@
     </div>
 
 </div>
+
+<script>
+function autoGenerateSummaryTitle() {
+    const subjectSelect = document.querySelector('select[name="subject"]');
+    const titleInput = document.querySelector('input[name="title"]');
+    if (!subjectSelect || !titleInput) return;
+
+    if (subjectSelect.selectedIndex > 0) {
+        const subjName = subjectSelect.options[subjectSelect.selectedIndex].text.trim();
+        titleInput.value = `Fiche Résumé — ${subjName}`;
+        titleInput.classList.add('ring-2', 'ring-purple-500');
+        setTimeout(() => titleInput.classList.remove('ring-2', 'ring-purple-500'), 1000);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const subjectSelect = document.querySelector('select[name="subject"]');
+    const titleInput = document.querySelector('input[name="title"]');
+
+    if (subjectSelect && titleInput) {
+        subjectSelect.addEventListener('change', function() {
+            if (!titleInput.value || titleInput.value.startsWith('Fiche Résumé — ') || titleInput.value.startsWith('Résumé — ')) {
+                autoGenerateSummaryTitle();
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
