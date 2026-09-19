@@ -160,6 +160,9 @@
          <a href="/administration/epreuves/{{ existing_duplicate.id }}/modifier/" target="_blank" class="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900 font-bold text-xs transition-colors">
            Consulter l'épreuve existante ↗
          </a>
+         <a href="{% url 'contributors:exam_list' %}" class="px-3.5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors">
+           Annuler
+         </a>
        </div>
      </div>
    </div>
@@ -182,24 +185,41 @@
        <p id="live-duplicate-desc" class="text-[11px] mt-0.5 text-amber-800 dark:text-amber-300"></p>
      </div>
    </div>
-   <button type="button" onclick="openDuplicateModal()" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-black text-[10px] rounded-lg shrink-0 transition-colors shadow-2xs">
-     Voir détails
-   </button>
+   <div class="flex items-center space-x-1.5 shrink-0">
+     <button type="button" onclick="openDuplicateModal()" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-black text-[10px] rounded-lg shrink-0 transition-colors shadow-2xs">
+       Voir détails
+     </button>
+     <button type="button" onclick="dismissLiveDuplicateAlert()" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-[10px] rounded-lg shrink-0 transition-colors">
+       Annuler
+     </button>
+   </div>
  </div>
  {% if form.title.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.title.errors.0 }}</p>{% endif %}
  </div>
 
- <div>
- <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200 mb-1.5">{{ form.subject_name.label }}</label>
- {{ form.subject_name }}
- <p class="text-[11px] text-slate-400 mt-1 font-medium">Saisie libre : tapez le nom de la matière. Elle sera créée automatiquement si elle n'existe pas encore.</p>
- {% if form.subject_name.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.subject_name.errors.0 }}</p>{% endif %}
+ <div class="space-y-2">
+   <div class="flex items-center justify-between">
+     <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200">Matière / Unité d'Enseignement (UE) *</label>
+     <button type="button" onclick="toggleNewSubjectField()" class="text-xs font-bold text-[#2563EB] hover:underline flex items-center space-x-1">
+       <i class="fa-solid fa-plus text-[10px]"></i>
+       <span id="toggle-new-subj-label">Nouvelle UE ?</span>
+     </button>
+   </div>
+   
+   <div id="subject-select-container">
+     {{ form.subject }}
+     {% if form.subject.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.subject.errors.0 }}</p>{% endif %}
+     <p class="text-[11px] text-slate-400 mt-1 font-medium">Sélectionnez directement l'UE parmi celles du semestre actif.</p>
+   </div>
 
- <datalist id="subjects-list">
- {% for sb in available_subjects %}
- <option value="{{ sb.name }}">{{ sb.semester.label }}</option>
- {% endfor %}
- </datalist>
+   <div id="new-subject-container" class="hidden p-3 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/40 rounded-xl space-y-1.5 animate-fade-in">
+     <label class="block text-[11px] font-bold text-blue-900 dark:text-blue-300">{{ form.new_subject_name.label }}</label>
+     {{ form.new_subject_name }}
+     <p class="text-[10px] text-blue-700 dark:text-blue-400 font-medium">Si l'UE n'existe pas encore dans la liste ci-dessus, saisissez son nom ici pour la créer automatiquement.</p>
+     {% if form.new_subject_name.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.new_subject_name.errors.0 }}</p>{% endif %}
+   </div>
+
+   <input type="hidden" name="subject_name" id="id_subject_name" value="">
  </div>
 
  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -384,7 +404,11 @@
 
     <!-- MODAL FOOTER / ACTIONS -->
     <div class="p-5 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-end gap-2.5">
-      <button type="button" onclick="closeDuplicateModal()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors">
+      <a href="{% url 'contributors:exam_list' %}" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors text-center">
+        Annuler et quitter
+      </a>
+
+      <button type="button" onclick="closeDuplicateModal()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors">
         Modifier les informations
       </button>
 
@@ -603,17 +627,41 @@ function replaceExistingExam() {
   }
 }
 
+function toggleNewSubjectField() {
+  const container = document.getElementById('new-subject-container');
+  const label = document.getElementById('toggle-new-subj-label');
+  const input = document.getElementById('id_new_subject_name');
+  if (!container) return;
+
+  if (container.classList.contains('hidden')) {
+    container.classList.remove('hidden');
+    if (label) label.innerText = "Choisir une UE existante";
+    if (input) input.focus();
+  } else {
+    container.classList.add('hidden');
+    if (label) label.innerText = "Nouvelle UE ?";
+    if (input) input.value = "";
+  }
+}
+
+function dismissLiveDuplicateAlert() {
+  const alertBox = document.getElementById('live-duplicate-alert');
+  if (alertBox) alertBox.classList.add('hidden');
+  detectedDuplicateData = null;
+}
+
 // Vérification AJAX dynamique lors de la saisie
 let duplicateDebounceTimer = null;
 function checkDuplicateAsync() {
-  const titleInput = document.getElementById('id_title') || document.querySelector('input[name="title"]');
+  const subjectSelect = document.getElementById('id_subject') || document.querySelector('select[name="subject"]');
+  const newSubjInput = document.getElementById('id_new_subject_name') || document.querySelector('input[name="new_subject_name"]');
   const subjInput = document.getElementById('id_subject_name') || document.querySelector('input[name="subject_name"]');
   const semesterSelect = document.getElementById('id_semester') || document.querySelector('select[name="semester"]');
   const yearInput = document.getElementById('id_year') || document.querySelector('input[name="year"]');
   const examTypeSelect = document.getElementById('id_exam_type') || document.querySelector('select[name="exam_type"]');
   
-  const title = titleInput ? titleInput.value.trim() : '';
-  const subj = subjInput ? subjInput.value.trim() : '';
+  const subjectId = subjectSelect ? subjectSelect.value : '';
+  const subjName = (newSubjInput && newSubjInput.value.trim()) ? newSubjInput.value.trim() : (subjInput ? subjInput.value.trim() : '');
   const semesterId = semesterSelect ? semesterSelect.value : '';
   const yearVal = yearInput ? yearInput.value.trim() : '';
   const examType = examTypeSelect ? examTypeSelect.value : '';
@@ -621,7 +669,8 @@ function checkDuplicateAsync() {
   const alertBox = document.getElementById('live-duplicate-alert');
   const descEl = document.getElementById('live-duplicate-desc');
 
-  if (!title && !subj) {
+  // Si l'un des paramètres obligatoires manque, ce n'est pas un doublon
+  if ((!subjectId && !subjName) || !yearVal || !examType) {
     if (alertBox) alertBox.classList.add('hidden');
     detectedDuplicateData = null;
     return;
@@ -630,8 +679,8 @@ function checkDuplicateAsync() {
   clearTimeout(duplicateDebounceTimer);
   duplicateDebounceTimer = setTimeout(() => {
     const params = new URLSearchParams({
-      title: title,
-      subject_name: subj,
+      subject_id: subjectId || '',
+      subject_name: subjName || '',
       semester_id: semesterId || '',
       year: yearVal || '',
       exam_type: examType || '',
@@ -659,16 +708,20 @@ function checkDuplicateAsync() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const titleInput = document.getElementById('id_title') || document.querySelector('input[name="title"]');
+  const subjectSelect = document.getElementById('id_subject') || document.querySelector('select[name="subject"]');
+  const newSubjInput = document.getElementById('id_new_subject_name') || document.querySelector('input[name="new_subject_name"]');
   const subjInput = document.getElementById('id_subject_name') || document.querySelector('input[name="subject_name"]');
   const yearInput = document.getElementById('id_year') || document.querySelector('input[name="year"]');
   const examTypeSelect = document.getElementById('id_exam_type') || document.querySelector('select[name="exam_type"]');
   const semesterSelect = document.getElementById('id_semester') || document.querySelector('select[name="semester"]');
   const form = document.getElementById('exam-admin-form');
 
-  if (titleInput) {
-    titleInput.addEventListener('input', checkDuplicateAsync);
-    titleInput.addEventListener('blur', checkDuplicateAsync);
+  if (subjectSelect) {
+    subjectSelect.addEventListener('change', checkDuplicateAsync);
+  }
+  if (newSubjInput) {
+    newSubjInput.addEventListener('input', checkDuplicateAsync);
+    newSubjInput.addEventListener('blur', checkDuplicateAsync);
   }
   if (subjInput) {
     subjInput.addEventListener('input', checkDuplicateAsync);
@@ -689,7 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', (e) => {
       const replaceInput = document.getElementById('id_replace_existing');
       if (replaceInput && replaceInput.value === '1') {
-        return; // Soumission autorisée pour remplacer
+        return;
       }
       if (detectedDuplicateData) {
         e.preventDefault();
@@ -698,8 +751,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Vérification initiale si des champs sont déjà renseignés
-  if (titleInput && titleInput.value.trim().length > 3) {
+  // Vérification initiale
+  if (subjectSelect && subjectSelect.value && yearInput && yearInput.value) {
     checkDuplicateAsync();
   }
 });

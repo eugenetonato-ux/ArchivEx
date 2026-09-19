@@ -35,47 +35,54 @@
             {% csrf_token %}
 
             <div>
-                <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.title.label }}</label>
+                <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200 mb-1.5">{{ form.title.label }} *</label>
                 {{ form.title }}
                 {% if form.title.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.title.errors.0 }}</p>{% endif %}
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.subject.label }}</label>
+                <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200 mb-1.5">{{ form.subject.label }} *</label>
                 {{ form.subject }}
+                <p class="text-[11px] text-slate-400 mt-1 font-medium">Sélectionnez la matière ou l'Unité d'Enseignement rattachée à cette fiche résumé.</p>
                 {% if form.subject.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.subject.errors.0 }}</p>{% endif %}
+            </div>
+
+            <!-- DOCUMENT PDF DU RÉSUMÉ (ÉLÉMENT PRINCIPAL) -->
+            <div class="p-5 rounded-2xl bg-purple-50/60 dark:bg-purple-950/20 border border-purple-200/80 dark:border-purple-900/40 space-y-2">
+                <label class="block text-xs font-black text-purple-950 dark:text-purple-200 flex items-center space-x-2">
+                    <i class="fa-solid fa-file-pdf text-rose-500 text-sm"></i>
+                    <span>Document PDF de la fiche résumé *</span>
+                </label>
+                {{ form.file }}
+                {% if summary_obj.file and summary_obj.file.name %}
+                    <div class="pt-2 flex items-center space-x-2 text-xs text-purple-800 dark:text-purple-300 font-bold">
+                        <i class="fa-solid fa-check-circle text-emerald-500"></i>
+                        <span>Fichier actuel : <a href="{{ summary_obj.file.url }}" target="_blank" class="underline hover:text-purple-950 dark:hover:text-purple-100">Consulter le PDF</a></span>
+                    </div>
+                {% endif %}
+                <p class="text-[11px] text-purple-700/80 dark:text-purple-300/70 font-medium">Le document PDF est consultable et téléchargeable directement par les étudiants sur le site public.</p>
+                {% if form.file.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.file.errors.0 }}</p>{% endif %}
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.access_type.label }}</label>
+                    <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200 mb-1.5">{{ form.access_type.label }}</label>
                     {{ form.access_type }}
                     {% if form.access_type.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.access_type.errors.0 }}</p>{% endif %}
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.publication_status.label }}</label>
+                    <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200 mb-1.5">{{ form.publication_status.label }}</label>
                     {{ form.publication_status }}
                     {% if form.publication_status.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.publication_status.errors.0 }}</p>{% endif %}
                 </div>
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.introduction.label }}</label>
+                <label class="block text-xs font-bold text-[#071A49] dark:text-slate-200 mb-1.5">{{ form.introduction.label }}</label>
                 {{ form.introduction }}
+                <p class="text-[11px] text-slate-400 mt-1 font-medium">Courte présentation ou points clés abordés dans ce résumé (facultatif).</p>
                 {% if form.introduction.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.introduction.errors.0 }}</p>{% endif %}
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.content.label }}</label>
-                {{ form.content }}
-                {% if form.content.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.content.errors.0 }}</p>{% endif %}
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-[#071A49] mb-1.5">{{ form.file.label }}</label>
-                {{ form.file }}
-                {% if form.file.errors %}<p class="text-xs text-rose-600 mt-1 font-semibold">{{ form.file.errors.0 }}</p>{% endif %}
             </div>
 
             <div class="pt-4 border-t border-slate-100 flex items-center justify-between">

@@ -77,16 +77,32 @@ class ExamAdminForm(forms.ModelForm):
         ("False", "Brouillon (Dépublié)"),
     ]
 
-    subject_name = forms.CharField(
+    subject = forms.ModelChoiceField(
+        queryset=Subject.objects.all(),
+        required=False,
+        label="Matière / Unité d'Enseignement (UE)",
+        widget=forms.Select(attrs={
+            "class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49] focus:ring-2 focus:ring-blue-500 outline-none",
+            "id": "id_subject_select"
+        }),
+        empty_label="-- Sélectionner une matière existante --"
+    )
+
+    new_subject_name = forms.CharField(
         max_length=150,
-        required=True,
-        label="Matière / UE (Saisie libre)",
+        required=False,
+        label="Ou ajouter une nouvelle matière (si non listée)",
         widget=forms.TextInput(attrs={
             "class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49] focus:ring-2 focus:ring-blue-500 outline-none",
-            "placeholder": "Ex: Analyse Mathématique, Comptabilité, Droit Commercial...",
-            "list": "subjects-list",
-            "autocomplete": "off"
+            "placeholder": "Tapez le nom de la nouvelle matière...",
+            "id": "id_new_subject_name"
         })
+    )
+
+    subject_name = forms.CharField(
+        max_length=150,
+        required=False,
+        widget=forms.HiddenInput()
     )
 
     year = forms.CharField(
@@ -172,6 +188,13 @@ class ExamAdminForm(forms.ModelForm):
 
     def __init__(self, *args, active_filiere=None, active_semester=None, **kwargs):
         super().__init__(*args, **kwargs)
+        subj_qs = Subject.objects.all()
+        if active_semester:
+            subj_qs = Subject.objects.filter(semester=active_semester)
+        elif active_filiere:
+            subj_qs = Subject.objects.filter(semester__filiere=active_filiere)
+        self.fields["subject"].queryset = subj_qs.order_by("name")
+
         if not self.instance or not self.instance.pk:
             self.fields["exam_type"].initial = "examen"
             self.fields["is_published"].initial = "True"
@@ -179,6 +202,7 @@ class ExamAdminForm(forms.ModelForm):
             self.fields["is_free"].initial = "true" if self.instance.is_free else "false"
             self.fields["is_published"].initial = "true" if self.instance.is_published else "false"
             if self.instance.subject:
+                self.fields["subject"].initial = self.instance.subject
                 self.fields["subject_name"].initial = self.instance.subject.name
             if self.instance.semester:
                 self.fields["semester"].initial = self.instance.semester
@@ -259,15 +283,26 @@ class ExamAdminForm(forms.ModelForm):
         if not has_file:
             self.add_error("file", "Veuillez sélectionner un fichier depuis la Bibliothèque Cloud ou téléverser un fichier PDF.")
 
+        # Validation de la matière
+        subject = cleaned_data.get("subject")
+        new_subject_name = cleaned_data.get("new_subject_name", "").strip()
+        subject_name = cleaned_data.get("subject_name", "").strip()
+
+        if not subject and not new_subject_name and not subject_name:
+            self.add_error("subject", "Veuillez sélectionner une matière dans la liste ou renseigner un nouveau nom de matière.")
+        elif subject:
+            cleaned_data["subject_name"] = subject.name
+        elif new_subject_name:
+            cleaned_data["subject_name"] = new_subject_name
+
         return cleaned_data
 
 
-
 class SummaryAdminForm(forms.ModelForm):
-    """Formulaire d'édition/publication d'un résumé de cours."""
+    """Formulaire d'édition/publication d'un résumé de cours 100% PDF."""
     HUMAN_STATUS_CHOICES = [
-        ("DRAFT", "Brouillon"),
         ("PUBLISHED", "Publié"),
+        ("DRAFT", "Brouillon"),
     ]
     HUMAN_ACCESS_CHOICES = [
         ("PREMIUM", "Pass Semestre (Premium)"),
@@ -284,40 +319,62 @@ class SummaryAdminForm(forms.ModelForm):
         label="Niveau d'accès",
         widget=forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"})
     )
+    file = forms.FileField(
+        required=False,
+        label="Fichier PDF du résumé",
+        widget=forms.FileInput(attrs={"class": "w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"})
+    )
+
+    content = forms.CharField(
+        required=False,
+        widget=forms.HiddenInput(),
+    )
 
     class Meta:
         model = Summary
-        fields = ["title", "subject", "introduction", "content", "file", "access_type", "publication_status"]
+        fields = ["title", "subject", "file", "access_type", "publication_status", "introduction", "content"]
         labels = {
             "title": "Titre du résumé",
-            "subject": "Unité d'Enseignement / Matière",
-            "introduction": "Présentation succincte",
-            "content": "Contenu détaillé rédigé",
-            "file": "Fichier PDF optionnel",
+            "subject": "Unité d'Enseignement (UE) / Matière",
+            "file": "Fichier PDF du résumé",
+            "introduction": "Description courte (optionnelle)",
         }
         widgets = {
-            "title": forms.TextInput(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]", "placeholder": "Fiche de synthèse..."}),
+            "title": forms.TextInput(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]", "placeholder": "Ex: Fiche de synthèse — Chapitre 1 & 2"}),
             "subject": forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"}),
-            "introduction": forms.Textarea(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-[#071A49]", "rows": 2}),
-            "content": forms.Textarea(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-[#071A49]", "rows": 8}),
-            "file": forms.FileInput(attrs={"class": "w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"}),
+            "introduction": forms.Textarea(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-[#071A49]", "rows": 2, "placeholder": "Points clés abordés (optionnel)..."}),
         }
 
-    def __init__(self, *args, active_filiere=None, **kwargs):
+    def __init__(self, *args, active_filiere=None, active_semester=None, **kwargs):
         super().__init__(*args, **kwargs)
-        if active_filiere:
-            self.fields["subject"].queryset = Subject.objects.filter(semester__filiere=active_filiere)
+        subj_qs = Subject.objects.all()
+        if active_semester:
+            subj_qs = Subject.objects.filter(semester=active_semester)
+        elif active_filiere:
+            subj_qs = Subject.objects.filter(semester__filiere=active_filiere)
+        self.fields["subject"].queryset = subj_qs.order_by("name")
+        self.fields["subject"].empty_label = "-- Sélectionner l'UE / Matière --"
+
+    def clean_file(self):
+        file = self.cleaned_data.get("file")
+        if file:
+            ext = os.path.splitext(file.name)[1].lower()
+            if ext != ".pdf":
+                raise forms.ValidationError("Seuls les fichiers au format PDF (.pdf) sont autorisés.")
+            if file.size > 25 * 1024 * 1024:
+                raise forms.ValidationError("La taille du fichier ne doit pas dépasser 25 Mo.")
+        return file
 
     def clean(self):
         cleaned_data = super().clean()
-        content = cleaned_data.get("content", "").strip() if cleaned_data.get("content") else ""
         file = cleaned_data.get("file")
-        status = cleaned_data.get("publication_status")
-
-        has_file = bool(file or (self.instance and self.instance.pk and self.instance.file))
-        if status == "PUBLISHED" and not content and not has_file:
-            self.add_error("file", "Un résumé publié doit comporter au moins du texte rédigé ou un fichier PDF.")
-
+        has_file_or_content = bool(
+            file or
+            (self.instance and self.instance.pk and self.instance.file) or
+            cleaned_data.get("content")
+        )
+        if not has_file_or_content:
+            self.add_error("file", "Veuillez joindre le document PDF du résumé de cours.")
         return cleaned_data
 
 

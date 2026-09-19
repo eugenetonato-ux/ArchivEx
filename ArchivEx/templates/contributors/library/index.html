@@ -203,7 +203,7 @@
                     {% if ue_name != "Noms non conformes / Non classés" %}
                         <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
                             <!-- BOUTON 1 : STATUT PREMIUM ÉPREUVES -->
-                            <form method="post" action="{% url 'contributors:toggle_ue_premium' %}" class="inline-block">
+                            <form method="post" action="{% url 'contributors:toggle_ue_premium' %}" class="inline-block ue-toggle-form" onsubmit="return ajaxToggleUePremiumForm(event, this);">
                                 {% csrf_token %}
                                 <input type="hidden" name="ue_name" value="{{ ue_name }}">
                                 <input type="hidden" name="target_type" value="exam">
@@ -212,9 +212,9 @@
                                 {% endif %}
                                 {% if group.is_free %}
                                     <div class="relative group/tooltip inline-block">
-                                        <button type="submit" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm" title="Accès Gratuit : Cliquez pour basculer les épreuves de cette UE en mode Premium payant">
+                                        <button type="submit" class="toggle-ue-btn px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm cursor-pointer" title="Accès Gratuit : Cliquez pour basculer les épreuves de cette UE en mode Premium payant">
                                             <i class="fa-solid fa-gift text-xs"></i>
-                                            <span>Épreuves : Gratuit</span>
+                                            <span class="btn-text">Épreuves : Gratuit</span>
                                         </button>
                                         <!-- INFO-BULLE DESCRIPTIVE SURVOL -->
                                         <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 bg-[#071A49] dark:bg-[#121824] text-white text-[11px] font-medium rounded-xl shadow-2xl border border-white/20 opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 z-50 text-center leading-snug">
@@ -225,9 +225,9 @@
                                     </div>
                                 {% else %}
                                     <div class="relative group/tooltip inline-block">
-                                        <button type="submit" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm" title="Accès Premium : Cliquez pour rendre toutes les épreuves de cette UE gratuites pour les étudiants">
+                                        <button type="submit" class="toggle-ue-btn px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm cursor-pointer" title="Accès Premium : Cliquez pour rendre toutes les épreuves de cette UE gratuites pour les étudiants">
                                             <i class="fa-solid fa-lock text-xs"></i>
-                                            <span>Épreuves : Premium</span>
+                                            <span class="btn-text">Épreuves : Premium</span>
                                         </button>
                                         <!-- INFO-BULLE DESCRIPTIVE SURVOL -->
                                         <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 bg-[#071A49] dark:bg-[#121824] text-white text-[11px] font-medium rounded-xl shadow-2xl border border-white/20 opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 z-50 text-center leading-snug">
@@ -240,7 +240,7 @@
                             </form>
 
                             <!-- BOUTON 2 : STATUT PREMIUM CORRIGÉS & RÉSUMÉS -->
-                            <form method="post" action="{% url 'contributors:toggle_ue_premium' %}" class="inline-block">
+                            <form method="post" action="{% url 'contributors:toggle_ue_premium' %}" class="inline-block ue-toggle-form" onsubmit="return ajaxToggleUePremiumForm(event, this);">
                                 {% csrf_token %}
                                 <input type="hidden" name="ue_name" value="{{ ue_name }}">
                                 <input type="hidden" name="target_type" value="correction">
@@ -249,9 +249,9 @@
                                 {% endif %}
                                 {% if group.is_free_correction %}
                                     <div class="relative group/tooltip inline-block">
-                                        <button type="submit" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm" title="Corrigés Gratuits : Cliquez pour restreindre l'accès aux abonnés Premium">
+                                        <button type="submit" class="toggle-ue-btn px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm cursor-pointer" title="Corrigés Gratuits : Cliquez pour restreindre l'accès aux abonnés Premium">
                                             <i class="fa-solid fa-circle-check text-xs"></i>
-                                            <span>Corrigés : Gratuit</span>
+                                            <span class="btn-text">Corrigés : Gratuit</span>
                                         </button>
                                         <!-- INFO-BULLE DESCRIPTIVE SURVOL -->
                                         <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 bg-[#071A49] dark:bg-[#121824] text-white text-[11px] font-medium rounded-xl shadow-2xl border border-white/20 opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 z-50 text-center leading-snug">
@@ -262,9 +262,9 @@
                                     </div>
                                 {% else %}
                                     <div class="relative group/tooltip inline-block">
-                                        <button type="submit" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm" title="Corrigés Premium : Cliquez pour basculer tous les corrigés de cette UE en accès Gratuit">
+                                        <button type="submit" class="toggle-ue-btn px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm cursor-pointer" title="Corrigés Premium : Cliquez pour basculer tous les corrigés de cette UE en accès Gratuit">
                                             <i class="fa-solid fa-lock text-xs"></i>
-                                            <span>Corrigés : Premium</span>
+                                            <span class="btn-text">Corrigés : Premium</span>
                                         </button>
                                         <!-- INFO-BULLE DESCRIPTIVE SURVOL -->
                                         <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 bg-[#071A49] dark:bg-[#121824] text-white text-[11px] font-medium rounded-xl shadow-2xl border border-white/20 opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 z-50 text-center leading-snug">
@@ -359,7 +359,12 @@
                                         {% endif %}
                                     </td>
                                     <td class="py-3.5 px-4 text-center">
-                                        {% if cloud_file.parsed_info.detected_academic_year %}
+                                        {% if cloud_file.file_type == 'SUMMARY' %}
+                                            <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] font-semibold italic inline-flex items-center space-x-1">
+                                                <i class="fa-solid fa-file-lines text-[9px]"></i>
+                                                <span>Fiche UE (Permanent)</span>
+                                            </span>
+                                        {% elif cloud_file.parsed_info.detected_academic_year %}
                                             <span class="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 text-xs font-black border border-blue-200/60 dark:border-blue-900/40 inline-flex items-center space-x-1">
                                                 <i class="fa-regular fa-calendar-check text-[10px]"></i>
                                                 <span>{{ cloud_file.parsed_info.detected_academic_year }}</span>
@@ -842,5 +847,63 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+function ajaxToggleUePremiumForm(event, form) {
+    event.preventDefault();
+    const btn = form.querySelector('button[type="submit"]');
+    if (!btn) return false;
+    btn.disabled = true;
+    btn.classList.add('opacity-60');
+
+    const formData = new FormData(form);
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const btnText = btn.querySelector('.btn-text');
+            const icon = btn.querySelector('i');
+            if (data.target_type === 'exam') {
+                if (data.is_free) {
+                    btn.className = "toggle-ue-btn px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm cursor-pointer";
+                    if (icon) icon.className = "fa-solid fa-gift text-xs";
+                    if (btnText) btnText.innerText = "Épreuves : Gratuit";
+                } else {
+                    btn.className = "toggle-ue-btn px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm cursor-pointer";
+                    if (icon) icon.className = "fa-solid fa-lock text-xs";
+                    if (btnText) btnText.innerText = "Épreuves : Premium";
+                }
+            } else if (data.target_type === 'correction') {
+                if (data.is_free_correction) {
+                    btn.className = "toggle-ue-btn px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm cursor-pointer";
+                    if (icon) icon.className = "fa-solid fa-circle-check text-xs";
+                    if (btnText) btnText.innerText = "Corrigés : Gratuit";
+                } else {
+                    btn.className = "toggle-ue-btn px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition-colors inline-flex items-center space-x-1.5 shadow-sm cursor-pointer";
+                    if (icon) icon.className = "fa-solid fa-lock text-xs";
+                    if (btnText) btnText.innerText = "Corrigés : Premium";
+                }
+            }
+        } else {
+            alert(data.error || "Une erreur est survenue.");
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Erreur réseau lors de la mise à jour.");
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.classList.remove('opacity-60');
+    });
+
+    return false;
+}
 </script>
 {% endblock %}

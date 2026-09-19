@@ -599,6 +599,153 @@ class SupportAndNotificationSeparationTest(TestCase):
         admin_notifs = Notification.objects.filter(recipient=self.admin, notification_type="NEW_EXAM")
         self.assertEqual(admin_notifs.count(), 0)
 
+    def test_ajax_toggle_exam_status_and_free(self):
+        """Test instant AJAX toggle for Exam publication status and free/paid access."""
+        from exams.models import Exam
+        self.client.login(username="admin_sep", password="Password123!")
+        exam = Exam.objects.create(
+            title="Algèbre 1",
+            subject=self.subject,
+            semester=self.semester,
+            filiere=self.filiere,
+            level=self.level,
+            academic_year=self.year,
+            exam_type="examen",
+            year=2026,
+            is_published=True,
+            is_free=False
+        )
+
+        # Toggle status via AJAX
+        res = self.client.post(
+            reverse("contributors:exam_toggle_status", kwargs={"pk": exam.pk}),
+            headers={"x-requested-with": "XMLHttpRequest"}
+        )
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertTrue(data["success"])
+        self.assertFalse(data["is_published"])
+        exam.refresh_from_db()
+        self.assertFalse(exam.is_published)
+
+        # Toggle access via AJAX
+        res_free = self.client.post(
+            reverse("contributors:exam_toggle_free", kwargs={"pk": exam.pk}),
+            headers={"x-requested-with": "XMLHttpRequest"}
+        )
+        self.assertEqual(res_free.status_code, 200)
+        data_free = res_free.json()
+        self.assertTrue(data_free["success"])
+        self.assertTrue(data_free["is_free"])
+        exam.refresh_from_db()
+        self.assertTrue(exam.is_free)
+
+    def test_ajax_toggle_summary_status_and_access(self):
+        """Test instant AJAX toggle for Summary publication status and access type."""
+        from content.models import Summary
+        self.client.login(username="admin_sep", password="Password123!")
+        sm = Summary.objects.create(
+            title="Fiche Algèbre",
+            subject=self.subject,
+            publication_status="DRAFT",
+            access_type="PREMIUM"
+        )
+
+        # Toggle status via AJAX
+        res = self.client.post(
+            reverse("contributors:summary_toggle_status", kwargs={"pk": sm.pk}),
+            headers={"x-requested-with": "XMLHttpRequest"}
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(res.json()["is_published"])
+        sm.refresh_from_db()
+        self.assertEqual(sm.publication_status, "PUBLISHED")
+
+        # Toggle access via AJAX
+        res_acc = self.client.post(
+            reverse("contributors:summary_toggle_access", kwargs={"pk": sm.pk}),
+            headers={"x-requested-with": "XMLHttpRequest"}
+        )
+        self.assertEqual(res_acc.status_code, 200)
+        self.assertTrue(res_acc.json()["is_free"])
+        sm.refresh_from_db()
+        self.assertEqual(sm.access_type, "FREE")
+
+    def test_ajax_toggle_ue_premium(self):
+        """Test instant AJAX toggle for UE premium/free status in Cloud Library."""
+        self.client.login(username="admin_sep", password="Password123!")
+        self.assertFalse(self.subject.is_free)
+
+        res = self.client.post(
+            reverse("contributors:toggle_ue_premium"),
+            data={"subject_id": self.subject.id, "target_type": "exam"},
+            headers={"x-requested-with": "XMLHttpRequest"}
+        )
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertTrue(data["success"])
+        self.assertTrue(data["is_free"])
+        self.subject.refresh_from_db()
+        self.assertTrue(self.subject.is_free)
+
+    def test_strict_duplicate_check_api(self):
+        """Verify strict duplicate detection API prevents false positives."""
+        from exams.models import Exam
+        self.client.login(username="admin_sep", password="Password123!")
+        Exam.objects.create(
+            title="Examen Final",
+            subject=self.subject,
+            semester=self.semester,
+            filiere=self.filiere,
+            level=self.level,
+            academic_year=self.year,
+            exam_type="examen",
+            year=2026,
+            is_published=True
+        )
+
+        # 1. Matching subject, semester, type and year -> duplicate!
+        res_dup = self.client.get(
+            reverse("contributors:api_check_exam_duplicate"),
+            data={
+                "subject_id": self.subject.id,
+                "semester_id": self.semester.id,
+                "year": "2026",
+                "exam_type": "examen",
+            },
+            headers={"x-requested-with": "XMLHttpRequest"}
+        )
+        self.assertEqual(res_dup.status_code, 200)
+        self.assertTrue(res_dup.json()["duplicate"])
+
+        # 2. Same subject, semester, type but DIFFERENT YEAR (2025) -> NOT duplicate!
+        res_diff_year = self.client.get(
+            reverse("contributors:api_check_exam_duplicate"),
+            data={
+                "subject_id": self.subject.id,
+                "semester_id": self.semester.id,
+                "year": "2024-2025",
+                "exam_type": "examen",
+            },
+            headers={"x-requested-with": "XMLHttpRequest"}
+        )
+        self.assertEqual(res_diff_year.status_code, 200)
+        self.assertFalse(res_diff_year.json()["duplicate"])
+
+        # 3. Same title but DIFFERENT subject -> NOT duplicate!
+        res_diff_subj = self.client.get(
+            reverse("contributors:api_check_exam_duplicate"),
+            data={
+                "title": "Examen Final",
+                "subject_name": "Chimie Organique",
+                "year": "2026",
+                "exam_type": "examen",
+            },
+            headers={"x-requested-with": "XMLHttpRequest"}
+        )
+        self.assertEqual(res_diff_subj.status_code, 200)
+        self.assertFalse(res_diff_subj.json()["duplicate"])
+
 
 
 

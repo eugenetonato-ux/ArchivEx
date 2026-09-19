@@ -124,28 +124,26 @@
                                     <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-500 text-[10px] font-bold">Épreuve seule</span>
                                 {% endif %}
                             </td>
-                            <td class="py-3.5 px-3">
-                                {% if ex.is_free %}
-                                    <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-extrabold text-[10px]">Gratuit</span>
-                                {% else %}
-                                    <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 font-extrabold text-[10px]">Pass Semestre</span>
-                                {% endif %}
+                            <td class="py-3.5 px-3" id="exam-access-cell-{{ ex.pk }}">
+                                <button type="button"
+                                        onclick="ajaxToggleExamFree(this, '{{ ex.pk }}', '{% url 'contributors:exam_toggle_free' ex.pk %}')"
+                                        class="px-2.5 py-1 rounded-full font-extrabold text-[10px] transition-all duration-200 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 inline-flex items-center space-x-1 {% if ex.is_free %}bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/60{% else %}bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200/60{% endif %}"
+                                        title="Cliquer pour basculer : Gratuit <-> Pass Semestre">
+                                    <i class="fa-solid {% if ex.is_free %}fa-gift text-[9px]{% else %}fa-lock text-[9px]{% endif %}"></i>
+                                    <span class="access-label">{% if ex.is_free %}Gratuit{% else %}Pass Semestre{% endif %}</span>
+                                </button>
                             </td>
-                            <td class="py-3.5 px-3">
-                                {% if ex.is_published %}
-                                    <span class="px-2.5 py-1 rounded-full bg-blue-50 text-[#2563EB] font-extrabold text-[10px]">Publié</span>
-                                {% else %}
-                                    <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-extrabold text-[10px]">Brouillon</span>
-                                {% endif %}
+                            <td class="py-3.5 px-3" id="exam-status-cell-{{ ex.pk }}">
+                                <button type="button"
+                                        onclick="ajaxToggleExamStatus(this, '{{ ex.pk }}', '{% url 'contributors:exam_toggle_status' ex.pk %}')"
+                                        class="px-2.5 py-1 rounded-full font-extrabold text-[10px] transition-all duration-200 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 inline-flex items-center space-x-1 {% if ex.is_published %}bg-blue-50 text-[#2563EB] hover:bg-blue-100 border border-blue-200/60{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-300/60{% endif %}"
+                                        title="Cliquer pour basculer : Publié <-> Brouillon">
+                                    <i class="fa-solid {% if ex.is_published %}fa-circle-check text-[9px]{% else %}fa-file text-[9px]{% endif %}"></i>
+                                    <span class="status-label">{% if ex.is_published %}Publié{% else %}Brouillon{% endif %}</span>
+                                </button>
                             </td>
                             <td class="py-3.5 px-3 text-right">
                                  <div class="flex items-center justify-end space-x-2">
-                                     <form method="post" action="{% url 'contributors:exam_toggle_status' ex.pk %}">
-                                         {% csrf_token %}
-                                         <button type="submit" class="text-[11px] font-bold px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors">
-                                             {% if ex.is_published %}Dépublier{% else %}Publier{% endif %}
-                                         </button>
-                                     </form>
                                      <a href="{% url 'contributors:exam_edit' ex.pk %}" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-[#2563EB] hover:bg-blue-100 transition-colors inline-flex items-center space-x-1">
                                          <i class="fa-solid fa-pen text-[10px]" aria-hidden="true"></i>
                                          <span>Modifier</span>
@@ -283,6 +281,84 @@
                 "Toutes les épreuves sélectionnées seront retirées du site public. Les fichiers PDF originaux du Cloud Storage restent 100% conservés et intacts."
             );
         }
+    }
+
+    function ajaxToggleExamFree(btn, examId, url) {
+        btn.disabled = true;
+        btn.classList.add('opacity-60');
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const label = btn.querySelector('.access-label');
+                const icon = btn.querySelector('i');
+                if (data.is_free) {
+                    btn.className = "px-2.5 py-1 rounded-full font-extrabold text-[10px] transition-all duration-200 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 inline-flex items-center space-x-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/60";
+                    if (icon) icon.className = "fa-solid fa-gift text-[9px]";
+                    if (label) label.innerText = "Gratuit";
+                } else {
+                    btn.className = "px-2.5 py-1 rounded-full font-extrabold text-[10px] transition-all duration-200 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 inline-flex items-center space-x-1 bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200/60";
+                    if (icon) icon.className = "fa-solid fa-lock text-[9px]";
+                    if (label) label.innerText = "Pass Semestre";
+                }
+            } else {
+                alert(data.error || "Une erreur est survenue lors de la mise à jour.");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erreur réseau lors de la mise à jour.");
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.classList.remove('opacity-60');
+        });
+    }
+
+    function ajaxToggleExamStatus(btn, examId, url) {
+        btn.disabled = true;
+        btn.classList.add('opacity-60');
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const label = btn.querySelector('.status-label');
+                const icon = btn.querySelector('i');
+                if (data.is_published) {
+                    btn.className = "px-2.5 py-1 rounded-full font-extrabold text-[10px] transition-all duration-200 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 inline-flex items-center space-x-1 bg-blue-50 text-[#2563EB] hover:bg-blue-100 border border-blue-200/60";
+                    if (icon) icon.className = "fa-solid fa-circle-check text-[9px]";
+                    if (label) label.innerText = "Publié";
+                } else {
+                    btn.className = "px-2.5 py-1 rounded-full font-extrabold text-[10px] transition-all duration-200 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 inline-flex items-center space-x-1 bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-300/60";
+                    if (icon) icon.className = "fa-solid fa-file text-[9px]";
+                    if (label) label.innerText = "Brouillon";
+                }
+                const cb = document.querySelector(`.exam-checkbox[value="${examId}"]`);
+                if (cb) cb.setAttribute('data-is-published', data.is_published ? '1' : '0');
+            } else {
+                alert(data.error || "Une erreur est survenue lors de la mise à jour.");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erreur réseau lors de la mise à jour.");
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.classList.remove('opacity-60');
+        });
     }
 </script>
 {% endblock %}

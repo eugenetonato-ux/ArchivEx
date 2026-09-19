@@ -115,46 +115,42 @@ def get_filieres_by_school_api(request):
 def check_exam_duplicate_api(request):
     """
     API JSON vérifiant en direct (AJAX) si une épreuve identique existe déjà.
+    Un doublon strict requiert obligatoirement : MÊME matière, MÊME semestre, MÊME type d'épreuve et MÊME année académique.
     """
-    title = request.GET.get("title", "").strip()
+    subject_id = request.GET.get("subject_id")
     subject_name = request.GET.get("subject_name", "").strip()
     semester_id = request.GET.get("semester_id")
     year_str = request.GET.get("year", "").strip()
     exam_type = request.GET.get("exam_type", "").strip()
     exclude_id = request.GET.get("exclude_id")
 
-    if not title and not subject_name:
+    # Si la matière, l'année ou le type ne sont pas précisés, aucun risque de faux doublon
+    if not (subject_id or subject_name) or not year_str or not exam_type:
         return JsonResponse({"duplicate": False})
 
     qs = Exam.objects.select_related("subject", "semester", "filiere", "academic_year")
     if exclude_id and str(exclude_id).isdigit():
         qs = qs.exclude(pk=int(exclude_id))
 
-    match = None
-    if title:
-        match = qs.filter(title__iexact=title).first()
+    if subject_id and str(subject_id).isdigit():
+        qs = qs.filter(subject_id=int(subject_id))
+    elif subject_name:
+        qs = qs.filter(subject__name__iexact=subject_name)
 
-    if not match and subject_name:
-        sub_qs = qs.filter(subject__name__iexact=subject_name)
-        if semester_id and str(semester_id).isdigit():
-            sub_qs = sub_qs.filter(semester_id=int(semester_id))
+    if semester_id and str(semester_id).isdigit():
+        qs = qs.filter(semester_id=int(semester_id))
 
-        if year_str:
-            extracted_digits = "".join([c for c in year_str if c.isdigit()])
-            if len(extracted_digits) >= 4:
-                first_4 = int(extracted_digits[:4])
-                year_match_qs = sub_qs.filter(
-                    Q(academic_year__label__icontains=year_str) |
-                    Q(year=first_4)
-                )
-                if exam_type:
-                    year_type_match = year_match_qs.filter(exam_type=exam_type).first()
-                    if year_type_match:
-                        match = year_type_match
-                if not match:
-                    match = year_match_qs.first()
-        elif exam_type:
-            match = sub_qs.filter(exam_type=exam_type).first()
+    qs = qs.filter(exam_type=exam_type)
+
+    # Filtrage par année académique exacte
+    extracted_digits = "".join([c for c in year_str if c.isdigit()])
+    year_filter = Q(academic_year__label__iexact=year_str) | Q(academic_year__label__icontains=year_str)
+    if len(extracted_digits) >= 4:
+        first_4 = int(extracted_digits[:4])
+        year_filter |= Q(year=first_4)
+    qs = qs.filter(year_filter)
+
+    match = qs.first()
 
     if match:
         return JsonResponse({
@@ -454,15 +450,19 @@ def exam_create_view(request):
             exam.filiere = target_semester.filiere
             exam.level = target_semester.filiere.level
 
-            # Traitement de la matière (saisie libre)
-            subject_name = form.cleaned_data["subject_name"].strip()
-            subject = Subject.objects.filter(semester=target_semester, name__iexact=subject_name).first()
-            if not subject:
-                subject = Subject.objects.create(
-                    semester=target_semester,
-                    name=subject_name,
-                    is_active=True
-                )
+            # Traitement de la matière (sélection dropdown OU nouvelle matière)
+            subject = form.cleaned_data.get("subject")
+            new_subject_name = (form.cleaned_data.get("new_subject_name") or form.cleaned_data.get("subject_name") or "").strip()
+            if not subject and new_subject_name:
+                subject = Subject.objects.filter(semester=target_semester, name__iexact=new_subject_name).first()
+                if not subject:
+                    subject = Subject.objects.create(
+                        semester=target_semester,
+                        name=new_subject_name,
+                        is_active=True
+                    )
+            elif not subject:
+                subject = Subject.objects.filter(semester=target_semester).first()
             exam.subject = subject
 
             raw_year_input = str(request.POST.get("year", "")).strip()
@@ -486,17 +486,15 @@ def exam_create_view(request):
             exam.is_free = form.cleaned_data["is_free"]
             exam.is_published = form.cleaned_data["is_published"]
 
-            # Vérification robuste des doublons
-            duplicate_filter = Q(title__iexact=exam.title)
-            if exam.subject and exam.semester:
+            # Vérification stricte des doublons : UNIQUEMENT si même matière, même semestre, même type et même année
+            duplicate_match = None
+            if exam.subject and exam.semester and exam.exam_type:
                 sub_sem_filter = Q(subject=exam.subject, semester=exam.semester, exam_type=exam.exam_type)
                 if exam.academic_year:
                     sub_sem_filter &= (Q(academic_year=exam.academic_year) | Q(year=exam.year))
                 elif exam.year:
                     sub_sem_filter &= Q(year=exam.year)
-                duplicate_filter |= sub_sem_filter
-
-            duplicate_match = Exam.objects.filter(duplicate_filter).select_related("subject", "semester", "filiere", "academic_year").first()
+                duplicate_match = Exam.objects.filter(sub_sem_filter).select_related("subject", "semester", "filiere", "academic_year").first()
 
             if duplicate_match:
                 if request.POST.get("replace_existing") == "1":
@@ -520,7 +518,7 @@ def exam_create_view(request):
                     messages.success(request, f"L'épreuve existante « {duplicate_match.title} » a été remplacée et mise à jour avec succès avec vos nouveaux fichiers !")
                     return redirect("contributors:exam_list")
                 else:
-                    # Blocage strict de la publication d'un doublon
+                    # Blocage strict de la publication d'un doublon avec bouton d'annulation
                     context = {
                         "active_school": active_school,
                         "active_filiere": active_filiere,
@@ -531,7 +529,7 @@ def exam_create_view(request):
                         "duplicate_warning": True,
                         "existing_duplicate": duplicate_match,
                     }
-                    messages.error(request, f"Publication impossible : Une épreuve identique existe déjà dans la base (« {duplicate_match.title} » pour {duplicate_match.subject.name}). Vous devez soit remplacer l'épreuve existante, soit modifier les informations.")
+                    messages.error(request, f"Publication impossible : Une épreuve identique existe déjà dans la base pour {duplicate_match.subject.name} ({duplicate_match.academic_year.label if duplicate_match.academic_year else duplicate_match.year}). Vous pouvez remplacer l'épreuve existante ou annuler.")
                     return render(request, "contributors/exams/form.html", context)
 
             # Traitement des fichiers Cloud et téléversements directs
@@ -580,14 +578,18 @@ def exam_edit_view(request, pk):
             exam.filiere = target_semester.filiere
             exam.level = target_semester.filiere.level
 
-            subject_name = form.cleaned_data["subject_name"].strip()
-            subject = Subject.objects.filter(semester=target_semester, name__iexact=subject_name).first()
-            if not subject:
-                subject = Subject.objects.create(
-                    semester=target_semester,
-                    name=subject_name,
-                    is_active=True
-                )
+            subject = form.cleaned_data.get("subject")
+            new_subject_name = (form.cleaned_data.get("new_subject_name") or form.cleaned_data.get("subject_name") or "").strip()
+            if not subject and new_subject_name:
+                subject = Subject.objects.filter(semester=target_semester, name__iexact=new_subject_name).first()
+                if not subject:
+                    subject = Subject.objects.create(
+                        semester=target_semester,
+                        name=new_subject_name,
+                        is_active=True
+                    )
+            elif not subject:
+                subject = exam.subject or Subject.objects.filter(semester=target_semester).first()
             exam.subject = subject
 
             raw_year_input = str(request.POST.get("year", "")).strip()
@@ -608,14 +610,14 @@ def exam_edit_view(request, pk):
 
             # Vérification des doublons (en excluant l'épreuve courante)
             duplicate_exists = Exam.objects.filter(
-                title__iexact=exam.title,
                 subject=exam.subject,
                 academic_year=exam.academic_year,
-                semester=exam.semester
+                semester=exam.semester,
+                exam_type=exam.exam_type,
             ).exclude(pk=exam.pk).exists()
 
             if duplicate_exists:
-                form.add_error("title", f"Une autre épreuve nommée « {exam.title} » existe déjà pour cette matière.")
+                form.add_error("title", f"Une autre épreuve identique existe déjà pour {exam.subject.name} pour cette session.")
             else:
                 _process_exam_cloud_files(form, exam, target_semester, active_school, active_filiere, active_semester, request.user)
     
@@ -642,17 +644,53 @@ def exam_edit_view(request, pk):
 
 @contributor_required
 def exam_toggle_status_view(request, pk):
-    """Changer le statut de publication d'une épreuve (Brouillon <-> Publié)."""
+    """Changer le statut de publication d'une épreuve (Brouillon <-> Publié) avec support AJAX."""
     if request.method == "POST":
         exam = get_object_or_404(Exam.objects.select_related("filiere", "filiere__school"), pk=pk)
-        if not check_school_permission(request.user, exam.filiere.school):
+        if not check_school_permission(request.user, exam.filiere.school if exam.filiere else None):
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"success": False, "error": "Permission refusée"}, status=403)
             raise PermissionDenied("Vous n'êtes pas autorisé à modifier cette épreuve.")
 
         exam.is_published = not exam.is_published
         exam.save()
 
         new_status = "publiée" if exam.is_published else "mise en brouillon"
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({
+                "success": True,
+                "is_published": exam.is_published,
+                "status_label": "Publié" if exam.is_published else "Brouillon",
+                "message": f"L'épreuve « {exam.title} » est maintenant {new_status}."
+            })
+
         messages.success(request, f"L'épreuve « {exam.title} » est maintenant {new_status}.")
+    return redirect("contributors:exam_list")
+
+
+@contributor_required
+def exam_toggle_free_view(request, pk):
+    """Basculer l'accès Gratuit <-> Pass Semestre d'une épreuve avec support AJAX."""
+    if request.method == "POST":
+        exam = get_object_or_404(Exam.objects.select_related("filiere", "filiere__school"), pk=pk)
+        if not check_school_permission(request.user, exam.filiere.school if exam.filiere else None):
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"success": False, "error": "Permission refusée"}, status=403)
+            raise PermissionDenied("Vous n'êtes pas autorisé à modifier cette épreuve.")
+
+        exam.is_free = not exam.is_free
+        exam.save()
+
+        access_label = "Gratuit" if exam.is_free else "Pass Semestre"
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({
+                "success": True,
+                "is_free": exam.is_free,
+                "access_label": access_label,
+                "message": f"L'accès à l'épreuve « {exam.title} » est maintenant : {access_label}."
+            })
+
+        messages.success(request, f"L'accès à l'épreuve « {exam.title} » est maintenant : {access_label}.")
     return redirect("contributors:exam_list")
 
 
@@ -770,15 +808,59 @@ def summary_edit_view(request, pk):
 
 @contributor_required
 def summary_toggle_status_view(request, pk):
-    """Basculer le statut de publication d'un résumé."""
+    """Basculer le statut de publication d'un résumé avec support AJAX."""
     if request.method == "POST":
         sm = get_object_or_404(Summary.objects.select_related("subject__semester__filiere__school"), pk=pk)
-        if not check_school_permission(request.user, sm.subject.semester.filiere.school):
+        school = sm.subject.semester.filiere.school if sm.subject and sm.subject.semester and sm.subject.semester.filiere else None
+        if not check_school_permission(request.user, school):
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"success": False, "error": "Permission refusée"}, status=403)
             raise PermissionDenied("Vous n'êtes pas autorisé à modifier ce résumé.")
 
         sm.publication_status = "DRAFT" if sm.publication_status == "PUBLISHED" else "PUBLISHED"
         sm.save()
+
+        is_pub = (sm.publication_status == "PUBLISHED")
+        status_label = "Publié" if is_pub else "Brouillon"
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({
+                "success": True,
+                "is_published": is_pub,
+                "publication_status": sm.publication_status,
+                "status_label": status_label,
+                "message": f"Le statut du résumé « {sm.title} » est maintenant : {status_label}."
+            })
+
         messages.success(request, f"Le statut du résumé « {sm.title} » a été mis à jour.")
+    return redirect("contributors:summary_list")
+
+
+@contributor_required
+def summary_toggle_access_view(request, pk):
+    """Basculer l'accès Gratuit <-> Pass Semestre d'un résumé avec support AJAX."""
+    if request.method == "POST":
+        sm = get_object_or_404(Summary.objects.select_related("subject__semester__filiere__school"), pk=pk)
+        school = sm.subject.semester.filiere.school if sm.subject and sm.subject.semester and sm.subject.semester.filiere else None
+        if not check_school_permission(request.user, school):
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"success": False, "error": "Permission refusée"}, status=403)
+            raise PermissionDenied("Vous n'êtes pas autorisé à modifier ce résumé.")
+
+        sm.access_type = "FREE" if sm.access_type == "PREMIUM" else "PREMIUM"
+        sm.save()
+
+        is_free = (sm.access_type == "FREE")
+        access_label = "Gratuit" if is_free else "Pass Semestre"
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({
+                "success": True,
+                "is_free": is_free,
+                "access_type": sm.access_type,
+                "access_label": access_label,
+                "message": f"L'accès au résumé « {sm.title} » est maintenant : {access_label}."
+            })
+
+        messages.success(request, f"L'accès au résumé « {sm.title} » est maintenant : {access_label}.")
     return redirect("contributors:summary_list")
 
 
@@ -1548,14 +1630,18 @@ def publish_from_cloud_view(request, pk):
             exam.filiere = target_semester.filiere
             exam.level = target_semester.filiere.level
 
-            subject_name = form.cleaned_data["subject_name"].strip()
-            subject = Subject.objects.filter(semester=target_semester, name__iexact=subject_name).first()
-            if not subject:
-                subject = Subject.objects.create(
-                    semester=target_semester,
-                    name=subject_name,
-                    is_active=True
-                )
+            subject = form.cleaned_data.get("subject")
+            new_subject_name = (form.cleaned_data.get("new_subject_name") or form.cleaned_data.get("subject_name") or "").strip()
+            if not subject and new_subject_name:
+                subject = Subject.objects.filter(semester=target_semester, name__iexact=new_subject_name).first()
+                if not subject:
+                    subject = Subject.objects.create(
+                        semester=target_semester,
+                        name=new_subject_name,
+                        is_active=True
+                    )
+            elif not subject:
+                subject = Subject.objects.filter(semester=target_semester).first()
             exam.subject = subject
 
             raw_year_input = str(request.POST.get("year", "")).strip()
@@ -1576,19 +1662,15 @@ def publish_from_cloud_view(request, pk):
             exam.is_free = form.cleaned_data["is_free"]
             exam.is_published = form.cleaned_data["is_published"]
 
-            # Duplicate check
-            duplicate_filter = Q(title__iexact=exam.title) | Q(cloud_file=cloud_file)
-            if cloud_file and cloud_file.file:
-                duplicate_filter |= Q(file=cloud_file.file)
-            if exam.subject and exam.semester:
+            # Vérification stricte des doublons
+            duplicate_match = None
+            if exam.subject and exam.semester and exam.exam_type:
                 sub_sem_filter = Q(subject=exam.subject, semester=exam.semester, exam_type=exam.exam_type)
                 if exam.academic_year:
                     sub_sem_filter &= (Q(academic_year=exam.academic_year) | Q(year=exam.year))
                 elif exam.year:
                     sub_sem_filter &= Q(year=exam.year)
-                duplicate_filter |= sub_sem_filter
-
-            duplicate_match = Exam.objects.filter(duplicate_filter).select_related("subject", "semester", "filiere", "academic_year").first()
+                duplicate_match = Exam.objects.filter(sub_sem_filter).select_related("subject", "semester", "filiere", "academic_year").first()
 
             if duplicate_match:
                 if request.POST.get("replace_existing") == "1":
@@ -1748,6 +1830,7 @@ def publish_cloud_folder_view(request):
     # Isoler UNIQUEMENT les épreuves et corrigés appartenant réellement à cette UE
     matching_cloud_exams = []
     matching_cloud_corrections = []
+    matching_cloud_summaries = []
 
     for cf in all_cloud:
         parsed = parse_exam_filename(cf.title, available_subjects=available_subjects)
@@ -1765,9 +1848,12 @@ def publish_cloud_folder_view(request):
                 matching_cloud_exams.append((cf, parsed))
             elif cf.file_type == "CORRECTION":
                 matching_cloud_corrections.append((cf, parsed))
+            elif cf.file_type == "SUMMARY":
+                matching_cloud_summaries.append((cf, parsed))
 
     published_count = 0
     with_corr_count = 0
+    published_summaries_count = 0
 
     for cf, parsed in matching_cloud_exams:
         yr_label = parsed["detected_academic_year"] or "2025-2026"
@@ -1780,8 +1866,8 @@ def publish_cloud_folder_view(request):
 
         exam_title = cf.title.replace("Épreuve — ", "").replace(".pdf", "").strip()
 
-        # Recherche avancée anti-doublon : par CloudFile, par fichier ou par titre/matière/semestre/année
-        dup_filter = Q(title__iexact=exam_title) | Q(cloud_file=cf)
+        # Recherche anti-doublon stricte par CloudFile ou par matière/semestre/année
+        dup_filter = Q(cloud_file=cf)
         if cf.file:
             dup_filter |= Q(file=cf.file)
         if subject and target_semester:
@@ -1835,9 +1921,30 @@ def publish_cloud_folder_view(request):
         if corr_cf:
             with_corr_count += 1
 
+    # Traitement des résumés de l'UE (100% PDF, aucune extraction de texte forcée, pas d'année)
+    for s_cf, s_parsed in matching_cloud_summaries:
+        s_title = s_cf.title.replace("Résumé — ", "").replace(".pdf", "").strip()
+        existing_sum = Summary.objects.filter(subject=subject, title__iexact=s_title).first()
+        if existing_sum:
+            existing_sum.publication_status = "PUBLISHED"
+            if not existing_sum.file and s_cf.file:
+                existing_sum.file = s_cf.file
+            existing_sum.save()
+        else:
+            Summary.objects.create(
+                title=s_title,
+                subject=subject,
+                file=s_cf.file if s_cf.file else None,
+                author=request.user,
+                access_type="FREE" if subject.is_free_correction or subject.is_free else "PREMIUM",
+                publication_status="PUBLISHED",
+            )
+        published_summaries_count += 1
+
+    summary_msg = f" et {published_summaries_count} résumé(s)" if published_summaries_count > 0 else ""
     messages.success(
         request,
-        f"{published_count} épreuve(s) pour l'UE « {subject.name} » ont été publiées sur le site public ({with_corr_count} avec corrigé rattaché)."
+        f"{published_count} épreuve(s){summary_msg} pour l'UE « {subject.name} » ont été publiées sur le site public ({with_corr_count} avec corrigé rattaché)."
     )
     return redirect("contributors:library_index")
 
@@ -1845,12 +1952,13 @@ def publish_cloud_folder_view(request):
 @contributor_required
 def toggle_ue_premium_view(request):
     """
-    Bascule l'état Premium / Gratuit d'une UE dans le Cloud Storage (Bouton Épreuves ou Bouton Corrigés & Résumés).
+    Bascule l'état Premium / Gratuit d'une UE dans le Cloud Storage avec support AJAX direct.
     """
     if request.method == "POST":
         subject_id = request.POST.get("subject_id")
         ue_name = request.POST.get("ue_name", "").strip()
         target_type = request.POST.get("target_type", "exam")
+        is_ajax = request.headers.get("x-requested-with") == "XMLHttpRequest"
 
         active_school, active_filiere, active_semester = get_active_academic_context(request)
         subject = None
@@ -1876,6 +1984,15 @@ def toggle_ue_premium_view(request):
                 subject.save()
                 Exam.objects.filter(subject=subject).update(is_free=subject.is_free)
                 status_txt = "Gratuit (Accès libre)" if subject.is_free else "Premium (Pass Semestre requis)"
+                if is_ajax:
+                    return JsonResponse({
+                        "success": True,
+                        "target_type": "exam",
+                        "is_free": subject.is_free,
+                        "label": "Épreuves : Gratuit" if subject.is_free else "Épreuves : Premium",
+                        "status_txt": status_txt,
+                        "message": f"Épreuves de l'UE « {subject.name} » : {status_txt}"
+                    })
                 messages.success(request, f"Épreuves de l'UE « {subject.name} » basculées en mode : {status_txt}")
 
             elif target_type == "correction":
@@ -1883,6 +2000,15 @@ def toggle_ue_premium_view(request):
                 subject.save()
                 Exam.objects.filter(subject=subject).update(is_free_correction=subject.is_free_correction)
                 status_txt = "Gratuit (Accès libre)" if subject.is_free_correction else "Premium (Pass Semestre requis)"
+                if is_ajax:
+                    return JsonResponse({
+                        "success": True,
+                        "target_type": "correction",
+                        "is_free_correction": subject.is_free_correction,
+                        "label": "Corrigés : Gratuit" if subject.is_free_correction else "Corrigés : Premium",
+                        "status_txt": status_txt,
+                        "message": f"Corrigés & résumés de l'UE « {subject.name} » : {status_txt}"
+                    })
                 messages.success(request, f"Corrigés & résumés de l'UE « {subject.name} » basculés en mode : {status_txt}")
 
     return redirect("contributors:library_index")

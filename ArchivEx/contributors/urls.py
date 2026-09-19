@@ -30,6 +30,7 @@ urlpatterns = [
 
     path("epreuves/<int:pk>/modifier/", views.exam_edit_view, name="exam_edit"),
     path("epreuves/<int:pk>/statut/", views.exam_toggle_status_view, name="exam_toggle_status"),
+    path("epreuves/<int:pk>/acces/", views.exam_toggle_free_view, name="exam_toggle_free"),
     path("epreuves/<int:pk>/supprimer/", views.exam_delete_view, name="exam_delete"),
     path("completeness/", views.resource_completeness_view, name="completeness_overview"),
 
@@ -38,6 +39,7 @@ urlpatterns = [
     path("resumes/ajouter/", views.summary_create_view, name="summary_create"),
     path("resumes/<int:pk>/modifier/", views.summary_edit_view, name="summary_edit"),
     path("resumes/<int:pk>/statut/", views.summary_toggle_status_view, name="summary_toggle_status"),
+    path("resumes/<int:pk>/acces/", views.summary_toggle_access_view, name="summary_toggle_access"),
     path("resumes/<int:pk>/supprimer/", views.summary_delete_view, name="summary_delete"),
 
     # Guides
