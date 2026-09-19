@@ -119,4 +119,59 @@ class AccountsAndAcademicsTest(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertContains(res, "prefill.student@gmail.com")
 
+    def test_single_session_per_account(self):
+        """Verify that when a user logs in on a second client, the first client session is invalidated."""
+        user = User.objects.create_user(
+            username="concurrent@univ.edu",
+            email="concurrent@univ.edu",
+            password="Password123!"
+        )
+        StudentProfile.objects.create(
+            user=user,
+            school=self.school_eneam,
+            level=self.level_l1,
+            filiere=self.filiere_ig
+        )
+
+        client1 = Client()
+        client2 = Client()
+
+        # 1. Device 1 logs in
+        res1 = client1.post(reverse("accounts:login"), {
+            "username": "concurrent@univ.edu",
+            "password": "Password123!"
+        })
+        self.assertRedirects(res1, reverse("accounts:dashboard"))
+        
+        # User active_session_key matches client1 session
+        user.refresh_from_db()
+        client1_session_key = client1.session.session_key
+        self.assertEqual(user.active_session_key, client1_session_key)
+
+        # Device 1 can access dashboard
+        res_dash1 = client1.get(reverse("accounts:dashboard"))
+        self.assertEqual(res_dash1.status_code, 200)
+
+        # 2. Device 2 logs in on the same account
+        res2 = client2.post(reverse("accounts:login"), {
+            "username": "concurrent@univ.edu",
+            "password": "Password123!"
+        })
+        self.assertRedirects(res2, reverse("accounts:dashboard"))
+
+        # User active_session_key is now updated to client2 session
+        user.refresh_from_db()
+        client2_session_key = client2.session.session_key
+        self.assertEqual(user.active_session_key, client2_session_key)
+        self.assertNotEqual(client1_session_key, client2_session_key)
+
+        # 3. Device 1 makes a subsequent request -> should be logged out & redirected to login
+        res_dash1_invalid = client1.get(reverse("accounts:dashboard"), follow=True)
+        self.assertRedirects(res_dash1_invalid, reverse("accounts:login"))
+        self.assertContains(res_dash1_invalid, "Votre session a été fermée")
+
+        # 4. Device 2 is still authenticated and works fine
+        res_dash2 = client2.get(reverse("accounts:dashboard"))
+        self.assertEqual(res_dash2.status_code, 200)
+
 

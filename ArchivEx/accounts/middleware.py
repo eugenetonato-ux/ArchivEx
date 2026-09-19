@@ -1,4 +1,7 @@
 import re
+from django.contrib.auth import logout
+from django.contrib import messages
+from django.shortcuts import redirect
 from .utils import log_user_action
 
 class SiteLoggingMiddleware:
@@ -97,5 +100,57 @@ class MustChangePasswordMiddleware:
 
             if not is_exempt:
                 return redirect("accounts:force_password_change")
+
+        return self.get_response(request)
+
+
+class SingleSessionMiddleware:
+    """
+    Middleware de sécurité anti-partage de compte.
+    Garantit qu'un seul appareil peut être connecté par compte à la fois.
+    Si une nouvelle connexion est détectée (clé de session différente),
+    la session courante est invalidée et l'utilisateur est redirigé vers la page de connexion.
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+        # Chemins exemptés : statiques, media, login, logout
+        self.exempt_paths = (
+            "/static/",
+            "/media/",
+            "/connexion/",
+            "/inscription/",
+            "/deconnexion/",
+            "/accounts/connexion/",
+            "/accounts/inscription/",
+            "/accounts/deconnexion/",
+            "/administration/login/",
+            "/administration/logout/",
+            "/favicon.ico",
+        )
+
+    def __call__(self, request):
+        user = getattr(request, "user", None)
+
+        if user and user.is_authenticated:
+            path = request.path
+
+            # Ne pas vérifier sur les chemins exemptés
+            if not any(path.startswith(ep) for ep in self.exempt_paths):
+                try:
+                    stored_key = user.active_session_key
+                    current_key = request.session.session_key
+
+                    if stored_key and current_key and stored_key != current_key:
+                        # Session invalide : une autre connexion a eu lieu
+                        logout(request)
+                        messages.warning(
+                            request,
+                            "Votre session a été fermée car votre compte vient d'être connecté depuis un autre appareil. "
+                            "Si ce n'est pas vous, modifiez votre mot de passe immédiatement."
+                        )
+                        return redirect("accounts:login")
+                except Exception:
+                    pass
 
         return self.get_response(request)

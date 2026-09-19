@@ -70,8 +70,9 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "accounts.middleware.SiteLoggingMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "accounts.middleware.SingleSessionMiddleware",
+    "accounts.middleware.SiteLoggingMiddleware",
     "accounts.middleware.MustChangePasswordMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]

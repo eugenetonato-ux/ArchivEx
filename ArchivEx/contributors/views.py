@@ -66,6 +66,9 @@ def admin_login_view(request):
             if user is not None:
                 if is_user_contributor(user):
                     login(request, user)
+                    # Enregistrer la clé de session active (protection anti-partage)
+                    user.active_session_key = request.session.session_key
+                    user.save(update_fields=["active_session_key"])
                     messages.success(request, f"Bienvenue dans l'espace administration, {user.first_name or user.username} !")
                     target_url = request.POST.get("next") or request.GET.get("next") or "/administration/"
                     return redirect(target_url)
@@ -90,6 +93,13 @@ def admin_logout_view(request):
     """
     Déconnecte le membre staff de la session d'administration.
     """
+    # Effacer la clé de session active proprement
+    if request.user.is_authenticated:
+        try:
+            request.user.active_session_key = None
+            request.user.save(update_fields=["active_session_key"])
+        except Exception:
+            pass
     logout(request)
     messages.info(request, "Vous avez été déconnecté avec succès de l'espace administration.")
     return redirect("contributors:admin_login")

@@ -8,6 +8,13 @@ class User(AbstractUser):
         verbose_name="Doit modifier son mot de passe",
         help_text="Forcer l'utilisateur à modifier son mot de passe dès sa prochaine connexion.",
     )
+    active_session_key = models.CharField(
+        max_length=40,
+        blank=True,
+        null=True,
+        verbose_name="Clé de session active",
+        help_text="Stocke la clé de session actuellement valide pour empêcher les connexions simultanées.",
+    )
 
 
 class StudentProfile(models.Model):

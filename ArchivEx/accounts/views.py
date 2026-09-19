@@ -23,6 +23,9 @@ def register_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
+            # Enregistrer la clé de session pour la protection anti-partage
+            user.active_session_key = request.session.session_key
+            user.save(update_fields=["active_session_key"])
             log_user_action(request, "CONNECTION", f"Nouvelle inscription et connexion automatique de l'utilisateur : {user.username}")
             messages.success(request, f"Bienvenue {user.first_name} ! Ton compte a été créé avec succès.")
             return redirect("accounts:dashboard")
@@ -47,6 +50,9 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            # Enregistrer la clé de session active pour la protection anti-partage de compte
+            user.active_session_key = request.session.session_key
+            user.save(update_fields=["active_session_key"])
             log_user_action(request, "CONNECTION", f"Connexion réussie de l'utilisateur : {user.username}")
             
             # Vérification de sécurité : l'étudiant doit changer son mot de passe temporaire
@@ -103,6 +109,10 @@ def force_password_change_view(request):
             from django.contrib.auth import update_session_auth_hash
             update_session_auth_hash(request, request.user)
 
+            # Après update_session_auth_hash, la clé de session est régénérée
+            request.user.active_session_key = request.session.session_key
+            request.user.save(update_fields=["active_session_key"])
+
             log_user_action(
                 request,
                 "MODIFICATION",
@@ -126,6 +136,13 @@ def force_password_change_view(request):
 def logout_view(request):
     username = request.user.username if request.user.is_authenticated else "Anonyme"
     log_user_action(request, "CONNECTION", f"Déconnexion de l'utilisateur : {username}")
+    # Effacer la clé de session active proprement lors de la déconnexion
+    if request.user.is_authenticated:
+        try:
+            request.user.active_session_key = None
+            request.user.save(update_fields=["active_session_key"])
+        except Exception:
+            pass
     logout(request)
     messages.info(request, "Tu es à présent déconnecté.")
     return redirect("academics:home")
