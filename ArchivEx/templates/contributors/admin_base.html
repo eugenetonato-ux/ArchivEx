@@ -479,7 +479,7 @@
                                     <a href="{% url 'contributors:admin_support_detail' req.pk %}" class="block p-3 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">
                                         <div class="flex items-center justify-between mb-1">
                                             <span class="text-[11px] font-extrabold text-slate-900 dark:text-white truncate max-w-[180px]">
-                                                {{ req.user.get_full_name|default:req.user.username|default:req.guest_name|default:"Étudiant" }}
+                                                {% if req.user %}{{ req.user.get_full_name|default:req.user.username }}{% elif req.guest_name %}{{ req.guest_name }}{% elif req.guest_email %}{{ req.guest_email }}{% else %}Étudiant{% endif %}
                                             </span>
                                             <span class="text-[9px] font-semibold text-slate-400">
                                                 {{ req.created_at|timesince }}

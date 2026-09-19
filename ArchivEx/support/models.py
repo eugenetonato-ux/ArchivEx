@@ -71,6 +71,12 @@ class SupportRequest(models.Model):
     def has_reply(self):
         return self.replies.exists()
 
+    @property
+    def sender_name(self):
+        if self.user:
+            return self.user.get_full_name() or self.user.username
+        return self.guest_name or self.guest_email or "Étudiant"
+
 
 class SupportReply(models.Model):
     """Réponse d'un administrateur à une demande de support étudiant."""
