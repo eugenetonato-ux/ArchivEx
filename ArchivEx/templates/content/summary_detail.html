@@ -30,9 +30,9 @@
         <h1 class="text-2xl sm:text-3xl font-extrabold text-[#071A49] mb-4">{{ summary.title }}</h1>
 
         {% if summary.introduction %}
-            <p class="text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-200/80 mb-6 italic leading-relaxed">
-                {{ summary.introduction }}
-            </p>
+            <div class="text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-200/80 mb-6 italic leading-relaxed">
+                {{ summary.introduction|safe }}
+            </div>
         {% endif %}
 
         {% if has_access %}
@@ -64,7 +64,7 @@
 
             {% if summary.content %}
                 <div class="prose prose-slate max-w-none text-slate-800 text-sm leading-relaxed border-t border-slate-100 pt-6 mt-6">
-                    {{ summary.content|linebreaks }}
+                    {{ summary.content|safe }}
                 </div>
             {% endif %}
         {% else %}

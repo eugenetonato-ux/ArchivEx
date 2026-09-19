@@ -36,7 +36,13 @@ class Summary(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             base_slug = slugify(self.title) or "resume"
-            self.slug = f"{base_slug}-{self.subject_id}"
+            candidate = f"{base_slug}-{self.subject_id}" if self.subject_id else base_slug
+            slug = candidate
+            counter = 1
+            while Summary.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{candidate}-{counter}"
+                counter += 1
+            self.slug = slug
         super().save(*args, **kwargs)
 
     @property
@@ -75,7 +81,13 @@ class Guide(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             base_slug = slugify(self.title) or "guide"
-            self.slug = f"{base_slug}-{self.subject_id}"
+            candidate = f"{base_slug}-{self.subject_id}" if self.subject_id else base_slug
+            slug = candidate
+            counter = 1
+            while Guide.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{candidate}-{counter}"
+                counter += 1
+            self.slug = slug
         super().save(*args, **kwargs)
 
     @property
@@ -117,7 +129,13 @@ class Article(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             base_slug = slugify(self.title) or "article"
-            self.slug = base_slug
+            candidate = base_slug
+            slug = candidate
+            counter = 1
+            while Article.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{candidate}-{counter}"
+                counter += 1
+            self.slug = slug
         super().save(*args, **kwargs)
 
     @property

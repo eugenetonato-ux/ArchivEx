@@ -189,12 +189,7 @@
         </form>
     </div>
 
-    <!-- FORMULAIRE GLOBAL POUR OPÉRATIONS GROUPÉES -->
-    <form id="bulk-action-form" method="post" action="{% url 'contributors:bulk_operations' %}">
-        {% csrf_token %}
-        <input type="hidden" name="action" id="bulk-form-action" value="">
-        <input type="hidden" name="dest_filiere" id="bulk-form-dest-filiere" value="">
-        <input type="hidden" name="dest_semester" id="bulk-form-dest-semester" value="">
+    <!-- CONTENEUR DES RESSOURCES CLOUD -->
 
         {% if not grouped_cloud_files %}
             <div class="bg-white rounded-2xl p-12 text-center text-slate-400 font-medium border border-slate-200/80 shadow-sm">
@@ -473,6 +468,14 @@
             </div>
 
         {% endif %}
+
+    <!-- FORMULAIRE GLOBAL AUTONOME POUR ACTIONS GROUPÉES -->
+    <form id="bulk-action-form" method="post" action="{% url 'contributors:bulk_operations' %}" class="hidden">
+        {% csrf_token %}
+        <input type="hidden" name="action" id="bulk-form-action" value="">
+        <input type="hidden" name="dest_filiere" id="bulk-form-dest-filiere" value="">
+        <input type="hidden" name="dest_semester" id="bulk-form-dest-semester" value="">
+        <div id="bulk-selected-inputs"></div>
     </form>
 
     <!-- FLOATING ACTIONS BAR FOR BULK OPERATIONS -->
@@ -695,7 +698,27 @@
     }
   }
 
+  function populateBulkForm() {
+    const container = document.getElementById('bulk-selected-inputs');
+    if (!container) return false;
+    container.innerHTML = '';
+    const checkedBoxes = document.querySelectorAll('.file-checkbox:checked');
+    if (!checkedBoxes.length) {
+        alert("Veuillez sélectionner au moins un fichier.");
+        return false;
+    }
+    checkedBoxes.forEach(cb => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'selected_files';
+        input.value = cb.value;
+        container.appendChild(input);
+    });
+    return true;
+  }
+
   function submitBulkAction(actionName) {
+    if (!populateBulkForm()) return;
     const actionInput = document.getElementById('bulk-form-action');
     const form = document.getElementById('bulk-action-form');
     if (actionInput && form) {
@@ -706,6 +729,7 @@
 
   function confirmBulkDelete() {
     if (!confirm("Êtes-vous sûr de vouloir supprimer définitivement ces fichiers du Cloud Storage ? Cette action est irréversible.")) return;
+    if (!populateBulkForm()) return;
     const form = document.getElementById('bulk-action-form');
     document.getElementById('bulk-form-action').value = 'delete';
     const formData = new FormData(form);
@@ -757,6 +781,7 @@
         alert("Veuillez choisir au moins une filière ou un semestre de destination.");
         return;
     }
+    if (!populateBulkForm()) return;
     
     const hiddenFiliere = document.getElementById('bulk-form-dest-filiere');
     const hiddenSemester = document.getElementById('bulk-form-dest-semester');

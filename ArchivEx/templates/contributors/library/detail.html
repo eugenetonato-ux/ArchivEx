@@ -34,10 +34,6 @@
 
         <div class="flex items-center space-x-3">
             {% if cloud_file %}
-                <a href="{% url 'contributors:publish_from_cloud' pk=cloud_file.id %}?force_ocr=1" class="px-3.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-colors shadow-md shadow-indigo-500/20 inline-flex items-center space-x-1.5">
-                    <i class="fa-solid fa-wand-magic-sparkles text-xs" aria-hidden="true"></i>
-                    <span>Extraire & Résumer (OCR)</span>
-                </a>
                 <a href="{% url 'contributors:publish_from_cloud' pk=cloud_file.id %}" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-colors shadow-md shadow-blue-500/20 inline-flex items-center space-x-2">
                     <i class="fa-solid fa-paper-plane text-xs" aria-hidden="true"></i>
                     <span>Publier cette ressource</span>

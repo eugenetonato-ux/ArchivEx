@@ -9,7 +9,6 @@ from django.http import JsonResponse, HttpResponseForbidden, FileResponse, Http4
 
 from academics.models import School, Level, Filiere, AcademicYear, Semester, Subject
 from academics.parser import parse_exam_filename
-from academics.ocr_utils import generate_pdf_summary_and_metadata
 from exams.models import Exam
 from content.models import Summary, Guide, Article, CloudFile
 from accounts.models import StudentProfile
@@ -1480,8 +1479,10 @@ def library_index_view(request):
     available_subjects = subj_qs
 
     published_exam_map = dict(
-        Exam.objects.filter(cloud_file__in=cloud_files).values_list("cloud_file_id", "id")
+        Exam.objects.filter(Q(cloud_file__in=cloud_files) | Q(cloud_correction_file__in=cloud_files) | Q(cloud_summary_file__in=cloud_files)).values_list("cloud_file_id", "id")
     )
+    published_summary_titles = set(Summary.objects.filter(publication_status="PUBLISHED").values_list("title", flat=True))
+    published_summary_files = set(Summary.objects.filter(publication_status="PUBLISHED", file__isnull=False).values_list("file", flat=True))
 
     from collections import OrderedDict
     grouped_cloud_files = OrderedDict()
@@ -1503,7 +1504,11 @@ def library_index_view(request):
         parsed = parse_exam_filename(cf.title, available_subjects=available_subjects)
         cf.parsed_info = parsed
         cf.published_exam_id = published_exam_map.get(cf.id)
-        cf.is_already_published = bool(cf.published_exam_id)
+        if cf.file_type == "SUMMARY":
+            clean_s_title = cf.title.replace("Résumé — ", "").replace("Fiche — ", "").replace(".pdf", "").strip()
+            cf.is_already_published = bool(cf.published_exam_id or (cf.file and cf.file.name in published_summary_files) or clean_s_title in published_summary_titles)
+        else:
+            cf.is_already_published = bool(cf.published_exam_id)
         matched_subj = parsed["matched_subject"]
         ue_name = matched_subj.name if matched_subj else (parsed["subject_candidate"] or "Noms non conformes / Non classés")
         
@@ -1689,7 +1694,7 @@ def cloud_file_edit_view(request, pk):
 
 @contributor_required
 def publish_from_cloud_view(request, pk):
-    """Pré-remplit le formulaire de publication d'épreuve avec un fichier Cloud sélectionné et recherche auto du corrigé/résumé."""
+    """Pré-remplit le formulaire de publication d'épreuve ou de résumé avec un fichier Cloud sélectionné."""
     cloud_file = get_object_or_404(CloudFile, pk=pk)
     active_school, active_filiere, active_semester = get_active_academic_context(request)
 
@@ -1700,30 +1705,49 @@ def publish_from_cloud_view(request, pk):
 
     detected_subject_name = parsed["matched_subject"].name if parsed["matched_subject"] else (parsed["subject_candidate"] or "")
     detected_academic_year = parsed["detected_academic_year"] or ""
-    initial_title = parsed["clean_title"] or cloud_file.title.replace("Épreuve — ", "").replace(".pdf", "").strip()
+    initial_title = parsed["clean_title"] or cloud_file.title.replace("Épreuve — ", "").replace("Résumé — ", "").replace("Correction — ", "").replace(".pdf", "").strip()
 
-    # Extraire automatiquement le texte et générer un résumé via OCR Python si aucune méta-donnée n'est détectée
+    # CAS 1 : C'est une FICHE RÉSUMÉ (SUMMARY)
+    if cloud_file.file_type == "SUMMARY":
+        matched_subj = parsed.get("matched_subject")
+        if not matched_subj and detected_subject_name:
+            matched_subj = available_subjects.filter(name__iexact=detected_subject_name).first()
+
+        clean_title = cloud_file.title.replace("Résumé — ", "").replace("Fiche — ", "").replace(".pdf", "").strip()
+
+        if request.method == "POST":
+            form = SummaryAdminForm(request.POST, request.FILES, active_filiere=target_filiere, active_semester=cloud_file.semester or active_semester)
+            if form.is_valid():
+                sm = form.save(commit=False)
+                sm.author = request.user
+                if not sm.file and cloud_file.file:
+                    sm.file = cloud_file.file
+                sm.save()
+                messages.success(request, f"Fiche résumé « {sm.title} » publiée avec succès sur le site public pour {sm.subject.name}.")
+                return redirect("contributors:library_index")
+        else:
+            initial_data = {
+                "title": clean_title,
+                "subject": matched_subj,
+                "publication_status": "PUBLISHED",
+                "access_type": "FREE" if (matched_subj and (matched_subj.is_free or matched_subj.is_free_correction)) else "PREMIUM",
+                "introduction": f"Fiche de synthèse et résumé de cours pour {matched_subj.name if matched_subj else 'cette UE'}.",
+            }
+            form = SummaryAdminForm(initial=initial_data, active_filiere=target_filiere, active_semester=cloud_file.semester or active_semester)
+
+        context = {
+            "active_school": active_school,
+            "active_filiere": target_filiere or active_filiere,
+            "active_semester": cloud_file.semester or active_semester,
+            "form": form,
+            "is_create": True,
+            "selected_cloud_file": cloud_file,
+        }
+        return render(request, "contributors/summaries/form.html", context)
+
+    # CAS 2 : ÉPREUVE OU CORRECTION
     ocr_result = None
     auto_ocr_summary = ""
-    force_ocr_flag = request.GET.get("force_ocr") == "1"
-
-    if (not parsed.get("is_valid") or not detected_subject_name or not detected_academic_year or force_ocr_flag) and cloud_file.file:
-        try:
-            ocr_result = generate_pdf_summary_and_metadata(
-                cloud_file.file,
-                filename=cloud_file.title,
-                available_subjects=available_subjects,
-                force_ocr=force_ocr_flag
-            )
-            auto_ocr_summary = ocr_result.get("summary", "")
-
-            # Si la matière ou l'année manque, utiliser le résultat OCR s'il est disponible
-            if not detected_subject_name and ocr_result.get("detected_subject_name"):
-                detected_subject_name = ocr_result["detected_subject_name"]
-            if not detected_academic_year and ocr_result.get("detected_year"):
-                detected_academic_year = ocr_result["detected_year"]
-        except Exception as ocr_err:
-            logger.warning(f"Erreur d'extraction OCR dans publish_from_cloud_view: {ocr_err}")
 
     # Recherche automatique du corrigé et du résumé associés dans le Cloud Storage
     auto_corr_cloud = None
@@ -1754,10 +1778,12 @@ def publish_from_cloud_view(request, pk):
                 target_semester = Semester.objects.filter(filiere=target_filiere).first()
             if not target_semester and target_filiere:
                 target_semester = Semester.objects.create(filiere=target_filiere, label="Semestre 1", number=1)
+            if not target_semester:
+                target_semester = Semester.objects.first()
 
             exam.semester = target_semester
-            exam.filiere = target_semester.filiere
-            exam.level = target_semester.filiere.level
+            exam.filiere = target_semester.filiere if (target_semester and target_semester.filiere) else target_filiere
+            exam.level = exam.filiere.level if (exam.filiere and exam.filiere.level) else Level.objects.first()
 
             subject = form.cleaned_data.get("subject")
             new_subject_name = (form.cleaned_data.get("new_subject_name") or form.cleaned_data.get("subject_name") or "").strip()
@@ -1855,8 +1881,8 @@ def publish_from_cloud_view(request, pk):
             "title": initial_title,
             "subject_name": detected_subject_name,
             "year": detected_academic_year or "2025-2026",
-            "exam_type": (ocr_result.get("detected_exam_type") if ocr_result else "examen") or "examen",
-            "description": auto_ocr_summary or "",
+            "exam_type": "examen",
+            "description": "",
             "is_published": "True",
             "is_free": "False",
             "cloud_file": cloud_file if cloud_file.file_type == "EXAM" else None,
@@ -2687,18 +2713,25 @@ def bulk_operations_view(request):
                 defaults={"is_active": True}
             )
             
-            clean_title = cf.title.replace("Résumé — ", "").replace(".pdf", "").strip()
-            Summary.objects.create(
-                title=clean_title,
-                subject=subject,
-                file=cf.file if cf.file else None,
-                introduction=f"Résumé de cours de l'UE {subject.name}.",
-                content="",
-                publication_status="PUBLISHED",
-                access_type="PREMIUM",
-            )
+            clean_title = cf.title.replace("Résumé — ", "").replace("Fiche — ", "").replace(".pdf", "").strip()
+            existing_sum = Summary.objects.filter(subject=subject, title__iexact=clean_title).first()
+            if existing_sum:
+                existing_sum.publication_status = "PUBLISHED"
+                if not existing_sum.file and cf.file:
+                    existing_sum.file = cf.file
+                existing_sum.save()
+            else:
+                Summary.objects.create(
+                    title=clean_title,
+                    subject=subject,
+                    file=cf.file if cf.file else None,
+                    author=request.user,
+                    introduction=f"Résumé de cours de l'UE {subject.name}.",
+                    content="",
+                    publication_status="PUBLISHED",
+                    access_type="FREE" if (subject.is_free or subject.is_free_correction) else "PREMIUM",
+                )
             published_summaries += 1
-            cf.delete()
 
         # 2. Traitement des Examens (EXAM)
         for cf in exams_to_process:
@@ -2712,13 +2745,18 @@ def bulk_operations_view(request):
                 defaults={"is_active": True}
             )
 
+            target_filiere = target_semester.filiere if (target_semester and getattr(target_semester, "filiere", None)) else (cf.filiere or Filiere.objects.first())
+            target_level = target_filiere.level if (target_filiere and getattr(target_filiere, "level", None)) else Level.objects.first()
+
             yr_label = parsed["detected_academic_year"] or "2025-2026"
             if "-" in yr_label:
                 ay_obj, _ = AcademicYear.objects.get_or_create(label=yr_label)
                 yr_int = int(yr_label.split("-")[1])
             else:
                 yr_int = 2025
-                ay_obj = target_semester.academic_year or AcademicYear.objects.first()
+                ay_obj = (target_semester.academic_year if target_semester else None) or AcademicYear.objects.first()
+
+            ay_obj = ay_obj or AcademicYear.objects.first()
 
             # Est-ce qu'on a un corrigé correspondant sélectionné dans corrections_to_process ?
             corr_cf = None
@@ -2729,23 +2767,38 @@ def bulk_operations_view(request):
                     break
 
             exam_title = cf.title.replace("Épreuve — ", "").replace(".pdf", "").strip()
-            Exam.objects.create(
-                title=exam_title,
-                subject=subject,
-                semester=target_semester,
-                filiere=target_semester.filiere if target_semester else None,
-                level=target_semester.filiere.level if (target_semester and target_semester.filiere) else None,
-                academic_year=ay_obj,
-                year=yr_int,
-                exam_type="examen",
-                cloud_file=cf,
-                file=cf.file if cf.file else None,
-                cloud_correction_file=corr_cf,
-                correction_file=corr_cf.file if (corr_cf and corr_cf.file) else None,
-                is_free=subject.is_free,
-                is_free_correction=subject.is_free_correction,
-                is_published=True,
-            )
+
+            existing_exam = Exam.objects.filter(
+                Q(cloud_file=cf) | (Q(subject=subject, semester=target_semester, exam_type="examen", year=yr_int))
+            ).first()
+
+            if existing_exam:
+                existing_exam.is_published = True
+                if not existing_exam.file and cf.file:
+                    existing_exam.file = cf.file
+                if corr_cf and not existing_exam.cloud_correction_file:
+                    existing_exam.cloud_correction_file = corr_cf
+                    if corr_cf.file and not existing_exam.correction_file:
+                        existing_exam.correction_file = corr_cf.file
+                existing_exam.save()
+            else:
+                Exam.objects.create(
+                    title=exam_title,
+                    subject=subject,
+                    semester=target_semester,
+                    filiere=target_filiere,
+                    level=target_level,
+                    academic_year=ay_obj,
+                    year=yr_int,
+                    exam_type="examen",
+                    cloud_file=cf,
+                    file=cf.file if cf.file else "",
+                    cloud_correction_file=corr_cf,
+                    correction_file=corr_cf.file if (corr_cf and corr_cf.file) else None,
+                    is_free=subject.is_free,
+                    is_free_correction=subject.is_free_correction,
+                    is_published=True,
+                )
             published_exams += 1
 
         # 3. Traitement des Corrections orphelines
@@ -2760,6 +2813,9 @@ def bulk_operations_view(request):
                 defaults={"is_active": True}
             )
 
+            target_filiere = target_semester.filiere if (target_semester and getattr(target_semester, "filiere", None)) else (cf.filiere or Filiere.objects.first())
+            target_level = target_filiere.level if (target_filiere and getattr(target_filiere, "level", None)) else Level.objects.first()
+
             existing_exam = Exam.objects.filter(subject=subject, correction_file__isnull=True).first()
             if existing_exam:
                 existing_exam.cloud_correction_file = cf
@@ -2773,20 +2829,21 @@ def bulk_operations_view(request):
                     yr_int = int(yr_label.split("-")[1])
                 else:
                     yr_int = 2025
-                    ay_obj = target_semester.academic_year or AcademicYear.objects.first()
+                    ay_obj = (target_semester.academic_year if target_semester else None) or AcademicYear.objects.first()
 
+                ay_obj = ay_obj or AcademicYear.objects.first()
                 exam_title = cf.title.replace("Correction — ", "").replace(".pdf", "").strip()
                 Exam.objects.create(
-                    title=exam_title,
+                    title=f"Correction — {exam_title}",
                     subject=subject,
                     semester=target_semester,
-                    filiere=target_semester.filiere if target_semester else None,
-                    level=target_semester.filiere.level if (target_semester and target_semester.filiere) else None,
+                    filiere=target_filiere,
+                    level=target_level,
                     academic_year=ay_obj,
                     year=yr_int,
-                    exam_type="correction",
-                    cloud_file=None,
-                    file=None,
+                    exam_type="examen",
+                    cloud_file=cf,
+                    file=cf.file if cf.file else "",
                     cloud_correction_file=cf,
                     correction_file=cf.file if cf.file else None,
                     is_free=subject.is_free,
