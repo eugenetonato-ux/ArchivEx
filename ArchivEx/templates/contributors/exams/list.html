@@ -3,362 +3,470 @@
 {% block title %}Gestion des Épreuves — Administration ArchivEx{% endblock %}
 
 {% block admin_content %}
+<style>
+  .ue-card { transition: box-shadow .2s, transform .2s; }
+  .ue-card:hover { box-shadow: 0 8px 32px rgba(7,26,73,.08); }
+  .ue-accordion-body { display: none; }
+  .ue-accordion-body.open { display: block; }
+  .ue-toggle-icon { transition: transform .25s cubic-bezier(.4,0,.2,1); }
+  .ue-card.expanded .ue-toggle-icon { transform: rotate(180deg); }
+  .ue-img-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #7c3aed 100%); }
+  .badge-pub { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+  .badge-draft { background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; }
+  .resource-row { transition: background .15s; }
+  .resource-row:hover { background: #f8fafc; }
+</style>
+
 <div class="space-y-6">
 
-    <!-- HEADER & ACTION BAR -->
-    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">Gestion des Épreuves</h1>
-            <p class="text-xs text-slate-500 font-medium">Consultez, recherchez, filtrez, dépubliez ou supprimez des épreuves d'examens.</p>
-        </div>
-        <div class="flex items-center space-x-3 shrink-0 flex-wrap gap-2">
-            <!-- BOUTON SUPPRIMER LA SÉLECTION (DYNAMIQUE) -->
-            <button type="button"
-                    id="btn-bulk-delete-selected"
-                    onclick="confirmBulkDeleteSelection()"
-                    class="hidden px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-sm items-center space-x-2 animate-fade-in">
-                <i class="fa-solid fa-trash-can text-xs" aria-hidden="true"></i>
-                <span>Supprimer la sélection (<span id="selected-badge-count">0</span>)</span>
-            </button>
+  <!-- HEADER -->
+  <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">Gestion des Épreuves</h1>
+      <p class="text-xs text-slate-500 font-medium mt-0.5">Unités d'Enseignement organisées en 2 colonnes — cliquez sur une carte pour afficher les épreuves, corrigés et résumés.</p>
+    </div>
+    <div class="flex items-center gap-2 flex-wrap shrink-0">
+      <button type="button"
+              onclick='openDeleteModal("{% url "contributors:exam_bulk_delete_published" %}", "Toutes les épreuves publiées", "Tout supprimer ?", "Les fichiers Cloud Storage restent 100% intacts.")'
+              class="px-4 py-2.5 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 font-extrabold text-xs rounded-xl transition-colors shadow-xs inline-flex items-center gap-2">
+        <i class="fa-solid fa-dumpster-fire text-xs"></i>
+        <span>Tout supprimer</span>
+      </button>
+      <a href="{% url 'contributors:exam_create' %}"
+         class="btn-primary text-xs px-5 py-2.5 font-extrabold rounded-xl shadow-sm flex items-center gap-2 shrink-0">
+        <i class="fa-solid fa-plus text-xs"></i>
+        <span>Ajouter une épreuve</span>
+      </a>
+    </div>
+  </div>
 
-            <!-- BOUTON TOUT SUPPRIMER -->
-            <button type="button" onclick='openDeleteModal("{% url "contributors:exam_bulk_delete_published" %}", "Toutes les épreuves actuellement publiées", "Tout supprimer les épreuves publiées ?", "Toutes les épreuves publiées seront retirées du site public. Les fichiers originaux du Cloud Storage resteront 100% INTACTS et conservés.")' class="px-4 py-2.5 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 font-extrabold text-xs rounded-xl transition-colors shadow-xs inline-flex items-center space-x-2">
-                <i class="fa-solid fa-dumpster-fire text-xs" aria-hidden="true"></i>
-                <span>Tout supprimer</span>
-            </button>
-            <a href="{% url 'contributors:exam_create' %}" class="btn-primary text-xs px-5 py-2.5 font-extrabold rounded-xl shadow-sm flex items-center justify-center space-x-2 shrink-0">
-                <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i>
-                <span>Ajouter une épreuve</span>
-            </a>
-        </div>
+  <!-- SEARCH -->
+  <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+    <form method="get" action="{% url 'contributors:exam_list' %}" class="flex gap-3">
+      <div class="relative flex-grow">
+        <input type="text" name="q" value="{{ q }}"
+               placeholder="Rechercher par titre d'épreuve, nom d'UE, année..."
+               class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#071A49] focus:ring-2 focus:ring-blue-500 outline-none">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+      </div>
+      {% if q %}
+        <a href="{% url 'contributors:exam_list' %}"
+           class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl transition-colors inline-flex items-center gap-1.5">
+          <i class="fa-solid fa-xmark text-xs"></i> Effacer
+        </a>
+      {% endif %}
+      <button type="submit" class="btn-primary text-xs px-5 py-2.5 font-bold rounded-xl shrink-0">
+        Rechercher
+      </button>
+    </form>
+  </div>
+
+  {% if not subjects_with_data %}
+    <div class="bg-white border border-slate-200 rounded-2xl p-12 shadow-sm text-center">
+      <div class="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+        <i class="fa-solid fa-folder-open text-slate-400 text-2xl"></i>
+      </div>
+      <p class="text-sm font-bold text-slate-600">Aucune Unité d'Enseignement trouvée dans ce contexte.</p>
+      {% if q %}<p class="text-xs text-slate-400 mt-1">Essayez un autre mot-clé de recherche.</p>{% endif %}
+      <a href="{% url 'contributors:exam_create' %}" class="btn-primary text-xs px-5 py-2.5 font-extrabold rounded-xl mt-4 inline-flex items-center gap-2">
+        <i class="fa-solid fa-plus"></i> Ajouter une épreuve
+      </a>
     </div>
 
-    <!-- BANDEAU D'ACTIONS MULTIPLES (S'AFFICHE QUAND DES CASES SONT COCHÉES) -->
-    <div id="selection-action-bar" class="hidden bg-rose-50/80 border border-rose-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-        <div class="flex items-center space-x-3">
-            <div class="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center text-xs font-black shrink-0">
-                <span id="banner-count-number">0</span>
+  {% else %}
+
+    <!-- STATS GLOBALES -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-center">
+        <p class="text-2xl font-black text-[#2563EB]">{{ subjects_with_data|length }}</p>
+        <p class="text-[11px] font-bold text-slate-500 mt-0.5">Unités d'Enseignement</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-center">
+        <p class="text-2xl font-black text-[#071A49]">{{ total_exams_count }}</p>
+        <p class="text-[11px] font-bold text-slate-500 mt-0.5">Épreuves au total</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-center">
+        <p class="text-2xl font-black text-emerald-600" id="stat-published">{{ total_published_count }}</p>
+        <p class="text-[11px] font-bold text-slate-500 mt-0.5">Épreuves publiées</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-center">
+        <p class="text-2xl font-black text-amber-600" id="stat-drafts">{{ total_draft_count }}</p>
+        <p class="text-[11px] font-bold text-slate-500 mt-0.5">Brouillons</p>
+      </div>
+    </div>
+
+    <!-- GRILLE 2 COLONNES DE CARTES UE -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      {% for ue_data in subjects_with_data %}
+        {% with subj=ue_data.subject exams_list=ue_data.exams summaries_list=ue_data.summaries %}
+        <div class="ue-card bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden"
+             id="ue-card-{{ subj.pk }}">
+
+          <!-- CARTE HEADER CLICQUABLE -->
+          <button type="button" onclick="toggleUeCard({{ subj.pk }})" class="w-full text-left focus:outline-none cursor-pointer">
+            <div class="flex items-stretch">
+
+              <!-- IMAGE / VIGNETTE DE L'UE -->
+              <div class="w-28 sm:w-36 shrink-0 relative overflow-hidden bg-slate-100">
+                {% if subj.image %}
+                  <img src="{{ subj.image.url }}" alt="{{ subj.name }}" class="w-full h-full object-cover min-h-[110px]">
+                {% else %}
+                  <div class="ue-img-gradient w-full h-full min-h-[110px] flex flex-col items-center justify-center p-3 gap-1 text-center">
+                    <i class="fa-solid fa-book-open text-white/90 text-2xl"></i>
+                    <span class="text-white/80 text-[10px] font-bold leading-tight line-clamp-1">{{ subj.code|default:"UE" }}</span>
+                  </div>
+                {% endif %}
+                <div class="absolute bottom-2 left-2 bg-[#071A49]/80 backdrop-blur-sm text-white text-[10px] font-black rounded-md px-1.5 py-0.5 shadow-sm">
+                  {{ exams_list|length }} épr.
+                </div>
+              </div>
+
+              <!-- INFOS UE -->
+              <div class="flex-1 p-4 flex flex-col justify-between min-w-0">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="min-w-0">
+                    <h2 class="text-sm font-black text-[#071A49] leading-tight line-clamp-1">{{ subj.name }}</h2>
+                    {% if subj.code %}<span class="text-[10px] text-slate-400 font-bold">{{ subj.code }}</span>{% endif %}
+                    {% if subj.semester %}
+                      <p class="text-[10px] text-slate-500 font-semibold mt-0.5 truncate">
+                        <i class="fa-solid fa-layer-group text-[8px] mr-1 text-[#2563EB]"></i>
+                        {{ subj.semester.label }}{% if subj.semester.filiere %} — {{ subj.semester.filiere.name }}{% endif %}
+                      </p>
+                    {% endif %}
+                  </div>
+                  <div class="ue-toggle-icon shrink-0 w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
+                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                  </div>
+                </div>
+
+                <!-- BADGES MINI STATS -->
+                <div class="flex flex-wrap gap-1.5 mt-2">
+                  {% if ue_data.published_count > 0 %}
+                    <span class="badge-pub text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      <i class="fa-solid fa-circle-check text-[9px] mr-0.5"></i>{{ ue_data.published_count }} publiée{{ ue_data.published_count|pluralize }}
+                    </span>
+                  {% endif %}
+                  {% if ue_data.draft_count > 0 %}
+                    <span class="badge-draft text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      <i class="fa-solid fa-file text-[9px] mr-0.5"></i>{{ ue_data.draft_count }} brouillon{{ ue_data.draft_count|pluralize }}
+                    </span>
+                  {% endif %}
+                  {% if summaries_list|length > 0 %}
+                    <span class="bg-purple-50 text-purple-700 border border-purple-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      <i class="fa-solid fa-file-lines text-[9px] mr-0.5"></i>{{ summaries_list|length }} résumé{{ summaries_list|length|pluralize }}
+                    </span>
+                  {% endif %}
+                  {% if subj.is_free %}
+                    <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      <i class="fa-solid fa-gift text-[9px] mr-0.5"></i>Gratuit
+                    </span>
+                  {% else %}
+                    <span class="bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      <i class="fa-solid fa-lock text-[9px] mr-0.5"></i>Pass Semestre
+                    </span>
+                  {% endif %}
+                </div>
+              </div>
             </div>
-            <div>
-                <p class="text-xs font-black text-rose-950" id="banner-count-text">0 épreuve sélectionnée</p>
-                <p class="text-[11px] text-rose-700 font-medium">Les fichiers originaux PDF sur le Cloud Storage resteront 100% intacts.</p>
+          </button>
+
+          <!-- ACCORDÉON BODY -->
+          <div class="ue-accordion-body border-t border-slate-100" id="ue-body-{{ subj.pk }}">
+
+            <!-- ÉPREUVES -->
+            {% if exams_list %}
+            <div class="px-4 pt-3 pb-2">
+              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                <i class="fa-solid fa-file-pdf text-[#2563EB]"></i>
+                Épreuves ({{ exams_list|length }})
+              </p>
+              <div class="divide-y divide-slate-100">
+                {% for ex in exams_list %}
+                  <div class="resource-row rounded-xl px-2.5 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2">
+                        <p class="text-xs font-extrabold text-[#071A49] leading-tight truncate">{{ ex.title }}</p>
+                        {% if ex.file %}
+                          <a href="{{ ex.file.url }}" target="_blank" rel="noopener" class="text-slate-400 hover:text-blue-600 text-xs shrink-0" title="Voir le PDF de l'épreuve">
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                          </a>
+                        {% endif %}
+                      </div>
+                      <p class="text-[10px] text-slate-400 font-semibold mt-0.5 flex flex-wrap items-center gap-1.5">
+                        <span>{{ ex.academic_year.label|default:ex.year }} · {{ ex.get_exam_type_display|default:"Examen" }}</span>
+                        {% if ex.has_correction %}
+                          <span class="bg-emerald-50 text-emerald-700 border border-emerald-100 text-[9px] font-bold px-1.5 py-0.5 rounded-md inline-flex items-center gap-1">
+                            <i class="fa-solid fa-check-double text-[8px]"></i> Corrigé
+                          </span>
+                        {% else %}
+                          <span class="bg-slate-100 text-slate-400 text-[9px] font-bold px-1.5 py-0.5 rounded-md">Sans corrigé</span>
+                        {% endif %}
+                        {% if ex.has_summary %}
+                          <span class="bg-purple-50 text-purple-700 border border-purple-100 text-[9px] font-bold px-1.5 py-0.5 rounded-md inline-flex items-center gap-1">
+                            <i class="fa-solid fa-file-lines text-[8px]"></i> Fiche liée
+                          </span>
+                        {% endif %}
+                      </p>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0 flex-wrap">
+                      <button type="button"
+                              onclick="ajaxToggleExamFree(this,'{{ ex.pk }}','{% url "contributors:exam_toggle_free" ex.pk %}')"
+                              class="px-2 py-1 rounded-full font-extrabold text-[9px] cursor-pointer hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-1 {% if ex.is_free %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-amber-50 text-amber-800 border border-amber-200{% endif %}">
+                        <i class="fa-solid {% if ex.is_free %}fa-gift{% else %}fa-lock{% endif %} text-[8px]"></i>
+                        <span class="access-label">{% if ex.is_free %}Gratuit{% else %}Pass{% endif %}</span>
+                      </button>
+                      <button type="button"
+                              onclick="ajaxToggleExamStatus(this,'{{ ex.pk }}','{% url "contributors:exam_toggle_status" ex.pk %}')"
+                              class="px-2 py-1 rounded-full font-extrabold text-[9px] cursor-pointer hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-1 {% if ex.is_published %}bg-blue-50 text-blue-700 border border-blue-200{% else %}bg-slate-100 text-slate-500 border border-slate-200{% endif %}">
+                        <i class="fa-solid {% if ex.is_published %}fa-circle-check{% else %}fa-file{% endif %} text-[8px]"></i>
+                        <span class="status-label">{% if ex.is_published %}Publié{% else %}Brouillon{% endif %}</span>
+                      </button>
+                      <a href="{% url 'contributors:exam_edit' ex.pk %}"
+                         class="px-2 py-1 rounded-lg bg-blue-50 text-[#2563EB] hover:bg-blue-100 text-[9px] font-bold transition-colors inline-flex items-center gap-1">
+                        <i class="fa-solid fa-pen text-[8px]"></i> Modifier
+                      </a>
+                      <button type="button"
+                              onclick='openDeleteModal("{% url "contributors:exam_delete" ex.pk %}","{{ ex.title|escapejs }}","Supprimer cette épreuve ?","Le fichier Cloud reste intact.")'
+                              class="px-2 py-1 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 text-[9px] font-bold transition-colors inline-flex items-center gap-1">
+                        <i class="fa-solid fa-trash text-[8px]"></i> Suppr.
+                      </button>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
             </div>
-        </div>
-        <div class="flex items-center space-x-2 flex-wrap gap-1.5 shrink-0">
-            <button type="button" onclick="selectOnlyPublished()" class="px-3 py-1.5 rounded-xl border border-rose-200 bg-white hover:bg-rose-100/60 text-rose-800 text-xs font-bold transition-colors inline-flex items-center space-x-1">
-                <i class="fa-solid fa-filter text-[10px]" aria-hidden="true"></i>
-                <span>Uniquement les publiées</span>
-            </button>
-            <button type="button" onclick="deselectAll()" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold transition-colors">
-                Désélectionner
-            </button>
-            <button type="button" onclick="confirmBulkDeleteSelection()" class="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl transition-colors shadow-xs inline-flex items-center space-x-1.5">
-                <i class="fa-solid fa-trash-can text-xs" aria-hidden="true"></i>
-                <span>Supprimer la sélection</span>
-            </button>
-        </div>
+            {% endif %}
+
+            <!-- RÉSUMÉS DE COURS -->
+            {% if summaries_list %}
+            <div class="px-4 pt-2 pb-3 border-t border-slate-100">
+              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                <i class="fa-solid fa-file-lines text-purple-600"></i>
+                Résumés de cours ({{ summaries_list|length }})
+              </p>
+              <div class="divide-y divide-slate-100">
+                {% for sm in summaries_list %}
+                  <div class="resource-row rounded-xl px-2.5 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2">
+                        <p class="text-xs font-extrabold text-[#071A49] leading-tight truncate">{{ sm.title }}</p>
+                        {% if sm.file %}
+                          <a href="{{ sm.file.url }}" target="_blank" rel="noopener" class="text-slate-400 hover:text-purple-600 text-xs shrink-0" title="Voir le PDF du résumé">
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                          </a>
+                        {% endif %}
+                      </div>
+                      <p class="text-[10px] text-slate-400 font-semibold mt-0.5">
+                        {% if sm.file %}<i class="fa-solid fa-file-pdf text-rose-400 text-[9px] mr-1"></i>Document PDF · {% endif %}Résumé de révision
+                      </p>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0 flex-wrap">
+                      <button type="button"
+                              onclick="ajaxToggleSummaryAccess(this,'{{ sm.pk }}','{% url "contributors:summary_toggle_access" sm.pk %}')"
+                              class="px-2 py-1 rounded-full font-extrabold text-[9px] cursor-pointer hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-1 {% if sm.access_type == 'FREE' %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-amber-50 text-amber-800 border border-amber-200{% endif %}">
+                        <i class="fa-solid {% if sm.access_type == 'FREE' %}fa-gift{% else %}fa-lock{% endif %} text-[8px]"></i>
+                        <span class="access-label">{% if sm.access_type == 'FREE' %}Gratuit{% else %}Pass{% endif %}</span>
+                      </button>
+                      <button type="button"
+                              onclick="ajaxToggleSummaryStatus(this,'{{ sm.pk }}','{% url "contributors:summary_toggle_status" sm.pk %}')"
+                              class="px-2 py-1 rounded-full font-extrabold text-[9px] cursor-pointer hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-1 {% if sm.publication_status == 'PUBLISHED' %}bg-blue-50 text-blue-700 border border-blue-200{% else %}bg-slate-100 text-slate-500 border border-slate-200{% endif %}">
+                        <i class="fa-solid {% if sm.publication_status == 'PUBLISHED' %}fa-circle-check{% else %}fa-file{% endif %} text-[8px]"></i>
+                        <span class="status-label">{% if sm.publication_status == 'PUBLISHED' %}Publié{% else %}Brouillon{% endif %}</span>
+                      </button>
+                      <a href="{% url 'contributors:summary_edit' sm.pk %}"
+                         class="px-2 py-1 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 text-[9px] font-bold transition-colors inline-flex items-center gap-1">
+                        <i class="fa-solid fa-pen text-[8px]"></i> Modifier
+                      </a>
+                      <button type="button"
+                              onclick='openDeleteModal("{% url "contributors:summary_delete" sm.pk %}","{{ sm.title|escapejs }}","Supprimer ce résumé ?","Ce résumé sera définitivement supprimé.")'
+                              class="px-2 py-1 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 text-[9px] font-bold transition-colors inline-flex items-center gap-1">
+                        <i class="fa-solid fa-trash text-[8px]"></i> Suppr.
+                      </button>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+
+            {% if not exams_list and not summaries_list %}
+              <div class="px-4 py-5 text-center text-xs text-slate-400 font-medium">
+                <i class="fa-regular fa-folder-open text-base mb-1 block text-slate-300"></i>
+                Aucune épreuve ni résumé enregistré pour cette UE.
+              </div>
+            {% endif %}
+
+            <!-- FOOTER CARTE -->
+            <div class="bg-slate-50 border-t border-slate-100 px-4 py-2.5 flex items-center justify-between gap-2">
+              <span class="text-[10px] text-slate-400 font-semibold truncate">{{ subj.name }}</span>
+              <a href="{% url 'contributors:exam_create' %}?subject={{ subj.pk }}"
+                 class="text-[10px] font-bold text-[#2563EB] hover:underline inline-flex items-center gap-1 shrink-0">
+                <i class="fa-solid fa-plus text-[9px]"></i> Ajouter une épreuve
+              </a>
+            </div>
+          </div><!-- /accordion body -->
+        </div><!-- /ue-card -->
+        {% endwith %}
+      {% endfor %}
     </div>
 
-    <!-- SEARCH & FILTER FORM -->
-    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-        <form method="get" action="{% url 'contributors:exam_list' %}" class="flex flex-col sm:flex-row gap-3">
-            <div class="relative flex-grow">
-                <input type="text" name="q" value="{{ q }}" placeholder="Rechercher par titre d'épreuve, matière, année..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#071A49] focus:ring-2 focus:ring-[#2563EB] outline-none">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs" aria-hidden="true"></i>
-            </div>
-            <button type="submit" class="btn-primary text-xs px-5 py-2.5 font-bold rounded-xl shrink-0">
-                Rechercher
-            </button>
-        </form>
-    </div>
-
-    <!-- EXAMS TABLE / CARDS -->
-    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs min-w-[750px]">
-                <thead>
-                    <tr class="border-b border-slate-200 text-slate-400 font-bold uppercase text-[10px]">
-                        <th class="py-3 px-3 w-10 text-center">
-                            <input type="checkbox"
-                                   id="select-all-header"
-                                   onchange="toggleSelectAll(this)"
-                                   class="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer"
-                                   title="Tout cocher / décocher">
-                        </th>
-                        <th class="py-3 px-3">Titre de l'épreuve</th>
-                        <th class="py-3 px-3">Matière / UE</th>
-                        <th class="py-3 px-3">Semestre & Filière</th>
-                        <th class="py-3 px-3">Complétude</th>
-                        <th class="py-3 px-3">Accès</th>
-                        <th class="py-3 px-3">Statut</th>
-                        <th class="py-3 px-3 text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 font-medium">
-                    {% for ex in exams %}
-                        <tr class="hover:bg-slate-50/80 transition-colors" id="row-exam-{{ ex.pk }}">
-                            <td class="py-3.5 px-3 text-center">
-                                <input type="checkbox"
-                                       name="exam_ids"
-                                       value="{{ ex.pk }}"
-                                       data-is-published="{% if ex.is_published %}1{% else %}0{% endif %}"
-                                       class="exam-checkbox w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer"
-                                       onchange="onExamCheckboxChange()">
-                            </td>
-                            <td class="py-3.5 px-3">
-                                <p class="font-extrabold text-[#071A49] text-xs mb-0.5">{{ ex.title }}</p>
-                                <span class="text-[10px] text-slate-400 font-semibold">Année académique : {{ ex.academic_year.label|default:ex.year }} · {{ ex.get_exam_type_display|default:"EXAM" }}</span>
-                            </td>
-                            <td class="py-3.5 px-3 font-semibold text-[#2563EB]">{{ ex.subject.name }}</td>
-                            <td class="py-3.5 px-3 text-slate-600">
-                                {{ ex.filiere.name }} <span class="text-slate-400">({{ ex.semester.label }})</span>
-                            </td>
-                            <td class="py-3.5 px-3">
-                                {% if ex.has_correction and ex.has_summary %}
-                                    <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">100% Complète</span>
-                                {% elif ex.has_correction %}
-                                    <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-bold">+ Correction</span>
-                                {% elif ex.has_summary %}
-                                    <span class="px-2 py-0.5 rounded bg-purple-100 text-purple-800 text-[10px] font-bold">+ Résumé</span>
-                                {% else %}
-                                    <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-500 text-[10px] font-bold">Épreuve seule</span>
-                                {% endif %}
-                            </td>
-                            <td class="py-3.5 px-3" id="exam-access-cell-{{ ex.pk }}">
-                                <button type="button"
-                                        onclick="ajaxToggleExamFree(this, '{{ ex.pk }}', '{% url 'contributors:exam_toggle_free' ex.pk %}')"
-                                        class="px-2.5 py-1 rounded-full font-extrabold text-[10px] transition-all duration-200 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 inline-flex items-center space-x-1 {% if ex.is_free %}bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/60{% else %}bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200/60{% endif %}"
-                                        title="Cliquer pour basculer : Gratuit <-> Pass Semestre">
-                                    <i class="fa-solid {% if ex.is_free %}fa-gift text-[9px]{% else %}fa-lock text-[9px]{% endif %}"></i>
-                                    <span class="access-label">{% if ex.is_free %}Gratuit{% else %}Pass Semestre{% endif %}</span>
-                                </button>
-                            </td>
-                            <td class="py-3.5 px-3" id="exam-status-cell-{{ ex.pk }}">
-                                <button type="button"
-                                        onclick="ajaxToggleExamStatus(this, '{{ ex.pk }}', '{% url 'contributors:exam_toggle_status' ex.pk %}')"
-                                        class="px-2.5 py-1 rounded-full font-extrabold text-[10px] transition-all duration-200 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 inline-flex items-center space-x-1 {% if ex.is_published %}bg-blue-50 text-[#2563EB] hover:bg-blue-100 border border-blue-200/60{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-300/60{% endif %}"
-                                        title="Cliquer pour basculer : Publié <-> Brouillon">
-                                    <i class="fa-solid {% if ex.is_published %}fa-circle-check text-[9px]{% else %}fa-file text-[9px]{% endif %}"></i>
-                                    <span class="status-label">{% if ex.is_published %}Publié{% else %}Brouillon{% endif %}</span>
-                                </button>
-                            </td>
-                            <td class="py-3.5 px-3 text-right">
-                                 <div class="flex items-center justify-end space-x-2">
-                                     <a href="{% url 'contributors:exam_edit' ex.pk %}" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-[#2563EB] hover:bg-blue-100 transition-colors inline-flex items-center space-x-1">
-                                         <i class="fa-solid fa-pen text-[10px]" aria-hidden="true"></i>
-                                         <span>Modifier</span>
-                                     </a>
-                                     <button type="button" onclick='openDeleteModal("{% url "contributors:exam_delete" ex.pk %}", "{{ ex.title|escapejs }}", "Supprimer l&apos;épreuve publiée ?", "Cette épreuve sera retirée du site public. Le fichier original PDF reste 100% conservé intact sur le Cloud Storage.")' class="text-[11px] font-bold px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] transition-colors inline-flex items-center space-x-1" title="Supprimer la publication de cette épreuve (le Cloud Storage reste intact)">
-                                         <i class="fa-solid fa-trash text-[10px]" aria-hidden="true"></i>
-                                         <span>Supprimer</span>
-                                     </button>
-                                 </div>
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="8" class="py-8 text-center text-slate-400 font-medium">
-                                Aucune épreuve trouvée dans ce contexte.
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+  {% endif %}
 
 </div>
 
 <script>
-    function getCheckedCheckboxes() {
-        return Array.from(document.querySelectorAll('.exam-checkbox:checked'));
+  function toggleUeCard(subjectId) {
+    const card = document.getElementById('ue-card-' + subjectId);
+    const body = document.getElementById('ue-body-' + subjectId);
+    if (!card || !body) return;
+    const isOpen = body.classList.contains('open');
+    if (isOpen) {
+      body.classList.remove('open');
+      card.classList.remove('expanded');
+    } else {
+      body.classList.add('open');
+      card.classList.add('expanded');
     }
+  }
 
-    function onExamCheckboxChange() {
-        const checked = getCheckedCheckboxes();
-        const count = checked.length;
-        const total = document.querySelectorAll('.exam-checkbox').length;
-
-        // Header select-all checkbox state
-        const selectAllHeader = document.getElementById('select-all-header');
-        if (selectAllHeader) {
-            selectAllHeader.checked = (count > 0 && count === total);
-            selectAllHeader.indeterminate = (count > 0 && count < total);
+  function ajaxToggleExamFree(btn, examId, url) {
+    btn.disabled = true;
+    btn.classList.add('opacity-60');
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        const label = btn.querySelector('.access-label');
+        const icon = btn.querySelector('i');
+        if (data.is_free) {
+          btn.className = "px-2 py-1 rounded-full font-extrabold text-[9px] cursor-pointer hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200";
+          if (icon) icon.className = "fa-solid fa-gift text-[8px]";
+          if (label) label.innerText = "Gratuit";
+        } else {
+          btn.className = "px-2 py-1 rounded-full font-extrabold text-[9px] cursor-pointer hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200";
+          if (icon) icon.className = "fa-solid fa-lock text-[8px]";
+          if (label) label.innerText = "Pass";
         }
+      } else {
+        alert(data.error || "Erreur.");
+      }
+    })
+    .catch(() => alert("Erreur réseau."))
+    .finally(() => {
+      btn.disabled = false;
+      btn.classList.remove('opacity-60');
+    });
+  }
 
-        // Header bulk delete button
-        const headerBtn = document.getElementById('btn-bulk-delete-selected');
-        const badgeCount = document.getElementById('selected-badge-count');
-        if (headerBtn && badgeCount) {
-            badgeCount.textContent = count;
-            if (count > 0) {
-                headerBtn.classList.remove('hidden');
-                headerBtn.classList.add('inline-flex');
-            } else {
-                headerBtn.classList.remove('inline-flex');
-                headerBtn.classList.add('hidden');
-            }
+  function ajaxToggleExamStatus(btn, examId, url) {
+    btn.disabled = true;
+    btn.classList.add('opacity-60');
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        const label = btn.querySelector('.status-label');
+        const icon = btn.querySelector('i');
+        if (data.is_published) {
+          btn.className = "px-2 py-1 rounded-full font-extrabold text-[9px] cursor-pointer hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-1 bg-blue-50 text-blue-700 border border-blue-200";
+          if (icon) icon.className = "fa-solid fa-circle-check text-[8px]";
+          if (label) label.innerText = "Publié";
+        } else {
+          btn.className = "px-2 py-1 rounded-full font-extrabold text-[9px] cursor-pointer hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-1 bg-slate-100 text-slate-500 border border-slate-200";
+          if (icon) icon.className = "fa-solid fa-file text-[8px]";
+          if (label) label.innerText = "Brouillon";
         }
+      } else {
+        alert(data.error || "Erreur.");
+      }
+    })
+    .catch(() => alert("Erreur réseau."))
+    .finally(() => {
+      btn.disabled = false;
+      btn.classList.remove('opacity-60');
+    });
+  }
 
-        // Selection action banner
-        const banner = document.getElementById('selection-action-bar');
-        const bannerNum = document.getElementById('banner-count-number');
-        const bannerText = document.getElementById('banner-count-text');
-        if (banner && bannerNum && bannerText) {
-            bannerNum.textContent = count;
-            bannerText.textContent = count + ' épreuve' + (count > 1 ? 's' : '') + ' sélectionnée' + (count > 1 ? 's' : '');
-            if (count > 0) {
-                banner.classList.remove('hidden');
-            } else {
-                banner.classList.add('hidden');
-            }
+  function ajaxToggleSummaryAccess(btn, smId, url) {
+    btn.disabled = true;
+    btn.classList.add('opacity-60');
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        const label = btn.querySelector('.access-label');
+        const icon = btn.querySelector('i');
+        if (data.is_free) {
+          btn.className = "px-2 py-1 rounded-full font-extrabold text-[9px] cursor-pointer hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200";
+          if (icon) icon.className = "fa-solid fa-gift text-[8px]";
+          if (label) label.innerText = "Gratuit";
+        } else {
+          btn.className = "px-2 py-1 rounded-full font-extrabold text-[9px] cursor-pointer hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200";
+          if (icon) icon.className = "fa-solid fa-lock text-[8px]";
+          if (label) label.innerText = "Pass";
         }
+      } else {
+        alert(data.error || "Erreur.");
+      }
+    })
+    .catch(() => alert("Erreur réseau."))
+    .finally(() => {
+      btn.disabled = false;
+      btn.classList.remove('opacity-60');
+    });
+  }
 
-        // Highlight selected rows
-        document.querySelectorAll('.exam-checkbox').forEach(cb => {
-            const row = document.getElementById('row-exam-' + cb.value);
-            if (row) {
-                if (cb.checked) {
-                    row.classList.add('bg-rose-50/50');
-                } else {
-                    row.classList.remove('bg-rose-50/50');
-                }
-            }
-        });
-    }
-
-    function toggleSelectAll(masterCb) {
-        document.querySelectorAll('.exam-checkbox').forEach(cb => {
-            cb.checked = masterCb.checked;
-        });
-        onExamCheckboxChange();
-    }
-
-    function deselectAll() {
-        const selectAllHeader = document.getElementById('select-all-header');
-        if (selectAllHeader) selectAllHeader.checked = false;
-        document.querySelectorAll('.exam-checkbox').forEach(cb => {
-            cb.checked = false;
-        });
-        onExamCheckboxChange();
-    }
-
-    function selectOnlyPublished() {
-        document.querySelectorAll('.exam-checkbox').forEach(cb => {
-            cb.checked = (cb.getAttribute('data-is-published') === '1');
-        });
-        onExamCheckboxChange();
-    }
-
-    function confirmBulkDeleteSelection() {
-        const checked = getCheckedCheckboxes();
-        if (checked.length === 0) {
-            alert("Veuillez sélectionner au moins une épreuve à supprimer.");
-            return;
+  function ajaxToggleSummaryStatus(btn, smId, url) {
+    btn.disabled = true;
+    btn.classList.add('opacity-60');
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        const label = btn.querySelector('.status-label');
+        const icon = btn.querySelector('i');
+        if (data.is_published) {
+          btn.className = "px-2 py-1 rounded-full font-extrabold text-[9px] cursor-pointer hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-1 bg-blue-50 text-blue-700 border border-blue-200";
+          if (icon) icon.className = "fa-solid fa-circle-check text-[8px]";
+          if (label) label.innerText = "Publié";
+        } else {
+          btn.className = "px-2 py-1 rounded-full font-extrabold text-[9px] cursor-pointer hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-1 bg-slate-100 text-slate-500 border border-slate-200";
+          if (icon) icon.className = "fa-solid fa-file text-[8px]";
+          if (label) label.innerText = "Brouillon";
         }
-
-        const count = checked.length;
-        const countLabel = count + " épreuve" + (count > 1 ? "s" : "") + " sélectionnée" + (count > 1 ? "s" : "");
-
-        const form = document.getElementById('delete-modal-form');
-        if (form) {
-            // Remove previous dynamically inserted inputs if any
-            form.querySelectorAll('input[name="exam_ids"]').forEach(el => el.remove());
-
-            // Add an input for each selected exam
-            checked.forEach(cb => {
-                const hiddenInput = document.createElement('input');
-                hiddenInput.type = 'hidden';
-                hiddenInput.name = 'exam_ids';
-                hiddenInput.value = cb.value;
-                form.appendChild(hiddenInput);
-            });
-
-            openDeleteModal(
-                "{% url 'contributors:exam_bulk_delete_selected' %}",
-                countLabel,
-                "Supprimer " + countLabel + " ?",
-                "Toutes les épreuves sélectionnées seront retirées du site public. Les fichiers PDF originaux du Cloud Storage restent 100% conservés et intacts."
-            );
-        }
-    }
-
-    function ajaxToggleExamFree(btn, examId, url) {
-        btn.disabled = true;
-        btn.classList.add('opacity-60');
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                const label = btn.querySelector('.access-label');
-                const icon = btn.querySelector('i');
-                if (data.is_free) {
-                    btn.className = "px-2.5 py-1 rounded-full font-extrabold text-[10px] transition-all duration-200 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 inline-flex items-center space-x-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/60";
-                    if (icon) icon.className = "fa-solid fa-gift text-[9px]";
-                    if (label) label.innerText = "Gratuit";
-                } else {
-                    btn.className = "px-2.5 py-1 rounded-full font-extrabold text-[10px] transition-all duration-200 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 inline-flex items-center space-x-1 bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200/60";
-                    if (icon) icon.className = "fa-solid fa-lock text-[9px]";
-                    if (label) label.innerText = "Pass Semestre";
-                }
-            } else {
-                alert(data.error || "Une erreur est survenue lors de la mise à jour.");
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            alert("Erreur réseau lors de la mise à jour.");
-        })
-        .finally(() => {
-            btn.disabled = false;
-            btn.classList.remove('opacity-60');
-        });
-    }
-
-    function ajaxToggleExamStatus(btn, examId, url) {
-        btn.disabled = true;
-        btn.classList.add('opacity-60');
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                const label = btn.querySelector('.status-label');
-                const icon = btn.querySelector('i');
-                if (data.is_published) {
-                    btn.className = "px-2.5 py-1 rounded-full font-extrabold text-[10px] transition-all duration-200 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 inline-flex items-center space-x-1 bg-blue-50 text-[#2563EB] hover:bg-blue-100 border border-blue-200/60";
-                    if (icon) icon.className = "fa-solid fa-circle-check text-[9px]";
-                    if (label) label.innerText = "Publié";
-                } else {
-                    btn.className = "px-2.5 py-1 rounded-full font-extrabold text-[10px] transition-all duration-200 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 inline-flex items-center space-x-1 bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-300/60";
-                    if (icon) icon.className = "fa-solid fa-file text-[9px]";
-                    if (label) label.innerText = "Brouillon";
-                }
-                const cb = document.querySelector(`.exam-checkbox[value="${examId}"]`);
-                if (cb) cb.setAttribute('data-is-published', data.is_published ? '1' : '0');
-            } else {
-                alert(data.error || "Une erreur est survenue lors de la mise à jour.");
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            alert("Erreur réseau lors de la mise à jour.");
-        })
-        .finally(() => {
-            btn.disabled = false;
-            btn.classList.remove('opacity-60');
-        });
-    }
+      } else {
+        alert(data.error || "Erreur.");
+      }
+    })
+    .catch(() => alert("Erreur réseau."))
+    .finally(() => {
+      btn.disabled = false;
+      btn.classList.remove('opacity-60');
+    });
+  }
 </script>
 {% endblock %}

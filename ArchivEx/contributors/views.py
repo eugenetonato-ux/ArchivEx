@@ -340,11 +340,30 @@ def set_context_view(request):
 
 @contributor_required
 def exam_list_view(request):
-    """Liste et recherche des épreuves dans le contexte actif."""
+    """Liste des épreuves groupées par UE sous forme de cartes accordéon 2 colonnes."""
+    from collections import OrderedDict
+    from academics.models import Subject
+    from content.models import Summary
+
     active_school, active_filiere, active_semester = get_active_academic_context(request)
     q = request.GET.get("q", "").strip()
 
-    qs = Exam.objects.select_related("subject", "semester", "filiere", "filiere__school")
+    # Base subjects queryset
+    subj_qs = Subject.objects.select_related(
+        "semester", "semester__filiere", "semester__filiere__school"
+    ).filter(is_active=True)
+    if active_school:
+        subj_qs = subj_qs.filter(semester__filiere__school=active_school)
+    if active_filiere:
+        subj_qs = subj_qs.filter(semester__filiere=active_filiere)
+    if active_semester:
+        subj_qs = subj_qs.filter(semester=active_semester)
+
+    # Base exams queryset
+    qs = Exam.objects.select_related(
+        "subject", "subject__semester", "subject__semester__filiere",
+        "semester", "filiere", "filiere__school", "academic_year"
+    )
     if active_school:
         qs = qs.filter(filiere__school=active_school)
     if active_filiere:
@@ -356,14 +375,56 @@ def exam_list_view(request):
         qs = qs.filter(
             Q(title__icontains=q) | Q(title__icontains=q_u) | Q(subject__name__icontains=q) | Q(year__icontains=q)
         )
+        subj_qs = subj_qs.filter(
+            Q(name__icontains=q) | Q(name__icontains=q_u) | Q(code__icontains=q) | Q(exams__in=qs)
+        ).distinct()
 
-    exams = qs.order_by("-created_at")
+    exams = qs.order_by("subject__name", "-created_at")
+
+    # Initialiser la map avec toutes les matières pertinentes
+    subjects_map = OrderedDict()
+    for subj in subj_qs.order_by("name"):
+        subjects_map[subj.pk] = {
+            "subject": subj,
+            "exams": [],
+            "summaries": list(Summary.objects.filter(subject=subj).order_by("-created_at")),
+            "published_count": 0,
+            "draft_count": 0,
+        }
+
+    total_published_count = 0
+    total_draft_count = 0
+
+    for ex in exams:
+        subj = ex.subject
+        if subj:
+            if subj.pk not in subjects_map:
+                subjects_map[subj.pk] = {
+                    "subject": subj,
+                    "exams": [],
+                    "summaries": list(Summary.objects.filter(subject=subj).order_by("-created_at")),
+                    "published_count": 0,
+                    "draft_count": 0,
+                }
+            subjects_map[subj.pk]["exams"].append(ex)
+            if ex.is_published:
+                subjects_map[subj.pk]["published_count"] += 1
+                total_published_count += 1
+            else:
+                subjects_map[subj.pk]["draft_count"] += 1
+                total_draft_count += 1
+
+    subjects_with_data = list(subjects_map.values())
 
     context = {
         "active_school": active_school,
         "active_filiere": active_filiere,
         "active_semester": active_semester,
+        "subjects_with_data": subjects_with_data,
         "exams": exams,
+        "total_exams_count": len(exams),
+        "total_published_count": total_published_count,
+        "total_draft_count": total_draft_count,
         "q": q,
     }
     return render(request, "contributors/exams/list.html", context)
