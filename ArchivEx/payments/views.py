@@ -20,6 +20,7 @@ from .services import (
     verify_chariow_pulse_signature,
     handle_chariow_pulse_event,
     activate_pass_for_payment,
+    verify_and_sync_chariow_sale,
 )
 
 logger = logging.getLogger(__name__)
@@ -123,9 +124,12 @@ def initier_paiement(request, semester_id):
         status=Payment.STATUS_PENDING,
     )
 
-    redirect_url = request.build_absolute_uri(
-        reverse("payments:payment_return", kwargs={"reference": payment.external_reference})
-    )
+    # URL de retour enrichie du placeholder Chariow {sale_id}
+    return_url = reverse("payments:payment_return", kwargs={"reference": payment.external_reference})
+    redirect_url = request.build_absolute_uri(return_url)
+    if "{sale_id}" not in redirect_url:
+        separator = "&" if "?" in redirect_url else "?"
+        redirect_url = f"{redirect_url}{separator}sale_id={{sale_id}}"
 
     # Appel à l'API Chariow Checkout (/v1/checkout)
     chariow_res = create_chariow_checkout(payment, redirect_url=redirect_url)
@@ -158,6 +162,11 @@ def payment_pending_view(request, reference):
         user=request.user
     )
 
+    # Synchronisation immédiate avec l'API Chariow si pas encore approuvé
+    if not payment.is_approved:
+        verify_and_sync_chariow_sale(payment)
+        payment.refresh_from_db()
+
     if payment.is_approved:
         messages.success(request, f"Félicitations ! Votre Pass Semestre pour {payment.semester.label} est actif !")
         return redirect("academics:matieres", semester_id=payment.semester.id)
@@ -174,16 +183,25 @@ def payment_return_view(request, reference=None):
     """
     Page de retour post-paiement Chariow (redirect_url).
     
-    IMPORTANT :
-    Cette page sert à l'expérience utilisateur. La source de vérité reste le webhook Pulse.
-    Le statut affiché correspond strictement à l'état en base de données.
+    Effectue une vérification active auprès de l'API Chariow (via sale_id ou polling direct)
+    pour valider immédiatement le paiement et activer le Pass Semestre sans dépendre du Webhook.
     """
     ref = reference or request.GET.get("external_reference") or request.GET.get("reference")
+    sale_id = (
+        request.GET.get("sale_id") or
+        request.GET.get("sale") or
+        request.GET.get("id")
+    )
     payment = None
 
     if ref:
         payment = Payment.objects.filter(
             external_reference=ref, user=request.user
+        ).select_related("semester", "semester__filiere").first()
+
+    if not payment and sale_id:
+        payment = Payment.objects.filter(
+            chariow_sale_id=sale_id, user=request.user
         ).select_related("semester", "semester__filiere").first()
 
     if not payment:
@@ -201,6 +219,11 @@ def payment_return_view(request, reference=None):
             "is_rejected": True,
         })
 
+    # Synchronisation active directe avec l'API Chariow
+    if not payment.is_approved:
+        verify_and_sync_chariow_sale(payment, sale_id=sale_id)
+        payment.refresh_from_db()
+
     context = {
         "payment": payment,
         "semester": payment.semester,
@@ -216,8 +239,14 @@ def payment_return_view(request, reference=None):
 def payment_status_api_view(request, reference):
     """
     API JSON d'état pour le sondage dynamique depuis les pages d'attente / retour.
+    Interroge l'API Chariow si le paiement local est encore PENDING pour une confirmation temps réel.
     """
     payment = get_object_or_404(Payment, external_reference=reference, user=request.user)
+
+    if not payment.is_approved:
+        sale_id = request.GET.get("sale_id") or None
+        verify_and_sync_chariow_sale(payment, sale_id=sale_id)
+        payment.refresh_from_db()
 
     return JsonResponse({
         "reference": payment.external_reference,

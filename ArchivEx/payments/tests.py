@@ -379,3 +379,104 @@ class ChariowIntegrationTests(TestCase):
         res = self.client.get(reverse("payment_success_return"))
         self.assertEqual(res.status_code, 200)
         self.assertFalse(has_user_valid_pass(self.student, self.semester))
+
+    @patch("payments.services.requests.get")
+    def test_verify_and_sync_chariow_sale_activates_pass(self, mock_get):
+        """La synchronisation directe valide le paiement et active le pass si la vente Chariow est completed."""
+        from payments.services import verify_and_sync_chariow_sale
+
+        payment = Payment.objects.create(
+            user=self.student,
+            semester=self.semester,
+            amount=3800,
+            currency="XOF",
+            external_reference="ARCHIVEX-PASS-SYNC-01",
+            status=Payment.STATUS_PENDING,
+        )
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {
+            "data": {
+                "id": "SALE_MOCK_123",
+                "status": "completed",
+                "payment": {"status": "success"},
+            }
+        }
+        mock_get.return_value = mock_resp
+
+        result = verify_and_sync_chariow_sale(payment, sale_id="SALE_MOCK_123")
+        self.assertTrue(result["is_approved"])
+
+        payment.refresh_from_db()
+        self.assertEqual(payment.status, Payment.STATUS_APPROVED)
+        self.assertEqual(payment.chariow_sale_id, "SALE_MOCK_123")
+        self.assertTrue(has_user_valid_pass(self.student, self.semester))
+
+    @patch("payments.services.requests.get")
+    def test_payment_return_view_with_sale_id_activates_pass_instantly(self, mock_get):
+        """À la redirection post-paiement, la présence de sale_id valide immédiatement le Pass."""
+        self.client.login(username="etudiant_test", password="Password123!")
+
+        payment = Payment.objects.create(
+            user=self.student,
+            semester=self.semester,
+            amount=3800,
+            currency="XOF",
+            external_reference="ARCHIVEX-PASS-RET-01",
+            status=Payment.STATUS_PENDING,
+        )
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {
+            "data": {
+                "id": "SALE_RET_999",
+                "status": "completed",
+                "payment": {"status": "success"},
+            }
+        }
+        mock_get.return_value = mock_resp
+
+        url = reverse("payments:payment_return", kwargs={"reference": payment.external_reference})
+        res = self.client.get(f"{url}?sale_id=SALE_RET_999")
+
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "Paiement confirmé")
+        self.assertTrue(has_user_valid_pass(self.student, self.semester))
+
+    def test_webhook_supports_successful_sale_underscore(self):
+        """Le webhook Chariow valide le paiement avec le format d'événement successful_sale."""
+        payment = Payment.objects.create(
+            user=self.student,
+            semester=self.semester,
+            amount=3800,
+            currency="XOF",
+            external_reference="ARCHIVEX-PASS-PULSE-US",
+            status=Payment.STATUS_PENDING,
+        )
+
+        payload = {
+            "event": "successful_sale",
+            "data": {
+                "id": "SALE_PULSE_US_1",
+                "custom_metadata": {
+                    "external_reference": payment.external_reference,
+                }
+            }
+        }
+        body_bytes = json.dumps(payload).encode("utf-8")
+        secret = settings.CHARIOW_PULSE_SECRET.encode("utf-8")
+        sig_hex = hmac.new(secret, body_bytes, hashlib.sha256).hexdigest()
+
+        res = self.client.post(
+            reverse("payments:chariow_webhook"),
+            data=body_bytes,
+            content_type="application/json",
+            HTTP_X_CHARIOW_SIGNATURE=f"sha256={sig_hex}"
+        )
+        self.assertEqual(res.status_code, 200)
+        payment.refresh_from_db()
+        self.assertEqual(payment.status, Payment.STATUS_APPROVED)
+        self.assertTrue(has_user_valid_pass(self.student, self.semester))
+

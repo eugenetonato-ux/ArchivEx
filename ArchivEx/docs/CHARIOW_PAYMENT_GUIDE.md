@@ -106,16 +106,46 @@ CHARIOW_CURRENCY=XOF
 
 ---
 
-## 4. Sécurité & Bonnes Pratiques
+## 4. Double Garantie : Synchronisation Active & Webhook Résilient
 
-1. **Vérification HMAC-SHA256** : Le webhook d'ArchivEx rejette immédiatement toute requête dont la signature transmise dans le header `x-chariow-signature` ne correspond pas au hachage du corps brut (`raw body`) avec votre `CHARIOW_PULSE_SECRET`.
-2. **Idempotence** : Si Chariow renvoie un même webhook à plusieurs reprises, ArchivEx détecte que le paiement est déjà `APPROVED` et acquitte la requête (HTTP 200) sans jamais créer de doublon d'abonnement ni recalculer la période de validité.
-3. **Sécurité des logs** : Les clés d'API et secrets ne sont jamais journalisés en clair dans les logs serveur (`archivex_error.log`).
-4. **HTTPS Obligatoire** : Les endpoints de webhooks doivent toujours utiliser HTTPS en production.
+Pour éliminer tout risque d'attente indéfinie pour l'étudiant, ArchivEx utilise une **architecture à double garantie** :
+
+1. **Synchronisation Active Immédiate (Garantie Principale)** :
+   - Le paramètre `?sale_id={sale_id}` est inclus dans l'URL de retour (`redirect_url`). Dès que l'étudiant revient de Chariow, le serveur Django interroge l'API Chariow (`GET /v1/sales/{sale_id}`).
+   - Si la vente est `completed`, le paiement passe à `APPROVED` et le Pass Semestre est débloqué **instantanément**, sans délai et sans dépendre du Webhook.
+   - Les pages d'attente (`/pass/attente/` et `/pass/retour/`) interrogent également l'API en direct en arrière-plan.
+
+2. **Webhook Pulse (Garantie Secondaire / Back-up)** :
+   - Supporte les variantes `successful.sale` et `successful_sale`.
+   - Réception asynchrone sécurisée par signature HMAC-SHA256.
+
+> [!IMPORTANT]
+> **Règle Chariow sur les Pulses** : Si un webhook échoue 5 fois consécutives, **Chariow le désactive automatiquement** (`is_enabled: false`).
+> Pour réactiver un Pulse désactivé :
+> 1. Accédez à votre tableau de bord [Chariow](https://dashboard.chariow.com) → **Automation** → **Pulses**.
+> 2. Cliquez sur le Pulse concerné.
+> 3. Activez le bouton **Actif / Enabled** et enregistrez.
 
 ---
 
-## 5. Tests et Vérification en Local / Staging
+## 5. Commande de Réconciliation Automatique
+
+Si des paiements ont été confirmés sur Chariow mais sont restés en attente localement, vous pouvez exécuter la commande de synchronisation à tout moment :
+
+```bash
+# Synchroniser toutes les ventes récentes
+python manage.py sync_chariow_sales
+
+# Forcer la synchronisation d'une vente précise
+python manage.py sync_chariow_sales --sale-id SALE52OXEL0A0SCYBID
+
+# Filtrer par email étudiant
+python manage.py sync_chariow_sales --email etudiant@domaine.com
+```
+
+---
+
+## 6. Tests et Vérification
 
 ### Tester les endpoints avec Django Test Suite
 Exécutez la suite de tests automatisés :
@@ -134,3 +164,4 @@ python manage.py test payments subscriptions
    ```
 3. Effectuez un paiement test via l'interface ArchivEx.
 4. Vérifiez dans la console Django la réception du Pulse et l'activation du Pass.
+

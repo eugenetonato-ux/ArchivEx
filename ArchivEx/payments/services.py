@@ -186,12 +186,17 @@ def create_chariow_checkout(payment, redirect_url=None):
     else:
         national_number = phone_digits
 
+    final_redirect_url = redirect_url or ""
+    if final_redirect_url and "{sale_id}" not in final_redirect_url:
+        separator = "&" if "?" in final_redirect_url else "?"
+        final_redirect_url = f"{final_redirect_url}{separator}sale_id={{sale_id}}"
+
     payload = {
         "product_id": product_id,
         "email": email,
         "first_name": first_name,
         "last_name": last_name,
-        "redirect_url": redirect_url or "",
+        "redirect_url": final_redirect_url,
         "custom_metadata": {
             "archivex_user_id": str(user.id),
             "archivex_semester_id": str(payment.semester_id) if payment.semester_id else "",
@@ -388,15 +393,132 @@ def activate_pass_for_payment(payment):
     return True
 
 
+def verify_and_sync_chariow_sale(payment, sale_id=None):
+    """
+    Interroge l'API Chariow en direct pour vérifier l'état réel d'une transaction et synchroniser le paiement local.
+    Garantit une validation immédiate et résiliente même si le webhook Pulse est désactivé ou retardé.
+    """
+    if payment.is_approved:
+        return {"success": True, "status": "already_approved", "is_approved": True}
+
+    target_sale_id = sale_id or payment.chariow_sale_id or None
+    base_url = getattr(settings, "CHARIOW_BASE_URL", "https://api.chariow.com/v1").rstrip("/")
+    headers = _chariow_headers()
+    matched_sale = None
+
+    # 1. Interrogation ciblée si sale_id est connu
+    if target_sale_id:
+        try:
+            url = f"{base_url}/sales/{target_sale_id}"
+            res = requests.get(url, headers=headers, timeout=_TIMEOUT)
+            if res.status_code == 200:
+                data = res.json()
+                matched_sale = data.get("data") if isinstance(data.get("data"), dict) else data
+        except requests.exceptions.RequestException as e:
+            logger.warning("[Chariow Sync] Erreur lors de la récupération de la vente %s : %s", target_sale_id, e)
+
+    # 2. Si aucune vente trouvée via target_sale_id, recherche dans les ventes récentes
+    if not matched_sale:
+        try:
+            url = f"{base_url}/sales?per_page=25"
+            res = requests.get(url, headers=headers, timeout=_TIMEOUT)
+            if res.status_code == 200:
+                data = res.json()
+                sales_list = data.get("data") if isinstance(data.get("data"), list) else []
+                user_email = (getattr(payment.user, "email", "") or "").strip().lower()
+                clean_phone = re.sub(r"[^\d]", "", str(payment.phone_number or ""))
+
+                for s in sales_list:
+                    # Match par custom_metadata
+                    s_metadata = s.get("custom_metadata") or {}
+                    s_ref = s_metadata.get("external_reference") or s.get("external_reference")
+                    if s_ref and s_ref == payment.external_reference:
+                        matched_sale = s
+                        break
+
+                    # Match par email ou téléphone pour les ventes 'completed'
+                    s_status = s.get("status")
+                    cust = s.get("customer") or {}
+                    c_email = (cust.get("email") or "").strip().lower()
+                    c_phone = ""
+                    if isinstance(cust.get("phone"), dict):
+                        c_phone = str(cust.get("phone", {}).get("number", ""))
+                    elif cust.get("phone"):
+                        c_phone = str(cust.get("phone"))
+                    c_phone_clean = re.sub(r"[^\d]", "", c_phone)
+
+                    email_match = user_email and c_email and (user_email == c_email)
+                    phone_match = clean_phone and c_phone_clean and (
+                        clean_phone.endswith(c_phone_clean) or c_phone_clean.endswith(clean_phone)
+                    )
+
+                    if s_status in ["completed", "success"] and (email_match or phone_match):
+                        matched_sale = s
+                        break
+        except requests.exceptions.RequestException as e:
+            logger.warning("[Chariow Sync] Erreur lors de la recherche des ventes récentes : %s", e)
+
+    if not matched_sale:
+        return {
+            "success": False,
+            "status": payment.status,
+            "is_approved": False,
+            "message": "Aucune transaction correspondante trouvée sur Chariow."
+        }
+
+    sale_status = matched_sale.get("status") or ""
+    payment_obj = matched_sale.get("payment") if isinstance(matched_sale.get("payment"), dict) else {}
+    payment_status = payment_obj.get("status") if isinstance(payment_obj, dict) else ""
+    actual_sale_id = matched_sale.get("id") or target_sale_id
+
+    if actual_sale_id and not payment.chariow_sale_id:
+        payment.chariow_sale_id = str(actual_sale_id)
+        payment.save(update_fields=["chariow_sale_id"])
+
+    if sale_status in ["completed", "success"] or payment_status in ["success", "completed"]:
+        payment.status = Payment.STATUS_APPROVED
+        payment.save(update_fields=["status"])
+        activate_pass_for_payment(payment)
+        logger.info(
+            "[Chariow Sync] Paiement %s validé avec succès via l'API Chariow (sale_id=%s)",
+            payment.external_reference, actual_sale_id
+        )
+        return {
+            "success": True,
+            "status": "approved",
+            "is_approved": True,
+            "sale_id": actual_sale_id,
+            "message": "Pass Semestre activé avec succès."
+        }
+    elif sale_status in ["failed", "abandoned", "refunded"] or payment_status in ["failed", "abandoned"]:
+        payment.status = Payment.STATUS_REJECTED
+        payment.save(update_fields=["status"])
+        return {
+            "success": True,
+            "status": "rejected",
+            "is_approved": False,
+            "sale_id": actual_sale_id,
+            "message": "Paiement non validé par Chariow."
+        }
+
+    return {
+        "success": True,
+        "status": payment.status,
+        "is_approved": False,
+        "sale_id": actual_sale_id,
+        "message": f"Vente en attente sur Chariow (statut: {sale_status})."
+    }
+
+
 def handle_chariow_pulse_event(payload, delivery_id=None):
     """
     Traite un événement Pulse reçu de Chariow de façon sécurisée et idempotente.
     
     Événements pris en charge :
-    - successful.sale : validation du paiement et activation du Pass
-    - failed.sale : échec du paiement
-    - abandoned.sale : abandon par l'étudiant
-    - refunded.sale : remboursement
+    - successful.sale / successful_sale : validation du paiement et activation du Pass
+    - failed.sale / failed_sale : échec du paiement
+    - abandoned.sale / abandoned_sale : abandon par l'étudiant
+    - refunded.sale / refunded_sale : remboursement
     """
     if not isinstance(payload, dict):
         return {"success": False, "error": "Payload invalide"}
@@ -423,12 +545,12 @@ def handle_chariow_pulse_event(payload, delivery_id=None):
     payment_id = custom_metadata.get("archivex_payment_id")
     sale_id = sale_data.get("id") or data.get("id") or sale_data.get("sale_id")
 
-    # Événements de vente pris en compte
+    # Événements de vente pris en compte (supportant le point et l'underscore)
     SALE_EVENTS = [
-        "successful.sale", "sale.completed", "sale.success",
-        "failed.sale", "sale.failed",
-        "abandoned.sale", "sale.abandoned",
-        "refunded.sale", "sale.refunded",
+        "successful.sale", "successful_sale", "sale.completed", "sale.success", "sale_completed",
+        "failed.sale", "failed_sale", "sale.failed",
+        "abandoned.sale", "abandoned_sale", "sale.abandoned",
+        "refunded.sale", "refunded_sale", "sale.refunded",
     ]
 
     # Si c'est un événement système, test ou non lié à une vente, acquitter avec 200 immédiatement
@@ -459,7 +581,7 @@ def handle_chariow_pulse_event(payload, delivery_id=None):
         payment.save(update_fields=["chariow_sale_id"])
 
     # Traitement selon le type d'événement
-    if event_name in ["successful.sale", "sale.completed", "sale.success"]:
+    if event_name in ["successful.sale", "successful_sale", "sale.completed", "sale.success", "sale_completed"]:
         # Idempotence : si déjà validé, ne pas dupliquer
         if payment.is_approved:
             logger.info("[Chariow Pulse] Vente %s déjà traitée et validée.", payment.external_reference)
