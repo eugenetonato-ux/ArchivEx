@@ -67,10 +67,6 @@
                 </div>
             </div>
             {% if cloud_file and cloud_file.file %}
-                <a href="{{ cloud_file.file.url }}" target="_blank" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl transition-colors inline-flex items-center space-x-2">
-                    <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                    <span>Consulter le PDF</span>
-                </a>
             {% elif exam and exam.file %}
                 <a href="{{ exam.file.url }}" target="_blank" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl transition-colors inline-flex items-center space-x-2">
                     <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
