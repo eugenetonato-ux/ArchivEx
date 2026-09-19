@@ -1469,13 +1469,36 @@ def library_index_view(request):
     correction_count = sum(1 for f in cloud_files if f.file_type == "CORRECTION")
     summary_count = sum(1 for f in cloud_files if f.file_type == "SUMMARY")
 
-    available_subjects = Subject.objects.filter(semester__filiere=active_filiere) if active_filiere else Subject.objects.all()
+    subj_qs = Subject.objects.select_related("semester", "semester__filiere", "semester__filiere__school").filter(is_active=True)
+    if active_school:
+        subj_qs = subj_qs.filter(semester__filiere__school=active_school)
+    if active_filiere:
+        subj_qs = subj_qs.filter(semester__filiere=active_filiere)
+    if active_semester:
+        subj_qs = subj_qs.filter(semester=active_semester)
+
+    available_subjects = subj_qs
 
     published_exam_map = dict(
         Exam.objects.filter(cloud_file__in=cloud_files).values_list("cloud_file_id", "id")
     )
 
-    grouped_cloud_files = {}
+    from collections import OrderedDict
+    grouped_cloud_files = OrderedDict()
+
+    # Pré-remplir avec toutes les matières du contexte pour afficher les 10 UE en cartes
+    for subj in available_subjects.order_by("name"):
+        grouped_cloud_files[subj.name] = {
+            "files": [],
+            "matched_subject": subj,
+            "is_free": subj.is_free,
+            "is_free_correction": subj.is_free_correction,
+            "published_count": 0,
+            "exam_count": 0,
+            "correction_count": 0,
+            "summary_count": 0,
+        }
+
     for cf in cloud_files:
         parsed = parse_exam_filename(cf.title, available_subjects=available_subjects)
         cf.parsed_info = parsed
@@ -1492,8 +1515,27 @@ def library_index_view(request):
                 "matched_subject": matched_subj,
                 "is_free": matched_subj.is_free if matched_subj else False,
                 "is_free_correction": matched_subj.is_free_correction if matched_subj else False,
+                "published_count": 0,
+                "exam_count": 0,
+                "correction_count": 0,
+                "summary_count": 0,
             }
         grouped_cloud_files[ue_name]["files"].append(cf)
+        if cf.is_already_published:
+            grouped_cloud_files[ue_name]["published_count"] += 1
+        if cf.file_type == "EXAM":
+            grouped_cloud_files[ue_name]["exam_count"] += 1
+        elif cf.file_type == "CORRECTION":
+            grouped_cloud_files[ue_name]["correction_count"] += 1
+        elif cf.file_type == "SUMMARY":
+            grouped_cloud_files[ue_name]["summary_count"] += 1
+
+    if q:
+        filtered_groups = OrderedDict()
+        for k, v in grouped_cloud_files.items():
+            if v["files"] or (q.lower() in k.lower()):
+                filtered_groups[k] = v
+        grouped_cloud_files = filtered_groups
 
     total_size_bytes = 0
     for cf in CloudFile.objects.all():
