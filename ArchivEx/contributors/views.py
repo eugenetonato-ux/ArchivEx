@@ -2564,7 +2564,7 @@ def bulk_operations_view(request):
                 subject=subject,
                 file=cf.file if cf.file else None,
                 introduction=f"Résumé de cours de l'UE {subject.name}.",
-                content=f"<p>Résumé PDF téléchargeable pour l'UE {subject.name}.</p>",
+                content="",
                 publication_status="PUBLISHED",
                 access_type="PREMIUM",
             )
