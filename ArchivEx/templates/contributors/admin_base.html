@@ -400,17 +400,6 @@
             <!-- ACTIVE ACADEMIC CONTEXT BADGE & DUAL SWITCHER (MASQUÉ SUR MOBILE ET TABLETTE: hidden lg:flex) -->
             <div class="hidden lg:flex items-center bg-[#171926] px-2 sm:px-3 py-1.5 rounded-2xl border border-slate-700/60 text-xs font-bold shrink min-w-0 shadow-inner">
                 <form id="admin-context-form" method="get" action="{% url 'contributors:set_context' %}" class="flex items-center space-x-1.5 sm:space-x-2">
-                    <!-- SÉLECTEUR ÉCOLE (ENEAM etc.) -->
-                    <div class="flex items-center space-x-1.5 shrink-0 bg-white/5 px-2 py-1 rounded-xl border border-white/10">
-                        <i class="fa-solid fa-building-columns text-amber-400 text-xs" aria-hidden="true" title="Université active"></i>
-                        <select name="school_id" id="admin-school-select" onchange="handleSchoolSelectChange(this)" class="bg-transparent text-white text-[11px] font-bold border-0 focus:outline-none focus:ring-0 max-w-[140px] xl:max-w-[180px] truncate cursor-pointer">
-                            <option value="all" class="bg-[#171926] text-white" {% if not active_school %}selected{% endif %}>Toutes Écoles</option>
-                            {% for sch in available_schools %}
-                                <option value="{{ sch.id }}" class="bg-[#171926] text-white" {% if active_school and active_school.id == sch.id %}selected{% endif %}>{{ sch.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
                     <!-- SÉLECTEUR FILIÈRE (PLAN etc.) -->
                     <div class="flex items-center space-x-1.5 shrink-0 bg-white/5 px-2 py-1 rounded-xl border border-white/10">
                         <i class="fa-solid fa-graduation-cap text-sky-400 text-xs" aria-hidden="true" title="Filière active"></i>
