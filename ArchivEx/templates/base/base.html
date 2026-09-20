@@ -297,6 +297,41 @@
  </div>
  </a>
 
+ <!-- ACTIVE SCHOOL INDICATOR & SELECTOR -->
+ {% if current_school %}
+ <div class="flex items-center ml-2 sm:ml-4 shrink-0">
+     {% if is_student_locked_to_school %}
+     <!-- Fixed school badge for enrolled students -->
+     <div class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-xl bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-bold shadow-xs" title="Établissement académique : {{ current_school.name }}">
+         <i class="fa-solid fa-graduation-cap text-amber-400 text-xs"></i>
+         <span class="max-w-[130px] sm:max-w-[170px] truncate">{{ current_school.code|default:current_school.name }}</span>
+     </div>
+     {% else %}
+     <!-- Interactive school switcher for visitors & administrators -->
+     <div class="relative" id="school-switcher-wrapper">
+         <button type="button" onclick="toggleDropdown('school-switcher-dropdown')" aria-expanded="false" aria-haspopup="true" class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold transition-all shadow-xs" title="Changer d'université active">
+             <i class="fa-solid fa-building-columns text-blue-400 text-xs"></i>
+             <span class="max-w-[110px] sm:max-w-[150px] truncate">{{ current_school.code|default:current_school.name }}</span>
+             <i class="fa-solid fa-chevron-down text-[9px] text-slate-300"></i>
+         </button>
+         <div id="school-switcher-dropdown" class="hidden absolute left-0 mt-2 w-64 bg-white dark:bg-[#0f172a] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-1.5 z-50 text-left text-slate-800 dark:text-slate-100 animate-in fade-in slide-in-from-top-2 duration-150">
+             <div class="px-3.5 py-2 border-b border-slate-100 dark:border-slate-800 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                 Changer d'université
+             </div>
+             {% for sch in available_schools %}
+             <a href="{% url 'academics:change_school' sch.id %}?next={{ request.get_full_path|urlencode }}" class="px-3.5 py-2 text-xs flex items-center justify-between hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors {% if current_school.id == sch.id %}text-[#2563EB] font-black bg-blue-50/50 dark:bg-blue-900/20{% else %}text-slate-700 dark:text-slate-200 font-semibold{% endif %}">
+                 <span class="truncate">{{ sch.name }}</span>
+                 {% if current_school.id == sch.id %}
+                 <i class="fa-solid fa-check text-xs text-[#2563EB]"></i>
+                 {% endif %}
+             </a>
+             {% endfor %}
+         </div>
+     </div>
+     {% endif %}
+ </div>
+ {% endif %}
+
  <!-- DESKTOP PRIMARY NAVIGATION LINKS -->
   <nav aria-label="Navigation principale" class="hidden md:flex items-center space-x-1 lg:space-x-2 text-sm font-semibold text-slate-200">
   <!-- ACCUEIL -->

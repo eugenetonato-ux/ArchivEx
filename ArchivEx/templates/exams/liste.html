@@ -39,6 +39,9 @@
                 </div>
                 <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">
                     {% if is_free_mode %}Ressources gratuites{% else %}Ressources premium{% endif %}
+                    {% if current_school %}
+                    <span class="text-[#2563EB] text-base sm:text-lg block sm:inline font-bold sm:ml-2">· {{ current_school.name }}</span>
+                    {% endif %}
                 </h1>
                 <p class="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
                     {% if is_free_mode %}
@@ -310,9 +313,11 @@
                     Consulter les ressources premium
                 </a>
             {% else %}
-                <h3 class="text-sm font-black text-[#071A49] mb-1">Aucune ressource disponible</h3>
+                <h3 class="text-sm font-black text-[#071A49] mb-1">
+                    Aucune ressource disponible{% if current_school %} pour {{ current_school.name }}{% endif %}
+                </h3>
                 <p class="text-xs text-slate-500 font-medium leading-relaxed">
-                    Les ressources de cette catégorie seront prochainement mises en ligne.
+                    Les ressources{% if current_school %} de l'établissement {{ current_school.name }}{% endif %} seront prochainement mises en ligne par les équipes pédagogiques.
                 </p>
             {% endif %}
         </div>

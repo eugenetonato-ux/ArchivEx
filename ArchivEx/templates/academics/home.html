@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <!-- Top Badge Pill -->
             <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#E1EEFE] border border-[#CDE1FE] text-[#2563EB] text-xs font-black mb-5 shadow-2xs">
                 <i class="fa-solid fa-graduation-cap"></i>
-                <span>ArchivEx</span>
+                <span>ArchivEx{% if current_school %} · {{ current_school.name }}{% endif %}</span>
             </div>
 
             <!-- Main Heading (Sentence Case) -->

@@ -105,6 +105,7 @@ TEMPLATES = [
                 "notifications.context_processors.notifications_context",
                 "contributors.context_processors.admin_academic_context",
                 "accounts.context_processors.user_pass_context",
+                "academics.context_processors.academic_school_context",
             ],
         },
     },

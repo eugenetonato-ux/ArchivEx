@@ -373,8 +373,8 @@
                 <p class="text-[11px] text-slate-400 leading-tight">
                     Portail officiel ArchivEx
                 </p>
-                <a href="{% url 'academics:home' %}" class="block w-full py-2 px-3 text-center rounded-xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:via-purple-700 hover:to-indigo-700 text-white text-xs font-black tracking-wide shadow-md shadow-purple-600/30 transition-all transform hover:-translate-y-0.5">
-                    Voir le site public
+                <a href="{% url 'academics:home' %}{% if active_school %}?school={{ active_school.id }}{% endif %}" class="block w-full py-2 px-3 text-center rounded-xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:via-purple-700 hover:to-indigo-700 text-white text-xs font-black tracking-wide shadow-md shadow-purple-600/30 transition-all transform hover:-translate-y-0.5">
+                    Voir le site public{% if active_school %} ({{ active_school.name }}){% endif %}
                 </a>
             </div>
         </div>
@@ -524,9 +524,9 @@
                 </button>
                 
                 <!-- BOUTON RETOUR SITE PUBLIC (UNIQUEMENT LE GLOBE SUR MOBILE ET TABLETTE) -->
-                <a href="{% url 'academics:home' %}" class="p-2 lg:px-3 lg:py-1.5 rounded-xl bg-gradient-to-r from-blue-500/20 to-indigo-500/20 hover:from-blue-500/30 hover:to-indigo-500/30 border border-blue-500/30 text-blue-300 hover:text-white font-extrabold text-[11px] flex items-center space-x-1.5 transition-all shadow-sm shrink-0" title="Accéder au site public">
+                <a href="{% url 'academics:home' %}{% if active_school %}?school={{ active_school.id }}{% endif %}" class="p-2 lg:px-3 lg:py-1.5 rounded-xl bg-gradient-to-r from-blue-500/20 to-indigo-500/20 hover:from-blue-500/30 hover:to-indigo-500/30 border border-blue-500/30 text-blue-300 hover:text-white font-extrabold text-[11px] flex items-center space-x-1.5 transition-all shadow-sm shrink-0" title="Accéder au site public{% if active_school %} ({{ active_school.name }}){% endif %}">
                     <i class="fa-solid fa-globe text-xs" aria-hidden="true"></i>
-                    <span class="hidden lg:inline">Site public</span>
+                    <span class="hidden lg:inline">Site public{% if active_school %} ({{ active_school.code|default:active_school.name }}){% endif %}</span>
                 </a>
                 
                 <!-- BOUTON DECONNEXION -->

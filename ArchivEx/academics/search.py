@@ -110,11 +110,11 @@ def compute_relevance_score(item_title, item_subject_name, item_desc, q_raw, tok
     return score
 
 
-def execute_intelligent_search(query_string, category="all", user=None):
+def execute_intelligent_search(query_string, category="all", user=None, current_school=None):
     """
-    Moteur de Recherche Intelligente ArchivEx V2 (Serveur-side / Pure Django).
+    Moteur de Recherche Intelligente Multi-Universités ArchivEx V2 (Serveur-side / Pure Django).
     Prend en charge la correspondance partielle, la tolérance aux fautes d'accents,
-    la tolérance singulier/pluriel, le multi-mots et le classement par score de pertinence.
+    la tolérance singulier/pluriel, le multi-mots et le cloisonnement strict par université.
     """
     q_raw = (query_string or "").strip()
     if not q_raw:
@@ -153,6 +153,7 @@ def execute_intelligent_search(query_string, category="all", user=None):
     profile = getattr(user, "profile", None) if user and user.is_authenticated else None
     user_school = profile.school if profile else None
     user_filiere = profile.filiere if profile else None
+    target_school = user_school or current_school
 
     subjects_results = []
     exams_results = []
@@ -168,7 +169,10 @@ def execute_intelligent_search(query_string, category="all", user=None):
         for v in all_variants:
             subj_q |= Q(name__icontains=v) | Q(semester__filiere__name__icontains=v)
 
-        subj_qs = list(Subject.objects.filter(subj_q).select_related(
+        subj_filter = Subject.objects.filter(subj_q)
+        if target_school:
+            subj_filter = subj_filter.filter(semester__filiere__school=target_school)
+        subj_qs = list(subj_filter.select_related(
             "semester", "semester__filiere", "semester__filiere__school", "semester__filiere__level"
         ).distinct())
 
@@ -176,7 +180,9 @@ def execute_intelligent_search(query_string, category="all", user=None):
         matched_ids = set(s.id for s in subj_qs)
         all_subjs = Subject.objects.select_related(
             "semester", "semester__filiere", "semester__filiere__school", "semester__filiere__level"
-        ).all()
+        )
+        if target_school:
+            all_subjs = all_subjs.filter(semester__filiere__school=target_school)
         for s in all_subjs:
             if s.id not in matched_ids:
                 s_name_norm = remove_accents(s.name.lower())
@@ -208,7 +214,10 @@ def execute_intelligent_search(query_string, category="all", user=None):
         for v in all_variants:
             exam_q |= Q(title__icontains=v) | Q(subject__name__icontains=v) | Q(description__icontains=v)
 
-        exam_qs = Exam.objects.filter(is_published=True).filter(exam_q).select_related(
+        exam_filter = Exam.objects.filter(is_published=True).filter(exam_q)
+        if target_school:
+            exam_filter = exam_filter.filter(filiere__school=target_school)
+        exam_qs = exam_filter.select_related(
             "subject", "filiere", "level", "semester", "filiere__school", "summary"
         ).distinct()
 
@@ -241,7 +250,10 @@ def execute_intelligent_search(query_string, category="all", user=None):
         for v in all_variants:
             sum_q |= Q(title__icontains=v) | Q(introduction__icontains=v) | Q(subject__name__icontains=v)
 
-        sum_qs = Summary.objects.filter(publication_status="PUBLISHED").filter(sum_q).select_related(
+        sum_filter = Summary.objects.filter(publication_status="PUBLISHED").filter(sum_q)
+        if target_school:
+            sum_filter = sum_filter.filter(subject__semester__filiere__school=target_school)
+        sum_qs = sum_filter.select_related(
             "subject", "subject__semester", "subject__semester__filiere", "author"
         ).distinct()
 

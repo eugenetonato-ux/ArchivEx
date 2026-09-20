@@ -79,6 +79,9 @@ def resources_view(request, mode=None):
         category = "epreuves"
 
     # Paramètres de recherche et filtrage multi-critères
+    from academics.context import get_current_school
+    current_school = get_current_school(request)
+
     q = request.GET.get("q", "").strip()
     selected_subject_id = request.GET.get("subject", "").strip()
     selected_filiere_id = request.GET.get("filiere", "").strip()
@@ -94,6 +97,8 @@ def resources_view(request, mode=None):
         ).filter(
             (Q(file__isnull=False) & ~Q(file="")) | Q(cloud_file__isnull=False)
         )
+        if current_school:
+            exams = exams.filter(filiere__school=current_school)
         if mode == "free":
             exams = exams.filter(Q(is_free=True) | Q(subject__is_free=True))
 
@@ -161,6 +166,8 @@ def resources_view(request, mode=None):
         ).filter(
             (Q(correction_file__isnull=False) & ~Q(correction_file="")) | Q(cloud_correction_file__isnull=False)
         )
+        if current_school:
+            exams = exams.filter(filiere__school=current_school)
         if mode == "free":
             exams = exams.filter(Q(is_free_correction=True) | Q(subject__is_free_correction=True))
 
@@ -231,6 +238,8 @@ def resources_view(request, mode=None):
         ).filter(
             (Q(summary_file__isnull=False) & ~Q(summary_file="")) | Q(cloud_summary_file__isnull=False)
         )
+        if current_school:
+            exam_summaries = exam_summaries.filter(filiere__school=current_school)
         if mode == "free":
             exam_summaries = exam_summaries.filter(Q(is_free_correction=True) | Q(subject__is_free_correction=True))
 
@@ -293,6 +302,8 @@ def resources_view(request, mode=None):
         course_summaries = CourseSummary.objects.filter(publication_status="PUBLISHED").select_related(
             "subject", "subject__semester", "subject__semester__filiere"
         )
+        if current_school:
+            course_summaries = course_summaries.filter(subject__semester__filiere__school=current_school)
         if mode == "free":
             course_summaries = course_summaries.filter(Q(access_type="FREE") | Q(subject__is_free_correction=True))
 
@@ -440,8 +451,9 @@ def resources_view(request, mode=None):
         "selected_year": selected_year,
         "selected_type": selected_type,
         "user_has_any_pass": user_has_any_pass,
-        "available_filieres": Filiere.objects.filter(is_active=True).select_related("school").order_by("school__name", "name"),
-        "available_semesters": Semester.objects.filter(is_active=True).select_related("filiere").order_by("number", "label"),
+        "current_school": current_school,
+        "available_filieres": Filiere.objects.filter(is_active=True, school=current_school).order_by("name") if current_school else Filiere.objects.filter(is_active=True).select_related("school").order_by("school__name", "name"),
+        "available_semesters": Semester.objects.filter(is_active=True, filiere__school=current_school).select_related("filiere").order_by("number", "label") if current_school else Semester.objects.filter(is_active=True).select_related("filiere").order_by("number", "label"),
         "available_academic_years": AcademicYear.objects.all().order_by("-label"),
         "exam_types": Exam.EXAM_TYPE_CHOICES,
     }

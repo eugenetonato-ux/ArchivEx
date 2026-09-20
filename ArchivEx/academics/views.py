@@ -14,39 +14,70 @@ User = get_user_model()
 
 def home_view(request):
     """
-    Page d'accueil (Landing Page) accessible à tous.
-    Optimisée avec un cache mémoire haute vitesse pour garantir un temps de réponse < 100ms.
+    Page d'accueil (Landing Page) accessible à tous, contextualisée par université / école.
+    Optimisée avec un cache mémoire haute vitesse par école.
     """
-    cache_key = "archivex_home_stats_and_showcase"
+    from .context import get_current_school
+    current_school = get_current_school(request)
+
+    cache_key = f"archivex_home_stats_and_showcase_{current_school.id if current_school else 'all'}"
     cached_data = cache.get(cache_key)
 
     if not cached_data:
         schools_count = School.objects.filter(is_active=True).count()
-        filieres_count = Filiere.objects.count()
-        subjects_count = Subject.objects.count()
-        exams_count = Exam.objects.filter(is_published=True).count()
-        summaries_count = Summary.objects.filter(publication_status="PUBLISHED").count()
-        guides_count = Guide.objects.filter(publication_status="PUBLISHED").count()
+        if current_school:
+            filieres_count = Filiere.objects.filter(school=current_school).count()
+            subjects_count = Subject.objects.filter(semester__filiere__school=current_school).count()
+            exams_count = Exam.objects.filter(is_published=True, filiere__school=current_school).count()
+            summaries_count = Summary.objects.filter(publication_status="PUBLISHED", subject__semester__filiere__school=current_school).count()
+            guides_count = Guide.objects.filter(publication_status="PUBLISHED", subject__semester__filiere__school=current_school).count()
+
+            featured_filieres = list(
+                Filiere.objects.filter(school=current_school).select_related("school", "level").annotate(
+                    exams_num=Count("exams", filter=Q(exams__is_published=True), distinct=True)
+                )[:6]
+            )
+
+            latest_exams = list(
+                Exam.objects.filter(
+                    is_published=True,
+                    filiere__school=current_school
+                ).select_related("subject", "semester", "filiere", "level", "filiere__school")[:6]
+            )
+
+            latest_summaries = list(
+                Summary.objects.filter(
+                    publication_status="PUBLISHED",
+                    subject__semester__filiere__school=current_school
+                ).select_related("subject", "subject__semester", "subject__semester__filiere")[:6]
+            )
+        else:
+            filieres_count = Filiere.objects.count()
+            subjects_count = Subject.objects.count()
+            exams_count = Exam.objects.filter(is_published=True).count()
+            summaries_count = Summary.objects.filter(publication_status="PUBLISHED").count()
+            guides_count = Guide.objects.filter(publication_status="PUBLISHED").count()
+
+            featured_filieres = list(
+                Filiere.objects.select_related("school", "level").annotate(
+                    exams_num=Count("exams", filter=Q(exams__is_published=True), distinct=True)
+                )[:6]
+            )
+
+            latest_exams = list(
+                Exam.objects.filter(
+                    is_published=True
+                ).select_related("subject", "semester", "filiere", "level", "filiere__school")[:6]
+            )
+
+            latest_summaries = list(
+                Summary.objects.filter(
+                    publication_status="PUBLISHED"
+                ).select_related("subject", "subject__semester", "subject__semester__filiere")[:6]
+            )
+
         students_count = User.objects.filter(is_staff=False).count()
         passes_count = SemesterAccess.objects.filter(activated_at__isnull=False).count()
-
-        featured_filieres = list(
-            Filiere.objects.select_related("school", "level").annotate(
-                exams_num=Count("exams", distinct=True)
-            )[:6]
-        )
-
-        latest_exams = list(
-            Exam.objects.filter(
-                is_published=True
-            ).select_related("subject", "semester", "filiere", "level", "filiere__school")[:6]
-        )
-
-        latest_summaries = list(
-            Summary.objects.filter(
-                publication_status="PUBLISHED"
-            ).select_related("subject", "subject__semester", "subject__semester__filiere")[:6]
-        )
 
         cached_data = {
             "schools_count": schools_count,
@@ -65,7 +96,35 @@ def home_view(request):
         cache.set(cache_key, cached_data, 60)
 
     context = dict(cached_data)
+    context["current_school"] = current_school
     return render(request, "academics/home.html", context)
+
+
+def change_school_view(request, school_id):
+    """
+    Permet à un visiteur ou un administrateur de sélectionner l'école active
+    sur le site public, puis redirige vers la page d'origine.
+    """
+    from django.shortcuts import redirect
+    from django.urls import reverse
+
+    school = get_object_or_404(School, pk=school_id, is_active=True)
+
+    # Pour un étudiant standard connecté, son école est fixée par son inscription
+    is_pure_student = (
+        request.user.is_authenticated and
+        hasattr(request.user, "profile") and
+        not (request.user.is_staff or request.user.is_superuser or getattr(request.user, "contributor_profile", None))
+    )
+    if not is_pure_student:
+        request.session["current_school_id"] = school.id
+        if request.user.is_authenticated and (request.user.is_staff or getattr(request.user, "contributor_profile", None)):
+            request.session["admin_active_school_id"] = school.id
+
+    next_url = request.GET.get("next") or request.META.get("HTTP_REFERER") or "/"
+    if "changer-ecole" in next_url:
+        next_url = reverse("academics:home")
+    return redirect(next_url)
 
 
 def about_view(request):
@@ -83,8 +142,10 @@ def filiere_list_view(request):
     """
     Vue principale UE ("Mes UE").
     Charge DIRECTEMENT les UE correspondant au contexte académique de l'étudiant connecté
-    (École + Filière + Niveau + Semestre), sans AUCUNE étape intermédiaire de choix de filière !
+    (École + Filière + Niveau + Semestre), sans AUCUN mélange inter-écoles !
     """
+    from .context import get_current_school
+    current_school = get_current_school(request)
     profile = getattr(request.user, "profile", None)
     
     semester = None
@@ -94,18 +155,26 @@ def filiere_list_view(request):
     total_exams_count = 0
     premium_exams_count = 0
 
-    if profile and profile.filiere:
+    user_school = profile.school if (profile and profile.school) else current_school
+
+    if profile and profile.filiere and (not user_school or profile.filiere.school_id == user_school.id):
         filiere = profile.filiere
         semester = Semester.objects.filter(filiere=profile.filiere).first()
     else:
         active_access = SemesterAccess.objects.filter(
             Q(user=request.user) & (Q(activated_at__isnull=False) | Q(payments__status__in=["APPROVED", "reussi", "approved", "success"]))
-        ).select_related("filiere", "semester").first()
+        ).select_related("filiere", "semester")
+        if user_school:
+            active_access = active_access.filter(filiere__school=user_school)
+        active_access = active_access.first()
+
         if active_access:
             filiere = active_access.filiere
             semester = active_access.semester
+        elif user_school:
+            filiere = Filiere.objects.filter(school=user_school).first()
         else:
-            filiere = Filiere.objects.first()
+            filiere = None
 
     if not semester and filiere:
         semester = Semester.objects.filter(filiere=filiere).first()
@@ -134,6 +203,7 @@ def filiere_list_view(request):
 
     context = {
         "profile": profile,
+        "school": user_school,
         "filiere": filiere,
         "semester": semester,
         "subjects": subjects,
@@ -255,12 +325,20 @@ def global_search_view(request):
     singulier/pluriel et scoring de pertinence) à academics.search.
     """
     from academics.search import execute_intelligent_search
+    from .context import get_current_school
 
     q = request.GET.get("q", "").strip()
     category = request.GET.get("category", "all")
+    current_school = get_current_school(request)
 
-    context = execute_intelligent_search(query_string=q, category=category, user=request.user)
+    context = execute_intelligent_search(
+        query_string=q,
+        category=category,
+        user=request.user,
+        current_school=current_school
+    )
     context["profile"] = getattr(request.user, "profile", None) if request.user.is_authenticated else None
+    context["current_school"] = current_school
     return render(request, "search/global_search.html", context)
 
 

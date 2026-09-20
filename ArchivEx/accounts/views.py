@@ -149,15 +149,19 @@ def logout_view(request):
 
 @login_required
 def dashboard_view(request):
+    from academics.context import get_current_school
+    current_school = get_current_school(request)
+
     profile = getattr(request.user, "profile", None)
     if not profile:
-        # Garantir qu'un profil étudiant existe pour tout utilisateur connecté (y compris administrateurs / staff qui consultent l'espace étudiant)
+        # Pour les administrateurs / staff qui consultent l'espace étudiant,
+        # associer leur profil d'aperçu à leur école active courante (ex: FASEG)
         from academics.models import Filiere, School, Level
-        default_filiere = Filiere.objects.first()
-        if default_filiere:
-            default_school = default_filiere.school or School.objects.first()
-            default_level = default_filiere.level or Level.objects.first()
-            if default_school and default_level:
+        default_school = current_school or School.objects.first()
+        if default_school:
+            default_filiere = Filiere.objects.filter(school=default_school).first()
+            default_level = (default_filiere.level if default_filiere else None) or Level.objects.filter(school=default_school).first() or Level.objects.first()
+            if default_filiere and default_level:
                 profile, _ = StudentProfile.objects.get_or_create(
                     user=request.user,
                     defaults={
@@ -166,6 +170,15 @@ def dashboard_view(request):
                         "level": default_level,
                     }
                 )
+    elif profile and (request.user.is_staff or request.user.is_superuser or getattr(request.user, "contributor_profile", None)):
+        # Si un admin a changé d'école active dans l'administration, synchroniser son aperçu
+        if current_school and profile.school_id != current_school.id:
+            profile.school = current_school
+            filiere_cand = Filiere.objects.filter(school=current_school).first()
+            if filiere_cand:
+                profile.filiere = filiere_cand
+                profile.level = filiere_cand.level or profile.level
+            profile.save()
 
     # Initialiser toutes les variables
     active_semester = None
@@ -179,10 +192,15 @@ def dashboard_view(request):
     recent_guides = []
     recent_articles = []
 
+    user_school = profile.school if profile else current_school
+
     # Active accesses (Legacy & V2)
     active_accesses = SemesterAccess.objects.filter(
         Q(user=request.user) & (Q(activated_at__isnull=False) | Q(payments__status__in=["APPROVED", "reussi", "approved", "success"]))
-    ).select_related("semester", "filiere", "level", "school").distinct()
+    )
+    if user_school:
+        active_accesses = active_accesses.filter(filiere__school=user_school)
+    active_accesses = active_accesses.select_related("semester", "filiere", "level", "school").distinct()
 
     from subscriptions.models import UserSubscription
     from subscriptions.services import can_user_access
@@ -191,29 +209,37 @@ def dashboard_view(request):
 
     user_subscriptions = UserSubscription.objects.filter(
         user=request.user, is_active=True
-    ).select_related("school", "filiere", "semester")
+    )
+    if user_school:
+        user_subscriptions = user_subscriptions.filter(school=user_school)
+    user_subscriptions = user_subscriptions.select_related("school", "filiere", "semester")
 
-    # Favorites
-    favorites = Favorite.objects.filter(user=request.user).select_related(
+    # Favorites (scopés sur l'école de l'étudiant si définie)
+    favorites = Favorite.objects.filter(user=request.user)
+    if user_school:
+        favorites = favorites.filter(exam__filiere__school=user_school)
+    favorites = favorites.select_related(
         "exam", "exam__subject", "exam__filiere"
     ).order_by("-created_at")[:6]
 
     # Filière active de l'étudiant
     filiere = None
-    if profile and profile.filiere:
+    if profile and profile.filiere and (not user_school or profile.filiere.school_id == user_school.id):
         filiere = profile.filiere
     else:
         active_access = active_accesses.first()
-        if active_access and active_access.filiere:
+        if active_access and active_access.filiere and (not user_school or active_access.filiere.school_id == user_school.id):
             filiere = active_access.filiere
+        elif user_school:
+            filiere = Filiere.objects.filter(school=user_school).first()
         else:
-            filiere = Filiere.objects.first()
+            filiere = None
 
-    available_semesters = Semester.objects.filter(filiere=filiere) if filiere else Semester.objects.all()
+    available_semesters = Semester.objects.filter(filiere=filiere) if filiere else Semester.objects.none()
     selected_semester_id = request.GET.get("semester")
-    if selected_semester_id:
+    if selected_semester_id and available_semesters.exists():
         active_semester = available_semesters.filter(id=selected_semester_id).first()
-    if not active_semester:
+    if not active_semester and available_semesters.exists():
         active_access = active_accesses.first()
         if active_access and active_access.semester and active_access.semester in available_semesters:
             active_semester = active_access.semester
@@ -246,27 +272,29 @@ def dashboard_view(request):
             filiere=filiere, is_published=True
         ).select_related("subject", "semester", "filiere")[:6]
     else:
-        semester_subjects_count = Subject.objects.filter(is_active=True).count()
-        semester_exams_count = Exam.objects.filter(is_published=True).count()
-        semester_summaries_count = Summary.objects.filter(publication_status="PUBLISHED").count()
-        semester_guides_count = Guide.objects.filter(publication_status="PUBLISHED").count()
-
-        user_ues = Subject.objects.filter(is_active=True).annotate(
-            exams_num=Count("exams", filter=Q(exams__is_published=True))
-        )[:8]
-        recent_exams = Exam.objects.filter(
-            is_published=True
-        ).select_related("subject", "semester", "filiere")[:6]
+        # Aucun mélange inter-écoles : tous les compteurs restent à zéro si l'école n'a pas encore de filière ou de document !
+        semester_subjects_count = 0
+        semester_exams_count = 0
+        semester_summaries_count = 0
+        semester_guides_count = 0
+        user_ues = []
+        recent_exams = []
 
     for exam in recent_exams:
         exam.user_has_access = can_user_access(request.user, exam)
 
-    # Summaries, Guides, Articles
-    recent_summaries = Summary.objects.filter(publication_status="PUBLISHED").select_related("subject")[:4]
+    # Summaries, Guides, Articles - scopés sur l'école
+    recent_summaries_qs = Summary.objects.filter(publication_status="PUBLISHED")
+    recent_guides_qs = Guide.objects.filter(publication_status="PUBLISHED")
+    if user_school:
+        recent_summaries_qs = recent_summaries_qs.filter(subject__semester__filiere__school=user_school)
+        recent_guides_qs = recent_guides_qs.filter(subject__semester__filiere__school=user_school)
+
+    recent_summaries = recent_summaries_qs.select_related("subject")[:4]
     for s in recent_summaries:
         s.user_has_access = can_user_access(request.user, s)
 
-    recent_guides = Guide.objects.filter(publication_status="PUBLISHED").select_related("subject")[:4]
+    recent_guides = recent_guides_qs.select_related("subject")[:4]
     for g in recent_guides:
         g.user_has_access = can_user_access(request.user, g)
 

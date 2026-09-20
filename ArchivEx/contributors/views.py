@@ -271,6 +271,7 @@ def set_context_view(request):
     if school_id:
         if school_id == "all":
             request.session["admin_active_school_id"] = None
+            request.session["current_school_id"] = None
             request.session["admin_active_filiere_id"] = None
             request.session["admin_active_semester_id"] = None
             messages.info(request, "Contexte réinitialisé : Toutes les universités")
@@ -281,6 +282,7 @@ def set_context_view(request):
             
             old_school_id = request.session.get("admin_active_school_id")
             request.session["admin_active_school_id"] = school.id
+            request.session["current_school_id"] = school.id
 
             if filiere_id:
                 if filiere_id == "all":

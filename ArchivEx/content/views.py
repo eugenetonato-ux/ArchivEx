@@ -10,10 +10,14 @@ from subscriptions.services import can_user_access
 def summary_list(request):
     """Liste des résumés de cours publiés."""
     from academics.models import Subject
+    from academics.context import get_current_school
+    current_school = get_current_school(request)
 
     summaries = Summary.objects.filter(publication_status="PUBLISHED").select_related(
         "subject", "subject__semester", "subject__semester__filiere", "author"
     )
+    if current_school:
+        summaries = summaries.filter(subject__semester__filiere__school=current_school)
 
     subject_id = request.GET.get("subject")
     selected_subject = None
@@ -32,6 +36,7 @@ def summary_list(request):
     context = {
         "summaries": summaries,
         "selected_subject": selected_subject,
+        "current_school": current_school,
         "q": q or "",
     }
     return render(request, "content/summary_list.html", context)
@@ -81,10 +86,14 @@ def summary_detail(request, pk):
 def guide_list(request):
     """Liste des guides de matières."""
     from academics.models import Subject
+    from academics.context import get_current_school
+    current_school = get_current_school(request)
 
     guides = Guide.objects.filter(publication_status="PUBLISHED").select_related(
         "subject", "subject__semester", "subject__semester__filiere", "author"
     )
+    if current_school:
+        guides = guides.filter(subject__semester__filiere__school=current_school)
 
     subject_id = request.GET.get("subject")
     selected_subject = None
