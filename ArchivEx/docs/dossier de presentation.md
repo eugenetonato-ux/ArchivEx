@@ -41,7 +41,7 @@ ArchivEx met à disposition un guichet unique, structuré et fiable :
 - **Arborescence académique native** : Fini les recherches infructueuses ; l'étudiant trouve son épreuve en 3 clics chrono.
 - **Documents vérifiés et optimisés** : Chaque épreuve est classée par année, session (Normale / Rattrapage), semestre, avec prévisualisation claire.
 - **Expérience Mobile-First** : Conçue pour consommer peu de données mobiles et fonctionner parfaitement sur les smartphones d'entrée de gamme couramment utilisés sur les campus.
-- **Paiements locaux intégrés** : Souscription simplifiée via **Mobile Money** (MTN MoMo, Moov Money, Wave, Celtiis Cash), sans nécessité de carte bancaire.
+- **Paiements locaux intégrés** : Souscription simplifiée via **Mobile Money** (MTN MoMo, Moov Money, Celtiis Cash), sans nécessité de carte bancaire.
 
 ### 3.2. Pourquoi ArchivEx l'emporte sur les méthodes traditionnelles ?
 

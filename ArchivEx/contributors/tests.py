@@ -195,12 +195,14 @@ class Phase11AdministrationTests(TestCase):
 
     def test_summary_creation_workflow(self):
         """Authorized contributor can create a summary of course."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        dummy_pdf = SimpleUploadedFile("resume_algo.pdf", b"%PDF-1.4 test pdf content", content_type="application/pdf")
         self.client.login(username="admin_boss", password="Password123!")
         summary_data = {
             "title": "Fiche de synthèse Algorithmique",
             "subject": self.subject.id,
             "introduction": "Intro",
-            "content": "Contenu complet rédigé",
+            "file": dummy_pdf,
             "access_type": "PREMIUM",
             "publication_status": "PUBLISHED",
         }

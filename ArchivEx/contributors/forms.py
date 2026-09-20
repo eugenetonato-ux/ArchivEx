@@ -403,14 +403,9 @@ class SummaryAdminForm(forms.ModelForm):
         widget=forms.FileInput(attrs={"class": "w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"})
     )
 
-    content = forms.CharField(
-        required=False,
-        widget=forms.HiddenInput(),
-    )
-
     class Meta:
         model = Summary
-        fields = ["title", "subject", "file", "access_type", "publication_status", "introduction", "content"]
+        fields = ["title", "subject", "file", "access_type", "publication_status", "introduction"]
         labels = {
             "title": "Titre du résumé",
             "subject": "Unité d'Enseignement (UE) / Matière",
@@ -446,13 +441,9 @@ class SummaryAdminForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         file = cleaned_data.get("file")
-        has_file_or_content = bool(
-            file or
-            (self.instance and self.instance.pk and self.instance.file) or
-            cleaned_data.get("content")
-        )
-        if not has_file_or_content:
-            self.add_error("file", "Veuillez joindre le document PDF du résumé de cours.")
+        has_file = bool(file or (self.instance and self.instance.pk and self.instance.file))
+        if not has_file:
+            self.add_error("file", "Le document PDF est obligatoire pour tout résumé de cours.")
         return cleaned_data
 
 

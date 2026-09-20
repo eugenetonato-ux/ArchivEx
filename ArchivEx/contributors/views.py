@@ -1270,7 +1270,9 @@ def resource_completeness_view(request):
     """
     active_school, active_filiere, active_semester = get_active_academic_context(request)
 
-    exams = Exam.objects.select_related("subject", "semester", "filiere", "filiere__school", "summary").order_by("-created_at")
+    exams = Exam.objects.select_related(
+        "subject", "semester", "filiere", "filiere__school", "summary", "cloud_correction_file", "cloud_summary_file"
+    ).order_by("-created_at")
 
     if active_school:
         exams = exams.filter(filiere__school=active_school)
@@ -1279,16 +1281,24 @@ def resource_completeness_view(request):
     if active_semester:
         exams = exams.filter(semester=active_semester)
 
-    total_exams = exams.count()
-    with_correction_count = exams.filter(correction_file__isnull=False).exclude(correction_file="").count()
-
-    with_summary_count = exams.filter(
-        Q(summary_file__isnull=False) & ~Q(summary_file="") | Q(summary__isnull=False)
-    ).count()
-
-    complete_count = 0
     all_exams_list = list(exams)
+    total_exams = len(all_exams_list)
+
+    from content.models import Summary
+    subjects_with_summary = set(
+        Summary.objects.filter(publication_status="PUBLISHED").exclude(file="").values_list("subject_id", flat=True)
+    )
+
+    with_correction_count = 0
+    with_summary_count = 0
+    complete_count = 0
+
     for e in all_exams_list:
+        e._has_subject_summary = (e.subject_id in subjects_with_summary)
+        if e.has_correction:
+            with_correction_count += 1
+        if e.has_summary:
+            with_summary_count += 1
         if e.has_correction and e.has_summary:
             complete_count += 1
 

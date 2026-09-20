@@ -49,22 +49,16 @@
                                 <p class="text-[11px] text-purple-800 font-medium">Document officiel prêt pour la révision de l'UE {{ summary.subject.name }}</p>
                             </div>
                         </div>
-                        <a href="{{ summary.file.url }}" target="_blank" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-sm inline-flex items-center space-x-1.5 shrink-0">
-                            <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                            <span>Ouvrir en plein écran</span>
-                        </a>
+                        <button type="button" onclick="togglePdfFullscreen()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-sm inline-flex items-center space-x-1.5 shrink-0">
+                            <i class="fa-solid fa-expand text-xs"></i>
+                            <span>Plein écran</span>
+                        </button>
                     </div>
 
-                    <!-- LECTEUR PDF INTÉGRÉ -->
-                    <div class="rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 shadow-inner w-full h-[650px]">
-                        <iframe src="{{ summary.file.url }}#toolbar=1&navpanes=0" class="w-full h-full border-none" title="{{ summary.title }}"></iframe>
+                    <!-- LECTEUR PDF INTÉGRÉ SÉCURISÉ (PAS DE TÉLÉCHARGEMENT) -->
+                    <div id="pdf-viewer-container" class="rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 shadow-inner w-full h-[650px] relative">
+                        <iframe id="pdf-iframe" src="{{ summary.file.url }}#toolbar=0&navpanes=0" class="w-full h-full border-none" title="{{ summary.title }}"></iframe>
                     </div>
-                </div>
-            {% endif %}
-
-            {% if summary.content %}
-                <div class="prose prose-slate max-w-none text-slate-800 text-sm leading-relaxed border-t border-slate-100 pt-6 mt-6">
-                    {{ summary.content|safe }}
                 </div>
             {% endif %}
         {% else %}
@@ -91,7 +85,7 @@
                 </h3>
 
                 <p class="text-xs sm:text-sm text-blue-100 mb-6 leading-relaxed">
-                    Accédez immédiatement au contenu rédigé de <strong class="text-white">{{ summary.title }}</strong> ainsi qu'à l'ensemble des ressources de votre semestre.
+                    Accédez immédiatement à la fiche résumé PDF complète de <strong class="text-white">{{ summary.title }}</strong> ainsi qu'à l'ensemble des ressources de votre semestre.
                 </p>
 
                 <!-- DYNAMIC BENEFITS LIST -->
@@ -110,7 +104,7 @@
                         <span class="w-4 h-4 rounded-full bg-amber-400 text-[#071A49] flex items-center justify-center font-black text-[10px]">
                             <i class="fa-solid fa-check text-[9px]"></i>
                         </span>
-                        <span><strong>{{ summaries_count }} résumés de cours</strong> rédigés pour vos UE</span>
+                        <span><strong>{{ summaries_count }} fiches résumés PDF</strong> pour réviser vos UE</span>
                     </div>
                     {% endif %}
                 </div>
@@ -137,5 +131,18 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+function togglePdfFullscreen() {
+    const el = document.getElementById('pdf-viewer-container');
+    if (!el) return;
+    if (!document.fullscreenElement) {
+        if (el.requestFullscreen) el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+    }
+}
+</script>
 {% endblock %}
 

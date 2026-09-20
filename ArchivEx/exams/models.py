@@ -49,11 +49,18 @@ class Exam(models.Model):
 
     @property
     def has_correction(self):
-        return bool(self.correction_file)
+        return bool(self.correction_file or self.cloud_correction_file_id)
 
     @property
     def has_summary(self):
-        return bool(self.summary_file or self.summary)
+        if bool(self.summary_file or self.summary_id or self.cloud_summary_file_id):
+            return True
+        if hasattr(self, "_has_subject_summary"):
+            return bool(self._has_subject_summary)
+        if getattr(self, "subject_id", None):
+            from content.models import Summary
+            return Summary.objects.filter(subject_id=self.subject_id, publication_status="PUBLISHED").exists()
+        return False
 
     @property
     def completeness_status(self):

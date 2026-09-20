@@ -86,9 +86,9 @@
 
             const path = url.pathname.toLowerCase();
 
-            // Exclure les zones d'administration et d'authentification sensible
-            if (path.startsWith('/django-admin/') || path.startsWith('/administration/')) return false;
-            if (path.includes('/logout') || path.includes('/deconnexion')) return false;
+            // Exclure les zones django-admin et déconnexions
+            if (path.startsWith('/django-admin/')) return false;
+            if (path.includes('/logout') || path.includes('/deconnexion') || path.includes('/admin-logout')) return false;
 
             // Exclure les fichiers statiques, médias et téléchargements directs
             if (path.startsWith('/static/') || path.startsWith('/media/')) return false;
@@ -195,11 +195,41 @@
             const parser = new DOMParser();
             const newDoc = parser.parseFromString(htmlContent, 'text/html');
 
-            const currentMain = document.getElementById('main-content');
-            const newMain = newDoc.getElementById('main-content');
+            const currentAdminMain = document.getElementById('admin-main-content');
+            const newAdminMain = newDoc.getElementById('admin-main-content');
+            const currentPublicMain = document.getElementById('main-content');
+            const newPublicMain = newDoc.getElementById('main-content');
 
-            if (!currentMain || !newMain) {
-                // Si la page cible n'a pas de #main-content (ex: page d'erreur ou admin), fallback natif
+            let activeMain = null;
+
+            if (currentAdminMain && newAdminMain) {
+                // Navigation fluide à l'intérieur de l'Administration (sans rechargement)
+                activeMain = currentAdminMain;
+                activeMain.style.opacity = '0.94';
+                activeMain.innerHTML = newAdminMain.innerHTML;
+
+                // Mettre à jour l'état actif de la sidebar d'administration
+                const currentSidebar = document.getElementById('admin-sidebar');
+                const newSidebar = newDoc.getElementById('admin-sidebar');
+                if (currentSidebar && newSidebar) {
+                    currentSidebar.innerHTML = newSidebar.innerHTML;
+                }
+
+                // Mettre à jour la bannière de support ou compteurs si présents
+                const currentSupportBadge = document.querySelector('[data-support-badge]');
+                const newSupportBadge = newDoc.querySelector('[data-support-badge]');
+                if (currentSupportBadge && newSupportBadge) {
+                    currentSupportBadge.innerHTML = newSupportBadge.innerHTML;
+                }
+
+            } else if (currentPublicMain && newPublicMain) {
+                // Navigation fluide à l'intérieur du Site Public (sans rechargement)
+                activeMain = currentPublicMain;
+                activeMain.style.opacity = '0.94';
+                activeMain.innerHTML = newPublicMain.innerHTML;
+
+            } else {
+                // Bascule de structure (ex: passage du site public vers l'administration)
                 stopProgress();
                 window.location.href = targetUrl.href;
                 return;
@@ -210,12 +240,8 @@
                 document.title = newDoc.title;
             }
 
-            // Remplacement fluide du contenu principal
-            currentMain.style.opacity = '0.94';
-            currentMain.innerHTML = newMain.innerHTML;
-
             // Ré-exécuter les scripts présents dans le nouveau main
-            const scripts = currentMain.querySelectorAll('script');
+            const scripts = activeMain.querySelectorAll('script');
             scripts.forEach(oldScript => {
                 const newScript = document.createElement('script');
                 Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
@@ -243,7 +269,7 @@
 
             // Rétablir l'opacité
             requestAnimationFrame(() => {
-                currentMain.style.opacity = '1';
+                activeMain.style.opacity = '1';
             });
 
             stopProgress();
@@ -256,6 +282,10 @@
             const resSheet = document.getElementById('mobile-resources-sheet');
             if (resSheet && !resSheet.classList.contains('hidden')) {
                 resSheet.classList.add('hidden');
+            }
+            const adminBackdrop = document.getElementById('admin-sidebar-backdrop');
+            if (adminBackdrop && !adminBackdrop.classList.contains('hidden')) {
+                adminBackdrop.classList.add('hidden');
             }
 
             // Mettre à jour l'état actif de la barre de navigation mobile du bas (Dock)

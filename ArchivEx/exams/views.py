@@ -614,6 +614,12 @@ def stream_summary_pdf(request, pk):
         target_file = exam.summary_file
     elif exam.summary and exam.summary.file:
         target_file = exam.summary.file
+    elif exam.cloud_summary_file and exam.cloud_summary_file.file:
+        target_file = exam.cloud_summary_file.file
+    elif exam.subject:
+        subj_sum = exam.subject.summaries.filter(publication_status="PUBLISHED").exclude(file="").first()
+        if subj_sum and subj_sum.file:
+            target_file = subj_sum.file
 
     if not target_file:
         messages.error(request, "Aucun résumé PDF n'est associé à cette épreuve.")
@@ -740,6 +746,10 @@ def student_viewer_view(request, pk):
         summary_target = exam.summary_file or (exam.summary.file if exam.summary else None)
         if not bool(summary_target) and exam.cloud_summary_file:
             summary_target = exam.cloud_summary_file.file
+        if not bool(summary_target) and exam.subject:
+            subj_sum = exam.subject.summaries.filter(publication_status="PUBLISHED").exclude(file="").first()
+            if subj_sum and subj_sum.file:
+                summary_target = subj_sum.file
         if not _get_safe_file_path(summary_target):
             messages.error(request, "Aucun résumé n'est actuellement disponible pour cette épreuve.")
             return redirect("exams:detail", pk=exam.pk)
@@ -801,6 +811,10 @@ def stream_watermarked_pdf_view(request, pk):
         target_file = exam.summary_file or (exam.summary.file if exam.summary else None)
         if not bool(target_file) and exam.cloud_summary_file:
             target_file = exam.cloud_summary_file.file
+        if not bool(target_file) and exam.subject:
+            subj_sum = exam.subject.summaries.filter(publication_status="PUBLISHED").exclude(file="").first()
+            if subj_sum and subj_sum.file:
+                target_file = subj_sum.file
         has_access = can_user_access_summary(request.user, exam)
 
     else:
