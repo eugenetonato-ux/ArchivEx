@@ -94,10 +94,9 @@ class ContentWorkflowAndSecurityTest(TestCase):
         self.assertEqual(res_detail.context["article"], self.article)
 
     def test_student_guide_accessibility(self):
-        """Student Guide landing page renders correctly with featured methodology content."""
+        """Student Guide redirects to home since guides are disabled."""
         res = self.client.get(reverse("content:student_guide"))
-        self.assertEqual(res.status_code, 200)
-        self.assertContains(res, "Guide étudiant ArchivEx")
-        self.assertContains(res, "Comment exploiter efficacement une ancienne épreuve")
+        self.assertEqual(res.status_code, 302)
+        self.assertRedirects(res, reverse("academics:home"))
 
 

@@ -133,8 +133,8 @@ def about_view(request):
 
 
 def student_guide_view(request):
-    """Guide d'utilisation d'ArchivEx pour les étudiants."""
-    return render(request, "academics/student_guide.html")
+    """Les guides ont été retirés de la plateforme (ressources autorisées : épreuves, corrigés, résumés)."""
+    return redirect("academics:home")
 
 
 @login_required
@@ -236,11 +236,12 @@ def semester_list_view(request, filiere_id):
         .annotate(c=Count("id"))
         .values_list("subject__semester_id", "c")
     )
-    guide_counts = dict(
-        Guide.objects.filter(subject__semester__in=semesters, publication_status="PUBLISHED")
-        .values("subject__semester_id")
+    correction_counts = dict(
+        Exam.objects.filter(semester__in=semesters, is_published=True)
+        .filter(Q(correction_file__isnull=False) & ~Q(correction_file="") | Q(cloud_correction_file__isnull=False))
+        .values("semester_id")
         .annotate(c=Count("id"))
-        .values_list("subject__semester_id", "c")
+        .values_list("semester_id", "c")
     )
 
     semesters_data = []
@@ -250,8 +251,8 @@ def semester_list_view(request, filiere_id):
             "has_access": can_user_access(request.user, sem),
             "subjects_num": sem.subjects_num,
             "exams_count": exam_counts.get(sem.id, 0),
+            "corrections_count": correction_counts.get(sem.id, 0),
             "summaries_count": summary_counts.get(sem.id, 0),
-            "guides_count": guide_counts.get(sem.id, 0),
         })
 
     context = {

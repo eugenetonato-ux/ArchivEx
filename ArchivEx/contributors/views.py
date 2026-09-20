@@ -188,14 +188,18 @@ def admin_dashboard_view(request):
         exams_count = Exam.objects.filter(filiere__school=active_school).count()
         published_exams = Exam.objects.filter(filiere__school=active_school, is_published=True).count()
         summaries_count = Summary.objects.filter(subject__semester__filiere__school=active_school).count()
-        guides_count = Guide.objects.filter(subject__semester__filiere__school=active_school).count()
+        corrections_count = Exam.objects.filter(filiere__school=active_school).filter(
+            Q(correction_file__isnull=False) & ~Q(correction_file="") | Q(cloud_correction_file__isnull=False)
+        ).count()
         recent_exams = Exam.objects.filter(filiere__school=active_school).select_related("subject", "semester", "filiere").order_by("-created_at")[:6]
     else:
         students_count = StudentProfile.objects.count()
         exams_count = Exam.objects.count()
         published_exams = Exam.objects.filter(is_published=True).count()
         summaries_count = Summary.objects.count()
-        guides_count = Guide.objects.count()
+        corrections_count = Exam.objects.filter(
+            Q(correction_file__isnull=False) & ~Q(correction_file="") | Q(cloud_correction_file__isnull=False)
+        ).count()
         recent_exams = Exam.objects.select_related("subject", "semester", "filiere").order_by("-created_at")[:6]
 
     articles_count = Article.objects.count()
@@ -211,32 +215,28 @@ def admin_dashboard_view(request):
     available_filieres = Filiere.objects.filter(school=active_school) if active_school else Filiere.objects.none()
     available_semesters = Semester.objects.filter(filiere=active_filiere) if active_filiere else Semester.objects.none()
 
-    # Chart data: Distribution des documents par filière (spécialité académique)
+    # Chart data: Distribution des documents par filière
     filieres_qs = Filiere.objects.filter(school=active_school) if active_school else Filiere.objects.all()
     filieres_qs = filieres_qs.annotate(
         exams_cnt=Count('exams', distinct=True),
         summaries_cnt=Count('semesters__subjects__summaries', distinct=True),
-        guides_cnt=Count('semesters__subjects__guides', distinct=True)
     )
 
     chart_labels = []
     chart_exams = []
     chart_summaries = []
-    chart_guides = []
     chart_totals = []
 
     for f in filieres_qs:
         chart_labels.append(f.name)
         chart_exams.append(f.exams_cnt)
         chart_summaries.append(f.summaries_cnt)
-        chart_guides.append(f.guides_cnt)
-        chart_totals.append(f.exams_cnt + f.summaries_cnt + f.guides_cnt)
+        chart_totals.append(f.exams_cnt + f.summaries_cnt)
 
     filiere_chart_json = json.dumps({
         "labels": chart_labels,
         "exams": chart_exams,
         "summaries": chart_summaries,
-        "guides": chart_guides,
         "totals": chart_totals,
     })
 
@@ -251,7 +251,7 @@ def admin_dashboard_view(request):
         "exams_count": exams_count,
         "published_exams": published_exams,
         "summaries_count": summaries_count,
-        "guides_count": guides_count,
+        "corrections_count": corrections_count,
         "articles_count": articles_count,
         "active_pass_count": active_pass_count,
         "recent_exams": recent_exams,
@@ -956,33 +956,13 @@ def summary_delete_view(request, pk):
 
 @contributor_required
 def guide_list_view(request):
-    """Liste et recherche des guides de matières."""
-    active_school, active_filiere, active_semester = get_active_academic_context(request)
-    q = request.GET.get("q", "").strip()
-
-    qs = Guide.objects.select_related("subject", "subject__semester__filiere")
-    if active_school:
-        qs = qs.filter(subject__semester__filiere__school=active_school)
-    if active_filiere:
-        qs = qs.filter(subject__semester__filiere=active_filiere)
-
-    if q:
-        qs = qs.filter(Q(title__icontains=q) | Q(subject__name__icontains=q))
-
-    guides_list = qs.order_by("-created_at")
-
-    context = {
-        "active_school": active_school,
-        "active_filiere": active_filiere,
-        "guides": guides_list,
-        "q": q,
-    }
-    return render(request, "contributors/guides/list.html", context)
+    """Les guides ont été retirés de la plateforme (ressources : épreuves, corrigés, résumés)."""
+    return redirect("contributors:summary_list")
 
 
 @contributor_required
 def guide_create_view(request):
-    """Créer un nouveau guide méthodologique."""
+    """Créer un guide (déprécié - redirige vers résumés)."""
     active_school, active_filiere, active_semester = get_active_academic_context(request)
 
     if request.method == "POST":
@@ -992,59 +972,18 @@ def guide_create_view(request):
             gd.author = request.user
             gd.save()
             messages.success(request, f"Guide « {gd.title} » créé avec succès.")
-            return redirect("contributors:guide_list")
-    else:
-        form = GuideAdminForm(active_filiere=active_filiere)
-
-    context = {
-        "active_school": active_school,
-        "active_filiere": active_filiere,
-        "form": form,
-        "is_create": True,
-    }
-    return render(request, "contributors/guides/form.html", context)
+            return redirect("contributors:summary_list")
+    return redirect("contributors:summary_list")
 
 
 @contributor_required
 def guide_edit_view(request, pk):
-    """Modifier un guide méthodologique existant."""
-    gd = get_object_or_404(Guide.objects.select_related("subject__semester__filiere__school"), pk=pk)
-    if not check_school_permission(request.user, gd.subject.semester.filiere.school):
-        raise PermissionDenied("Vous n'êtes pas autorisé à modifier ce guide.")
-
-    active_school, active_filiere, active_semester = get_active_academic_context(request)
-
-    if request.method == "POST":
-        form = GuideAdminForm(request.POST, request.FILES, instance=gd, active_filiere=gd.subject.semester.filiere)
-        if form.is_valid():
-            form.save()
-            messages.success(request, f"Guide « {gd.title} » mis à jour avec succès.")
-            return redirect("contributors:guide_list")
-    else:
-        form = GuideAdminForm(instance=gd, active_filiere=gd.subject.semester.filiere)
-
-    context = {
-        "active_school": active_school,
-        "active_filiere": active_filiere,
-        "form": form,
-        "guide_obj": gd,
-        "is_create": False,
-    }
-    return render(request, "contributors/guides/form.html", context)
+    return redirect("contributors:summary_list")
 
 
 @contributor_required
 def guide_toggle_status_view(request, pk):
-    """Basculer le statut de publication d'un guide."""
-    if request.method == "POST":
-        gd = get_object_or_404(Guide.objects.select_related("subject__semester__filiere__school"), pk=pk)
-        if not check_school_permission(request.user, gd.subject.semester.filiere.school):
-            raise PermissionDenied("Vous n'êtes pas autorisé à modifier ce guide.")
-
-        gd.publication_status = "DRAFT" if gd.publication_status == "PUBLISHED" else "PUBLISHED"
-        gd.save()
-        messages.success(request, f"Statut du guide « {gd.title} » mis à jour.")
-    return redirect("contributors:guide_list")
+    return redirect("contributors:summary_list")
 
 
 @contributor_required

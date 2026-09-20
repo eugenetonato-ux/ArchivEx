@@ -196,12 +196,12 @@
             <!-- 3 MINI STATS CARDS EN BAS DU GRAPHIQUE (IDENTIQUE AU MODÈLE FUSION) -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-5 border-t border-slate-100 dark:border-slate-800/80 mt-5">
                 <div class="flex items-center space-x-3 p-3 rounded-2xl bg-slate-50/80 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-                    <div class="w-9 h-9 rounded-xl bg-pink-500/10 text-pink-500 flex items-center justify-center text-sm shrink-0">
-                        <i class="fa-solid fa-graduation-cap"></i>
+                    <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-sm shrink-0">
+                        <i class="fa-solid fa-check-double"></i>
                     </div>
                     <div>
-                        <p class="text-sm font-black text-slate-900 dark:text-white">{{ guides_count }}</p>
-                        <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400">Guides méthodologiques</p>
+                        <p class="text-sm font-black text-slate-900 dark:text-white">{{ corrections_count }}</p>
+                        <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400">Corrigés types</p>
                     </div>
                 </div>
 
@@ -260,18 +260,18 @@
                     <p id="examPercent" class="text-sm font-black text-slate-900 dark:text-white">--%</p>
                 </div>
                 <div class="space-y-1">
+                    <div class="flex items-center justify-center space-x-1 text-[11px] font-bold text-emerald-500">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span>Corrigés</span>
+                    </div>
+                    <p id="correctionPercent" class="text-sm font-black text-slate-900 dark:text-white">--%</p>
+                </div>
+                <div class="space-y-1">
                     <div class="flex items-center justify-center space-x-1 text-[11px] font-bold text-cyan-500">
                         <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
                         <span>Résumés</span>
                     </div>
                     <p id="summaryPercent" class="text-sm font-black text-slate-900 dark:text-white">--%</p>
-                </div>
-                <div class="space-y-1">
-                    <div class="flex items-center justify-center space-x-1 text-[11px] font-bold text-pink-500">
-                        <span class="w-2 h-2 rounded-full bg-pink-500"></span>
-                        <span>Guides</span>
-                    </div>
-                    <p id="guidePercent" class="text-sm font-black text-slate-900 dark:text-white">--%</p>
                 </div>
             </div>
         </div>
@@ -516,35 +516,35 @@ document.addEventListener("DOMContentLoaded", function() {
     const ctxDonut = document.getElementById("contentDonutChart");
     if (ctxDonut) {
         const examsCount = Number("{{ exams_count|default:0 }}");
+        const correctionsCount = Number("{{ corrections_count|default:0 }}");
         const summariesCount = Number("{{ summaries_count|default:0 }}");
-        const guidesCount = Number("{{ guides_count|default:0 }}");
-        const total = examsCount + summariesCount + guidesCount;
+        const total = examsCount + correctionsCount + summariesCount;
 
         const totalElem = document.getElementById("donutTotalCount");
         if (totalElem) totalElem.textContent = total;
 
         const examPct = total > 0 ? Math.round((examsCount / total) * 100) : 0;
+        const corrPct = total > 0 ? Math.round((correctionsCount / total) * 100) : 0;
         const sumPct = total > 0 ? Math.round((summariesCount / total) * 100) : 0;
-        const guidePct = total > 0 ? Math.round((guidesCount / total) * 100) : 0;
 
         const examEl = document.getElementById("examPercent");
+        const corrEl = document.getElementById("correctionPercent");
         const sumEl = document.getElementById("summaryPercent");
-        const guideEl = document.getElementById("guidePercent");
 
         if (examEl) examEl.textContent = examPct + "%";
+        if (corrEl) corrEl.textContent = corrPct + "%";
         if (sumEl) sumEl.textContent = sumPct + "%";
-        if (guideEl) guideEl.textContent = guidePct + "%";
 
         new Chart(ctxDonut, {
             type: 'doughnut',
             data: {
-                labels: ['Épreuves', 'Résumés', 'Guides'],
+                labels: ['Épreuves', 'Corrigés', 'Fiches Résumés'],
                 datasets: [{
-                    data: total > 0 ? [examsCount, summariesCount, guidesCount] : [1, 1, 1],
+                    data: total > 0 ? [examsCount, correctionsCount, summariesCount] : [1, 1, 1],
                     backgroundColor: [
                         '#7C4DFF', // Purple
-                        '#00B4D8', // Cyan
-                        '#FF3366'  // Pink
+                        '#10B981', // Emerald
+                        '#00B4D8'  // Cyan
                     ],
                     borderWidth: 0,
                     hoverOffset: 4

@@ -634,22 +634,22 @@ document.addEventListener('DOMContentLoaded', function() {
 </section>
 {% endif %}
 
-<!-- 7. STUDENT GUIDANCE / KNOWLEDGE CENTER -->
+<!-- 7. FICHES DE RÉSUMÉ DE COURS -->
 <section class="py-16 bg-[#071A49] text-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
         <div class="md:col-span-8 space-y-4">
-            <span class="text-xs font-black uppercase tracking-widest text-[#60A5FA] block">Guide étudiant et méthodologie</span>
+            <span class="text-xs font-black uppercase tracking-widest text-[#60A5FA] block">Fiches de résumé & synthèses clés</span>
             <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                Accompagner les étudiants au-delà des simples documents
+                Révisez l'essentiel de chaque matière en un coup d'œil
             </h2>
             <p class="text-slate-200 text-xs sm:text-sm leading-relaxed font-medium">
-                Avoir accès aux épreuves ne suffit pas : encore faut-il savoir comment les travailler efficacement. Notre guide étudiant propose des conseils pratiques sur la prise de notes, l'organisation du temps de travail et la gestion du stress lors des examens.
+                Complétez votre préparation aux examens grâce à nos fiches de résumé PDF officielles. Synthèses concises des chapitres, formules incontournables et notions clés élaborées pour chaque Unité d'Enseignement.
             </p>
         </div>
         <div class="md:col-span-4 flex justify-start md:justify-end">
-            <a href="{% url 'content:student_guide' %}" class="btn-secondary text-xs sm:text-sm px-6 py-3.5 font-black rounded-xl flex items-center space-x-2 bg-white text-[#071A49] hover:bg-slate-100 transition-colors shadow-md">
-                <i class="fa-solid fa-graduation-cap text-blue-600" aria-hidden="true"></i>
-                <span>Consulter le guide étudiant</span>
+            <a href="{% url 'content:summary_list' %}" class="btn-secondary text-xs sm:text-sm px-6 py-3.5 font-black rounded-xl flex items-center space-x-2 bg-white text-[#071A49] hover:bg-slate-100 transition-colors shadow-md">
+                <i class="fa-solid fa-file-invoice text-blue-600" aria-hidden="true"></i>
+                <span>Consulter les fiches résumés</span>
             </a>
         </div>
     </div>
