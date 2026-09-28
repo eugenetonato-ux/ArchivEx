@@ -922,7 +922,7 @@ html, body, button, input, select, textarea {
         transform: scale(1) translate(0, 0);
     }
     100% {
-        transform: scale(1.08) translate(-1.5%, -1%);
+        transform: scale(1.05) translate(-1%, -0.5%);
     }
 }
 
@@ -945,24 +945,26 @@ html, body, button, input, select, textarea {
     position: absolute;
     inset: 0;
     background-size: cover;
-    background-position: center 30%;
-    animation: univKenburns 24s ease-in-out infinite alternate;
+    background-position: center 28%;
+    animation: univKenburns 28s ease-in-out infinite alternate;
     pointer-events: none;
     will-change: transform;
+    image-rendering: -webkit-optimize-contrast;
+    filter: brightness(1.04) contrast(1.06);
 }
 
 .univ-hero-voile {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: linear-gradient(90deg, rgba(7, 26, 73, 0.94) 0%, rgba(7, 26, 73, 0.72) 48%, rgba(7, 26, 73, 0.35) 100%),
-                linear-gradient(0deg, rgba(7, 26, 73, 0.98) 0%, rgba(7, 26, 73, 0.65) 50%, rgba(7, 26, 73, 0.25) 100%);
+    background: linear-gradient(90deg, rgba(7, 26, 73, 0.84) 0%, rgba(7, 26, 73, 0.45) 45%, rgba(7, 26, 73, 0.05) 100%),
+                linear-gradient(0deg, rgba(7, 26, 73, 0.90) 0%, rgba(7, 26, 73, 0.35) 55%, rgba(7, 26, 73, 0) 100%);
 }
 
 @media (max-width: 768px) {
     .univ-hero-voile {
-        background: linear-gradient(90deg, rgba(7, 26, 73, 0.96) 0%, rgba(7, 26, 73, 0.78) 50%, rgba(7, 26, 73, 0.45) 100%),
-                    linear-gradient(0deg, rgba(7, 26, 73, 0.99) 0%, rgba(7, 26, 73, 0.85) 45%, rgba(7, 26, 73, 0.5) 100%) !important;
+        background: linear-gradient(90deg, rgba(7, 26, 73, 0.88) 0%, rgba(7, 26, 73, 0.60) 50%, rgba(7, 26, 73, 0.20) 100%),
+                    linear-gradient(0deg, rgba(7, 26, 73, 0.94) 0%, rgba(7, 26, 73, 0.55) 50%, rgba(7, 26, 73, 0.10) 100%) !important;
     }
 }
 

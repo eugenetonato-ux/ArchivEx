@@ -72,224 +72,114 @@ document.addEventListener('DOMContentLoaded', function() {
         <!-- LEFT COLUMN: EDITORIAL CONTENT & ACTIONS -->
         <div class="lg:col-span-6 text-center lg:text-left">
             <!-- Top Badge Pill -->
-            <div class="inline-flex items-center space-x-2.5 px-4 py-1.5 rounded-full bg-blue-500/20 border border-blue-400/40 text-blue-200 text-xs font-black mb-5 backdrop-blur-md shadow-inner">
-                <span class="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee] animate-pulse"></span>
-                <span>ArchivEx{% if current_school %} · {{ current_school.name }}{% else %} · Plateforme Académique des Épreuves{% endif %}</span>
+            <div class="inline-flex items-center space-x-2.5 px-4 py-1.5 rounded-full bg-blue-600/30 border border-blue-400/50 text-cyan-200 text-xs font-black mb-5 backdrop-blur-md shadow-md">
+                <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_10px_#22d3ee] animate-pulse"></span>
+                <span>ArchivEx{% if current_school %} · {{ current_school.name }}{% else %} · Banque Nationale d'Épreuves & Examens{% endif %}</span>
             </div>
 
-            <!-- Main Heading (Style univservices.bj) -->
-            <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white mb-4 leading-[1.05] drop-shadow-md">
+            <!-- Main Heading (Ultra-Sharp, Vivid Accent) -->
+            <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white mb-4 leading-[1.05] drop-shadow-[0_4px_16px_rgba(0,0,0,0.7)]">
                 Toutes vos épreuves,<br>
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-sky-200 to-indigo-200">une seule plateforme.</span>
+                <span class="text-[#38BDF8] drop-shadow-[0_4px_25px_rgba(56,189,248,0.6)]">une seule plateforme.</span>
             </h1>
 
-            <!-- Subtitle -->
-            <p class="max-w-xl mx-auto lg:mx-0 text-sm sm:text-base text-slate-200 mb-6 leading-relaxed font-semibold drop-shadow-sm">
+            <!-- Subtitle (Pure High-Contrast White) -->
+            <p class="max-w-xl mx-auto lg:mx-0 text-sm sm:text-base text-white font-semibold mb-7 leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
                 Centralisez vos anciennes épreuves, corrigés détaillés et fiches de synthèse pour réussir sereinement chaque semestre dans vos universités et grandes écoles.
             </p>
 
-            <!-- MOBILE LAPTOP MOCKUP (Visible only on mobile/tablet) -->
-            <div class="flex lg:hidden justify-center mb-8">
-                <div class="relative w-full max-w-[560px] mx-auto pt-2 pb-2">
-                    <div class="relative mx-auto border-[8px] border-[#1E293B] rounded-t-2xl bg-[#1E293B] shadow-2xl overflow-hidden max-w-[500px]">
-                        <div class="bg-slate-50 text-slate-800 text-[11px] aspect-[16/10] overflow-hidden flex flex-col select-none">
-                            <!-- Screen Top Navbar -->
-                            <div class="bg-white border-b border-slate-200 px-3 py-1.5 flex items-center justify-between shrink-0">
-                                <div class="flex items-center space-x-2">
-                                    <div class="w-5 h-5 rounded-lg bg-[#071A49] flex items-center justify-center text-[10px] text-white font-black">A</div>
-                                    <span class="font-black text-[#071A49] text-[11px]">Archiv<span class="text-[#2563EB]">Ex</span></span>
-                                </div>
-                                <div class="bg-slate-100 rounded-lg px-2 py-0.5 flex items-center space-x-1.5 text-[9px] text-slate-600 font-medium w-44">
-                                    <i class="fa-solid fa-magnifying-glass text-[8px] text-slate-400"></i>
-                                    <span class="truncate">Rechercher une épreuve...</span>
-                                </div>
-                                <div class="flex items-center space-x-1.5">
-                                    <div class="w-5 h-5 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-[9px] font-black">É</div>
-                                </div>
-                            </div>
-
-                            <!-- Screen Body -->
-                            <div class="flex-grow flex overflow-hidden">
-                                <!-- Sidebar -->
-                                <div class="w-28 bg-white border-r border-slate-200 p-2 space-y-1 shrink-0 text-[9px]">
-                                    <div class="bg-blue-50 text-[#2563EB] font-black p-1.5 rounded-lg flex items-center space-x-1.5">
-                                        <i class="fa-solid fa-house text-[9px]"></i>
-                                        <span class="truncate">Accueil</span>
-                                    </div>
-                                    <div class="text-slate-700 font-bold p-1.5 rounded-lg flex items-center space-x-1.5">
-                                        <i class="fa-solid fa-book-open text-[9px] text-slate-400"></i>
-                                        <span class="truncate">Matières</span>
-                                    </div>
-                                    <div class="text-slate-700 font-bold p-1.5 rounded-lg flex items-center space-x-1.5">
-                                        <i class="fa-solid fa-id-card text-[9px] text-slate-400"></i>
-                                        <span class="truncate">Pass</span>
-                                    </div>
-                                </div>
-
-                                <!-- Main Content -->
-                                <div class="flex-grow p-2.5 bg-slate-50 overflow-hidden">
-                                    <div class="mb-2">
-                                        <h4 class="font-black text-[#071A49] text-xs leading-tight">Espace étudiant</h4>
-                                        <p class="text-[9px] text-slate-600 font-semibold">Toutes vos épreuves classées.</p>
-                                    </div>
-
-                                    <!-- Mini Stat Cards -->
-                                    <div class="grid grid-cols-3 gap-1.5 mb-2">
-                                        <div class="bg-white p-1.5 rounded-lg border border-slate-200 shadow-2xs flex items-center space-x-1.5">
-                                            <div class="w-5 h-5 rounded bg-blue-100 text-[#2563EB] flex items-center justify-center font-black text-[9px]">EP</div>
-                                            <div>
-                                                <span class="font-black text-xs text-[#071A49] block leading-none">{{ exams_count|default:"0" }}</span>
-                                                <span class="text-[7px] text-slate-600 font-bold block">Épreuves</span>
-                                            </div>
-                                        </div>
-                                        <div class="bg-white p-1.5 rounded-lg border border-slate-200 shadow-2xs flex items-center space-x-1.5">
-                                            <div class="w-5 h-5 rounded bg-amber-100 text-amber-800 flex items-center justify-center font-black text-[9px]">UE</div>
-                                            <div>
-                                                <span class="font-black text-xs text-[#071A49] block leading-none">{{ subjects_count|default:"0" }}</span>
-                                                <span class="text-[7px] text-slate-600 font-bold block">Matières</span>
-                                            </div>
-                                        </div>
-                                        <div class="bg-white p-1.5 rounded-lg border border-slate-200 shadow-2xs flex items-center space-x-1.5">
-                                            <div class="w-5 h-5 rounded bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-[9px]">OK</div>
-                                            <div>
-                                                <span class="font-black text-xs text-emerald-800 block leading-none">100%</span>
-                                                <span class="text-[7px] text-slate-600 font-bold block">Conforme</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Cards row -->
-                                    <div class="grid grid-cols-3 gap-1.5">
-                                        <div class="bg-white p-2 rounded-lg border border-slate-200 shadow-2xs space-y-1">
-                                            <div class="flex items-center justify-between">
-                                                <i class="fa-solid fa-file-lines text-slate-500 text-[9px]"></i>
-                                                <span class="text-[7px] font-black bg-amber-500 text-white px-1.5 py-0.2 rounded">Premium</span>
-                                            </div>
-                                            <p class="font-black text-[#071A49] text-[9px] leading-tight truncate">Base de données</p>
-                                            <p class="text-[7px] text-slate-600 font-semibold">Licence • S4</p>
-                                        </div>
-
-                                        <div class="bg-white p-2 rounded-lg border border-slate-200 shadow-2xs space-y-1">
-                                            <div class="flex items-center justify-between">
-                                                <i class="fa-solid fa-file-lines text-slate-500 text-[9px]"></i>
-                                                <span class="text-[7px] font-black bg-emerald-600 text-white px-1.5 py-0.2 rounded">Gratuit</span>
-                                            </div>
-                                            <p class="font-black text-[#071A49] text-[9px] leading-tight truncate">Algorithmique</p>
-                                            <p class="text-[7px] text-slate-600 font-semibold">Licence • S3</p>
-                                        </div>
-
-                                        <div class="bg-white p-2 rounded-lg border border-slate-200 shadow-2xs space-y-1">
-                                            <div class="flex items-center justify-between">
-                                                <i class="fa-solid fa-book-open text-slate-500 text-[9px]"></i>
-                                                <span class="text-[7px] font-black bg-blue-600 text-white px-1.5 py-0.2 rounded">Résumé</span>
-                                            </div>
-                                            <p class="font-black text-[#071A49] text-[9px] leading-tight truncate">Réseaux</p>
-                                            <p class="text-[7px] text-slate-600 font-semibold">Licence • S5</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Laptop Base -->
-                    <div class="w-full max-w-[520px] h-3.5 bg-gradient-to-b from-[#334155] to-[#0F172A] rounded-b-xl mx-auto shadow-lg relative -mt-0.5 border-t border-slate-600/40">
-                        <div class="w-16 h-1 bg-slate-400/50 rounded-full mx-auto -mt-0.5"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- QUICK SEARCH FORM HERO CARD (GLASSMORPHISM STYLE) -->
+            <!-- QUICK SEARCH FORM HERO CARD (HIGH CONTRAST & READABLE) -->
             <form action="{% url 'academics:global_search' %}" method="get" class="mb-7 max-w-xl mx-auto lg:mx-0">
-                <div class="relative flex items-center bg-white/10 hover:bg-white/15 focus-within:bg-white/20 border border-white/25 focus-within:border-blue-400 rounded-2xl p-1.5 backdrop-blur-xl shadow-2xl transition-all">
-                    <div class="pl-3.5 pr-2 text-blue-200">
+                <div class="relative flex items-center bg-white border-2 border-white focus-within:border-[#38BDF8] rounded-2xl p-1.5 shadow-[0_15px_35px_rgba(0,0,0,0.45)] transition-all">
+                    <div class="pl-3.5 pr-2 text-slate-500">
                         <i class="fa-solid fa-magnifying-glass text-base"></i>
                     </div>
-                    <input type="text" name="q" placeholder="Rechercher une épreuve, une matière, un sujet..." class="w-full bg-transparent border-0 focus:ring-0 text-xs sm:text-sm font-bold text-white placeholder-slate-300 py-2.5 px-1 focus:outline-none" required>
-                    <button type="submit" class="bg-gradient-to-r from-[#2563EB] to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-black text-xs sm:text-sm px-5 py-2.5 rounded-xl transition-all shrink-0 flex items-center space-x-1.5 shadow-lg shadow-blue-600/40 active:scale-95">
+                    <input type="text" name="q" placeholder="Rechercher une épreuve, une matière, un sujet..." class="w-full bg-transparent border-0 focus:ring-0 text-xs sm:text-sm font-bold text-slate-900 placeholder-slate-400 py-2.5 px-1 focus:outline-none" required>
+                    <button type="submit" class="bg-[#2563EB] hover:bg-blue-700 text-white font-black text-xs sm:text-sm px-6 py-2.5 rounded-xl transition-all shrink-0 flex items-center space-x-1.5 shadow-md shadow-blue-500/40 active:scale-95">
                         <span>Rechercher</span>
                         <i class="fa-solid fa-arrow-right text-xs"></i>
                     </button>
                 </div>
             </form>
 
-            <!-- 3 Mini Feature Cards (Clean, Glassmorphism, High Contrast) -->
+            <!-- 3 Mini Feature Cards (Pure White, Ultra-Crisp, High Contrast) -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 max-w-xl mx-auto lg:mx-0 text-left">
                 <!-- Card 1: Épreuves -->
-                <div class="bg-white/10 hover:bg-white/15 border border-white/15 rounded-2xl p-3.5 flex items-center space-x-3 shadow-xs backdrop-blur-md transition-colors">
-                    <div class="w-10 h-10 rounded-xl bg-blue-500/30 border border-blue-400/40 text-blue-200 flex items-center justify-center shrink-0 text-lg font-black">
+                <div class="bg-white hover:bg-slate-50 rounded-2xl p-3.5 flex items-center space-x-3 shadow-lg shadow-black/25 border border-white transition-transform hover:-translate-y-0.5">
+                    <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 text-base font-black shadow-md shadow-blue-600/30">
                         <i class="fa-solid fa-book-open"></i>
                     </div>
                     <div>
-                        <h4 class="text-xs font-black text-white leading-snug">Épreuves</h4>
-                        <p class="text-[11px] text-blue-200 font-bold">Sessions passées</p>
+                        <h4 class="text-xs font-black text-[#071A49] leading-snug">Épreuves</h4>
+                        <p class="text-[11px] text-slate-600 font-bold">Sessions passées</p>
                     </div>
                 </div>
 
                 <!-- Card 2: Corrigés -->
-                <div class="bg-white/10 hover:bg-white/15 border border-white/15 rounded-2xl p-3.5 flex items-center space-x-3 shadow-xs backdrop-blur-md transition-colors">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 flex items-center justify-center shrink-0 text-lg font-black">
+                <div class="bg-white hover:bg-slate-50 rounded-2xl p-3.5 flex items-center space-x-3 shadow-lg shadow-black/25 border border-white transition-transform hover:-translate-y-0.5">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 text-base font-black shadow-md shadow-emerald-600/30">
                         <i class="fa-solid fa-file-circle-check"></i>
                     </div>
                     <div>
-                        <h4 class="text-xs font-black text-white leading-snug">Corrigés</h4>
-                        <p class="text-[11px] text-emerald-200 font-bold">Détaillés pas à pas</p>
+                        <h4 class="text-xs font-black text-[#064E3B] leading-snug">Corrigés</h4>
+                        <p class="text-[11px] text-slate-600 font-bold">Détaillés pas à pas</p>
                     </div>
                 </div>
 
                 <!-- Card 3: Résumés -->
-                <div class="bg-white/10 hover:bg-white/15 border border-white/15 rounded-2xl p-3.5 flex items-center space-x-3 shadow-xs backdrop-blur-md transition-colors">
-                    <div class="w-10 h-10 rounded-xl bg-purple-500/30 border border-purple-400/40 text-purple-200 flex items-center justify-center shrink-0 text-lg font-black">
+                <div class="bg-white hover:bg-slate-50 rounded-2xl p-3.5 flex items-center space-x-3 shadow-lg shadow-black/25 border border-white transition-transform hover:-translate-y-0.5">
+                    <div class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 text-base font-black shadow-md shadow-purple-600/30">
                         <i class="fa-solid fa-file-lines"></i>
                     </div>
                     <div>
-                        <h4 class="text-xs font-black text-white leading-snug">Résumés</h4>
-                        <p class="text-[11px] text-purple-200 font-bold">Fiches de révision</p>
+                        <h4 class="text-xs font-black text-[#4C1D95] leading-snug">Résumés</h4>
+                        <p class="text-[11px] text-slate-600 font-bold">Fiches de révision</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Action Buttons -->
+            <!-- Action Buttons (Punchy, High Contrast, univservices.bj inspired) -->
             <div class="flex flex-col sm:flex-row flex-wrap items-center justify-center lg:justify-start gap-3.5">
                 {% if user.is_authenticated and user.is_staff or user.is_authenticated and user.is_superuser or user.is_authenticated and user.contributor_profile %}
                     <a href="{% url 'contributors:admin_dashboard' %}" class="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm px-7 py-3.5 rounded-2xl shadow-lg shadow-amber-500/25 flex items-center justify-center space-x-2.5 transition-colors">
                         <i class="fa-solid fa-user-shield"></i>
                         <span>Espace d'administration</span>
                     </a>
-                    <a href="{% url 'accounts:dashboard' %}" class="w-full sm:w-auto bg-gradient-to-r from-[#2563EB] to-indigo-600 hover:brightness-110 text-white font-black text-sm px-7 py-3.5 rounded-2xl shadow-xl shadow-blue-600/30 border border-blue-400/40 flex items-center justify-center space-x-2.5 transition-all">
-                        <i class="fa-solid fa-gauge-high text-amber-300 text-base"></i>
+                    <a href="{% url 'accounts:dashboard' %}" class="w-full sm:w-auto bg-[#FFFFFF] hover:bg-slate-100 text-[#071A49] font-black text-sm px-7 py-3.5 rounded-2xl shadow-xl shadow-black/30 flex items-center justify-center space-x-2.5 transition-all">
+                        <i class="fa-solid fa-gauge-high text-blue-600 text-base"></i>
                         <span>Mon tableau de bord</span>
-                        <i class="fa-solid fa-arrow-right text-xs text-blue-200"></i>
+                        <i class="fa-solid fa-arrow-right text-xs text-blue-600"></i>
                     </a>
                 {% elif user.is_authenticated %}
-                    <a href="{% url 'accounts:dashboard' %}" class="w-full sm:w-auto bg-gradient-to-r from-[#2563EB] to-indigo-600 hover:brightness-110 text-white font-black text-sm px-7 py-3.5 rounded-2xl shadow-xl shadow-blue-600/30 border border-blue-400/40 flex items-center justify-center space-x-2.5 transition-all">
-                        <i class="fa-solid fa-gauge-high text-amber-300 text-base"></i>
+                    <a href="{% url 'accounts:dashboard' %}" class="w-full sm:w-auto bg-[#FFFFFF] hover:bg-slate-100 text-[#071A49] font-black text-sm px-7 py-3.5 rounded-2xl shadow-xl shadow-black/30 flex items-center justify-center space-x-2.5 transition-all">
+                        <i class="fa-solid fa-gauge-high text-blue-600 text-base"></i>
                         <span>Mon tableau de bord</span>
-                        <i class="fa-solid fa-arrow-right text-xs text-blue-200"></i>
+                        <i class="fa-solid fa-arrow-right text-xs text-blue-600"></i>
                     </a>
-                    <a href="{% url 'academics:filieres' %}" class="w-full sm:w-auto bg-white/15 hover:bg-white/25 text-white border border-white/30 font-black text-sm px-7 py-3.5 rounded-2xl shadow-lg backdrop-blur-md flex items-center justify-center space-x-2.5 transition-colors">
+                    <a href="{% url 'academics:filieres' %}" class="w-full sm:w-auto bg-[#2563EB] hover:bg-blue-700 text-white font-black text-sm px-7 py-3.5 rounded-2xl shadow-lg shadow-blue-500/40 flex items-center justify-center space-x-2.5 transition-colors">
                         <i class="fa-solid fa-graduation-cap"></i>
                         <span>Explorer les matières</span>
                     </a>
-                    <a href="{% url 'academics:about' %}" class="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border border-white/20 font-black text-sm px-6 py-3.5 rounded-2xl shadow-xs backdrop-blur-md flex items-center justify-center space-x-2.5 transition-colors">
-                        <div class="w-5 h-5 rounded-full border border-white/40 flex items-center justify-center text-[10px]">
+                    <a href="{% url 'academics:about' %}" class="w-full sm:w-auto bg-white/20 hover:bg-white/30 text-white border border-white/40 font-black text-sm px-6 py-3.5 rounded-2xl shadow-xs backdrop-blur-md flex items-center justify-center space-x-2.5 transition-colors">
+                        <div class="w-5 h-5 rounded-full border border-white/60 flex items-center justify-center text-[10px]">
                             <i class="fa-solid fa-play text-[8px] text-white ml-0.5"></i>
                         </div>
                         <span>Découvrir la plateforme</span>
                     </a>
                 {% else %}
                     <!-- BOUTONS DIRECTS POUR VISITEUR : S'INSCRIRE OU SE CONNECTER -->
-                    <a href="{% url 'accounts:register' %}" class="w-full sm:w-auto bg-gradient-to-r from-[#2563EB] to-indigo-600 hover:from-blue-600 hover:to-indigo-500 text-white font-black text-sm px-7 py-3.5 rounded-2xl shadow-xl shadow-blue-600/40 border border-blue-300/30 flex items-center justify-center space-x-2.5 transition-all hover:scale-105 active:scale-95">
-                        <i class="fa-solid fa-user-plus text-base"></i>
+                    <a href="{% url 'accounts:register' %}" class="w-full sm:w-auto bg-white hover:bg-slate-100 text-[#071A49] font-black text-sm sm:text-base px-8 py-3.5 rounded-2xl shadow-[0_12px_30px_rgba(0,0,0,0.35)] flex items-center justify-center space-x-2.5 transition-all hover:scale-105 active:scale-95">
+                        <i class="fa-solid fa-user-plus text-blue-600 text-base"></i>
                         <span>S'inscrire gratuitement</span>
                     </a>
 
-                    <a href="{% url 'accounts:login' %}" class="w-full sm:w-auto bg-white/15 hover:bg-white/25 text-white border border-white/30 hover:border-white/50 font-black text-sm px-6 py-3.5 rounded-2xl shadow-lg backdrop-blur-md flex items-center justify-center space-x-2.5 transition-all">
+                    <a href="{% url 'accounts:login' %}" class="w-full sm:w-auto bg-[#2563EB] hover:bg-blue-700 text-white font-black text-sm sm:text-base px-7 py-3.5 rounded-2xl shadow-[0_12px_25px_rgba(37,99,235,0.4)] border border-blue-300/40 flex items-center justify-center space-x-2.5 transition-all hover:scale-105 active:scale-95">
                         <i class="fa-solid fa-arrow-right-to-bracket text-cyan-300"></i>
                         <span>Se connecter</span>
                     </a>
 
-                    <a href="{% url 'exams:free_liste' %}" class="w-full sm:w-auto bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 font-bold text-xs sm:text-sm px-5 py-3.5 rounded-2xl flex items-center justify-center space-x-2 backdrop-blur-md transition-colors">
-                        <i class="fa-solid fa-book-open text-emerald-300"></i>
+                    <a href="{% url 'exams:free_liste' %}" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm px-6 py-3.5 rounded-2xl flex items-center justify-center space-x-2 shadow-lg shadow-emerald-900/30 transition-all hover:scale-105 active:scale-95">
+                        <i class="fa-solid fa-book-open text-emerald-200"></i>
                         <span>Épreuves gratuites</span>
                     </a>
                 {% endif %}
