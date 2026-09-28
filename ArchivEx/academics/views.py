@@ -110,16 +110,14 @@ def change_school_view(request, school_id):
 
     school = get_object_or_404(School, pk=school_id, is_active=True)
 
-    # Pour un étudiant standard connecté, son école est fixée par son inscription
-    is_pure_student = (
-        request.user.is_authenticated and
-        hasattr(request.user, "profile") and
-        not (request.user.is_staff or request.user.is_superuser or getattr(request.user, "contributor_profile", None))
-    )
-    if not is_pure_student:
-        request.session["current_school_id"] = school.id
-        if request.user.is_authenticated and (request.user.is_staff or getattr(request.user, "contributor_profile", None)):
-            request.session["admin_active_school_id"] = school.id
+    # Règle stricte : Un étudiant connecté ne peut jamais changer d'école dans sa session
+    if request.user.is_authenticated and not (request.user.is_staff or request.user.is_superuser):
+        next_url = request.GET.get("next") or request.META.get("HTTP_REFERER") or "/"
+        return redirect(next_url)
+
+    request.session["current_school_id"] = school.id
+    if request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser):
+        request.session["admin_active_school_id"] = school.id
 
     next_url = request.GET.get("next") or request.META.get("HTTP_REFERER") or "/"
     if "changer-ecole" in next_url:
