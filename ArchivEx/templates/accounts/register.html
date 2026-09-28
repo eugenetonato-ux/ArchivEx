@@ -4,69 +4,24 @@
 {% block title %}Créer un compte — ArchivEx{% endblock %}
 
 {% block content %}
-<!-- COSMIC DARK CONTAINER -->
-<div class="relative min-h-[calc(100vh-64px)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[#020510] overflow-hidden">
+<!-- AUTH CONTAINER (STYLE UNIVSERVICES.BJ AVEC FOND CONTEXTUEL ARCHIVEX) -->
+<div class="univ-hero-wrapper relative min-h-[calc(100vh-64px)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
 
-    <!-- NEON BLUE ORBITAL BACKGROUND (MATCHING REFERENCE DESIGN) -->
-    <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <!-- Ambient Radial Glow Orbs -->
-        <div class="absolute top-[12%] right-[10%] w-[550px] h-[550px] bg-gradient-to-br from-[#0066FF]/35 via-[#00D2FF]/20 to-transparent rounded-full blur-[130px] opacity-70"></div>
-        <div class="absolute bottom-[5%] left-[8%] w-[500px] h-[500px] bg-gradient-to-tr from-[#0044CC]/30 via-[#0099FF]/15 to-transparent rounded-full blur-[120px] opacity-60"></div>
-        <div class="absolute top-[45%] left-[48%] -translate-x-1/2 -translate-y-1/2 w-[750px] h-[750px] bg-[#0055ff]/15 rounded-full blur-[160px] pointer-events-none"></div>
+    <!-- Image d'arrière-plan animée (Ken Burns) contextualisée ArchivEx (Étudiants sur le campus) -->
+    <div class="univ-hero-bg" style="background-image: url('{% static 'images/hero_campus.webp' %}');"></div>
 
-        <!-- SVG Neon Curved Arcs & Ribbon -->
-        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 1000 1200" preserveAspectRatio="xMidYMid slice" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <linearGradient id="regNeonArcGrad1" x1="250" y1="0" x2="850" y2="1200" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stop-color="#00F0FF" stop-opacity="0.95" />
-                    <stop offset="35%" stop-color="#0088FF" stop-opacity="0.9" />
-                    <stop offset="70%" stop-color="#0055FF" stop-opacity="0.8" />
-                    <stop offset="100%" stop-color="#0022AA" stop-opacity="0.4" />
-                </linearGradient>
-
-                <linearGradient id="regNeonArcGrad2" x1="100" y1="300" x2="900" y2="1000" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.2" />
-                    <stop offset="50%" stop-color="#00C2FF" stop-opacity="0.75" />
-                    <stop offset="100%" stop-color="#1D4ED8" stop-opacity="0.1" />
-                </linearGradient>
-
-                <linearGradient id="regDiagonalRayGrad" x1="100" y1="220" x2="900" y2="980" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stop-color="#38BDF8" stop-opacity="0" />
-                    <stop offset="35%" stop-color="#60A5FA" stop-opacity="0.35" />
-                    <stop offset="55%" stop-color="#93C5FD" stop-opacity="0.5" />
-                    <stop offset="100%" stop-color="#2563EB" stop-opacity="0" />
-                </linearGradient>
-
-                <filter id="regNeonFilterGlow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="6" result="coloredBlur1" />
-                    <feGaussianBlur stdDeviation="18" result="coloredBlur2" />
-                    <feMerge>
-                        <feMergeNode in="coloredBlur2" />
-                        <feMergeNode in="coloredBlur1" />
-                        <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                </filter>
-            </defs>
-
-            <!-- Diagonal Accent Line -->
-            <line x1="80" y1="200" x2="920" y2="980" stroke="url(#regDiagonalRayGrad)" stroke-width="1.8" />
-
-            <!-- Primary Outer Glowing Ambient Sweep -->
-            <path d="M 480 -60 C 820 180 890 520 560 700 C 260 870 380 1140 520 1260" 
-                  stroke="url(#regNeonArcGrad1)" stroke-width="14" stroke-linecap="round" opacity="0.45" filter="url(#regNeonFilterGlow)" />
-
-            <!-- Primary Razor-Sharp Electric Arc -->
-            <path d="M 480 -60 C 820 180 890 520 560 700 C 260 870 380 1140 520 1260" 
-                  stroke="url(#regNeonArcGrad1)" stroke-width="3.5" stroke-linecap="round" />
-
-            <!-- Secondary Inner Crescent Arc -->
-            <path d="M 160 1260 C 90 980 220 680 520 590" 
-                  stroke="url(#regNeonArcGrad2)" stroke-width="2.5" stroke-linecap="round" opacity="0.7" />
-        </svg>
-    </div>
+    <!-- Voile dégradé bleu marine profond (Contraste et lisibilité maximale style univservices.bj) -->
+    <div class="univ-hero-voile"></div>
 
     <!-- CENTERED FROSTED GLASS REGISTRATION CARD -->
     <div class="relative z-10 w-full max-w-[540px] mx-auto">
+        <!-- Badge institutionnel ArchivEx -->
+        <div class="text-center mb-4">
+            <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-bold backdrop-blur-md shadow-inner">
+                <span class="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee] animate-pulse"></span>
+                <span>ArchivEx · Inscription Gratuite</span>
+            </div>
+        </div>
         <div class="cosmic-glass-card rounded-[28px] p-7 sm:p-9 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85),0_0_40px_-10px_rgba(0,102,255,0.25)] border border-white/[0.14] bg-[#070D1E]/60 backdrop-blur-2xl transition-all duration-300">
             
             <!-- TITLE: "Créer un compte" -->

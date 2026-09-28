@@ -59,27 +59,33 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- End KWABO -->
 {% endif %}
 
-<!-- 1. HERO SECTION -->
-<section class="relative overflow-hidden pt-8 pb-14 md:pt-14 md:pb-20 bg-gradient-to-b from-[#F4F8FE] via-[#EDF3FE] to-[#F6F9FF] border-b border-blue-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+<!-- 1. HERO SECTION (STYLE UNIVSERVICES.BJ AVEC FOND CONTEXTUEL ARCHIVEX) -->
+<section class="univ-hero-wrapper relative min-h-[580px] lg:min-h-[660px] pt-10 pb-20 md:pt-14 md:pb-24 border-b border-blue-900/40 text-white flex items-center">
+    <!-- Image d'arrière-plan animée (Ken Burns) contextualisée ArchivEx -->
+    <div class="univ-hero-bg" style="background-image: url('{% static 'images/hero_campus.webp' %}');"></div>
+
+    <!-- Voile dégradé bleu marine profond (Contraste et lisibilité maximale style univservices.bj) -->
+    <div class="univ-hero-voile"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center w-full">
 
         <!-- LEFT COLUMN: EDITORIAL CONTENT & ACTIONS -->
         <div class="lg:col-span-6 text-center lg:text-left">
             <!-- Top Badge Pill -->
-            <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#E1EEFE] border border-[#CDE1FE] text-[#2563EB] text-xs font-black mb-5 shadow-2xs">
-                <i class="fa-solid fa-graduation-cap"></i>
-                <span>ArchivEx{% if current_school %} · {{ current_school.name }}{% endif %}</span>
+            <div class="inline-flex items-center space-x-2.5 px-4 py-1.5 rounded-full bg-blue-500/20 border border-blue-400/40 text-blue-200 text-xs font-black mb-5 backdrop-blur-md shadow-inner">
+                <span class="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee] animate-pulse"></span>
+                <span>ArchivEx{% if current_school %} · {{ current_school.name }}{% else %} · Plateforme Académique des Épreuves{% endif %}</span>
             </div>
 
-            <!-- Main Heading (Sentence Case) -->
-            <h1 class="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#071A49] mb-4 leading-tight">
-                Prenez le contrôle de vos examens
-                avec <span class="text-[#2563EB]">ArchivEx</span>
+            <!-- Main Heading (Style univservices.bj) -->
+            <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white mb-4 leading-[1.05] drop-shadow-md">
+                Toutes vos épreuves,<br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-sky-200 to-indigo-200">une seule plateforme.</span>
             </h1>
 
             <!-- Subtitle -->
-            <p class="max-w-xl mx-auto lg:mx-0 text-sm sm:text-base text-slate-700 mb-6 leading-relaxed font-semibold">
-                La plateforme académique qui centralise vos anciennes épreuves, corrigés détaillés et fiches de synthèse pour réussir sereinement chaque semestre.
+            <p class="max-w-xl mx-auto lg:mx-0 text-sm sm:text-base text-slate-200 mb-6 leading-relaxed font-semibold drop-shadow-sm">
+                Centralisez vos anciennes épreuves, corrigés détaillés et fiches de synthèse pour réussir sereinement chaque semestre dans vos universités et grandes écoles.
             </p>
 
             <!-- MOBILE LAPTOP MOCKUP (Visible only on mobile/tablet) -->
@@ -192,52 +198,52 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
 
-            <!-- QUICK SEARCH FORM HERO CARD -->
+            <!-- QUICK SEARCH FORM HERO CARD (GLASSMORPHISM STYLE) -->
             <form action="{% url 'academics:global_search' %}" method="get" class="mb-7 max-w-xl mx-auto lg:mx-0">
-                <div class="relative flex items-center bg-white border-2 border-blue-200 hover:border-blue-400 focus-within:border-[#2563EB] rounded-2xl p-1.5 shadow-lg shadow-blue-500/10 transition-all">
-                    <div class="pl-3.5 pr-2 text-slate-500">
+                <div class="relative flex items-center bg-white/10 hover:bg-white/15 focus-within:bg-white/20 border border-white/25 focus-within:border-blue-400 rounded-2xl p-1.5 backdrop-blur-xl shadow-2xl transition-all">
+                    <div class="pl-3.5 pr-2 text-blue-200">
                         <i class="fa-solid fa-magnifying-glass text-base"></i>
                     </div>
-                    <input type="text" name="q" placeholder="Rechercher une épreuve, une matière, un sujet..." class="w-full bg-transparent border-0 focus:ring-0 text-xs sm:text-sm font-bold text-slate-800 placeholder-slate-400 py-2.5 px-1 focus:outline-none" required>
-                    <button type="submit" class="bg-[#2563EB] hover:bg-blue-700 text-white font-black text-xs sm:text-sm px-5 py-2.5 rounded-xl transition-all shrink-0 flex items-center space-x-1.5 shadow-md active:scale-95">
+                    <input type="text" name="q" placeholder="Rechercher une épreuve, une matière, un sujet..." class="w-full bg-transparent border-0 focus:ring-0 text-xs sm:text-sm font-bold text-white placeholder-slate-300 py-2.5 px-1 focus:outline-none" required>
+                    <button type="submit" class="bg-gradient-to-r from-[#2563EB] to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-black text-xs sm:text-sm px-5 py-2.5 rounded-xl transition-all shrink-0 flex items-center space-x-1.5 shadow-lg shadow-blue-600/40 active:scale-95">
                         <span>Rechercher</span>
                         <i class="fa-solid fa-arrow-right text-xs"></i>
                     </button>
                 </div>
             </form>
 
-            <!-- 3 Mini Feature Cards (Clean, Solid, Ultra-High Contrast, Sentence Case) -->
+            <!-- 3 Mini Feature Cards (Clean, Glassmorphism, High Contrast) -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 max-w-xl mx-auto lg:mx-0 text-left">
                 <!-- Card 1: Épreuves -->
-                <div class="bg-white border border-slate-200 hover:border-blue-300 rounded-2xl p-3.5 flex items-center space-x-3 shadow-xs transition-colors">
-                    <div class="w-10 h-10 rounded-xl bg-blue-100 text-[#2563EB] flex items-center justify-center shrink-0 text-lg font-black">
+                <div class="bg-white/10 hover:bg-white/15 border border-white/15 rounded-2xl p-3.5 flex items-center space-x-3 shadow-xs backdrop-blur-md transition-colors">
+                    <div class="w-10 h-10 rounded-xl bg-blue-500/30 border border-blue-400/40 text-blue-200 flex items-center justify-center shrink-0 text-lg font-black">
                         <i class="fa-solid fa-book-open"></i>
                     </div>
                     <div>
-                        <h4 class="text-xs font-black text-[#071A49] leading-snug">Épreuves</h4>
-                        <p class="text-[11px] text-slate-700 font-bold">Sessions passées</p>
+                        <h4 class="text-xs font-black text-white leading-snug">Épreuves</h4>
+                        <p class="text-[11px] text-blue-200 font-bold">Sessions passées</p>
                     </div>
                 </div>
 
                 <!-- Card 2: Corrigés -->
-                <div class="bg-white border border-slate-200 hover:border-emerald-300 rounded-2xl p-3.5 flex items-center space-x-3 shadow-xs transition-colors">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 text-lg font-black">
+                <div class="bg-white/10 hover:bg-white/15 border border-white/15 rounded-2xl p-3.5 flex items-center space-x-3 shadow-xs backdrop-blur-md transition-colors">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 flex items-center justify-center shrink-0 text-lg font-black">
                         <i class="fa-solid fa-file-circle-check"></i>
                     </div>
                     <div>
-                        <h4 class="text-xs font-black text-emerald-950 leading-snug">Corrigés</h4>
-                        <p class="text-[11px] text-slate-700 font-bold">Détaillés pas à pas</p>
+                        <h4 class="text-xs font-black text-white leading-snug">Corrigés</h4>
+                        <p class="text-[11px] text-emerald-200 font-bold">Détaillés pas à pas</p>
                     </div>
                 </div>
 
                 <!-- Card 3: Résumés -->
-                <div class="bg-white border border-slate-200 hover:border-purple-300 rounded-2xl p-3.5 flex items-center space-x-3 shadow-xs transition-colors">
-                    <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 text-lg font-black">
+                <div class="bg-white/10 hover:bg-white/15 border border-white/15 rounded-2xl p-3.5 flex items-center space-x-3 shadow-xs backdrop-blur-md transition-colors">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/30 border border-purple-400/40 text-purple-200 flex items-center justify-center shrink-0 text-lg font-black">
                         <i class="fa-solid fa-file-lines"></i>
                     </div>
                     <div>
-                        <h4 class="text-xs font-black text-purple-950 leading-snug">Résumés</h4>
-                        <p class="text-[11px] text-slate-700 font-bold">Fiches de révision</p>
+                        <h4 class="text-xs font-black text-white leading-snug">Résumés</h4>
+                        <p class="text-[11px] text-purple-200 font-bold">Fiches de révision</p>
                     </div>
                 </div>
             </div>
@@ -249,41 +255,41 @@ document.addEventListener('DOMContentLoaded', function() {
                         <i class="fa-solid fa-user-shield"></i>
                         <span>Espace d'administration</span>
                     </a>
-                    <a href="{% url 'accounts:dashboard' %}" class="w-full sm:w-auto bg-gradient-to-r from-[#071A49] via-[#0E2461] to-[#1D4ED8] hover:brightness-110 text-white font-black text-sm px-7 py-3.5 rounded-2xl shadow-xl shadow-blue-900/25 border border-blue-400/30 flex items-center justify-center space-x-2.5 transition-all">
-                        <i class="fa-solid fa-gauge-high text-amber-400 text-base"></i>
+                    <a href="{% url 'accounts:dashboard' %}" class="w-full sm:w-auto bg-gradient-to-r from-[#2563EB] to-indigo-600 hover:brightness-110 text-white font-black text-sm px-7 py-3.5 rounded-2xl shadow-xl shadow-blue-600/30 border border-blue-400/40 flex items-center justify-center space-x-2.5 transition-all">
+                        <i class="fa-solid fa-gauge-high text-amber-300 text-base"></i>
                         <span>Mon tableau de bord</span>
                         <i class="fa-solid fa-arrow-right text-xs text-blue-200"></i>
                     </a>
                 {% elif user.is_authenticated %}
-                    <a href="{% url 'accounts:dashboard' %}" class="w-full sm:w-auto bg-gradient-to-r from-[#071A49] via-[#0E2461] to-[#1D4ED8] hover:brightness-110 text-white font-black text-sm px-7 py-3.5 rounded-2xl shadow-xl shadow-blue-900/30 border border-blue-400/40 flex items-center justify-center space-x-2.5 transition-all">
-                        <i class="fa-solid fa-gauge-high text-amber-400 text-base"></i>
+                    <a href="{% url 'accounts:dashboard' %}" class="w-full sm:w-auto bg-gradient-to-r from-[#2563EB] to-indigo-600 hover:brightness-110 text-white font-black text-sm px-7 py-3.5 rounded-2xl shadow-xl shadow-blue-600/30 border border-blue-400/40 flex items-center justify-center space-x-2.5 transition-all">
+                        <i class="fa-solid fa-gauge-high text-amber-300 text-base"></i>
                         <span>Mon tableau de bord</span>
                         <i class="fa-solid fa-arrow-right text-xs text-blue-200"></i>
                     </a>
-                    <a href="{% url 'academics:filieres' %}" class="w-full sm:w-auto bg-[#2563EB] hover:bg-blue-700 text-white font-black text-sm px-7 py-3.5 rounded-2xl shadow-lg shadow-blue-500/25 flex items-center justify-center space-x-2.5 transition-colors">
+                    <a href="{% url 'academics:filieres' %}" class="w-full sm:w-auto bg-white/15 hover:bg-white/25 text-white border border-white/30 font-black text-sm px-7 py-3.5 rounded-2xl shadow-lg backdrop-blur-md flex items-center justify-center space-x-2.5 transition-colors">
                         <i class="fa-solid fa-graduation-cap"></i>
                         <span>Explorer les matières</span>
                     </a>
-                    <a href="{% url 'academics:about' %}" class="w-full sm:w-auto bg-white hover:bg-slate-50 text-[#071A49] border-2 border-slate-200 font-black text-sm px-6 py-3.5 rounded-2xl shadow-xs flex items-center justify-center space-x-2.5 transition-colors">
-                        <div class="w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center text-[10px]">
-                            <i class="fa-solid fa-play text-[8px] text-[#071A49] ml-0.5"></i>
+                    <a href="{% url 'academics:about' %}" class="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border border-white/20 font-black text-sm px-6 py-3.5 rounded-2xl shadow-xs backdrop-blur-md flex items-center justify-center space-x-2.5 transition-colors">
+                        <div class="w-5 h-5 rounded-full border border-white/40 flex items-center justify-center text-[10px]">
+                            <i class="fa-solid fa-play text-[8px] text-white ml-0.5"></i>
                         </div>
                         <span>Découvrir la plateforme</span>
                     </a>
                 {% else %}
                     <!-- BOUTONS DIRECTS POUR VISITEUR : S'INSCRIRE OU SE CONNECTER -->
-                    <a href="{% url 'accounts:register' %}" class="w-full sm:w-auto bg-gradient-to-r from-[#2563EB] to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-sm px-7 py-3.5 rounded-2xl shadow-xl shadow-blue-600/30 flex items-center justify-center space-x-2.5 transition-colors">
+                    <a href="{% url 'accounts:register' %}" class="w-full sm:w-auto bg-gradient-to-r from-[#2563EB] to-indigo-600 hover:from-blue-600 hover:to-indigo-500 text-white font-black text-sm px-7 py-3.5 rounded-2xl shadow-xl shadow-blue-600/40 border border-blue-300/30 flex items-center justify-center space-x-2.5 transition-all hover:scale-105 active:scale-95">
                         <i class="fa-solid fa-user-plus text-base"></i>
                         <span>S'inscrire gratuitement</span>
                     </a>
 
-                    <a href="{% url 'accounts:login' %}" class="w-full sm:w-auto bg-white hover:bg-slate-50 text-[#071A49] border-2 border-slate-200 hover:border-[#2563EB] font-black text-sm px-6 py-3.5 rounded-2xl shadow-xs flex items-center justify-center space-x-2.5 transition-colors">
-                        <i class="fa-solid fa-arrow-right-to-bracket text-[#2563EB]"></i>
+                    <a href="{% url 'accounts:login' %}" class="w-full sm:w-auto bg-white/15 hover:bg-white/25 text-white border border-white/30 hover:border-white/50 font-black text-sm px-6 py-3.5 rounded-2xl shadow-lg backdrop-blur-md flex items-center justify-center space-x-2.5 transition-all">
+                        <i class="fa-solid fa-arrow-right-to-bracket text-cyan-300"></i>
                         <span>Se connecter</span>
                     </a>
 
-                    <a href="{% url 'exams:free_liste' %}" class="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs sm:text-sm px-5 py-3.5 rounded-2xl flex items-center justify-center space-x-2 transition-colors">
-                        <i class="fa-solid fa-book-open text-blue-600"></i>
+                    <a href="{% url 'exams:free_liste' %}" class="w-full sm:w-auto bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 font-bold text-xs sm:text-sm px-5 py-3.5 rounded-2xl flex items-center justify-center space-x-2 backdrop-blur-md transition-colors">
+                        <i class="fa-solid fa-book-open text-emerald-300"></i>
                         <span>Épreuves gratuites</span>
                     </a>
                 {% endif %}
@@ -293,7 +299,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <!-- RIGHT COLUMN: LAPTOP MOCKUP (DESKTOP ONLY) -->
         <div class="hidden lg:flex lg:col-span-6 justify-center">
             <div class="relative w-full max-w-[560px] mx-auto pt-6 pb-2">
-                <div class="relative mx-auto border-[10px] border-[#1E293B] rounded-t-2xl bg-[#1E293B] shadow-2xl overflow-hidden max-w-[500px]">
+                <div class="relative mx-auto border-[10px] border-[#1E293B] rounded-t-2xl bg-[#1E293B] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] overflow-hidden max-w-[500px]">
                     <div class="bg-slate-50 text-slate-800 text-[11px] aspect-[16/10] overflow-hidden flex flex-col select-none">
                         <!-- Screen Top Navbar -->
                         <div class="bg-white border-b border-slate-200 px-3 py-1.5 flex items-center justify-between shrink-0">
@@ -384,7 +390,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         </div>
                                         <p class="font-black text-[#071A49] text-[9px] leading-tight truncate">Base de données</p>
                                         <p class="text-[7px] text-slate-600 font-semibold">Licence • S4</p>
-                                        <span class="text-[6px] font-black text-blue-700 bg-blue-100 px-1 py-0.2 rounded inline-block">+ Épreuve + Corrigé</span>
+                                        <span class="text-[6px] font-black text-amber-700 bg-amber-100 px-1 py-0.2 rounded inline-block">Session 2024</span>
                                     </div>
 
                                     <div class="bg-white p-2 rounded-lg border border-slate-200 shadow-2xs space-y-1">
@@ -394,7 +400,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         </div>
                                         <p class="font-black text-[#071A49] text-[9px] leading-tight truncate">Algorithmique</p>
                                         <p class="text-[7px] text-slate-600 font-semibold">Licence • S3</p>
-                                        <span class="text-[6px] font-black text-emerald-700 bg-emerald-100 px-1 py-0.2 rounded inline-block">+ Épreuve</span>
+                                        <span class="text-[6px] font-black text-emerald-700 bg-emerald-100 px-1 py-0.2 rounded inline-block">Session 2023</span>
                                     </div>
 
                                     <div class="bg-white p-2 rounded-lg border border-slate-200 shadow-2xs space-y-1">
@@ -419,9 +425,18 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
 
     </div>
+
+    <!-- BOUTON DÉCOUVRIR FLOTTANT (STYLE UNIVSERVICES.BJ) -->
+    <a href="#services-stats" class="univ-hero-discover" aria-label="Découvrir les épreuves et services">
+        <span class="text-[11px] tracking-[0.18em] uppercase font-bold text-white/80">Découvrir</span>
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 8l5 5 5-5"></path>
+        </svg>
+    </a>
 </section>
 
 <!-- 2. MARQUEE TICKER (STATISTIQUES RÉELLES DU PROJET) -->
+<section id="services-stats" class="marquee-ticker-container scroll-mt-20">
 <section class="marquee-ticker-container">
     <div class="marquee-wrapper">
         <div class="marquee-content">

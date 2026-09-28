@@ -911,3 +911,86 @@ html, body, button, input, select, textarea {
     background-color: var(--ax-accent) !important;
     color: #FFFFFF !important;
 }
+
+/* ==========================================================================
+   UNIVSERVICES-STYLE HERO & AUTH BACKGROUND SYSTEM
+   Cinematic African University Background with Ken Burns & Layered Deep Navy Voile
+   ========================================================================== */
+
+@keyframes univKenburns {
+    0% {
+        transform: scale(1) translate(0, 0);
+    }
+    100% {
+        transform: scale(1.08) translate(-1.5%, -1%);
+    }
+}
+
+@keyframes univBob {
+    0%, 100% {
+        transform: translate(-50%, 0);
+    }
+    50% {
+        transform: translate(-50%, 7px);
+    }
+}
+
+.univ-hero-wrapper {
+    position: relative;
+    overflow: hidden;
+    background-color: #071A49;
+}
+
+.univ-hero-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center 30%;
+    animation: univKenburns 24s ease-in-out infinite alternate;
+    pointer-events: none;
+    will-change: transform;
+}
+
+.univ-hero-voile {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(7, 26, 73, 0.94) 0%, rgba(7, 26, 73, 0.72) 48%, rgba(7, 26, 73, 0.35) 100%),
+                linear-gradient(0deg, rgba(7, 26, 73, 0.98) 0%, rgba(7, 26, 73, 0.65) 50%, rgba(7, 26, 73, 0.25) 100%);
+}
+
+@media (max-width: 768px) {
+    .univ-hero-voile {
+        background: linear-gradient(90deg, rgba(7, 26, 73, 0.96) 0%, rgba(7, 26, 73, 0.78) 50%, rgba(7, 26, 73, 0.45) 100%),
+                    linear-gradient(0deg, rgba(7, 26, 73, 0.99) 0%, rgba(7, 26, 73, 0.85) 45%, rgba(7, 26, 73, 0.5) 100%) !important;
+    }
+}
+
+.univ-hero-discover {
+    position: absolute;
+    bottom: 22px;
+    left: 50%;
+    transform: translate(-50%, 0);
+    z-index: 20;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    cursor: pointer;
+    animation: univBob 2.2s ease-in-out infinite;
+    transition: color 0.2s ease;
+}
+
+.univ-hero-discover:hover {
+    color: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .univ-hero-bg,
+    .univ-hero-discover {
+        animation: none !important;
+    }
+}
