@@ -334,23 +334,23 @@ function toggleMobileHomeMenu() {
 
             </div>
 
-            <!-- Ligne des Chiffres Clés -->
+            <!-- Ligne des Chiffres Clés Réels (Directement issus de la base de données) -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-8 border-t border-slate-100 text-center">
                 <div>
-                    <span class="text-2xl sm:text-3xl font-black text-[#1D68FE] block">+{{ exams_count|default:"500" }}</span>
-                    <span class="text-xs text-slate-500 font-medium mt-1 block">Épreuves disponibles</span>
+                    <span class="text-2xl sm:text-3xl font-black text-[#1D68FE] block">{{ exams_count }}</span>
+                    <span class="text-xs text-slate-500 font-medium mt-1 block">Épreuve{{ exams_count|pluralize }} disponible{{ exams_count|pluralize }}</span>
                 </div>
                 <div>
-                    <span class="text-2xl sm:text-3xl font-black text-[#1D68FE] block">+{{ subjects_count|default:"50" }}</span>
-                    <span class="text-xs text-slate-500 font-medium mt-1 block">Matières couvertes</span>
+                    <span class="text-2xl sm:text-3xl font-black text-[#1D68FE] block">{{ subjects_count }}</span>
+                    <span class="text-xs text-slate-500 font-medium mt-1 block">Matière{{ subjects_count|pluralize }} couverte{{ subjects_count|pluralize }}</span>
                 </div>
                 <div>
-                    <span class="text-2xl sm:text-3xl font-black text-[#1D68FE] block">+{{ filieres_count|default:"10" }}</span>
-                    <span class="text-xs text-slate-500 font-medium mt-1 block">Filières universitaires</span>
+                    <span class="text-2xl sm:text-3xl font-black text-[#1D68FE] block">{{ filieres_count }}</span>
+                    <span class="text-xs text-slate-500 font-medium mt-1 block">Filière{{ filieres_count|pluralize }} active{{ filieres_count|pluralize }}</span>
                 </div>
                 <div>
-                    <span class="text-2xl sm:text-3xl font-black text-[#1D68FE] block">100%</span>
-                    <span class="text-xs text-slate-500 font-medium mt-1 block">Engagement pour votre réussite</span>
+                    <span class="text-2xl sm:text-3xl font-black text-[#1D68FE] block">{{ students_count }}</span>
+                    <span class="text-xs text-slate-500 font-medium mt-1 block">Étudiant{{ students_count|pluralize }} inscrit{{ students_count|pluralize }}</span>
                 </div>
             </div>
 
