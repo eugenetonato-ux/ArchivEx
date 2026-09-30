@@ -36,7 +36,7 @@ def send_password_reset_email(user, temp_password: str, request=None, admin_user
     if request:
         login_url = request.build_absolute_uri(reverse("accounts:login"))
     else:
-        site_url = getattr(settings, "SITE_URL", "https://redsandro.pythonanywhere.com").rstrip("/")
+        site_url = getattr(settings, "SITE_URL", "https://archivex.pythonanywhere.com").rstrip("/")
         login_url = f"{site_url}{reverse('accounts:login')}"
 
     user_full_name = user.get_full_name() or user.username

@@ -4,646 +4,404 @@
 {% block title %}ArchivEx — Banque d'épreuves, corrigés & examens universitaires{% endblock %}
 {% block meta_description %}ArchivEx est la banque d'épreuves universitaires de référence. Retrouvez des centaines d'épreuves, de corrigés détaillés et de résumés de cours pour toutes vos matières.{% endblock %}
 {% block og_title %}ArchivEx — Banque d'épreuves, corrigés & examens universitaires{% endblock %}
-{% block og_description %}Accédez immédiatement aux anciennes épreuves universitaires, corrigés de révision et fiches de synthèse pour réussir chaque semestre.{% endblock %}
+{% block og_description %}Accédez facilement aux anciens sujets d'examens, aux corrigés détaillés et aux résumés de vos matières.{% endblock %}
 
-{% block content %}
-{% if user.is_authenticated %}
-<!-- KWABO ELEGANT DISCRETE TOAST (Apple / Linear style) -->
-<div id="kwabo-toast" class="fixed top-20 right-4 sm:right-6 z-50 transform translate-x-32 opacity-0 transition-all duration-300 pointer-events-auto max-w-sm">
-    <div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-blue-200 dark:border-blue-900/50 rounded-2xl shadow-xl p-3.5 flex items-center space-x-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#2563EB] to-indigo-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
-            <i class="fa-solid fa-hand-sparkles"></i>
-        </div>
-        <div class="flex-grow pr-2">
-            <p class="text-xs font-black text-[#071A49] dark:text-white leading-tight">
-                Kwabo, {{ user.first_name|default:user.username }} !
-            </p>
-            <a href="{% url 'accounts:dashboard' %}" class="inline-flex items-center space-x-1 text-[11px] font-extrabold text-[#2563EB] hover:underline mt-0.5">
-                <span>Accéder à mon tableau de bord</span>
-                <i class="fa-solid fa-arrow-right text-[9px]"></i>
+{% block header %}
+<!-- ========================================================================= -->
+<!-- HEADER ÉPURÉ CONFORME À LA MAQUETTE ARCHIVEX -->
+<!-- ========================================================================= -->
+<header role="banner" class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-[0_2px_15px_rgba(0,0,0,0.03)] w-full">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        
+        <!-- LOGO BRAND (Ax + ArchivEx) -->
+        <div class="flex items-center space-x-8">
+            <a href="{% url 'academics:home' %}" class="flex items-center space-x-2.5 group shrink-0" aria-label="Accueil ArchivEx">
+                <!-- Ax Badged Mark -->
+                <div class="w-9 h-9 rounded-xl bg-[#1D68FE] flex items-center justify-center text-white font-black text-base shadow-sm shadow-blue-500/30 group-hover:scale-105 transition-transform">
+                    <span class="tracking-tighter">Ax</span>
+                </div>
+                <span class="text-2xl font-black text-[#0B1B3D] tracking-tight">ArchivEx</span>
             </a>
+
+            <!-- NAVIGATION LINKS (DESKTOP) -->
+            <nav class="hidden md:flex items-center space-x-7 text-sm font-semibold pt-0.5" aria-label="Navigation principale">
+                <a href="{% url 'academics:home' %}" class="text-[#0B1B3D] font-black relative py-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2.5px] after:bg-[#1D68FE] after:rounded-full">
+                    Accueil
+                </a>
+                <a href="{% url 'exams:liste' %}" class="text-slate-600 hover:text-[#1D68FE] transition-colors py-2">
+                    Épreuves
+                </a>
+                <a href="{% url 'exams:liste' %}?has_correction=1" class="text-slate-600 hover:text-[#1D68FE] transition-colors py-2">
+                    Corrigés
+                </a>
+                <a href="{% url 'content:summary_list' %}" class="text-slate-600 hover:text-[#1D68FE] transition-colors py-2">
+                    Résumés
+                </a>
+            </nav>
         </div>
-        <button type="button" onclick="dismissKwaboToast()" class="w-6 h-6 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center text-xs shrink-0 transition-colors" aria-label="Fermer">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
-    </div>
-</div>
 
-<script>
-function dismissKwaboToast() {
-    const toast = document.getElementById('kwabo-toast');
-    if (toast) {
-        toast.classList.add('translate-x-32', 'opacity-0');
-        setTimeout(() => toast.remove(), 300);
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    if (!sessionStorage.getItem('kwabo_welcome_shown')) {
-        const toast = document.getElementById('kwabo-toast');
-        if (toast) {
-            setTimeout(() => {
-                toast.classList.remove('translate-x-32', 'opacity-0');
-                toast.classList.add('translate-x-0', 'opacity-100');
-            }, 150);
-
-            setTimeout(() => {
-                dismissKwaboToast();
-            }, 3800);
-
-            sessionStorage.setItem('kwabo_welcome_shown', 'true');
-        }
-    }
-});
-</script>
-<!-- End KWABO -->
-{% endif %}
-
-<!-- 1. HERO SECTION (STYLE UNIVSERVICES.BJ AVEC FOND CONTEXTUEL ARCHIVEX) -->
-<section class="univ-hero-wrapper relative min-h-[580px] lg:min-h-[660px] pt-10 pb-20 md:pt-14 md:pb-24 border-b border-blue-900/40 text-white flex items-center">
-    <!-- Image d'arrière-plan animée (Ken Burns) contextualisée ArchivEx -->
-    <div class="univ-hero-bg" style="background-image: url('{% static 'images/hero_campus.webp' %}');"></div>
-
-    <!-- Voile dégradé bleu marine profond (Contraste et lisibilité maximale style univservices.bj) -->
-    <div class="univ-hero-voile"></div>
-
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center w-full">
-
-        <!-- LEFT COLUMN: EDITORIAL CONTENT & ACTIONS -->
-        <div class="lg:col-span-6 text-center lg:text-left">
-            <!-- Top Badge Pill -->
-            <div class="inline-flex items-center space-x-2.5 px-4 py-1.5 rounded-full bg-blue-600/30 border border-blue-400/50 text-cyan-200 text-xs font-black mb-5 backdrop-blur-md shadow-md">
-                <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_10px_#22d3ee] animate-pulse"></span>
-                <span>ArchivEx{% if current_school %} · {{ current_school.name }}{% else %} · Banque Nationale d'Épreuves & Examens{% endif %}</span>
-            </div>
-
-            <!-- Main Heading (Ultra-Sharp, Vivid Accent) -->
-            <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white mb-4 leading-[1.05] drop-shadow-[0_4px_16px_rgba(0,0,0,0.7)]">
-                Toutes vos épreuves,<br>
-                <span class="text-[#38BDF8] drop-shadow-[0_4px_25px_rgba(56,189,248,0.6)]">une seule plateforme.</span>
-            </h1>
-
-            <!-- Subtitle (Pure High-Contrast White) -->
-            <p class="max-w-xl mx-auto lg:mx-0 text-sm sm:text-base text-white font-semibold mb-7 leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
-                Centralisez vos anciennes épreuves, corrigés détaillés et fiches de synthèse pour réussir sereinement chaque semestre dans vos universités et grandes écoles.
-            </p>
-
-            <!-- QUICK SEARCH FORM HERO CARD (HIGH CONTRAST & READABLE) -->
-            <form action="{% url 'academics:global_search' %}" method="get" class="mb-7 max-w-xl mx-auto lg:mx-0">
-                <div class="relative flex items-center bg-white border-2 border-white focus-within:border-[#38BDF8] rounded-2xl p-1.5 shadow-[0_15px_35px_rgba(0,0,0,0.45)] transition-all">
-                    <div class="pl-3.5 pr-2 text-slate-500">
-                        <i class="fa-solid fa-magnifying-glass text-base"></i>
-                    </div>
-                    <input type="text" name="q" placeholder="Rechercher une épreuve, une matière, un sujet..." class="w-full bg-transparent border-0 focus:ring-0 text-xs sm:text-sm font-bold text-slate-900 placeholder-slate-400 py-2.5 px-1 focus:outline-none" required>
-                    <button type="submit" class="bg-[#2563EB] hover:bg-blue-700 text-white font-black text-xs sm:text-sm px-6 py-2.5 rounded-xl transition-all shrink-0 flex items-center space-x-1.5 shadow-md shadow-blue-500/40 active:scale-95">
-                        <span>Rechercher</span>
-                        <i class="fa-solid fa-arrow-right text-xs"></i>
-                    </button>
+        <!-- RIGHT SEARCH + ACTIONS -->
+        <div class="hidden lg:flex items-center space-x-5">
+            <!-- RECHERCHE PILL INPUT -->
+            <form action="{% url 'academics:global_search' %}" method="get" class="relative">
+                <div class="relative flex items-center">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 text-slate-400 text-xs pointer-events-none"></i>
+                    <input type="text" name="q" placeholder="Rechercher une matière, une UE..." class="w-64 pl-9 pr-4 py-2 rounded-full bg-slate-50 border border-slate-200/80 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#1D68FE] focus:bg-white transition-all font-medium">
                 </div>
             </form>
 
-            <!-- 3 Mini Feature Cards (Pure White, Ultra-Crisp, High Contrast) -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 max-w-xl mx-auto lg:mx-0 text-left">
-                <!-- Card 1: Épreuves -->
-                <div class="bg-white hover:bg-slate-50 rounded-2xl p-3.5 flex items-center space-x-3 shadow-lg shadow-black/25 border border-white transition-transform hover:-translate-y-0.5">
-                    <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 text-base font-black shadow-md shadow-blue-600/30">
-                        <i class="fa-solid fa-book-open"></i>
-                    </div>
-                    <div>
-                        <h4 class="text-xs font-black text-[#071A49] leading-snug">Épreuves</h4>
-                        <p class="text-[11px] text-slate-600 font-bold">Sessions passées</p>
-                    </div>
-                </div>
-
-                <!-- Card 2: Corrigés -->
-                <div class="bg-white hover:bg-slate-50 rounded-2xl p-3.5 flex items-center space-x-3 shadow-lg shadow-black/25 border border-white transition-transform hover:-translate-y-0.5">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 text-base font-black shadow-md shadow-emerald-600/30">
-                        <i class="fa-solid fa-file-circle-check"></i>
-                    </div>
-                    <div>
-                        <h4 class="text-xs font-black text-[#064E3B] leading-snug">Corrigés</h4>
-                        <p class="text-[11px] text-slate-600 font-bold">Détaillés pas à pas</p>
-                    </div>
-                </div>
-
-                <!-- Card 3: Résumés -->
-                <div class="bg-white hover:bg-slate-50 rounded-2xl p-3.5 flex items-center space-x-3 shadow-lg shadow-black/25 border border-white transition-transform hover:-translate-y-0.5">
-                    <div class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 text-base font-black shadow-md shadow-purple-600/30">
-                        <i class="fa-solid fa-file-lines"></i>
-                    </div>
-                    <div>
-                        <h4 class="text-xs font-black text-[#4C1D95] leading-snug">Résumés</h4>
-                        <p class="text-[11px] text-slate-600 font-bold">Fiches de révision</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Action Buttons (Punchy, High Contrast, univservices.bj inspired) -->
-            <div class="flex flex-col sm:flex-row flex-wrap items-center justify-center lg:justify-start gap-3.5">
-                {% if user.is_authenticated and user.is_staff or user.is_authenticated and user.is_superuser or user.is_authenticated and user.contributor_profile %}
-                    <a href="{% url 'contributors:admin_dashboard' %}" class="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm px-7 py-3.5 rounded-2xl shadow-lg shadow-amber-500/25 flex items-center justify-center space-x-2.5 transition-colors">
-                        <i class="fa-solid fa-user-shield"></i>
-                        <span>Espace d'administration</span>
-                    </a>
-                    <a href="{% url 'accounts:dashboard' %}" class="w-full sm:w-auto bg-[#FFFFFF] hover:bg-slate-100 text-[#071A49] font-black text-sm px-7 py-3.5 rounded-2xl shadow-xl shadow-black/30 flex items-center justify-center space-x-2.5 transition-all">
-                        <i class="fa-solid fa-gauge-high text-blue-600 text-base"></i>
-                        <span>Mon tableau de bord</span>
-                        <i class="fa-solid fa-arrow-right text-xs text-blue-600"></i>
-                    </a>
-                {% elif user.is_authenticated %}
-                    <a href="{% url 'accounts:dashboard' %}" class="w-full sm:w-auto bg-[#FFFFFF] hover:bg-slate-100 text-[#071A49] font-black text-sm px-7 py-3.5 rounded-2xl shadow-xl shadow-black/30 flex items-center justify-center space-x-2.5 transition-all">
-                        <i class="fa-solid fa-gauge-high text-blue-600 text-base"></i>
-                        <span>Mon tableau de bord</span>
-                        <i class="fa-solid fa-arrow-right text-xs text-blue-600"></i>
-                    </a>
-                    <a href="{% url 'academics:filieres' %}" class="w-full sm:w-auto bg-[#2563EB] hover:bg-blue-700 text-white font-black text-sm px-7 py-3.5 rounded-2xl shadow-lg shadow-blue-500/40 flex items-center justify-center space-x-2.5 transition-colors">
-                        <i class="fa-solid fa-graduation-cap"></i>
-                        <span>Explorer les matières</span>
-                    </a>
-                    <a href="{% url 'academics:about' %}" class="w-full sm:w-auto bg-white/20 hover:bg-white/30 text-white border border-white/40 font-black text-sm px-6 py-3.5 rounded-2xl shadow-xs backdrop-blur-md flex items-center justify-center space-x-2.5 transition-colors">
-                        <div class="w-5 h-5 rounded-full border border-white/60 flex items-center justify-center text-[10px]">
-                            <i class="fa-solid fa-play text-[8px] text-white ml-0.5"></i>
-                        </div>
-                        <span>Découvrir la plateforme</span>
-                    </a>
-                {% else %}
-                    <!-- BOUTONS DIRECTS POUR VISITEUR : S'INSCRIRE OU SE CONNECTER -->
-                    <a href="{% url 'accounts:register' %}" class="w-full sm:w-auto bg-white hover:bg-slate-100 text-[#071A49] font-black text-sm sm:text-base px-8 py-3.5 rounded-2xl shadow-[0_12px_30px_rgba(0,0,0,0.35)] flex items-center justify-center space-x-2.5 transition-all hover:scale-105 active:scale-95">
-                        <i class="fa-solid fa-user-plus text-blue-600 text-base"></i>
-                        <span>S'inscrire gratuitement</span>
-                    </a>
-
-                    <a href="{% url 'accounts:login' %}" class="w-full sm:w-auto bg-[#2563EB] hover:bg-blue-700 text-white font-black text-sm sm:text-base px-7 py-3.5 rounded-2xl shadow-[0_12px_25px_rgba(37,99,235,0.4)] border border-blue-300/40 flex items-center justify-center space-x-2.5 transition-all hover:scale-105 active:scale-95">
-                        <i class="fa-solid fa-arrow-right-to-bracket text-cyan-300"></i>
-                        <span>Se connecter</span>
-                    </a>
-
-                    <a href="{% url 'exams:free_liste' %}" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm px-6 py-3.5 rounded-2xl flex items-center justify-center space-x-2 shadow-lg shadow-emerald-900/30 transition-all hover:scale-105 active:scale-95">
-                        <i class="fa-solid fa-book-open text-emerald-200"></i>
-                        <span>Épreuves gratuites</span>
-                    </a>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- RIGHT COLUMN: LAPTOP MOCKUP (DESKTOP ONLY) -->
-        <div class="hidden lg:flex lg:col-span-6 justify-center">
-            <div class="relative w-full max-w-[560px] mx-auto pt-6 pb-2">
-                <div class="relative mx-auto border-[10px] border-[#1E293B] rounded-t-2xl bg-[#1E293B] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] overflow-hidden max-w-[500px]">
-                    <div class="bg-slate-50 text-slate-800 text-[11px] aspect-[16/10] overflow-hidden flex flex-col select-none">
-                        <!-- Screen Top Navbar -->
-                        <div class="bg-white border-b border-slate-200 px-3 py-1.5 flex items-center justify-between shrink-0">
-                            <div class="flex items-center space-x-2">
-                                <div class="w-5 h-5 rounded-lg bg-[#071A49] flex items-center justify-center text-[10px] text-white font-black">A</div>
-                                <span class="font-black text-[#071A49] text-[11px]">Archiv<span class="text-[#2563EB]">Ex</span></span>
-                                <span class="text-[8px] text-slate-500 font-bold hidden sm:inline">les épreuves en un clic</span>
-                            </div>
-                            <div class="bg-slate-100 rounded-lg px-2 py-0.5 flex items-center space-x-1.5 text-[9px] text-slate-600 font-medium w-44">
-                                <i class="fa-solid fa-magnifying-glass text-[8px] text-slate-400"></i>
-                                <span class="truncate">Rechercher une épreuve, UE...</span>
-                            </div>
-                            <div class="flex items-center space-x-1.5">
-                                <div class="w-5 h-5 rounded-full bg-blue-100 text-[#2563EB] flex items-center justify-center text-[9px] font-black">É</div>
-                                <div class="hidden sm:block text-[9px]">
-                                    <p class="font-black text-[#071A49] leading-none">Étudiant</p>
-                                    <p class="text-[8px] text-slate-500 font-medium leading-none">Licence 1 informatique</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Screen Body -->
-                        <div class="flex-grow flex overflow-hidden">
-                            <!-- Sidebar -->
-                            <div class="w-28 bg-white border-r border-slate-200 p-2 space-y-1 shrink-0 text-[9px]">
-                                <div class="bg-blue-50 text-[#2563EB] font-black p-1.5 rounded-lg flex items-center space-x-1.5">
-                                    <i class="fa-solid fa-house text-[9px]"></i>
-                                    <span class="truncate">Tableau de bord</span>
-                                </div>
-                                <div class="text-slate-700 font-bold p-1.5 rounded-lg flex items-center space-x-1.5 hover:bg-slate-50">
-                                    <i class="fa-solid fa-book-open text-[9px] text-slate-400"></i>
-                                    <span class="truncate">Mes matières</span>
-                                </div>
-                                <div class="text-slate-700 font-bold p-1.5 rounded-lg flex items-center space-x-1.5 hover:bg-slate-50">
-                                    <i class="fa-solid fa-file-invoice text-[9px] text-slate-400"></i>
-                                    <span class="truncate">Fiches résumés</span>
-                                </div>
-                                <div class="text-slate-700 font-bold p-1.5 rounded-lg flex items-center space-x-1.5 hover:bg-slate-50">
-                                    <i class="fa-solid fa-id-card text-[9px] text-slate-400"></i>
-                                    <span class="truncate">Pass semestre</span>
-                                </div>
-                            </div>
-
-                            <!-- Main Content -->
-                            <div class="flex-grow p-3 bg-slate-50 overflow-hidden">
-                                <div class="mb-2">
-                                    <h4 class="font-black text-[#071A49] text-xs leading-tight">Bienvenue sur ArchivEx</h4>
-                                    <p class="text-[9px] text-slate-600 font-medium">Préparez vos examens avec les meilleures annales.</p>
-                                </div>
-
-                                <!-- Mini Stat Cards -->
-                                <div class="grid grid-cols-3 gap-1.5 mb-2.5">
-                                    <div class="bg-white p-1.5 rounded-lg border border-slate-200 shadow-2xs flex items-center space-x-1.5">
-                                        <div class="w-5 h-5 rounded bg-blue-100 text-[#2563EB] flex items-center justify-center font-black text-[9px]">EP</div>
-                                        <div>
-                                            <span class="font-black text-xs text-[#071A49] block leading-none">{{ exams_count|default:"0" }}</span>
-                                            <span class="text-[7px] text-slate-600 font-bold block">Épreuves</span>
-                                        </div>
-                                    </div>
-                                    <div class="bg-white p-1.5 rounded-lg border border-slate-200 shadow-2xs flex items-center space-x-1.5">
-                                        <div class="w-5 h-5 rounded bg-amber-100 text-amber-800 flex items-center justify-center font-black text-[9px]">UE</div>
-                                        <div>
-                                            <span class="font-black text-xs text-[#071A49] block leading-none">{{ subjects_count|default:"0" }}</span>
-                                            <span class="text-[7px] text-slate-600 font-bold block">Matières</span>
-                                        </div>
-                                    </div>
-                                    <div class="bg-white p-1.5 rounded-lg border border-slate-200 shadow-2xs flex items-center space-x-1.5">
-                                        <div class="w-5 h-5 rounded bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-[9px]">OK</div>
-                                        <div>
-                                            <span class="font-black text-xs text-emerald-800 block leading-none">100%</span>
-                                            <span class="text-[7px] text-slate-600 font-bold block">Conforme</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Ressources récentes header -->
-                                <div class="flex items-center justify-between mb-1.5 text-[9px]">
-                                    <span class="font-black text-[#071A49]">Ressources récentes</span>
-                                    <span class="text-[8px] text-[#2563EB] font-black">Voir tout →</span>
-                                </div>
-
-                                <!-- Cards row -->
-                                <div class="grid grid-cols-3 gap-1.5">
-                                    <div class="bg-white p-2 rounded-lg border border-slate-200 shadow-2xs space-y-1">
-                                        <div class="flex items-center justify-between">
-                                            <i class="fa-solid fa-file-lines text-slate-400 text-[9px]"></i>
-                                            <span class="text-[7px] font-black bg-amber-500 text-white px-1.5 py-0.2 rounded">Premium</span>
-                                        </div>
-                                        <p class="font-black text-[#071A49] text-[9px] leading-tight truncate">Base de données</p>
-                                        <p class="text-[7px] text-slate-600 font-semibold">Licence • S4</p>
-                                        <span class="text-[6px] font-black text-amber-700 bg-amber-100 px-1 py-0.2 rounded inline-block">Session 2024</span>
-                                    </div>
-
-                                    <div class="bg-white p-2 rounded-lg border border-slate-200 shadow-2xs space-y-1">
-                                        <div class="flex items-center justify-between">
-                                            <i class="fa-solid fa-file-lines text-slate-400 text-[9px]"></i>
-                                            <span class="text-[7px] font-black bg-emerald-600 text-white px-1.5 py-0.2 rounded">Gratuit</span>
-                                        </div>
-                                        <p class="font-black text-[#071A49] text-[9px] leading-tight truncate">Algorithmique</p>
-                                        <p class="text-[7px] text-slate-600 font-semibold">Licence • S3</p>
-                                        <span class="text-[6px] font-black text-emerald-700 bg-emerald-100 px-1 py-0.2 rounded inline-block">Session 2023</span>
-                                    </div>
-
-                                    <div class="bg-white p-2 rounded-lg border border-slate-200 shadow-2xs space-y-1">
-                                        <div class="flex items-center justify-between">
-                                            <i class="fa-solid fa-book-open text-slate-400 text-[9px]"></i>
-                                            <span class="text-[7px] font-black bg-purple-600 text-white px-1.5 py-0.2 rounded">Fiche</span>
-                                        </div>
-                                        <p class="font-black text-[#071A49] text-[9px] leading-tight truncate">Réseaux</p>
-                                        <p class="text-[7px] text-slate-600 font-semibold">Licence • S5</p>
-                                        <span class="text-[6px] font-black text-purple-700 bg-purple-100 px-1 py-0.2 rounded inline-block">+ Résumé</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Laptop Base -->
-                <div class="w-full max-w-[520px] h-3.5 bg-gradient-to-b from-[#334155] to-[#0F172A] rounded-b-xl mx-auto shadow-lg relative -mt-0.5 border-t border-slate-600/40">
-                    <div class="w-16 h-1 bg-slate-400/50 rounded-full mx-auto -mt-0.5"></div>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- BOUTON DÉCOUVRIR FLOTTANT (STYLE UNIVSERVICES.BJ) -->
-    <a href="#services-stats" class="univ-hero-discover" aria-label="Découvrir les épreuves et services">
-        <span class="text-[11px] tracking-[0.18em] uppercase font-bold text-white/80">Découvrir</span>
-        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 8l5 5 5-5"></path>
-        </svg>
-    </a>
-</section>
-
-<!-- 2. MARQUEE TICKER (STATISTIQUES RÉELLES DU PROJET) -->
-<section id="services-stats" class="marquee-ticker-container scroll-mt-20">
-<section class="marquee-ticker-container">
-    <div class="marquee-wrapper">
-        <div class="marquee-content">
-            <div class="stat-ticker-pill">
-                <span class="text-white font-black text-sm">{{ exams_count|default:"0" }}</span>
-                <span class="text-slate-200 text-xs font-bold">Épreuve{{ exams_count|pluralize }} disponible{{ exams_count|pluralize }}</span>
-            </div>
-            <div class="stat-ticker-pill">
-                <span class="text-white font-black text-sm">{{ subjects_count|default:"0" }}</span>
-                <span class="text-slate-200 text-xs font-bold">Matière{{ subjects_count|pluralize }} clé{{ subjects_count|pluralize }}</span>
-            </div>
-            <div class="stat-ticker-pill">
-                <span class="text-white font-black text-sm">{{ summaries_count|default:"0" }}</span>
-                <span class="text-slate-200 text-xs font-bold">Résumé{{ summaries_count|pluralize }} de cours</span>
-            </div>
-            <div class="stat-ticker-pill">
-                <span class="text-white font-black text-sm">{{ students_count|default:"0" }}</span>
-                <span class="text-slate-200 text-xs font-bold">Étudiant{{ students_count|pluralize }} inscrit{{ students_count|pluralize }}</span>
-            </div>
-            <div class="stat-ticker-pill">
-                <span class="text-amber-300 font-black text-xs uppercase tracking-wider">
-                    {% if passes_count > 0 %}{{ passes_count }} Pass semestre actif{{ passes_count|pluralize }}{% else %}Pass semestre disponible{% endif %}
-                </span>
-            </div>
-            <div class="stat-ticker-pill">
-                <span class="text-emerald-300 font-black text-xs uppercase tracking-wider">{{ schools_count|default:"0" }} Université{{ schools_count|pluralize }} & École{{ schools_count|pluralize }}</span>
-            </div>
-        </div>
-
-        <div class="marquee-content" aria-hidden="true">
-            <div class="stat-ticker-pill">
-                <span class="text-white font-black text-sm">{{ exams_count|default:"0" }}</span>
-                <span class="text-slate-200 text-xs font-bold">Épreuve{{ exams_count|pluralize }} disponible{{ exams_count|pluralize }}</span>
-            </div>
-            <div class="stat-ticker-pill">
-                <span class="text-white font-black text-sm">{{ subjects_count|default:"0" }}</span>
-                <span class="text-slate-200 text-xs font-bold">Matière{{ subjects_count|pluralize }} clé{{ subjects_count|pluralize }}</span>
-            </div>
-            <div class="stat-ticker-pill">
-                <span class="text-white font-black text-sm">{{ summaries_count|default:"0" }}</span>
-                <span class="text-slate-200 text-xs font-bold">Résumé{{ summaries_count|pluralize }} de cours</span>
-            </div>
-            <div class="stat-ticker-pill">
-                <span class="text-white font-black text-sm">{{ students_count|default:"0" }}</span>
-                <span class="text-slate-200 text-xs font-bold">Étudiant{{ students_count|pluralize }} inscrit{{ students_count|pluralize }}</span>
-            </div>
-            <div class="stat-ticker-pill">
-                <span class="text-amber-300 font-black text-xs uppercase tracking-wider">
-                    {% if passes_count > 0 %}{{ passes_count }} Pass semestre actif{{ passes_count|pluralize }}{% else %}Pass semestre disponible{% endif %}
-                </span>
-            </div>
-            <div class="stat-ticker-pill">
-                <span class="text-emerald-300 font-black text-xs uppercase tracking-wider">{{ schools_count|default:"0" }} Université{{ schools_count|pluralize }} & École{{ schools_count|pluralize }}</span>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- 3. RESOURCE OVERVIEW -->
-<section class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="mb-12 text-center max-w-3xl mx-auto">
-        <h2 class="text-2xl sm:text-4xl font-black text-[#071A49] tracking-tight mb-3">
-            Toutes vos ressources académiques en un seul endroit
-        </h2>
-        <p class="text-slate-700 text-xs sm:text-sm leading-relaxed font-semibold">
-            ArchivEx rassemble et organise l'ensemble des contenus indispensables pour accompagner la réussite de votre semestre universitaire.
-        </p>
-    </div>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
-        <!-- Épreuves -->
-        <div class="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 hover:border-blue-300 shadow-sm transition-colors flex flex-col justify-between">
-            <div>
-                <div class="w-12 h-12 rounded-2xl bg-blue-100 text-[#2563EB] flex items-center justify-center text-xl mb-4 shrink-0 font-black">
-                    <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
-                </div>
-                <h3 class="text-lg font-black text-[#071A49] mb-2">Épreuves et annales</h3>
-                <p class="text-xs text-slate-700 leading-relaxed font-medium">
-                    Consultez les sujets d'examens des sessions précédentes classés par filière, semestre et matière avec leurs corrections méthodologiques.
-                </p>
-            </div>
-            <div class="pt-4 mt-6 border-t border-slate-100">
-                <a href="{% url 'exams:liste' %}" class="text-xs font-black text-[#2563EB] hover:underline flex items-center space-x-1.5">
-                    <span>Parcourir les épreuves</span>
-                    <i class="fa-solid fa-arrow-right text-[10px]" aria-hidden="true"></i>
-                </a>
-            </div>
-        </div>
-
-        <!-- Résumés -->
-        <div class="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 hover:border-emerald-300 shadow-sm transition-colors flex flex-col justify-between">
-            <div>
-                <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl mb-4 shrink-0 font-black">
-                    <i class="fa-solid fa-book-open" aria-hidden="true"></i>
-                </div>
-                <h3 class="text-lg font-black text-emerald-950 mb-2">Résumés de cours</h3>
-                <p class="text-xs text-slate-700 leading-relaxed font-medium">
-                    Révisez l'essentiel des chapitres grâce à des fiches de synthèse structurées et concises rédigées pour chaque unité d'enseignement.
-                </p>
-            </div>
-            <div class="pt-4 mt-6 border-t border-slate-100">
-                <a href="{% url 'content:summary_list' %}" class="text-xs font-black text-emerald-700 hover:underline flex items-center space-x-1.5">
-                    <span>Parcourir les résumés</span>
-                    <i class="fa-solid fa-arrow-right text-[10px]" aria-hidden="true"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-</section>
-
-
-
-<!-- 5. HOW ARCHIVEX WORKS -->
-<section class="py-16 bg-white border-y border-slate-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="mb-12 text-left">
-            <span class="text-xs font-black uppercase tracking-wider text-[#2563EB] mb-1 block">Parcours étudiant</span>
-            <h2 class="text-2xl sm:text-3xl font-black text-[#071A49] tracking-tight">Comment fonctionne ArchivEx ?</h2>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-            <div class="bg-white hover:border-blue-300 border border-slate-200 p-5 rounded-2xl shadow-sm flex flex-col items-start transition-colors">
-                <div class="w-8 h-8 rounded-xl bg-blue-600 text-white font-black text-xs flex items-center justify-center mb-3">
-                    01
-                </div>
-                <h3 class="text-sm font-black text-[#071A49] mb-1">Inscrivez-vous</h3>
-                <p class="text-xs text-slate-700 font-medium leading-relaxed">Créez votre compte étudiant en toute sécurité.</p>
-            </div>
-
-            <div class="bg-white hover:border-blue-300 border border-slate-200 p-5 rounded-2xl shadow-sm flex flex-col items-start transition-colors">
-                <div class="w-8 h-8 rounded-xl bg-blue-600 text-white font-black text-xs flex items-center justify-center mb-3">
-                    02
-                </div>
-                <h3 class="text-sm font-black text-[#071A49] mb-1">Votre profil</h3>
-                <p class="text-xs text-slate-700 font-medium leading-relaxed">Indiquez votre école et votre filière d'études.</p>
-            </div>
-
-            <div class="bg-white hover:border-blue-300 border border-slate-200 p-5 rounded-2xl shadow-sm flex flex-col items-start transition-colors">
-                <div class="w-8 h-8 rounded-xl bg-blue-600 text-white font-black text-xs flex items-center justify-center mb-3">
-                    03
-                </div>
-                <h3 class="text-sm font-black text-[#071A49] mb-1">Vos matières</h3>
-                <p class="text-xs text-slate-700 font-medium leading-relaxed">Accédez à votre programme par semestre et UE.</p>
-            </div>
-
-            <div class="bg-white hover:border-blue-300 border border-slate-200 p-5 rounded-2xl shadow-sm flex flex-col items-start transition-colors">
-                <div class="w-8 h-8 rounded-xl bg-blue-600 text-white font-black text-xs flex items-center justify-center mb-3">
-                    04
-                </div>
-                <h3 class="text-sm font-black text-[#071A49] mb-1">Ressources</h3>
-                <p class="text-xs text-slate-700 font-medium leading-relaxed">Consultez les épreuves, corrigés et fiches.</p>
-            </div>
-
-            <div class="bg-white hover:border-blue-300 border border-slate-200 p-5 rounded-2xl shadow-sm flex flex-col items-start transition-colors">
-                <div class="w-8 h-8 rounded-xl bg-blue-600 text-white font-black text-xs flex items-center justify-center mb-3">
-                    05
-                </div>
-                <h3 class="text-sm font-black text-[#071A49] mb-1">Révisez serein</h3>
-                <p class="text-xs text-slate-700 font-medium leading-relaxed">Préparez vos examens avec des bases solides.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- 6. ARCHIVEX PASS SECTION (Masqué pour les étudiants disposant déjà du pass) -->
-{% if not user_has_active_pass %}
-<section class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="bg-gradient-to-br from-amber-50/80 via-white to-white border-2 border-amber-200 rounded-3xl p-8 sm:p-12 shadow-sm grid grid-cols-1 lg:grid-cols-12 gap-8 items-center transition-all hover:shadow-md">
-        <div class="lg:col-span-8 space-y-4">
-            <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-amber-100 border border-amber-300 text-xs font-black text-amber-950">
-                <i class="fa-solid fa-id-card text-amber-700" aria-hidden="true"></i>
-                <span>Accès complet par semestre</span>
-            </div>
-            <h2 class="text-2xl sm:text-3xl font-black text-amber-950 tracking-tight">
-                Le pass semestre ArchivEx
-            </h2>
-            <p class="text-slate-700 text-xs sm:text-sm leading-relaxed font-semibold">
-                Le pass semestre permet de débloquer l'intégralité des épreuves et des corrigés détaillés d'un semestre spécifique. Il permet de financer directement le travail de numérisation, de tri et d'indexation académique des sujets.
-            </p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs font-bold text-slate-800">
-                <div class="flex items-center space-x-2">
-                    <i class="fa-solid fa-circle-check text-emerald-600" aria-hidden="true"></i>
-                    <span>Accès illimité aux épreuves du semestre</span>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <i class="fa-solid fa-circle-check text-emerald-600" aria-hidden="true"></i>
-                    <span>Activation simple et instantanée</span>
-                </div>
-            </div>
-        </div>
-        <div class="lg:col-span-4 flex flex-col items-center justify-center p-6 bg-white rounded-2xl border-2 border-amber-200 shadow-xs text-center">
-            <p class="text-xs font-black uppercase tracking-wider text-amber-700 mb-1">Formule unique</p>
-            <p class="text-2xl sm:text-3xl font-black text-amber-950 mb-2">Pass semestre</p>
-            <p class="text-xs font-semibold text-slate-600 mb-6">Valable pour toute la durée du semestre en cours.</p>
             {% if user.is_authenticated %}
-                <a href="{% url 'accounts:dashboard' %}" class="btn-primary text-xs px-6 py-3 font-black rounded-xl w-full text-center">
-                    Consulter mon pass
+                <!-- Utilisateur connecté -->
+                <a href="{% url 'accounts:dashboard' %}" class="text-sm font-bold text-[#0B1B3D] hover:text-[#1D68FE] transition-colors">
+                    Mon espace
+                </a>
+                <a href="{% url 'accounts:dashboard' %}" class="inline-flex items-center space-x-2 px-5 py-2.5 rounded-full bg-[#1D68FE] hover:bg-blue-600 text-white font-bold text-sm shadow-sm hover:shadow-md transition-all active:scale-95">
+                    <i class="fa-solid fa-gauge-high text-xs"></i>
+                    <span>Tableau de bord</span>
                 </a>
             {% else %}
-                <a href="{% url 'accounts:register' %}" class="btn-primary text-xs px-6 py-3.5 font-black rounded-xl w-full text-center block shadow-md">
-                    <i class="fa-solid fa-user-plus mr-1.5"></i>
-                    <span>S'inscrire pour activer</span>
+                <!-- Visiteur -->
+                <a href="{% url 'accounts:login' %}" class="text-sm font-bold text-slate-700 hover:text-[#1D68FE] transition-colors px-1">
+                    Se connecter
                 </a>
-                <p class="text-[11px] text-slate-500 mt-2.5 font-medium">
-                    Déjà un compte ? <a href="{% url 'accounts:login' %}" class="font-bold text-[#2563EB] hover:underline">Se connecter</a>
+                <a href="{% url 'accounts:register' %}" class="inline-flex items-center space-x-2 px-5 py-2.5 rounded-full bg-[#1D68FE] hover:bg-blue-600 text-white font-bold text-sm shadow-sm hover:shadow-md transition-all active:scale-95">
+                    <i class="fa-solid fa-user-plus text-xs"></i>
+                    <span>S'inscrire</span>
+                </a>
+            {% endif %}
+        </div>
+
+        <!-- MOBILE MENU BUTTON -->
+        <div class="flex items-center space-x-2 md:hidden">
+            {% if not user.is_authenticated %}
+                <a href="{% url 'accounts:login' %}" class="text-xs font-bold text-slate-700 px-3 py-1.5 rounded-full bg-slate-100">
+                    Connexion
+                </a>
+                <a href="{% url 'accounts:register' %}" class="text-xs font-bold text-white px-3 py-1.5 rounded-full bg-[#1D68FE]">
+                    S'inscrire
+                </a>
+            {% else %}
+                <a href="{% url 'accounts:dashboard' %}" class="text-xs font-bold text-white px-3 py-1.5 rounded-full bg-[#1D68FE]">
+                    Mon espace
+                </a>
+            {% endif %}
+            <button type="button" onclick="toggleMobileHomeMenu()" class="p-2 rounded-xl text-slate-600 hover:bg-slate-100" aria-label="Ouvrir le menu">
+                <i class="fa-solid fa-bars text-lg"></i>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- MOBILE DROPDOWN COLLAPSIBLE -->
+    <div id="mobile-home-menu" class="hidden md:hidden border-t border-slate-100 bg-white px-4 py-3 space-y-2">
+        <form action="{% url 'academics:global_search' %}" method="get" class="mb-3">
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                <input type="text" name="q" placeholder="Rechercher une matière, une UE..." class="w-full pl-8 pr-4 py-2 rounded-full bg-slate-50 border border-slate-200 text-xs">
+            </div>
+        </form>
+        <a href="{% url 'academics:home' %}" class="block px-3 py-2 rounded-xl text-sm font-bold text-[#1D68FE] bg-blue-50">Accueil</a>
+        <a href="{% url 'exams:liste' %}" class="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50">Épreuves</a>
+        <a href="{% url 'exams:liste' %}?has_correction=1" class="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50">Corrigés</a>
+        <a href="{% url 'content:summary_list' %}" class="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50">Résumés</a>
+    </div>
+</header>
+<script>
+function toggleMobileHomeMenu() {
+    const el = document.getElementById('mobile-home-menu');
+    if (el) el.classList.toggle('hidden');
+}
+</script>
+{% endblock header %}
+
+{% block content %}
+
+<!-- ========================================================================= -->
+<!-- 1. HERO SECTION AVEC MOCKUP LAPTOP EXACT -->
+<!-- ========================================================================= -->
+<section class="relative bg-gradient-to-b from-[#F5F8FF] via-[#FAFCFF] to-white pt-10 pb-16 md:pt-16 md:pb-24 overflow-hidden border-b border-slate-100/80">
+    <!-- Halo lumineux d'ambiance -->
+    <div class="absolute top-0 right-1/4 w-[500px] h-[500px] bg-blue-100/35 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+            
+            <!-- COLONNE GAUCHE : TEXTE & RECHERCHE -->
+            <div class="lg:col-span-6 text-left">
+                
+                <!-- Badge Pill -->
+                <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#EEF4FF] border border-[#D8E6FF] text-[#1D68FE] text-xs font-bold mb-6 shadow-2xs">
+                    <i class="fa-solid fa-graduation-cap text-xs"></i>
+                    <span>Votre réussite, notre priorité</span>
+                </div>
+
+                <!-- Grand Titre Épuré -->
+                <h1 class="text-4xl sm:text-5xl lg:text-[3.6rem] font-black tracking-tight text-[#0B1B3D] mb-5 leading-[1.08]">
+                    Toutes vos épreuves.<br>
+                    <span class="text-[#1D68FE]">Une seule plateforme.</span>
+                </h1>
+
+                <!-- Sous-titre -->
+                <p class="text-slate-600 text-sm sm:text-base leading-relaxed mb-8 max-w-xl font-normal">
+                    Accédez facilement aux anciens sujets d'examens, aux corrigés détaillés et aux résumés de vos matières. Gagnez du temps, révisez mieux, réussissez plus.
                 </p>
+
+                <!-- Formulaire de recherche Pill -->
+                <form action="{% url 'academics:global_search' %}" method="get" class="mb-5 max-w-xl">
+                    <div class="relative flex items-center bg-white border border-slate-200/90 rounded-full p-2 pl-5 shadow-[0_10px_35px_rgba(0,0,0,0.06)] hover:border-blue-300 focus-within:border-[#1D68FE] focus-within:ring-4 focus-within:ring-blue-50 transition-all">
+                        <i class="fa-solid fa-magnifying-glass text-slate-400 mr-3 text-base shrink-0"></i>
+                        <input type="text" name="q" placeholder="Rechercher une matière, une UE, un professeur..." class="w-full bg-transparent border-none text-slate-800 placeholder-slate-400 text-xs sm:text-sm font-medium focus:outline-none pr-2" required>
+                        <button type="submit" class="bg-[#1D68FE] hover:bg-blue-600 text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-full flex items-center space-x-2 shrink-0 transition-all shadow-sm active:scale-95">
+                            <span>Rechercher</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- 3 Filtres Pill Rapides -->
+                <div class="flex flex-wrap items-center gap-2.5 text-xs font-semibold">
+                    <a href="{% url 'exams:liste' %}" class="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-[#1D68FE] text-white shadow-xs hover:bg-blue-600 transition-colors">
+                        <i class="fa-solid fa-file-lines text-xs"></i>
+                        <span>Épreuves</span>
+                    </a>
+                    <a href="{% url 'exams:liste' %}?has_correction=1" class="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-[#EFF6FF] text-[#1D68FE] hover:bg-blue-100 transition-colors">
+                        <i class="fa-solid fa-circle-check text-xs"></i>
+                        <span>Corrigés</span>
+                    </a>
+                    <a href="{% url 'content:summary_list' %}" class="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-[#EFF6FF] text-[#1D68FE] hover:bg-blue-100 transition-colors">
+                        <i class="fa-solid fa-file-invoice text-xs"></i>
+                        <span>Résumés</span>
+                    </a>
+                </div>
+
+            </div>
+
+            <!-- COLONNE DROITE : MOCKUP LAPTOP SUR BUREAU AVEC PLANTE -->
+            <div class="lg:col-span-6 flex justify-center lg:justify-end">
+                <div class="relative w-full max-w-[580px] rounded-2xl overflow-hidden shadow-[0_25px_60px_rgba(15,23,42,0.12)] border border-slate-100/80 bg-white group">
+                    <img src="{% static 'images/hero_laptop_mockup.webp' %}" alt="ArchivEx — Plateforme d'épreuves sur ordinateur portable" class="w-full h-auto object-cover transform group-hover:scale-[1.015] transition-transform duration-500 ease-out" loading="eager">
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- 2. CARTES FONCTIONNALITÉS (Épreuves, Corrigés, Résumés) -->
+<!-- ========================================================================= -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- CARTE 1 : ÉPREUVES -->
+        <a href="{% url 'exams:liste' %}" class="group bg-white rounded-3xl p-7 sm:p-8 border border-slate-100 shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_35px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-50 text-[#1D68FE] flex items-center justify-center text-xl shadow-2xs group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-file-lines"></i>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 group-hover:bg-[#1D68FE] group-hover:text-white flex items-center justify-center text-xs transition-colors">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+                <h3 class="text-xl font-black text-[#0B1B3D] mb-2.5">Épreuves</h3>
+                <p class="text-slate-500 text-sm leading-relaxed mb-6 font-normal">
+                    Retrouvez les anciens sujets d'examens classés par matière et par UE.
+                </p>
+            </div>
+            <span class="inline-flex items-center space-x-1.5 text-sm font-bold text-[#1D68FE] group-hover:translate-x-1 transition-transform">
+                <span>Voir plus</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </span>
+        </a>
+
+        <!-- CARTE 2 : CORRIGÉS -->
+        <a href="{% url 'exams:liste' %}?has_correction=1" class="group bg-white rounded-3xl p-7 sm:p-8 border border-slate-100 shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_35px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-xl shadow-2xs group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 group-hover:bg-emerald-500 group-hover:text-white flex items-center justify-center text-xs transition-colors">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+                <h3 class="text-xl font-black text-[#0B1B3D] mb-2.5">Corrigés</h3>
+                <p class="text-slate-500 text-sm leading-relaxed mb-6 font-normal">
+                    Accédez aux corrigés détaillés pour mieux comprendre et progresser.
+                </p>
+            </div>
+            <span class="inline-flex items-center space-x-1.5 text-sm font-bold text-[#1D68FE] group-hover:translate-x-1 transition-transform">
+                <span>Voir plus</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </span>
+        </a>
+
+        <!-- CARTE 3 : RÉSUMÉS -->
+        <a href="{% url 'content:summary_list' %}" class="group bg-white rounded-3xl p-7 sm:p-8 border border-slate-100 shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_35px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl shadow-2xs group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-file-invoice"></i>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 group-hover:bg-purple-600 group-hover:text-white flex items-center justify-center text-xs transition-colors">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+                <h3 class="text-xl font-black text-[#0B1B3D] mb-2.5">Résumés</h3>
+                <p class="text-slate-500 text-sm leading-relaxed mb-6 font-normal">
+                    Des fiches de révision claires et concises pour aller à l'essentiel.
+                </p>
+            </div>
+            <span class="inline-flex items-center space-x-1.5 text-sm font-bold text-[#1D68FE] group-hover:translate-x-1 transition-transform">
+                <span>Voir plus</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </span>
+        </a>
+
+    </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- 3. SECTION "POURQUOI CHOISIR ARCHIVEX ?" + 4 FEATURES + 4 STATISTIQUES -->
+<!-- ========================================================================= -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-20 border-t border-slate-100">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
+        
+        <!-- BLOC GAUCHE : TITRE & CTA -->
+        <div class="lg:col-span-4 text-left">
+            <span class="text-xs font-black tracking-widest text-[#1D68FE] uppercase mb-3 block">
+                POURQUOI CHOISIR ARCHIVEX ?
+            </span>
+            <h2 class="text-3xl sm:text-4xl font-black text-[#0B1B3D] tracking-tight leading-tight mb-4">
+                Un outil pensé pour votre réussite
+            </h2>
+            <p class="text-slate-600 text-sm leading-relaxed mb-8 font-normal">
+                ArchivEx simplifie votre parcours universitaire en vous offrant un accès rapide et fiable à toutes les ressources dont vous avez besoin, au même endroit.
+            </p>
+            {% if user.is_authenticated %}
+                <a href="{% url 'academics:filieres' %}" class="inline-flex items-center space-x-2 bg-[#1D68FE] hover:bg-blue-600 text-white font-bold text-sm px-7 py-3.5 rounded-full shadow-sm hover:shadow-md transition-all active:scale-95">
+                    <span>Découvrir la plateforme</span>
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </a>
+            {% else %}
+                <a href="{% url 'accounts:register' %}" class="inline-flex items-center space-x-2 bg-[#1D68FE] hover:bg-blue-600 text-white font-bold text-sm px-7 py-3.5 rounded-full shadow-sm hover:shadow-md transition-all active:scale-95">
+                    <span>Découvrir la plateforme</span>
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </a>
+            {% endif %}
+        </div>
+
+        <!-- BLOC DROIT : 4 AVANTAGES + STATS -->
+        <div class="lg:col-span-8">
+            <!-- 4 Features en ligne -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                
+                <!-- 1. Recherche ultra rapide -->
+                <div>
+                    <div class="w-11 h-11 rounded-full bg-blue-50 text-[#1D68FE] flex items-center justify-center text-lg mb-3.5">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <h4 class="font-black text-sm text-[#0B1B3D] mb-1.5">Recherche ultra rapide</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed font-normal">
+                        Trouvez ce que vous cherchez en quelques secondes.
+                    </p>
+                </div>
+
+                <!-- 2. Contenus fiables -->
+                <div>
+                    <div class="w-11 h-11 rounded-full bg-blue-50 text-[#1D68FE] flex items-center justify-center text-lg mb-3.5">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h4 class="font-black text-sm text-[#0B1B3D] mb-1.5">Contenus fiables</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed font-normal">
+                        Des ressources vérifiées et mises à jour régulièrement.
+                    </p>
+                </div>
+
+                <!-- 3. Accessible partout -->
+                <div>
+                    <div class="w-11 h-11 rounded-full bg-blue-50 text-[#1D68FE] flex items-center justify-center text-lg mb-3.5">
+                        <i class="fa-solid fa-display"></i>
+                    </div>
+                    <h4 class="font-black text-sm text-[#0B1B3D] mb-1.5">Accessible partout</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed font-normal">
+                        Sur ordinateur, tablette et mobile.
+                    </p>
+                </div>
+
+                <!-- 4. Pour tous les étudiants -->
+                <div>
+                    <div class="w-11 h-11 rounded-full bg-blue-50 text-[#1D68FE] flex items-center justify-center text-lg mb-3.5">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <h4 class="font-black text-sm text-[#0B1B3D] mb-1.5">Pour tous les étudiants</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed font-normal">
+                        Toutes les filières et toutes les universités.
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- Ligne des Chiffres Clés -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-8 border-t border-slate-100 text-center">
+                <div>
+                    <span class="text-2xl sm:text-3xl font-black text-[#1D68FE] block">+{{ exams_count|default:"500" }}</span>
+                    <span class="text-xs text-slate-500 font-medium mt-1 block">Épreuves disponibles</span>
+                </div>
+                <div>
+                    <span class="text-2xl sm:text-3xl font-black text-[#1D68FE] block">+{{ subjects_count|default:"50" }}</span>
+                    <span class="text-xs text-slate-500 font-medium mt-1 block">Matières couvertes</span>
+                </div>
+                <div>
+                    <span class="text-2xl sm:text-3xl font-black text-[#1D68FE] block">+{{ filieres_count|default:"10" }}</span>
+                    <span class="text-xs text-slate-500 font-medium mt-1 block">Filières universitaires</span>
+                </div>
+                <div>
+                    <span class="text-2xl sm:text-3xl font-black text-[#1D68FE] block">100%</span>
+                    <span class="text-xs text-slate-500 font-medium mt-1 block">Engagement pour votre réussite</span>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- 4. BANNIÈRE D'APPEL À L'ACTION (CTA BANNER) -->
+<!-- ========================================================================= -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+    <div class="bg-[#0B1B3D] rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl relative overflow-hidden">
+        <!-- Glow d'arrière-plan -->
+        <div class="absolute -right-20 -bottom-20 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- Texte & Icône gauche -->
+        <div class="flex items-center space-x-4 relative z-10 text-left w-full sm:w-auto">
+            <div class="w-12 h-12 rounded-2xl bg-white/10 text-white flex items-center justify-center text-xl shrink-0">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <div>
+                <h3 class="text-lg sm:text-xl font-black text-white mb-0.5">Commencez vos révisions dès aujourd'hui !</h3>
+                <p class="text-xs sm:text-sm text-slate-300 font-normal">Rejoignez des milliers d'étudiants qui font confiance à ArchivEx.</p>
+            </div>
+        </div>
+
+        <!-- Bouton droit -->
+        <div class="relative z-10 shrink-0 w-full sm:w-auto">
+            {% if user.is_authenticated %}
+                <a href="{% url 'accounts:dashboard' %}" class="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-white hover:bg-slate-100 text-[#0B1B3D] font-black text-sm px-7 py-3.5 rounded-full transition-all shadow-md active:scale-95">
+                    <span>Mon tableau de bord</span>
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </a>
+            {% else %}
+                <a href="{% url 'accounts:register' %}" class="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-white hover:bg-slate-100 text-[#0B1B3D] font-black text-sm px-7 py-3.5 rounded-full transition-all shadow-md active:scale-95">
+                    <span>Créer un compte</span>
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </a>
             {% endif %}
         </div>
     </div>
 </section>
-{% endif %}
 
-<!-- 7. FICHES DE RÉSUMÉ DE COURS -->
-<section class="py-16 bg-[#071A49] text-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-        <div class="md:col-span-8 space-y-4">
-            <span class="text-xs font-black uppercase tracking-widest text-[#60A5FA] block">Fiches de résumé & synthèses clés</span>
-            <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                Révisez l'essentiel de chaque matière en un coup d'œil
-            </h2>
-            <p class="text-slate-200 text-xs sm:text-sm leading-relaxed font-medium">
-                Complétez votre préparation aux examens grâce à nos fiches de résumé PDF officielles. Synthèses concises des chapitres, formules incontournables et notions clés élaborées pour chaque Unité d'Enseignement.
-            </p>
-        </div>
-        <div class="md:col-span-4 flex justify-start md:justify-end">
-            <a href="{% url 'content:summary_list' %}" class="btn-secondary text-xs sm:text-sm px-6 py-3.5 font-black rounded-xl flex items-center space-x-2 bg-white text-[#071A49] hover:bg-slate-100 transition-colors shadow-md">
-                <i class="fa-solid fa-file-invoice text-blue-600" aria-hidden="true"></i>
-                <span>Consulter les fiches résumés</span>
-            </a>
-        </div>
-    </div>
-</section>
-
-<!-- 8. PWA APPLICATION DOWNLOAD SECTION -->
-<section class="py-16 bg-gradient-to-br from-[#061230] via-[#071A49] to-[#0A2260] text-white relative overflow-hidden border-y border-blue-800">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-            <div class="lg:col-span-7 space-y-5">
-                <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-900 border border-blue-400 text-blue-200 text-xs font-black">
-                    <i class="fa-solid fa-mobile-screen-button"></i>
-                    <span>Application mobile & ordinateur</span>
-                </div>
-                <h2 class="text-3xl sm:text-4xl font-black tracking-tight leading-tight text-white">
-                    Emportez <span class="text-[#60A5FA]">ArchivEx</span> partout avec vous, même hors-ligne
-                </h2>
-                <p class="text-slate-200 text-sm sm:text-base leading-relaxed font-medium">
-                    Installez l'application directement sur votre smartphone ou votre ordinateur en un clic. L'application est légère et se lance instantanément.
-                </p>
-
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-                    <div class="bg-[#0c2054] border border-blue-400/40 rounded-2xl p-4 shadow-sm hover:border-blue-400 transition-colors">
-                        <i class="fa-solid fa-bolt text-[#FBBF24] text-xl mb-2 block"></i>
-                        <h4 class="text-xs font-black text-white">Accès instantané</h4>
-                        <p class="text-[11px] text-slate-200 font-medium">Lancement direct depuis l'écran d'accueil</p>
-                    </div>
-                    <div class="bg-[#0c2054] border border-blue-400/40 rounded-2xl p-4 shadow-sm hover:border-blue-400 transition-colors">
-                        <i class="fa-solid fa-wifi-slash text-emerald-400 text-xl mb-2 block"></i>
-                        <h4 class="text-xs font-black text-white">Mode hors-ligne</h4>
-                        <p class="text-[11px] text-slate-200 font-medium">Vos révisions accessibles partout</p>
-                    </div>
-                    <div class="bg-[#0c2054] border border-blue-400/40 rounded-2xl p-4 shadow-sm hover:border-blue-400 transition-colors">
-                        <i class="fa-solid fa-shield-halved text-blue-400 text-xl mb-2 block"></i>
-                        <h4 class="text-xs font-black text-white">100% sécurisé</h4>
-                        <p class="text-[11px] text-slate-200 font-medium">Mises à jour transparentes</p>
-                    </div>
-                </div>
-
-                <div class="pt-4 flex flex-col sm:flex-row items-center gap-3">
-                    <button type="button" class="pwa-install-trigger w-full sm:w-auto bg-[#2563EB] hover:bg-blue-600 active:scale-95 text-white font-black text-sm px-8 py-4 rounded-2xl shadow-xl shadow-blue-600/40 flex items-center justify-center space-x-3 transition-all">
-                        <i class="fa-solid fa-cloud-arrow-down text-lg"></i>
-                        <span>Télécharger l'application</span>
-                    </button>
-                    <span class="text-xs text-slate-300 font-bold">Compatible Android • iOS • Windows • Mac</span>
-                </div>
-            </div>
-
-            <div class="lg:col-span-5 flex justify-center">
-                <div class="relative bg-[#08173d] border-2 border-blue-400/40 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl text-center">
-                    <div class="w-24 h-24 mx-auto rounded-3xl bg-[#071A49] border-2 border-blue-400/60 p-2 shadow-2xl mb-4 flex items-center justify-center">
-                        <img src="{% static 'icons/icon-192.png' %}" alt="ArchivEx PWA" class="w-full h-full object-cover rounded-2xl">
-                    </div>
-                    <h3 class="text-lg font-black text-white mb-1">ArchivEx mobile & ordinateur</h3>
-                    <p class="text-xs text-slate-200 font-semibold mb-5">Prêt à être installé sur votre appareil</p>
-                    <button type="button" class="pwa-install-trigger w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black text-sm py-3.5 px-5 rounded-xl shadow-lg flex items-center justify-center space-x-2 transition-all">
-                        <i class="fa-solid fa-download"></i>
-                        <span>Installer maintenant</span>
-                    </button>
-                    <p class="text-[11px] text-slate-300 font-semibold mt-3">Gratuit • Sans passer par les stores</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- 9. FINAL CTA -->
-<section class="py-16 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-    <h2 class="text-2xl sm:text-3xl font-black text-[#071A49] mb-4">
-        Prêt à mieux préparer votre semestre ?
-    </h2>
-    <p class="text-slate-700 text-xs sm:text-sm leading-relaxed mb-8 max-w-xl mx-auto font-semibold">
-        Rejoignez les étudiants qui utilisent ArchivEx pour organiser leurs révisions et aborder leurs examens en toute confiance.
-    </p>
-    {% if not user.is_authenticated %}
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5">
-            <a href="{% url 'accounts:register' %}" class="w-full sm:w-auto btn-primary text-xs sm:text-sm px-8 py-4 font-black rounded-xl shadow-lg flex items-center justify-center space-x-2">
-                <i class="fa-solid fa-user-plus"></i>
-                <span>Créer un compte gratuitement</span>
-            </a>
-            <a href="{% url 'accounts:login' %}" class="w-full sm:w-auto bg-white hover:bg-slate-50 text-[#071A49] border-2 border-slate-200 hover:border-[#2563EB] font-black text-xs sm:text-sm px-7 py-4 rounded-xl shadow-xs flex items-center justify-center space-x-2 transition-all">
-                <i class="fa-solid fa-arrow-right-to-bracket text-[#2563EB]"></i>
-                <span>J'ai déjà un compte</span>
-            </a>
-        </div>
-    {% else %}
-        <a href="{% url 'academics:filieres' %}" class="btn-primary text-xs sm:text-sm px-8 py-3.5 font-black rounded-xl inline-block shadow-md">
-            Accéder à mes matières
-        </a>
-    {% endif %}
-</section>
-{% endblock %}
+{% endblock content %}
