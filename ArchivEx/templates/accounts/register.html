@@ -44,24 +44,14 @@
                     </div>
                 {% endif %}
 
-                <!-- 1. FIRST NAME & LAST NAME ROW -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    <div>
-                        <div class="relative flex items-center">
-                            {{ form.first_name }}
-                        </div>
-                        {% if form.first_name.errors %}
-                            <p class="text-[11px] text-rose-400 font-semibold mt-1 pl-3">{{ form.first_name.errors.0 }}</p>
-                        {% endif %}
+                <!-- 1. NOM ET PRÉNOM (CASE UNIQUE) -->
+                <div>
+                    <div class="relative flex items-center">
+                        {{ form.full_name }}
                     </div>
-                    <div>
-                        <div class="relative flex items-center">
-                            {{ form.last_name }}
-                        </div>
-                        {% if form.last_name.errors %}
-                            <p class="text-[11px] text-rose-400 font-semibold mt-1 pl-3">{{ form.last_name.errors.0 }}</p>
-                        {% endif %}
-                    </div>
+                    {% if form.full_name.errors %}
+                        <p class="text-[11px] text-rose-400 font-semibold mt-1 pl-3">{{ form.full_name.errors.0 }}</p>
+                    {% endif %}
                 </div>
 
                 <!-- 2. EMAIL INPUT -->
@@ -159,9 +149,44 @@
         color: #000000 !important;
     }
 
+    /* Cases sombres élégantes (non-blanches) */
+    .cosmic-dark-input,
+    .cosmic-dark-select,
+    .cosmic-pill-input,
+    input[type="text"], 
+    input[type="email"], 
+    input[type="password"], 
+    select {
+        background-color: #0B1528 !important;
+        color: #ffffff !important;
+        border-color: rgba(255, 255, 255, 0.14) !important;
+    }
+    .cosmic-dark-input:focus,
+    .cosmic-dark-select:focus,
+    .cosmic-pill-input:focus,
+    input[type="text"]:focus, 
+    input[type="email"]:focus, 
+    input[type="password"]:focus, 
+    select:focus {
+        background-color: #0E1A33 !important;
+        border-color: #22d3ee !important;
+        box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.25) !important;
+    }
+
+    /* Anti-autofill blanc du navigateur */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover, 
+    input:-webkit-autofill:focus, 
+    input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 1000px #0B1528 inset !important;
+        -webkit-text-fill-color: #ffffff !important;
+        caret-color: #ffffff !important;
+        transition: background-color 5000s ease-in-out 0s;
+    }
+
     /* Style for dark selects and dropdown options */
     select option {
-        background-color: #080e22 !important;
+        background-color: #0B1528 !important;
         color: #f8fafc !important;
     }
 </style>
@@ -187,7 +212,7 @@
         // Apply cosmic pill classes to all text, email, password inputs and selects
         const formElements = document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"], select');
         formElements.forEach(el => {
-            el.className = "w-full px-5 py-3 rounded-full text-xs sm:text-sm text-white placeholder-slate-400/80 bg-white/[0.05] border border-white/[0.18] focus:border-cyan-400 focus:bg-white/[0.08] focus:outline-none focus:ring-2 focus:ring-cyan-400/30 transition-all font-medium";
+            el.className = "cosmic-dark-input w-full px-5 py-3.5 rounded-full text-xs sm:text-sm text-white placeholder-slate-400/80 bg-[#0B1528] border border-white/[0.14] focus:border-cyan-400 focus:bg-[#0E1A33] focus:outline-none focus:ring-2 focus:ring-cyan-400/30 transition-all font-medium shadow-inner";
         });
 
         const pwdInput = document.getElementById("id_password");

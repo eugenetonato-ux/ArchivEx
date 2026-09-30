@@ -8,36 +8,70 @@ User = get_user_model()
 
 
 class StudentRegistrationForm(forms.ModelForm):
-    first_name = forms.CharField(max_length=50, required=True, label="Prénom", widget=forms.TextInput(attrs={
-        'class': 'w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]',
-        'placeholder': 'Sophia'
-    }))
-    last_name = forms.CharField(max_length=50, required=True, label="Nom", widget=forms.TextInput(attrs={
-        'class': 'w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]',
-        'placeholder': 'Lokossou'
-    }))
-    email = forms.EmailField(required=True, label="Adresse Email", widget=forms.EmailInput(attrs={
-        'class': 'w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]',
-        'placeholder': 'sophialokossou@gmail.com'
-    }))
-    password = forms.CharField(widget=forms.PasswordInput(attrs={
-        'class': 'w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]',
-        'placeholder': 'Tapez un mot de passe'
-    }), label="Mot de passe")
+    full_name = forms.CharField(
+        max_length=100, 
+        required=True, 
+        label="Nom et Prénom", 
+        widget=forms.TextInput(attrs={
+            'class': 'cosmic-dark-input w-full px-5 py-3.5 bg-[#0B1528] border border-white/[0.14] rounded-full text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/30 focus:border-cyan-400 transition-all font-medium',
+            'placeholder': 'Nom et Prénom (ex: Sophia Lokossou)'
+        })
+    )
+    email = forms.EmailField(
+        required=True, 
+        label="Adresse Email", 
+        widget=forms.EmailInput(attrs={
+            'class': 'cosmic-dark-input w-full px-5 py-3.5 bg-[#0B1528] border border-white/[0.14] rounded-full text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/30 focus:border-cyan-400 transition-all font-medium',
+            'placeholder': 'sophialokossou@gmail.com'
+        })
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'cosmic-dark-input w-full px-5 py-3.5 pr-11 bg-[#0B1528] border border-white/[0.14] rounded-full text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/30 focus:border-cyan-400 transition-all font-medium',
+            'placeholder': 'Tapez un mot de passe'
+        }), 
+        label="Mot de passe"
+    )
 
-    school = forms.ModelChoiceField(queryset=School.objects.filter(is_active=True), label="École / Université", widget=forms.Select(attrs={
-        'class': 'w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] focus:outline-none focus:ring-2 focus:ring-[#2563EB]'
-    }))
-    level = forms.ModelChoiceField(queryset=Level.objects.all(), label="Niveau d'étude", widget=forms.Select(attrs={
-        'class': 'w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] focus:outline-none focus:ring-2 focus:ring-[#2563EB]'
-    }))
-    filiere = forms.ModelChoiceField(queryset=Filiere.objects.all(), label="Filière", widget=forms.Select(attrs={
-        'class': 'w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] focus:outline-none focus:ring-2 focus:ring-[#2563EB]'
-    }))
+    school = forms.ModelChoiceField(
+        queryset=School.objects.filter(is_active=True), 
+        label="École / Université", 
+        empty_label="-- Sélectionner votre école --",
+        widget=forms.Select(attrs={
+            'class': 'cosmic-dark-select w-full px-5 py-3.5 bg-[#0B1528] border border-white/[0.14] rounded-full text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/30 focus:border-cyan-400 transition-all font-medium cursor-pointer'
+        })
+    )
+    level = forms.ModelChoiceField(
+        queryset=Level.objects.all(), 
+        label="Niveau d'étude", 
+        empty_label="-- Choisir le niveau --",
+        widget=forms.Select(attrs={
+            'class': 'cosmic-dark-select w-full px-5 py-3.5 bg-[#0B1528] border border-white/[0.14] rounded-full text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/30 focus:border-cyan-400 transition-all font-medium cursor-pointer'
+        })
+    )
+    filiere = forms.ModelChoiceField(
+        queryset=Filiere.objects.all(), 
+        label="Filière", 
+        empty_label="-- Choisir la filière --",
+        widget=forms.Select(attrs={
+            'class': 'cosmic-dark-select w-full px-5 py-3.5 bg-[#0B1528] border border-white/[0.14] rounded-full text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/30 focus:border-cyan-400 transition-all font-medium cursor-pointer'
+        })
+    )
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'password']
+        fields = ['email', 'password']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Rétro-compatibilité : si un test ou caller fournit first_name et last_name séparés
+        if self.data and 'full_name' not in self.data:
+            first = self.data.get('first_name', '').strip()
+            last = self.data.get('last_name', '').strip()
+            if first or last:
+                mutable_data = self.data.copy()
+                mutable_data['full_name'] = f"{first} {last}".strip()
+                self.data = mutable_data
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -49,6 +83,22 @@ class StudentRegistrationForm(forms.ModelForm):
         user = super().save(commit=False)
         user.username = self.cleaned_data['email']
         user.set_password(self.cleaned_data['password'])
+        
+        # Découpage intelligent du nom et prénom pour peupler les champs natifs User
+        full_name = self.cleaned_data.get('full_name', '').strip()
+        if not full_name:
+            fn = self.data.get('first_name', '').strip()
+            ln = self.data.get('last_name', '').strip()
+            full_name = f"{fn} {ln}".strip()
+            
+        if ' ' in full_name:
+            parts = full_name.split(' ', 1)
+            user.first_name = parts[0].strip()
+            user.last_name = parts[1].strip()
+        else:
+            user.first_name = full_name
+            user.last_name = ''
+
         if commit:
             user.save()
             StudentProfile.objects.create(
@@ -62,11 +112,11 @@ class StudentRegistrationForm(forms.ModelForm):
 
 class StudentLoginForm(AuthenticationForm):
     username = forms.CharField(label="Adresse Email ou identifiant", widget=forms.TextInput(attrs={
-        'class': 'w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]',
+        'class': 'cosmic-pill-input w-full px-5 py-3.5 rounded-full text-xs sm:text-sm text-white placeholder-slate-400/80 bg-[#0B1528] border border-white/[0.14] focus:border-cyan-400 focus:bg-[#0E1A33] focus:outline-none focus:ring-2 focus:ring-cyan-400/30 transition-all font-medium',
         'placeholder': 'etudiant@gmail.com'
     }))
     password = forms.CharField(label="Mot de passe", widget=forms.PasswordInput(attrs={
-        'class': 'w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]',
+        'class': 'cosmic-pill-input w-full pl-5 pr-11 py-3.5 rounded-full text-xs sm:text-sm text-white placeholder-slate-400/80 bg-[#0B1528] border border-white/[0.14] focus:border-cyan-400 focus:bg-[#0E1A33] focus:outline-none focus:ring-2 focus:ring-cyan-400/30 transition-all font-medium',
         'placeholder': '••••••••'
     }))
 

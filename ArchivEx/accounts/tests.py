@@ -68,6 +68,26 @@ class AccountsAndAcademicsTest(TestCase):
         self.assertEqual(res_dup.status_code, 200)
         self.assertContains(res_dup, "Un compte avec cette adresse email existe déjà.")
 
+    def test_student_registration_with_single_fullname_field(self):
+        """Test registration using the new single 'full_name' (Nom et Prénom) field."""
+        data = {
+            "full_name": "Sophia Lokossou",
+            "email": "sophia.lokossou@univ.edu",
+            "password": "Password123!",
+            "school": self.school_eneam.id,
+            "level": self.level_l1.id,
+            "filiere": self.filiere_ig.id,
+        }
+        res = self.client.post(reverse("accounts:register"), data)
+        self.assertRedirects(res, reverse("accounts:dashboard"))
+
+        user = User.objects.get(email="sophia.lokossou@univ.edu")
+        self.assertEqual(user.first_name, "Sophia")
+        self.assertEqual(user.last_name, "Lokossou")
+        self.assertEqual(user.get_full_name(), "Sophia Lokossou")
+        self.assertTrue(hasattr(user, "profile"))
+        self.assertEqual(user.profile.school, self.school_eneam)
+
     def test_student_data_isolation_idor_prevention(self):
         """Verify Student A cannot access or see Student B's profile or dashboard data."""
         user_a = User.objects.create_user(username="student_a@univ.edu", email="student_a@univ.edu", password="Password123!")
