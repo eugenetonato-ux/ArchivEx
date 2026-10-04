@@ -60,6 +60,9 @@ INSTALLED_APPS = [
     "contributors",
     "notifications",
     "support",
+
+    # Third party
+    "storages",
 ]
 
 MIDDLEWARE = [
@@ -115,8 +118,13 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 
 # Database
+# Supported engines:
+#   - django.db.backends.sqlite3     → Développement local
+#   - django.db.backends.postgresql  → Production (Supabase)
+#   - django.db.backends.mysql       → Fallback hébergeurs partagés (ex: PythonAnywhere)
 
 DB_ENGINE = config("DB_ENGINE", default="django.db.backends.sqlite3")
+
 if DB_ENGINE == "django.db.backends.sqlite3":
     DATABASES = {
         "default": {
@@ -124,15 +132,41 @@ if DB_ENGINE == "django.db.backends.sqlite3":
             "NAME": BASE_DIR / config("DB_NAME", default="db.sqlite3"),
         }
     }
-else:
+
+elif DB_ENGINE == "django.db.backends.postgresql":
+    # Supabase PostgreSQL — connexion via Transaction Pooler (port 6543)
+    # ou Session Pooler (port 5432) selon le plan
     DATABASES = {
         "default": {
-            "ENGINE": DB_ENGINE,
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": config("DB_NAME", default="postgres"),
+            "USER": config("DB_USER", default="postgres"),
+            "PASSWORD": config("DB_PASSWORD", default=""),
+            "HOST": config("DB_HOST", default="localhost"),
+            "PORT": config("DB_PORT", default="5432"),
+            "OPTIONS": {
+                "sslmode": config("DB_SSLMODE", default="require"),
+            },
+            "CONN_MAX_AGE": config("DB_CONN_MAX_AGE", default=60, cast=int),
+        }
+    }
+
+else:
+    # MySQL — Fallback pour hébergeurs partagés (PythonAnywhere, Infomaniak, etc.)
+    import pymysql
+    pymysql.install_as_MySQLdb()
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
             "NAME": config("DB_NAME", default="archivex"),
             "USER": config("DB_USER", default="root"),
             "PASSWORD": config("DB_PASSWORD", default=""),
             "HOST": config("DB_HOST", default="127.0.0.1"),
             "PORT": config("DB_PORT", default="3306"),
+            "OPTIONS": {
+                "charset": "utf8mb4",
+                "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
         }
     }
 
@@ -168,15 +202,57 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static & Media Files (WhiteNoise Strategy)
+# Static & Media Files (WhiteNoise + Supabase Storage / S3 Strategy)
 
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+USE_SUPABASE_STORAGE = config("USE_SUPABASE_STORAGE", default=False, cast=bool)
+
+if USE_SUPABASE_STORAGE:
+    AWS_ACCESS_KEY_ID = config("SUPABASE_STORAGE_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = config("SUPABASE_STORAGE_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = config("SUPABASE_STORAGE_BUCKET_NAME", default="archivex-docs")
+    AWS_S3_REGION_NAME = config("SUPABASE_STORAGE_REGION", default="eu-west-1")
+    AWS_S3_ENDPOINT_URL = config(
+        "SUPABASE_STORAGE_ENDPOINT_URL",
+        default="https://shqxnsswjffkhywljwzp.supabase.co/storage/v1/s3"
+    )
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = config("SUPABASE_STORAGE_QUERYSTRING_AUTH", default=False, cast=bool)
+
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+            "OPTIONS": {
+                "access_key": AWS_ACCESS_KEY_ID,
+                "secret_key": AWS_SECRET_ACCESS_KEY,
+                "bucket_name": AWS_STORAGE_BUCKET_NAME,
+                "endpoint_url": AWS_S3_ENDPOINT_URL,
+                "region_name": AWS_S3_REGION_NAME,
+                "default_acl": None,
+                "file_overwrite": False,
+                "querystring_auth": AWS_QUERYSTRING_AUTH,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+    MEDIA_URL = f"{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/"
+else:
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = BASE_DIR / "media"
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
 
 
 # Email Configuration

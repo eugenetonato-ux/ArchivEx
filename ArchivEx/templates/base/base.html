@@ -546,12 +546,13 @@
  {% endif %}
 
  <!-- MAIN CONTENT AREA -->
- <main id="main-content" tabindex="-1" role="main" class="flex-grow w-full max-w-full overflow-x-hidden min-w-0 outline-none">
+ <main id="main-content" tabindex="-1" role="main" class="flex-grow w-full max-w-full overflow-x-hidden min-w-0 outline-none pb-20 md:pb-10">
  {% block content %}{% endblock %}
  </main>
 
- <!-- FOOTER DESKTOP & TABLET -->
+ <!-- FOOTER DESKTOP & TABLET (Uniquement sur Accueil et Profil) -->
  {% block footer %}
+ {% if request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'profile' %}
  <footer role="contentinfo" class="border-t border-slate-800 bg-[#071A49] text-slate-400 text-sm mt-20">
  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-12">
  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
@@ -611,6 +612,7 @@
  </div>
  </div>
  </footer>
+ {% endif %}
  {% endblock %}
 
  {% if user.is_authenticated %}
@@ -815,12 +817,14 @@
  }
  });
  </script>
- <!-- FLOATING SUPPORT BUTTON (PUBLIC & RESPONSIVE) -->
+ <!-- FLOATING SUPPORT BUTTON (Uniquement sur Accueil, Dashboard et Profil) -->
+ {% if request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'profile' %}
  <a href="{% url 'support:create' %}" id="floating-support-btn" aria-label="Contacter le support" class="fixed bottom-20 md:bottom-6 right-6 z-40 bg-[#2563EB] hover:bg-blue-700 text-white font-extrabold text-xs px-4 py-3 rounded-full shadow-xl shadow-blue-600/30 flex items-center space-x-2 transition-all hover:scale-105 group border border-white/20">
  <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
  <i class="fa-solid fa-comments text-sm group-hover:rotate-6 transition-transform"></i>
  <span class="font-extrabold"> Support</span>
  </a>
+ {% endif %}
 
  <!-- PWA MODAL & 20S POPUP -->
  {% include "base/_pwa_modal.html" %}

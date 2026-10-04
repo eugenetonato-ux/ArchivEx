@@ -5,4 +5,14 @@ pypdf>=5.1.0
 reportlab>=4.2.5
 Pillow>=10.4.0
 requests>=2.32.0
+
+# PostgreSQL (Supabase) — Production
+psycopg2-binary>=2.9.0
+
+# MySQL — Fallback hébergeurs partagés
 pymysql>=1.1.0
+
+# Storage S3 / Supabase Storage
+django-storages>=1.14.0
+boto3>=1.34.0
+

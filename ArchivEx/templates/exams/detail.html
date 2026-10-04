@@ -86,9 +86,26 @@
             </div>
 
             {% if has_access %}
-                <!-- PDF PREVIEW / SECURE INLINE VIEWER (SPACIEUX ET LISIBLE) -->
-                <div class="w-full h-[82vh] min-h-[680px] rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 relative shadow-inner">
-                    <div id="detail-pdf-viewer-mount" class="w-full h-full"></div>
+                <!-- ACCÈS AU LECTEUR PLEIN ÉCRAN EXCLUSIF SÉCURISÉ -->
+                <div class="p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-slate-900 via-[#071A49] to-blue-950 text-white text-center flex flex-col items-center justify-center space-y-4 shadow-md border border-blue-900/60">
+                    <div class="w-16 h-16 rounded-2xl bg-blue-600/30 border border-blue-400/40 text-blue-300 flex items-center justify-center text-2xl shadow-inner">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </div>
+                    <div class="max-w-md">
+                        <h3 class="text-base sm:text-lg font-black text-white mb-1">Épreuve Prête pour Consultation</h3>
+                        <p class="text-xs text-blue-200/90 leading-relaxed">
+                            Pour un confort optimal et la protection des droits universitaires, les documents sont consultables exclusivement en mode plein écran immersif.
+                        </p>
+                    </div>
+                    <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=exam" class="btn-primary text-xs sm:text-sm px-8 py-3.5 font-black inline-flex items-center space-x-2 rounded-xl shadow-lg hover:scale-105 transition-all">
+                        <i class="fa-solid fa-expand text-xs"></i>
+                        <span>Ouvrir l'épreuve en plein écran</span>
+                    </a>
+                    <div class="flex items-center space-x-3 text-[11px] text-slate-400 pt-2 border-t border-white/10 flex-wrap justify-center gap-y-1">
+                        <span class="flex items-center space-x-1"><i class="fa-solid fa-shield-halved text-emerald-400 text-xs"></i> <span>Document certifié</span></span>
+                        <span>•</span>
+                        <span class="flex items-center space-x-1"><i class="fa-solid fa-ban text-rose-400 text-xs"></i> <span class="text-rose-300 font-bold">Téléchargement strictement interdit</span></span>
+                    </div>
                 </div>
             {% else %}
                 <!-- LOCKED PREMIUM ACCESS CARD WITH VALUE SHOWCASE -->
@@ -186,16 +203,4 @@
 
     </div>
 </div>
-
-{% if has_access %}
-<script src="{% static 'js/pdf-viewer.js' %}"></script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    initArchivexPdfViewer('detail-pdf-viewer-mount', '{% url "exams:stream_watermarked_pdf" pk=exam.id %}?type=exam', {
-        studentName: '{{ request.user.get_full_name|default:request.user.username|escapejs }}',
-        watermarkText: '{{ request.user.email|escapejs }}'
-    });
-});
-</script>
-{% endif %}
 {% endblock %}
