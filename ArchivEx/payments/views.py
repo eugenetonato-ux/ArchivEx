@@ -20,9 +20,6 @@ from .services import (
     verify_fedapay_webhook_signature,
     handle_fedapay_webhook_event,
     verify_and_sync_fedapay_transaction,
-    create_chariow_checkout,
-    verify_chariow_pulse_signature,
-    handle_chariow_pulse_event,
     activate_pass_for_payment,
     verify_and_sync_chariow_sale,
 )
@@ -121,7 +118,7 @@ def initier_paiement(request, semester_id):
         user=request.user,
         semester=semester,
         amount=price,
-        currency=getattr(settings, "FEDAPAY_CURRENCY", getattr(settings, "CHARIOW_CURRENCY", "XOF")),
+        currency=getattr(settings, "FEDAPAY_CURRENCY", "XOF"),
         operator=operator,
         phone_number=normalized_phone,
         external_reference=ext_ref,
@@ -132,7 +129,7 @@ def initier_paiement(request, semester_id):
     return_url = reverse("payments:payment_return", kwargs={"reference": payment.external_reference})
     callback_url = request.build_absolute_uri(return_url)
 
-    # Initialisation de la transaction via FedaPay (Gateway principale)
+    # Initialisation de la transaction via FedaPay (Passerelle exclusive)
     fedapay_res = create_fedapay_transaction(payment, callback_url=callback_url)
 
     if fedapay_res.get("success"):
@@ -142,15 +139,7 @@ def initier_paiement(request, semester_id):
         else:
             return redirect("payments:payment_pending", reference=payment.external_reference)
     else:
-        # Fallback de secours vers Chariow si FedaPay échoue ou n'est pas encore configuré
-        if getattr(settings, "CHARIOW_API_KEY", "") and getattr(settings, "CHARIOW_PRODUCT_ID", ""):
-            logger.info("[Paiement] FedaPay non disponible, tentative de repli vers Chariow pour ref=%s", payment.external_reference)
-            chariow_return_url = f"{callback_url}?sale_id={{sale_id}}"
-            chariow_res = create_chariow_checkout(payment, redirect_url=chariow_return_url)
-            if chariow_res.get("success") and chariow_res.get("checkout_url"):
-                return redirect(chariow_res.get("checkout_url"))
-
-        error_msg = fedapay_res.get("error", "Erreur lors de l'initialisation du paiement.")
+        error_msg = fedapay_res.get("error", "Erreur lors de l'initialisation du paiement FedaPay.")
         payment.status = Payment.STATUS_REJECTED
         payment.save(update_fields=["status"])
         messages.error(request, error_msg)
@@ -309,38 +298,6 @@ def fedapay_webhook_view(request):
     return JsonResponse(result, status=status_code)
 
 
-@csrf_exempt
-@require_POST
-def chariow_webhook_view(request):
-    """
-    Endpoint Webhook hérité pour la réception des Pulses Chariow (legacy / fallback).
-    POST /pass/webhook/chariow/ et POST /webhook/chariow/
-    """
-    signature_header = (
-        request.headers.get("X-Chariow-Signature") or
-        request.headers.get("x-chariow-signature") or
-        request.META.get("HTTP_X_CHARIOW_SIGNATURE", "")
-    )
-
-    if not verify_chariow_pulse_signature(request.body, signature_header):
-        logger.warning("[Chariow Webhook] Signature invalide reçue.")
-        return HttpResponseForbidden("Signature Webhook Chariow invalide.")
-
-    try:
-        payload = json.loads(request.body.decode("utf-8"))
-    except (json.JSONDecodeError, UnicodeDecodeError):
-        logger.error("[Chariow Webhook] Payload JSON non décodable.")
-        return JsonResponse({"error": "Payload JSON invalide"}, status=400)
-
-    delivery_id = (
-        request.headers.get("X-Pulse-Delivery-Id") or
-        request.headers.get("x-pulse-delivery-id") or
-        request.META.get("HTTP_X_PULSE_DELIVERY_ID", "")
-    )
-
-    result = handle_chariow_pulse_event(payload, delivery_id=delivery_id)
-    status_code = 200 if result.get("success", True) else result.get("status_code", 400)
-    return JsonResponse(result, status=status_code)
 
 
 @login_required

@@ -301,21 +301,25 @@
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {% for ue in user_ues %}
-                                <a href="{% url 'exams:liste' %}?subject={{ ue.id }}" class="p-3.5 rounded-2xl bg-slate-50/80 hover:bg-blue-50/70 border border-slate-200/80 hover:border-blue-200 flex items-center justify-between transition-all group">
+                                <a href="{% url 'exams:liste' %}?subject={{ ue.id }}" class="p-3.5 rounded-2xl bg-white hover:bg-blue-50/60 border border-slate-200/90 hover:border-blue-300 flex items-center justify-between transition-all group shadow-2xs hover:shadow-sm">
                                     <div class="flex items-center space-x-3 min-w-0">
                                         {% if ue.image %}
-                                            <img src="{{ ue.image.url }}" alt="{{ ue.name }}" class="w-9 h-9 rounded-xl object-cover shrink-0 border border-slate-200" />
+                                            <img src="{{ ue.image.url }}" alt="{{ ue.name }}" class="w-10 h-10 rounded-xl object-cover shrink-0 border border-slate-200" />
+                                        {% elif ue.code and ue.code|length <= 4 %}
+                                            <span class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 font-black text-xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                                {{ ue.code|upper }}
+                                            </span>
                                         {% else %}
-                                            <span class="w-9 h-9 rounded-xl bg-blue-100 text-[#2563EB] font-black text-xs flex items-center justify-center shrink-0">
-                                                {{ ue.code|default:"UE" }}
+                                            <span class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 text-sm flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                                <i class="fa-solid fa-book-bookmark text-blue-600"></i>
                                             </span>
                                         {% endif %}
                                         <div class="min-w-0">
-                                            <h4 class="text-xs font-black text-[#071A49] group-hover:text-[#2563EB] transition-colors truncate">{{ ue.name }}</h4>
+                                            <h4 class="text-xs font-black text-[#071A49] group-hover:text-blue-600 transition-colors truncate" title="{{ ue.name }}">{{ ue.name }}</h4>
                                             <p class="text-[10px] text-slate-500 font-medium">{{ ue.exams_num|default:"0" }} épreuve{{ ue.exams_num|pluralize }} disponible{{ ue.exams_num|pluralize }}</p>
                                         </div>
                                     </div>
-                                    <span class="w-7 h-7 rounded-xl bg-white text-[#2563EB] flex items-center justify-center shrink-0 shadow-xs border border-slate-100 group-hover:translate-x-1 transition-transform">
+                                    <span class="w-7 h-7 rounded-xl bg-slate-50 group-hover:bg-blue-600 text-slate-400 group-hover:text-white flex items-center justify-center shrink-0 shadow-2xs border border-slate-100 group-hover:border-blue-600 group-hover:translate-x-0.5 transition-all">
                                         <i class="fa-solid fa-chevron-right text-[10px]"></i>
                                     </span>
                                 </a>

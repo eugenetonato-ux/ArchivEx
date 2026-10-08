@@ -22,21 +22,72 @@
   <!-- HEADER -->
   <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
-      <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">Gestion des Épreuves</h1>
-      <p class="text-xs text-slate-500 font-medium mt-0.5">Unités d'Enseignement organisées en 2 colonnes — cliquez sur une carte pour afficher les épreuves, corrigés et résumés.</p>
+      <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-wider mb-2">
+        <i class="fa-solid fa-file-shield text-blue-600"></i>
+        <span>Portail Central Épreuves & Documents</span>
+      </div>
+      <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">Gestion des Épreuves & Documents</h1>
+      <p class="text-xs text-slate-500 font-medium mt-0.5">Téléversement par lot, détection intelligente des UE et gestion unifiée du stockage.</p>
     </div>
     <div class="flex items-center gap-2 flex-wrap shrink-0">
       <button type="button"
-              onclick='openDeleteModal("{% url "contributors:exam_bulk_delete_published" %}", "Toutes les épreuves publiées", "Tout supprimer ?", "Les fichiers Cloud Storage restent 100% intacts.")'
-              class="px-4 py-2.5 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 font-extrabold text-xs rounded-xl transition-colors shadow-xs inline-flex items-center gap-2">
-        <i class="fa-solid fa-dumpster-fire text-xs"></i>
-        <span>Tout supprimer</span>
+              onclick="openQuickModal()"
+              class="btn-primary text-xs px-4 py-2.5 font-extrabold rounded-xl shadow-sm flex items-center gap-2 shrink-0">
+        <i class="fa-solid fa-bolt-lightning text-amber-300"></i>
+        <span>Nouveau (Formulaire 3 champs)</span>
       </button>
       <a href="{% url 'contributors:exam_create' %}"
-         class="btn-primary text-xs px-5 py-2.5 font-extrabold rounded-xl shadow-sm flex items-center gap-2 shrink-0">
-        <i class="fa-solid fa-plus text-xs"></i>
-        <span>Ajouter une épreuve</span>
+         class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors shadow-xs inline-flex items-center gap-1.5 shrink-0"
+         title="Formulaire détaillé avancé">
+        <i class="fa-solid fa-sliders text-xs text-slate-500"></i>
+        <span>Mode détaillé</span>
       </a>
+      <button type="button"
+              onclick='openDeleteModal("{% url "contributors:exam_bulk_delete_published" %}", "Toutes les épreuves publiées", "Tout supprimer ?", "Les fichiers originaux restent intacts.")'
+              class="px-3 py-2.5 bg-slate-50 hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200 font-bold text-xs rounded-xl transition-colors shadow-xs inline-flex items-center gap-1.5"
+              title="Supprimer toutes les épreuves">
+        <i class="fa-solid fa-trash text-xs"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- SECTION DRAG & DROP MULTI-FICHIERS (TÉLÉVERSEMENT PAR LOT) -->
+  <div class="bg-gradient-to-r from-[#0d1e4c] via-[#1e3a8a] to-[#2563eb] rounded-3xl p-6 sm:p-7 text-white shadow-xl relative overflow-hidden">
+    <div class="absolute -right-10 -bottom-10 w-44 h-44 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+      <div>
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-black uppercase tracking-wider mb-1 backdrop-blur-sm">
+          <i class="fa-solid fa-wand-magic-sparkles text-amber-300 text-xs"></i>
+          <span>Auto-Indexation & Liaison</span>
+        </div>
+        <h2 class="text-base sm:text-lg font-black tracking-tight">Déposez toutes vos épreuves & corrigés en un seul geste</h2>
+        <p class="text-xs text-blue-100">Déposez 1 à 30 fichiers PDF. Le système détecte la matière, l'année et lie automatiquement les corrigés aux épreuves.</p>
+      </div>
+    </div>
+
+    <!-- ZONE DE DÉPÔT REACTIVE -->
+    <div id="batch-dropzone"
+         class="border-2 border-dashed border-white/40 hover:border-white rounded-2xl p-6 text-center bg-white/10 hover:bg-white/15 transition-all cursor-pointer group"
+         onclick="document.getElementById('batch-file-input').click()">
+      <input type="file" id="batch-file-input" multiple accept=".pdf" class="hidden" onchange="handleBatchFileSelect(this.files)">
+      <div class="w-12 h-12 rounded-2xl bg-white/20 group-hover:scale-110 flex items-center justify-center mx-auto mb-2 text-white transition-transform shadow-inner">
+        <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+      </div>
+      <p class="text-xs sm:text-sm font-extrabold text-white">Glissez-déposez vos fichiers PDF ici ou cliquez pour parcourir</p>
+      <p class="text-[10px] sm:text-[11px] text-blue-100 mt-1">Exemples reconnus : « Analyse 2025-2026.pdf », « Analyse 2025-2026 Corrige.pdf »</p>
+    </div>
+
+    <!-- RÉSULTATS DU TÉLÉVERSEMENT EN DIRECT -->
+    <div id="batch-results-box" class="mt-4 hidden bg-slate-950/70 backdrop-blur-md rounded-2xl p-4 border border-white/10 max-h-64 overflow-y-auto">
+      <div class="flex items-center justify-between text-xs font-black text-slate-200 pb-2 border-b border-white/10">
+        <span id="batch-status-text" class="flex items-center gap-2">
+          <i class="fa-solid fa-spinner fa-spin text-blue-400"></i> Traitement en cours...
+        </span>
+        <button type="button" onclick="window.location.reload()" class="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold transition-colors">
+          Actualiser l'affichage
+        </button>
+      </div>
+      <div id="batch-items-container" class="space-y-1.5 pt-2 text-xs"></div>
     </div>
   </div>
 
@@ -134,8 +185,16 @@
                       </p>
                     {% endif %}
                   </div>
-                  <div class="ue-toggle-icon shrink-0 w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
-                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <button type="button"
+                            onclick="event.stopPropagation(); openQuickModalWithSubject('{{ subj.pk }}', '{{ subj.name|escapejs }}')"
+                            class="w-7 h-7 rounded-lg bg-blue-50 hover:bg-blue-100 text-[#2563EB] flex items-center justify-center transition-colors"
+                            title="Ajouter une épreuve à cette matière">
+                      <i class="fa-solid fa-plus text-xs"></i>
+                    </button>
+                    <div class="ue-toggle-icon w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
+                      <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </div>
                   </div>
                 </div>
 
@@ -312,6 +371,93 @@
 
   {% endif %}
 
+  <!-- MODALE FORMULAIRE RAPIDE (3 CHAMPS ESSENTIELS) -->
+  <div id="quick-exam-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative animate-in fade-in zoom-in duration-200">
+      <button type="button" onclick="closeQuickModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-100 transition-colors">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg shrink-0 shadow-xs">
+          <i class="fa-solid fa-file-circle-plus"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-black text-[#071A49] tracking-tight">Ajout Rapide d'Épreuve</h3>
+          <p class="text-xs text-slate-500 font-medium">3 champs essentiels — contexte hérité automatiquement.</p>
+        </div>
+      </div>
+
+      <form method="post" action="{% url 'contributors:exam_list' %}" enctype="multipart/form-data" class="space-y-4">
+        {% csrf_token %}
+        <input type="hidden" name="quick_exam_submit" value="1">
+
+        <!-- 1. MATIÈRE -->
+        <div>
+          <label class="block text-xs font-bold text-[#071A49] mb-1.5">
+            1. Matière / UE existante <span class="text-rose-500">*</span>
+          </label>
+          {{ quick_form.subject }}
+          <div class="mt-2">
+            <input type="text" name="new_subject_name" id="id_quick_new_subject"
+                   placeholder="Ou saisir le nom d'une nouvelle matière..."
+                   class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#071A49] focus:ring-2 focus:ring-blue-500 outline-none">
+          </div>
+        </div>
+
+        <!-- 2. ANNÉE & TYPE -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-[#071A49] mb-1.5">
+              2. Année académique <span class="text-rose-500">*</span>
+            </label>
+            {{ quick_form.year }}
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#071A49] mb-1.5">Type d'épreuve</label>
+            {{ quick_form.exam_type }}
+          </div>
+        </div>
+
+        <!-- 3. FICHIERS PDF -->
+        <div class="space-y-3 pt-2 border-t border-slate-100">
+          <div>
+            <label class="block text-xs font-bold text-[#071A49] mb-1">
+              3. Fichier PDF de l'épreuve <span class="text-rose-500">*</span>
+            </label>
+            {{ quick_form.file }}
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">
+              Fichier PDF du corrigé (Optionnel)
+            </label>
+            {{ quick_form.correction_file }}
+          </div>
+        </div>
+
+        <!-- ACCÈS -->
+        <div class="flex items-center gap-2 pt-1">
+          {{ quick_form.is_free }}
+          <label for="id_quick_is_free" class="text-xs font-bold text-slate-700 cursor-pointer">
+            Rendre gratuit (accessible sans Pass Semestre)
+          </label>
+        </div>
+
+        <!-- BOUTONS -->
+        <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
+          <button type="button" onclick="closeQuickModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors">
+            Annuler
+          </button>
+          <button type="submit" class="btn-primary px-6 py-2.5 font-black text-xs rounded-xl inline-flex items-center gap-2 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all">
+            <i class="fa-solid fa-check"></i>
+            <span>Publier directement</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -467,6 +613,99 @@
       btn.disabled = false;
       btn.classList.remove('opacity-60');
     });
+  }
+
+  // --- DRAG & DROP MULTI-FICHIERS EN LOT ---
+  const dropzone = document.getElementById('batch-dropzone');
+  if (dropzone) {
+    ['dragenter', 'dragover'].forEach(evt => {
+      dropzone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropzone.classList.add('border-white', 'bg-white/20');
+      }, false);
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+      dropzone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('border-white', 'bg-white/20');
+      }, false);
+    });
+    dropzone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      if (files && files.length > 0) {
+        handleBatchFileSelect(files);
+      }
+    });
+  }
+
+  function handleBatchFileSelect(files) {
+    if (!files || files.length === 0) return;
+
+    const resultsBox = document.getElementById('batch-results-box');
+    const itemsContainer = document.getElementById('batch-items-container');
+    const statusText = document.getElementById('batch-status-text');
+
+    resultsBox.classList.remove('hidden');
+    itemsContainer.innerHTML = '';
+    statusText.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-400"></i> Téléversement et analyse de ${files.length} fichier(s) en cours...`;
+
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append('files', files[i]);
+    }
+
+    fetch('{% url "contributors:exam_batch_upload" %}', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        statusText.innerHTML = `✓ Terminé : <span class="text-emerald-400 font-bold">${data.created_count} créée(s)</span>, <span class="text-blue-400 font-bold">${data.updated_count} mise(s) à jour</span>.`;
+        data.results.forEach(res => {
+          const div = document.createElement('div');
+          div.className = "flex items-center justify-between p-2.5 rounded-xl bg-white/10 border border-white/10 text-xs";
+          const icon = res.status === 'success' ? '<i class="fa-solid fa-circle-check text-emerald-400 mr-2"></i>' : '<i class="fa-solid fa-circle-exclamation text-rose-400 mr-2"></i>';
+          div.innerHTML = `
+            <div class="truncate mr-3">
+              ${icon} <span class="font-bold text-white">${res.name}</span>
+              ${res.subject ? `<span class="text-slate-300 font-medium"> → ${res.subject} (${res.year})</span>` : ''}
+            </div>
+            <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider shrink-0 ${res.status === 'success' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'}">${res.type || res.message || 'Traité'}</span>
+          `;
+          itemsContainer.appendChild(div);
+        });
+      } else {
+        statusText.innerText = `Erreur : ${data.error || 'Impossible de traiter les fichiers'}`;
+      }
+    })
+    .catch(() => {
+      statusText.innerText = "Erreur de connexion au serveur.";
+    });
+  }
+
+  // --- MODALE FORMULAIRE RAPIDE ---
+  function openQuickModal() {
+    const modal = document.getElementById('quick-exam-modal');
+    if (modal) modal.classList.remove('hidden');
+  }
+
+  function closeQuickModal() {
+    const modal = document.getElementById('quick-exam-modal');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  function openQuickModalWithSubject(subjId, subjName) {
+    const sel = document.getElementById('id_quick_subject');
+    if (sel) {
+      sel.value = subjId;
+    }
+    openQuickModal();
   }
 </script>
 {% endblock %}

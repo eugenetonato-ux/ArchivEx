@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from payments.views import fedapay_webhook_view, chariow_webhook_view, payment_return_view
+from payments.views import fedapay_webhook_view, payment_return_view
 from academics import views as academic_views
 from django.contrib.sitemaps.views import sitemap
 from config.sitemaps import (
@@ -38,7 +38,6 @@ urlpatterns = [
     path("pass/", include("payments.urls")),
     path("payment/success/", payment_return_view, name="payment_success_return"),
     path("webhook/fedapay/", fedapay_webhook_view, name="root_fedapay_webhook"),
-    path("webhook/chariow/", chariow_webhook_view, name="root_chariow_webhook"),
 
     path("ressources/", include("content.urls")),
     path("notifications/", include("notifications.urls")),

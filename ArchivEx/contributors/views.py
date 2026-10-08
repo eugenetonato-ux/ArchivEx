@@ -20,6 +20,7 @@ from .permissions import check_school_permission
 from .forms import (
     ContextSelectForm,
     ExamAdminForm,
+    QuickExamAdminForm,
     CloudFileAdminForm,
     SummaryAdminForm,
     GuideAdminForm,
@@ -351,13 +352,132 @@ def set_context_view(request):
 
 @contributor_required
 def exam_list_view(request):
-    """Liste des épreuves groupées par UE sous forme de cartes accordéon 2 colonnes."""
+    """Liste des épreuves groupées par UE sous forme de cartes accordéon 2 colonnes avec upload rapide direct."""
     from collections import OrderedDict
-    from academics.models import Subject
-    from content.models import Summary
+    from academics.models import Subject, AcademicYear, Level
+    from content.models import Summary, CloudFile
 
     active_school, active_filiere, active_semester = get_active_academic_context(request)
     q = request.GET.get("q", "").strip()
+
+    # Traitement du formulaire d'ajout rapide (depuis la modale de la page)
+    if request.method == "POST" and "quick_exam_submit" in request.POST:
+        quick_form = QuickExamAdminForm(
+            request.POST, request.FILES,
+            active_school=active_school,
+            active_filiere=active_filiere,
+            active_semester=active_semester
+        )
+        if quick_form.is_valid():
+            subj = quick_form.cleaned_data.get("subject")
+            new_subj_name = (quick_form.cleaned_data.get("new_subject_name") or "").strip()
+
+            target_semester = active_semester
+            if not target_semester and active_filiere:
+                target_semester = Semester.objects.filter(filiere=active_filiere).first()
+            if not target_semester and subj and subj.semester:
+                target_semester = subj.semester
+
+            if not subj and new_subj_name:
+                subj, _ = Subject.objects.get_or_create(
+                    name=new_subj_name.strip(),
+                    semester=target_semester,
+                    defaults={"is_active": True}
+                )
+
+            raw_yr = quick_form.cleaned_data.get("year", "2025-2026").strip()
+            ay_obj, _ = AcademicYear.objects.get_or_create(label=raw_yr)
+            yr_int = int(raw_yr.split("-")[-1]) if "-" in raw_yr else (int(raw_yr) if raw_yr.isdigit() else 2026)
+
+            filiere_obj = target_semester.filiere if target_semester else active_filiere
+            level_obj = filiere_obj.level if (filiere_obj and filiere_obj.level) else Level.objects.first()
+            school_obj = filiere_obj.school if filiere_obj else active_school
+
+            existing_exam = Exam.objects.filter(
+                subject=subj,
+                academic_year=ay_obj,
+                semester=target_semester
+            ).first()
+
+            if existing_exam:
+                existing_exam.file = quick_form.cleaned_data["file"]
+                existing_exam.is_free = quick_form.cleaned_data.get("is_free", False)
+                existing_exam.is_published = True
+                corr_file = quick_form.cleaned_data.get("correction_file")
+                if corr_file:
+                    existing_exam.correction_file = corr_file
+                cf_exam = CloudFile.objects.create(
+                    title=f"Épreuve — {subj.name} {raw_yr}.pdf",
+                    file=existing_exam.file,
+                    file_type="EXAM",
+                    school=school_obj,
+                    filiere=filiere_obj,
+                    semester=target_semester,
+                    uploaded_by=request.user
+                )
+                existing_exam.cloud_file = cf_exam
+                if corr_file:
+                    cf_corr = CloudFile.objects.create(
+                        title=f"Corrigé — {subj.name} {raw_yr}.pdf",
+                        file=corr_file,
+                        file_type="CORRECTION",
+                        school=school_obj,
+                        filiere=filiere_obj,
+                        semester=target_semester,
+                        uploaded_by=request.user
+                    )
+                    existing_exam.cloud_correction_file = cf_corr
+                existing_exam.save()
+                messages.success(request, f"L'épreuve « {existing_exam.title} » a été mise à jour avec vos nouveaux fichiers !")
+            else:
+                exam = Exam.objects.create(
+                    title=f"{subj.name} {raw_yr}",
+                    subject=subj,
+                    semester=target_semester,
+                    filiere=filiere_obj,
+                    level=level_obj,
+                    academic_year=ay_obj,
+                    year=yr_int,
+                    exam_type=quick_form.cleaned_data.get("exam_type", "examen"),
+                    is_free=quick_form.cleaned_data.get("is_free", False),
+                    is_published=True,
+                    file=quick_form.cleaned_data["file"],
+                )
+                corr_file = quick_form.cleaned_data.get("correction_file")
+                if corr_file:
+                    exam.correction_file = corr_file
+                cf_exam = CloudFile.objects.create(
+                    title=f"Épreuve — {subj.name} {raw_yr}.pdf",
+                    file=exam.file,
+                    file_type="EXAM",
+                    school=school_obj,
+                    filiere=filiere_obj,
+                    semester=target_semester,
+                    uploaded_by=request.user
+                )
+                exam.cloud_file = cf_exam
+                if corr_file:
+                    cf_corr = CloudFile.objects.create(
+                        title=f"Corrigé — {subj.name} {raw_yr}.pdf",
+                        file=corr_file,
+                        file_type="CORRECTION",
+                        school=school_obj,
+                        filiere=filiere_obj,
+                        semester=target_semester,
+                        uploaded_by=request.user
+                    )
+                    exam.cloud_correction_file = cf_corr
+                exam.save()
+                messages.success(request, f"L'épreuve « {exam.title} » a été publiée avec succès !")
+            return redirect("contributors:exam_list")
+        else:
+            messages.error(request, "Veuillez vérifier les informations du formulaire rapide.")
+    else:
+        quick_form = QuickExamAdminForm(
+            active_school=active_school,
+            active_filiere=active_filiere,
+            active_semester=active_semester
+        )
 
     # Base subjects queryset
     subj_qs = Subject.objects.select_related(
@@ -437,8 +557,262 @@ def exam_list_view(request):
         "total_published_count": total_published_count,
         "total_draft_count": total_draft_count,
         "q": q,
+        "quick_form": quick_form,
     }
     return render(request, "contributors/exams/list.html", context)
+
+
+@contributor_required
+def exam_batch_upload_view(request):
+    """
+    Téléversement en lot (Drag & Drop multi-fichiers) d'épreuves et de corrigés PDF.
+    Détecte automatiquement l'UE, l'année académique, et lie les corrigés aux épreuves.
+    Supporte les requêtes AJAX et standards.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Méthode non autorisée"}, status=405)
+
+    import re
+    from academics.models import AcademicYear, Level
+    from academics.search import remove_accents
+    from academics.parser import parse_exam_filename
+
+    active_school, active_filiere, active_semester = get_active_academic_context(request)
+    files = request.FILES.getlist("files") or ([request.FILES.get("file")] if request.FILES.get("file") else [])
+
+    if not files:
+        return JsonResponse({"error": "Aucun fichier reçu."}, status=400)
+
+    # Récupérer les matières du contexte
+    subj_qs = Subject.objects.select_related("semester", "semester__filiere").filter(is_active=True)
+    if active_semester:
+        subj_qs = subj_qs.filter(semester=active_semester)
+    elif active_filiere:
+        subj_qs = subj_qs.filter(semester__filiere=active_filiere)
+    elif active_school:
+        subj_qs = subj_qs.filter(semester__filiere__school=active_school)
+
+    available_subjects = list(subj_qs)
+    results = []
+    created_count = 0
+    updated_count = 0
+    error_count = 0
+
+    for f in files:
+        orig_name = f.name
+        if not orig_name.lower().endswith(".pdf"):
+            results.append({"name": orig_name, "status": "error", "message": "Fichier non PDF ignoré."})
+            error_count += 1
+            continue
+
+        is_correction = bool(re.search(r"(corrige|correction)", orig_name, re.IGNORECASE))
+
+        # 1. Détection de l'année académique
+        year_match = re.search(r"\b(\d{4}-\d{4})\b", orig_name)
+        if year_match:
+            year_label = year_match.group(1)
+        else:
+            single_yr = re.search(r"\b(20\d{2})\b", orig_name)
+            if single_yr:
+                yr_val = int(single_yr.group(1))
+                year_label = f"{yr_val-1}-{yr_val}"
+            else:
+                year_label = "2025-2026"
+
+        yr_int = int(year_label.split("-")[-1]) if "-" in year_label else 2026
+        ay_obj, _ = AcademicYear.objects.get_or_create(label=year_label)
+
+        # 2. Détection du semestre cible
+        target_sem = active_semester
+        sem_match = re.search(r"\b(S[1-6])\b", orig_name, re.IGNORECASE)
+        if sem_match and active_filiere:
+            sem_num = int(sem_match.group(1)[1:])
+            matching_sem = Semester.objects.filter(filiere=active_filiere, number=sem_num).first()
+            if matching_sem:
+                target_sem = matching_sem
+        if not target_sem and active_filiere:
+            target_sem = Semester.objects.filter(filiere=active_filiere).first()
+
+        # 3. Détection de l'UE (Subject)
+        matched_subj = None
+        parse_res = parse_exam_filename(orig_name, available_subjects=available_subjects)
+        if parse_res.get("matched_subject"):
+            matched_subj = parse_res["matched_subject"]
+
+        if not matched_subj:
+            clean_search = orig_name.lower().replace(".pdf", "")
+            clean_search = re.sub(r"(corrige_type_|corrige_|epreuve_|examen_|\bS[1-6]\b|\b\d{4}-\d{4}\b|\b20\d{2}\b)", " ", clean_search)
+            clean_search = re.sub(r"^\d+[\s_-]*", "", clean_search).strip()
+            clean_search_u = remove_accents(clean_search)
+
+            for s in available_subjects:
+                s_name_u = remove_accents(s.name.lower())
+                s_code_u = remove_accents(s.code.lower()) if s.code else ""
+                if (s_code_u and s_code_u in clean_search_u) or (len(s_name_u) >= 4 and s_name_u in clean_search_u) or (len(clean_search_u) >= 4 and clean_search_u in s_name_u):
+                    matched_subj = s
+                    break
+
+        if not matched_subj:
+            extracted_subj_name = orig_name.replace(".pdf", "")
+            extracted_subj_name = re.sub(r"(corrige|correction|epreuve|examen|\bS[1-6]\b|\b\d{4}-\d{4}\b|\b20\d{2}\b)", "", extracted_subj_name, flags=re.IGNORECASE)
+            extracted_subj_name = re.sub(r"^\d+[\s_-]*", "", extracted_subj_name).replace("_", " ").strip(" -_")
+            if not extracted_subj_name:
+                extracted_subj_name = "Matière générale"
+
+            matched_subj, _ = Subject.objects.get_or_create(
+                name=extracted_subj_name.title(),
+                semester=target_sem,
+                defaults={"is_active": True}
+            )
+            available_subjects.append(matched_subj)
+
+        final_sem = target_sem or matched_subj.semester
+        final_filiere = final_sem.filiere if final_sem else active_filiere
+        final_school = final_filiere.school if final_filiere else active_school
+        final_level = final_filiere.level if final_filiere and final_filiere.level else Level.objects.first()
+
+        # 4. Enregistrement / Liaison
+        if is_correction:
+            existing_exam = Exam.objects.filter(
+                subject=matched_subj,
+                academic_year=ay_obj,
+                semester=final_sem
+            ).first()
+
+            if existing_exam:
+                existing_exam.correction_file = f
+                cf_corr = CloudFile.objects.create(
+                    title=f"Corrigé — {matched_subj.name} {year_label}.pdf",
+                    file=f,
+                    file_type="CORRECTION",
+                    school=final_school,
+                    filiere=final_filiere,
+                    semester=final_sem,
+                    uploaded_by=request.user
+                )
+                existing_exam.cloud_correction_file = cf_corr
+                existing_exam.save()
+                updated_count += 1
+                results.append({
+                    "name": orig_name,
+                    "status": "success",
+                    "subject": matched_subj.name,
+                    "year": year_label,
+                    "type": "Corrigé (Lié à l'épreuve)",
+                    "exam_id": existing_exam.id
+                })
+            else:
+                exam = Exam.objects.create(
+                    title=f"{matched_subj.name} {year_label}",
+                    subject=matched_subj,
+                    semester=final_sem,
+                    filiere=final_filiere,
+                    level=final_level,
+                    academic_year=ay_obj,
+                    year=yr_int,
+                    exam_type="examen",
+                    is_published=True,
+                    correction_file=f
+                )
+                cf_corr = CloudFile.objects.create(
+                    title=f"Corrigé — {matched_subj.name} {year_label}.pdf",
+                    file=f,
+                    file_type="CORRECTION",
+                    school=final_school,
+                    filiere=final_filiere,
+                    semester=final_sem,
+                    uploaded_by=request.user
+                )
+                exam.cloud_correction_file = cf_corr
+                exam.save()
+                created_count += 1
+                results.append({
+                    "name": orig_name,
+                    "status": "success",
+                    "subject": matched_subj.name,
+                    "year": year_label,
+                    "type": "Corrigé (Nouvelle fiche)",
+                    "exam_id": exam.id
+                })
+        else:
+            existing_exam = Exam.objects.filter(
+                subject=matched_subj,
+                academic_year=ay_obj,
+                semester=final_sem
+            ).first()
+
+            if existing_exam:
+                existing_exam.file = f
+                cf = CloudFile.objects.create(
+                    title=f"Épreuve — {matched_subj.name} {year_label}.pdf",
+                    file=f,
+                    file_type="EXAM",
+                    school=final_school,
+                    filiere=final_filiere,
+                    semester=final_sem,
+                    uploaded_by=request.user
+                )
+                existing_exam.cloud_file = cf
+                existing_exam.save()
+                updated_count += 1
+                results.append({
+                    "name": orig_name,
+                    "status": "success",
+                    "subject": matched_subj.name,
+                    "year": year_label,
+                    "type": "Épreuve mise à jour",
+                    "exam_id": existing_exam.id
+                })
+            else:
+                exam = Exam.objects.create(
+                    title=f"{matched_subj.name} {year_label}",
+                    subject=matched_subj,
+                    semester=final_sem,
+                    filiere=final_filiere,
+                    level=final_level,
+                    academic_year=ay_obj,
+                    year=yr_int,
+                    exam_type="examen",
+                    is_published=True,
+                    file=f
+                )
+                cf = CloudFile.objects.create(
+                    title=f"Épreuve — {matched_subj.name} {year_label}.pdf",
+                    file=f,
+                    file_type="EXAM",
+                    school=final_school,
+                    filiere=final_filiere,
+                    semester=final_sem,
+                    uploaded_by=request.user
+                )
+                exam.cloud_file = cf
+                exam.save()
+                created_count += 1
+                results.append({
+                    "name": orig_name,
+                    "status": "success",
+                    "subject": matched_subj.name,
+                    "year": year_label,
+                    "type": "Épreuve créée",
+                    "exam_id": exam.id
+                })
+
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest" or "application/json" in request.headers.get("Accept", "")
+    if is_ajax:
+        return JsonResponse({
+            "success": True,
+            "created_count": created_count,
+            "updated_count": updated_count,
+            "error_count": error_count,
+            "total": len(files),
+            "results": results
+        })
+
+    msg = f"Traitement terminé : {created_count} épreuve(s) créée(s), {updated_count} mise(s) à jour."
+    if error_count:
+        msg += f" {error_count} erreur(s)."
+    messages.success(request, msg)
+    return redirect("contributors:exam_list")
 
 
 def _process_exam_cloud_files(form, exam, target_semester, active_school, active_filiere, active_semester, user):

@@ -24,12 +24,15 @@ CSRF_TRUSTED_ORIGINS = config(
 )
 
 # HTTPS & Cookie Security
+# En production : SESSION_COOKIE_SECURE=True, CSRF_COOKIE_SECURE=True, SECURE_SSL_REDIRECT=True (dans .env)
 SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=False, cast=bool)
 CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=False, cast=bool)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=False, cast=bool)
 
 # HSTS Configuration
+# En production : SECURE_HSTS_SECONDS=31536000, SECURE_HSTS_INCLUDE_SUBDOMAINS=True, SECURE_HSTS_PRELOAD=True (dans .env)
+# Commencer avec 300 secondes, puis augmenter progressivement jusqu'à 31536000 (1 an)
 SECURE_HSTS_SECONDS = config("SECURE_HSTS_SECONDS", default=0, cast=int)
 SECURE_HSTS_INCLUDE_SUBDOMAINS = config("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=False, cast=bool)
 SECURE_HSTS_PRELOAD = config("SECURE_HSTS_PRELOAD", default=False, cast=bool)
@@ -37,7 +40,8 @@ SECURE_HSTS_PRELOAD = config("SECURE_HSTS_PRELOAD", default=False, cast=bool)
 # Security Headers
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
-X_FRAME_OPTIONS = "SAMEORIGIN"
+# DENY empêche tout framing (clickjacking) — requis pour le check --deploy (W019)
+X_FRAME_OPTIONS = "DENY"
 
 
 # Application definition
@@ -253,7 +257,6 @@ if USE_SUPABASE_STORAGE:
     MEDIA_URL = f"{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/"
 else:
     MEDIA_URL = "/media/"
-    MEDIA_ROOT = BASE_DIR / "media"
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -262,6 +265,8 @@ else:
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
+
+MEDIA_ROOT = BASE_DIR / "media"
 
 
 # Email Configuration
@@ -324,14 +329,13 @@ FEDAPAY_WEBHOOK_SECRET = config("FEDAPAY_WEBHOOK_SECRET", default="")
 FEDAPAY_CURRENCY = config("FEDAPAY_CURRENCY", default="XOF")
 FEDAPAY_CALLBACK_URL = config("FEDAPAY_CALLBACK_URL", default="")
 
-# Chariow Payment Gateway Configuration (Legacy / Fallback) (https://chariow.dev)
-CHARIOW_API_KEY = config("CHARIOW_API_KEY", default="")
-CHARIOW_PRODUCT_ID = config("CHARIOW_PRODUCT_ID", default="")
-CHARIOW_PULSE_SECRET = config("CHARIOW_PULSE_SECRET", default=config("CHARIOW_WEBHOOK_SECRET", default=""))
-CHARIOW_BASE_URL = config("CHARIOW_BASE_URL", default="https://api.chariow.com/v1").rstrip("/")
-CHARIOW_CURRENCY = config("CHARIOW_CURRENCY", default="XOF")
 
 
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Silence les warnings de sécurité intentionnellement désactivés en local.
+# W008 : SECURE_SSL_REDIRECT=False en local (géré par Nginx sur le VPS en prod).
+# W021 : SECURE_HSTS_PRELOAD=False — à activer après 6 mois de prod stable.
+SILENCED_SYSTEM_CHECKS = ["security.W008", "security.W021"]

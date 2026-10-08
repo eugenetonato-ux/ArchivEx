@@ -12,5 +12,4 @@ urlpatterns = [
     path("status/<str:reference>/", views.payment_status_api_view, name="payment_status_api"),
     path("historique/", views.student_payment_history_view, name="student_history"),
     path("webhook/fedapay/", views.fedapay_webhook_view, name="fedapay_webhook"),
-    path("webhook/chariow/", views.chariow_webhook_view, name="chariow_webhook"),
 ]

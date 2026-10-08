@@ -748,6 +748,50 @@ class SupportAndNotificationSeparationTest(TestCase):
         self.assertEqual(res_diff_subj.status_code, 200)
         self.assertFalse(res_diff_subj.json()["duplicate"])
 
+    def test_quick_exam_form_and_batch_upload(self):
+        """Vérifie le téléversement par lot Drag & Drop et le formulaire rapide à 3 champs."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from exams.models import Exam
+
+        self.client.login(username="admin_sep", password="Password123!")
+
+        # 1. Test batch upload avec 2 fichiers (1 épreuve + 1 corrigé)
+        f_exam = SimpleUploadedFile("Microeconomie 2025-2026.pdf", b"%PDF-1.4 exam content", content_type="application/pdf")
+        f_corr = SimpleUploadedFile("Microeconomie 2025-2026 Corrige.pdf", b"%PDF-1.4 correction content", content_type="application/pdf")
+
+        res_batch = self.client.post(
+            reverse("contributors:exam_batch_upload"),
+            data={"files": [f_exam, f_corr]},
+            headers={"x-requested-with": "XMLHttpRequest"}
+        )
+        self.assertEqual(res_batch.status_code, 200)
+        batch_json = res_batch.json()
+        self.assertTrue(batch_json["success"])
+        self.assertEqual(batch_json["total"], 2)
+
+        # Vérifier que l'épreuve a bien été créée et que le corrigé lui a été attaché
+        created_exam = Exam.objects.filter(subject__name__icontains="Microeconomie").first()
+        self.assertIsNotNone(created_exam)
+        self.assertTrue(created_exam.has_correction)
+
+        # 2. Test Quick Form submission via POST sur exam_list
+        f_quick = SimpleUploadedFile("Statistique 2025-2026.pdf", b"%PDF-1.4 quick exam", content_type="application/pdf")
+        res_quick = self.client.post(
+            reverse("contributors:exam_list"),
+            data={
+                "quick_exam_submit": "1",
+                "new_subject_name": "Statistique Appliquee",
+                "year": "2025-2026",
+                "exam_type": "examen",
+                "file": f_quick,
+            }
+        )
+        self.assertEqual(res_quick.status_code, 302)
+        stat_exam = Exam.objects.filter(subject__name="Statistique Appliquee").first()
+        self.assertIsNotNone(stat_exam)
+        self.assertTrue(stat_exam.is_published)
+
+
 
 
 

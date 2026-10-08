@@ -376,6 +376,128 @@ class ExamAdminForm(forms.ModelForm):
         return cleaned_data
 
 
+class QuickExamAdminForm(forms.Form):
+    """
+    Formulaire ultra-simplifié pour l'administration :
+    Seulement 3 champs indispensables :
+    1. Matière / UE (liste déroulante filtrée ou création libre)
+    2. Année académique (par défaut 2025-2026)
+    3. Fichier épreuve PDF (+ corrigé optionnel)
+    Tout le reste (université, filière, semestre, titre, etc.) est déduit automatiquement du contexte actif !
+    """
+    subject = forms.ModelChoiceField(
+        queryset=Subject.objects.none(),
+        required=False,
+        label="Matière / Unité d'Enseignement",
+        widget=forms.Select(attrs={
+            "class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49] focus:ring-2 focus:ring-blue-500 outline-none",
+            "id": "id_quick_subject"
+        }),
+        empty_label="-- Sélectionner l'UE existante --"
+    )
+
+    new_subject_name = forms.CharField(
+        max_length=150,
+        required=False,
+        label="Ou saisir une nouvelle matière",
+        widget=forms.TextInput(attrs={
+            "class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#071A49] focus:ring-2 focus:ring-blue-500 outline-none",
+            "placeholder": "Nom si nouvelle UE...",
+            "id": "id_quick_new_subject"
+        })
+    )
+
+    year = forms.CharField(
+        max_length=20,
+        initial="2025-2026",
+        label="Année académique",
+        widget=forms.TextInput(attrs={
+            "class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]",
+            "placeholder": "Ex: 2025-2026",
+            "id": "id_quick_year"
+        })
+    )
+
+    exam_type = forms.ChoiceField(
+        choices=Exam.EXAM_TYPE_CHOICES,
+        initial="examen",
+        label="Type d'épreuve",
+        widget=forms.Select(attrs={
+            "class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"
+        })
+    )
+
+    file = forms.FileField(
+        required=True,
+        label="Fichier PDF de l'épreuve",
+        widget=forms.FileInput(attrs={
+            "class": "w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700",
+            "accept": ".pdf",
+            "id": "id_quick_file"
+        })
+    )
+
+    correction_file = forms.FileField(
+        required=False,
+        label="Fichier PDF du corrigé (Optionnel)",
+        widget=forms.FileInput(attrs={
+            "class": "w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700",
+            "accept": ".pdf",
+            "id": "id_quick_correction_file"
+        })
+    )
+
+    is_free = forms.BooleanField(
+        required=False,
+        initial=False,
+        label="Accès libre gratuit (sans Pass)",
+        widget=forms.CheckboxInput(attrs={
+            "class": "w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-slate-300",
+            "id": "id_quick_is_free"
+        })
+    )
+
+    def __init__(self, *args, active_school=None, active_filiere=None, active_semester=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        subj_qs = Subject.objects.filter(is_active=True).select_related("semester", "semester__filiere")
+        if active_semester:
+            subj_qs = subj_qs.filter(semester=active_semester)
+        elif active_filiere:
+            subj_qs = subj_qs.filter(semester__filiere=active_filiere)
+        elif active_school:
+            subj_qs = subj_qs.filter(semester__filiere__school=active_school)
+        self.fields["subject"].queryset = subj_qs.order_by("name")
+
+    def clean_file(self):
+        file = self.cleaned_data.get("file")
+        if file:
+            ext = os.path.splitext(file.name)[1].lower()
+            if ext != ".pdf":
+                raise forms.ValidationError("Seuls les fichiers PDF (.pdf) sont autorisés.")
+            if file.size > 25 * 1024 * 1024:
+                raise forms.ValidationError("Le fichier ne doit pas dépasser 25 Mo.")
+        return file
+
+    def clean_correction_file(self):
+        file = self.cleaned_data.get("correction_file")
+        if file:
+            ext = os.path.splitext(file.name)[1].lower()
+            if ext != ".pdf":
+                raise forms.ValidationError("Seuls les fichiers PDF (.pdf) sont autorisés pour le corrigé.")
+            if file.size > 25 * 1024 * 1024:
+                raise forms.ValidationError("Le fichier de corrigé ne doit pas dépasser 25 Mo.")
+        return file
+
+    def clean(self):
+        cleaned_data = super().clean()
+        subject = cleaned_data.get("subject")
+        new_name = (cleaned_data.get("new_subject_name") or "").strip()
+        if not subject and not new_name:
+            self.add_error("subject", "Veuillez sélectionner une matière ou indiquer un nom.")
+        return cleaned_data
+
+
+
 class SummaryAdminForm(forms.ModelForm):
     """Formulaire d'édition/publication d'un résumé de cours 100% PDF."""
     HUMAN_STATUS_CHOICES = [

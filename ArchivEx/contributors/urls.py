@@ -25,6 +25,7 @@ urlpatterns = [
     path("library/<int:pk>/download-original/<str:file_type>/", views.library_download_original_view, name="library_download_original"),
     path("epreuves/", views.exam_list_view, name="exam_list"),
     path("epreuves/ajouter/", views.exam_create_view, name="exam_create"),
+    path("epreuves/televersement-lot/", views.exam_batch_upload_view, name="exam_batch_upload"),
     path("epreuves/tout-supprimer/", views.exam_bulk_delete_published_view, name="exam_bulk_delete_published"),
     path("epreuves/supprimer-selection/", views.exam_bulk_delete_selected_view, name="exam_bulk_delete_selected"),
 
