@@ -283,9 +283,17 @@
             if (resSheet && !resSheet.classList.contains('hidden')) {
                 resSheet.classList.add('hidden');
             }
-            const adminBackdrop = document.getElementById('admin-sidebar-backdrop');
-            if (adminBackdrop && !adminBackdrop.classList.contains('hidden')) {
-                adminBackdrop.classList.add('hidden');
+            if (typeof closeAdminSidebar === 'function') {
+                closeAdminSidebar();
+            } else {
+                const adminBackdrop = document.getElementById('admin-sidebar-backdrop');
+                if (adminBackdrop) adminBackdrop.classList.add('hidden');
+                const adminSidebar = document.getElementById('admin-sidebar');
+                if (adminSidebar && window.innerWidth < 768) {
+                    adminSidebar.classList.add('hidden');
+                    adminSidebar.classList.remove('flex');
+                }
+                document.body.classList.remove('overflow-hidden');
             }
 
             // Mettre à jour l'état actif de la barre de navigation mobile du bas (Dock)
