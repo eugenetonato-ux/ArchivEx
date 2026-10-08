@@ -17,7 +17,8 @@ const isAndroid = () => {
 
 const isInStandaloneMode = () => {
     return ('standalone' in window.navigator && window.navigator.standalone) ||
-           (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+           (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+           localStorage.getItem('archivex_pwa_installed') === 'true';
 };
 
 // 2. Enregistrement direct et immédiat du Service Worker
@@ -64,6 +65,8 @@ window.addEventListener('appinstalled', () => {
     console.log('[PWA] ArchivEx a été installé avec succès sur cet appareil !');
     deferredPrompt = null;
     window.deferredPWAInstallPrompt = null;
+    localStorage.setItem('archivex_pwa_installed', 'true');
+    localStorage.setItem('archivex_pwa_dismissed', 'true');
     dismissPwaPopup(true);
     closePwaInstallModal();
     showPwaToast('ArchivEx est installé avec succès sur votre appareil !');
@@ -120,6 +123,8 @@ async function executeNativePwaPrompt() {
         console.log('[PWA] Choix de l\'utilisateur:', choiceResult.outcome);
 
         if (choiceResult.outcome === 'accepted') {
+            localStorage.setItem('archivex_pwa_installed', 'true');
+            localStorage.setItem('archivex_pwa_dismissed', 'true');
             dismissPwaPopup(true);
             closePwaInstallModal();
             showPwaToast('Installation en cours...');
@@ -195,30 +200,35 @@ function switchPwaTab(tab) {
     }
 }
 
-// 9. Bannière Télécharger automatique à la connexion (durée : 5 secondes)
+// 9. Bannière Télécharger discrète (UNIQUEMENT première visite, plus jamais après rejet ou installation)
 let pwaAutoDismissTimer = null;
 
+function shouldShowPwaPopup() {
+    // 1. Déjà en standalone ou déjà installée
+    if (isInStandaloneMode()) return false;
+    if (localStorage.getItem('archivex_pwa_installed') === 'true') return false;
+
+    // 2. Déjà fermée ou refusée par l'utilisateur (définitif)
+    if (localStorage.getItem('archivex_pwa_dismissed') === 'true') return false;
+    if (sessionStorage.getItem('archivex_pwa_session_shown') === 'true') return false;
+
+    return true;
+}
+
 function initPwaPopup() {
-    if (isInStandaloneMode()) {
-        updateInstallButtonsState(true);
+    if (!shouldShowPwaPopup()) {
+        updateInstallButtonsState(isInStandaloneMode() || localStorage.getItem('archivex_pwa_installed') === 'true');
         return;
     }
 
-    // Si déjà affichée lors de cette session de navigation, éviter de réapparaître à chaque page visitée
-    if (sessionStorage.getItem('archivex_pwa_session_shown') === 'true') {
-        return;
-    }
-
-    console.log('[PWA] Affichage automatique à la connexion prévu');
-    // Apparaît automatiquement à la connexion (délai court de 600ms pour un rendu fluide)
+    // Apparaît uniquement lors de la première découverte après 3 secondes
     pwaPopupTimer = setTimeout(() => {
         showPwaPopup();
-    }, 600);
+    }, 3000);
 }
 
 function showPwaPopup() {
-    if (isInStandaloneMode()) return;
-    if (sessionStorage.getItem('archivex_pwa_session_shown') === 'true') return;
+    if (!shouldShowPwaPopup()) return;
 
     const popup = document.getElementById('pwa-install-popup');
     if (popup) {
@@ -228,15 +238,15 @@ function showPwaPopup() {
             popup.classList.remove('translate-y-10', 'opacity-0');
             popup.classList.add('translate-y-0', 'opacity-100');
         });
-        console.log('[PWA] Bannière Télécharger affichée (durée : 5s)');
+        console.log('[PWA] Bannière d\'installation affichée (première visite)');
 
-        // Disparaît automatiquement au bout de 5 secondes
+        // Disparaît automatiquement au bout de 6 secondes
         clearTimeout(pwaAutoDismissTimer);
         pwaAutoDismissTimer = setTimeout(() => {
             dismissPwaPopup();
-        }, 5000);
+        }, 6000);
 
-        // Pause de l'auto-dismiss si l'utilisateur survole la bannière avec la souris
+        // Pause de l'auto-dismiss au survol
         popup.addEventListener('mouseenter', () => {
             clearTimeout(pwaAutoDismissTimer);
         });
@@ -248,8 +258,18 @@ function showPwaPopup() {
     }
 }
 
-function dismissPwaPopup() {
+function dismissPwaPopup(isInstalled = false) {
     clearTimeout(pwaAutoDismissTimer);
+    clearTimeout(pwaPopupTimer);
+
+    // Mémoriser de façon DÉFINITIVE pour ne plus jamais embêter l'utilisateur
+    localStorage.setItem('archivex_pwa_dismissed', 'true');
+    sessionStorage.setItem('archivex_pwa_session_shown', 'true');
+
+    if (isInstalled) {
+        localStorage.setItem('archivex_pwa_installed', 'true');
+    }
+
     const popup = document.getElementById('pwa-install-popup');
     if (popup) {
         popup.classList.remove('translate-y-0', 'opacity-100');
@@ -258,7 +278,6 @@ function dismissPwaPopup() {
             popup.classList.add('hidden');
         }, 500);
     }
-    sessionStorage.setItem('archivex_pwa_session_shown', 'true');
 }
 
 // 10. Toast utilitaire
