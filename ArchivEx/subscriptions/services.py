@@ -75,7 +75,7 @@ def has_user_valid_pass(user, resource=None):
     elif not res_school and res_filiere:
         res_school = getattr(res_filiere, "school", None)
 
-    # 1. Vérification SemesterAccess (Legacy V1 & Paiements approuvés)
+    # 1. Vérification SemesterAccess (Strictement par semestre)
     legacy_query = Q(user=user) & (
         Q(activated_at__isnull=False) |
         Q(payments__status__in=["APPROVED", "reussi", "approved", "success"])
@@ -83,6 +83,9 @@ def has_user_valid_pass(user, resource=None):
     if res_semester:
         if SemesterAccess.objects.filter(legacy_query & Q(semester=res_semester)).exists():
             return True
+        # Règle d'or : Si la ressource appartient à un semestre (ex: S2), un Pass acheté
+        # pour un autre semestre (ex: S1) ne donne AUCUN accès. L'achat de chaque semestre est obligatoire.
+        return False
 
     if res_filiere:
         if SemesterAccess.objects.filter(legacy_query & Q(filiere=res_filiere)).exists():

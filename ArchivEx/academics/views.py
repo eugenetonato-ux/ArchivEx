@@ -27,20 +27,21 @@ def home_view(request):
         schools_count = School.objects.filter(is_active=True).count()
         if current_school:
             filieres_count = Filiere.objects.filter(school=current_school).count()
-            subjects_count = Subject.objects.filter(semester__filiere__school=current_school).count()
-            exams_count = Exam.objects.filter(is_published=True, filiere__school=current_school).count()
-            summaries_count = Summary.objects.filter(publication_status="PUBLISHED", subject__semester__filiere__school=current_school).count()
-            guides_count = Guide.objects.filter(publication_status="PUBLISHED", subject__semester__filiere__school=current_school).count()
+            subjects_count = Subject.objects.filter(semester__is_active=True, semester__filiere__school=current_school).count()
+            exams_count = Exam.objects.filter(is_published=True, semester__is_active=True, filiere__school=current_school).count()
+            summaries_count = Summary.objects.filter(publication_status="PUBLISHED", subject__semester__is_active=True, subject__semester__filiere__school=current_school).count()
+            guides_count = Guide.objects.filter(publication_status="PUBLISHED", subject__semester__is_active=True, subject__semester__filiere__school=current_school).count()
 
             featured_filieres = list(
                 Filiere.objects.filter(school=current_school).select_related("school", "level").annotate(
-                    exams_num=Count("exams", filter=Q(exams__is_published=True), distinct=True)
+                    exams_num=Count("exams", filter=Q(exams__is_published=True, exams__semester__is_active=True), distinct=True)
                 )[:6]
             )
 
             latest_exams = list(
                 Exam.objects.filter(
                     is_published=True,
+                    semester__is_active=True,
                     filiere__school=current_school
                 ).select_related("subject", "semester", "filiere", "level", "filiere__school")[:6]
             )
@@ -48,31 +49,34 @@ def home_view(request):
             latest_summaries = list(
                 Summary.objects.filter(
                     publication_status="PUBLISHED",
+                    subject__semester__is_active=True,
                     subject__semester__filiere__school=current_school
                 ).select_related("subject", "subject__semester", "subject__semester__filiere")[:6]
             )
         else:
             filieres_count = Filiere.objects.count()
-            subjects_count = Subject.objects.count()
-            exams_count = Exam.objects.filter(is_published=True).count()
-            summaries_count = Summary.objects.filter(publication_status="PUBLISHED").count()
-            guides_count = Guide.objects.filter(publication_status="PUBLISHED").count()
+            subjects_count = Subject.objects.filter(semester__is_active=True).count()
+            exams_count = Exam.objects.filter(is_published=True, semester__is_active=True).count()
+            summaries_count = Summary.objects.filter(publication_status="PUBLISHED", subject__semester__is_active=True).count()
+            guides_count = Guide.objects.filter(publication_status="PUBLISHED", subject__semester__is_active=True).count()
 
             featured_filieres = list(
                 Filiere.objects.select_related("school", "level").annotate(
-                    exams_num=Count("exams", filter=Q(exams__is_published=True), distinct=True)
+                    exams_num=Count("exams", filter=Q(exams__is_published=True, exams__semester__is_active=True), distinct=True)
                 )[:6]
             )
 
             latest_exams = list(
                 Exam.objects.filter(
-                    is_published=True
+                    is_published=True,
+                    semester__is_active=True
                 ).select_related("subject", "semester", "filiere", "level", "filiere__school")[:6]
             )
 
             latest_summaries = list(
                 Summary.objects.filter(
-                    publication_status="PUBLISHED"
+                    publication_status="PUBLISHED",
+                    subject__semester__is_active=True
                 ).select_related("subject", "subject__semester", "subject__semester__filiere")[:6]
             )
 
@@ -157,14 +161,14 @@ def filiere_list_view(request):
 
     if profile and profile.filiere and (not user_school or profile.filiere.school_id == user_school.id):
         filiere = profile.filiere
-        semester = Semester.objects.filter(filiere=profile.filiere).first()
+        semester = Semester.objects.filter(filiere=profile.filiere, is_active=True).first()
     else:
         active_access = SemesterAccess.objects.filter(
             Q(user=request.user) & (Q(activated_at__isnull=False) | Q(payments__status__in=["APPROVED", "reussi", "approved", "success"]))
         ).select_related("filiere", "semester")
         if user_school:
             active_access = active_access.filter(filiere__school=user_school)
-        active_access = active_access.first()
+        active_access = active_access.filter(semester__is_active=True).first()
 
         if active_access:
             filiere = active_access.filiere
@@ -175,7 +179,7 @@ def filiere_list_view(request):
             filiere = None
 
     if not semester and filiere:
-        semester = Semester.objects.filter(filiere=filiere).first()
+        semester = Semester.objects.filter(filiere=filiere, is_active=True).first()
 
     subjects_data = []
     if semester:
@@ -217,7 +221,7 @@ def filiere_list_view(request):
 def semester_list_view(request, filiere_id):
     """Page listant les semestres d'une filière avec counts réels et statut d'accès."""
     filiere = get_object_or_404(Filiere.objects.select_related("school", "level"), pk=filiere_id)
-    semesters = list(Semester.objects.filter(filiere=filiere).select_related("academic_year").annotate(
+    semesters = list(Semester.objects.filter(filiere=filiere, is_active=True).select_related("academic_year").annotate(
         subjects_num=Count("subjects")
     ))
 

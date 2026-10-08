@@ -92,7 +92,7 @@ def resources_view(request, mode=None):
     subjects_map = {}
 
     if category == "epreuves":
-        exams = Exam.objects.filter(is_published=True).select_related(
+        exams = Exam.objects.filter(is_published=True, semester__is_active=True).select_related(
             "subject", "subject__semester", "subject__semester__filiere", "subject__semester__filiere__school", "academic_year"
         ).filter(
             (Q(file__isnull=False) & ~Q(file="")) | Q(cloud_file__isnull=False)
@@ -161,7 +161,7 @@ def resources_view(request, mode=None):
             })
 
     elif category == "corrections":
-        exams = Exam.objects.filter(is_published=True).select_related(
+        exams = Exam.objects.filter(is_published=True, semester__is_active=True).select_related(
             "subject", "subject__semester", "subject__semester__filiere", "subject__semester__filiere__school", "academic_year"
         ).filter(
             (Q(correction_file__isnull=False) & ~Q(correction_file="")) | Q(cloud_correction_file__isnull=False)
@@ -233,7 +233,7 @@ def resources_view(request, mode=None):
         from content.models import Summary as CourseSummary
 
         # A. Fiches résumés issues des épreuves
-        exam_summaries = Exam.objects.filter(is_published=True).select_related(
+        exam_summaries = Exam.objects.filter(is_published=True, semester__is_active=True).select_related(
             "subject", "subject__semester", "subject__semester__filiere", "academic_year"
         ).filter(
             (Q(summary_file__isnull=False) & ~Q(summary_file="")) | Q(cloud_summary_file__isnull=False)
@@ -299,7 +299,7 @@ def resources_view(request, mode=None):
             })
 
         # B. Résumés rédigés de cours
-        course_summaries = CourseSummary.objects.filter(publication_status="PUBLISHED").select_related(
+        course_summaries = CourseSummary.objects.filter(publication_status="PUBLISHED", subject__semester__is_active=True).select_related(
             "subject", "subject__semester", "subject__semester__filiere"
         )
         if current_school:
