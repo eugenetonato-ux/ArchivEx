@@ -1,7 +1,29 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% block title %}{% if semester %}{{ semester.label }} — {{ filiere.name }}{% else %}Mes UE{% endif %} | ArchivEx{% endblock %}
+{% block title %}{% if semester %}{{ semester.label }} — {{ filiere.name }}{% else %}Mes Unités d'Enseignement{% endif %} | ArchivEx{% endblock %}
+{% block meta_description %}Découvrez les unités d'enseignement {% if semester %}du {{ semester.label }} en {{ filiere.name }} ({{ filiere.school.name|default:"Université" }}){% endif %}. Épreuves, corrigés et résumés disponibles sur ArchivEx.{% endblock %}
+{% block og_title %}{% if semester %}{{ semester.label }} — {{ filiere.name }}{% else %}Matières{% endif %} | ArchivEx{% endblock %}
+{% block og_description %}Accédez aux épreuves et corrigés {% if semester %}du {{ semester.label }} — {{ filiere.name }} ({{ filiere.school.name|default:"Université" }}){% endif %} sur ArchivEx.{% endblock %}
+{% block canonical_url %}{% if semester %}{{ request.scheme }}://{{ request.get_host }}{% url 'academics:matieres' semester_id=semester.id %}{% else %}{{ request.build_absolute_uri }}{% endif %}{% endblock %}
+{% block extra_schema %}
+{% if semester %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "{{ semester.label }} — {{ filiere.name }}",
+  "description": "Unités d'enseignement du {{ semester.label }} pour la filière {{ filiere.name }} à {{ filiere.school.name|default:'Université' }}",
+  "url": "{{ request.build_absolute_uri }}",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "ArchivEx",
+    "url": "{{ request.scheme }}://{{ request.get_host }}"
+  }
+}
+</script>
+{% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">

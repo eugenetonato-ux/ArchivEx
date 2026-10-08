@@ -1,6 +1,26 @@
 {% extends "base/base.html" %}
 
-{% block title %}{{ guide.title }} — Guide {{ guide.subject.name }}{% endblock %}
+{% block title %}{{ guide.title }} — Guide Méthodologique {{ guide.subject.name }} | ArchivEx{% endblock %}
+{% block meta_description %}Guide méthodologique : {{ guide.title }} — {{ guide.subject.name }}{% if guide.subject.semester %} ({{ guide.subject.semester.label }}, {{ guide.subject.semester.filiere.name }}){% endif %}. Stratégies et concepts clés pour réussir vos examens sur ArchivEx.{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ guide.title }} — Guide {{ guide.subject.name }} | ArchivEx{% endblock %}
+{% block og_description %}{% if guide.introduction %}{{ guide.introduction|truncatechars:160 }}{% else %}Guide méthodologique pour {{ guide.subject.name }} : stratégies de révision, concepts clés et conseils d'examen sur ArchivEx.{% endif %}{% endblock %}
+{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{% url 'content:guide_detail' pk=guide.pk %}{% endblock %}
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "{{ guide.title }}",
+  "description": "{% if guide.introduction %}{{ guide.introduction|truncatechars:200 }}{% else %}Guide méthodologique pour {{ guide.subject.name }}{% endif %}",
+  "url": "{{ request.build_absolute_uri }}",
+  "inLanguage": "fr",
+  "datePublished": "{{ guide.published_at|date:'Y-m-d'|default:guide.created_at|date:'Y-m-d' }}",
+  "dateModified": "{{ guide.updated_at|date:'Y-m-d' }}",
+  "publisher": { "@type": "Organization", "name": "ArchivEx", "url": "{{ request.scheme }}://{{ request.get_host }}" }
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">

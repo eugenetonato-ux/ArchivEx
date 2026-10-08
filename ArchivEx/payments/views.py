@@ -16,6 +16,10 @@ from .services import (
     normalize_benin_phone,
     detect_operator,
     generate_external_reference,
+    create_fedapay_transaction,
+    verify_fedapay_webhook_signature,
+    handle_fedapay_webhook_event,
+    verify_and_sync_fedapay_transaction,
     create_chariow_checkout,
     verify_chariow_pulse_signature,
     handle_chariow_pulse_event,
@@ -28,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def pass_semestre(request, semester_id):
-    """Page de présentation et formulaire de souscription du Pass Semestre (2 000 FCFA)."""
+    """Page de présentation et formulaire de souscription du Pass Semestre (3 800 FCFA)."""
     from exams.models import Exam
     from content.models import Summary, Guide, Article
     from academics.models import Subject
@@ -76,13 +80,13 @@ def pass_semestre(request, semester_id):
 @require_POST
 def initier_paiement(request, semester_id):
     """
-    Initialise le paiement sécurisé côté serveur :
-    - Détermine le tarif serveur (2 000 FCFA)
-    - Valide et normalise le numéro béninois
+    Initialise le paiement sécurisé côté serveur via FedaPay :
+    - Détermine le tarif serveur (3 800 FCFA)
+    - Valide et normalise le numéro béninois (+229)
     - Génère une référence externe unique (ARCHIVEX-PASS-YYYY-XXXXXX)
     - Crée l'enregistrement Payment local PENDING
-    - Appelle l'API Chariow /checkout
-    - Redirige l'étudiant vers payment.checkout_url
+    - Appelle l'API FedaPay (/v1/transactions + /token)
+    - Redirige l'étudiant vers l'URL de paiement sécurisée FedaPay
     """
     semester = get_object_or_404(
         Semester.objects.select_related("filiere", "filiere__school", "filiere__level", "academic_year"),
@@ -109,7 +113,7 @@ def initier_paiement(request, semester_id):
     operator = request.POST.get("operator", "").strip().lower()
     if not operator:
         detected_op = detect_operator(normalized_phone)
-        operator = detected_op or "chariow"
+        operator = detected_op or "fedapay"
 
     ext_ref = generate_external_reference()
 
@@ -117,36 +121,36 @@ def initier_paiement(request, semester_id):
         user=request.user,
         semester=semester,
         amount=price,
-        currency=getattr(settings, "CHARIOW_CURRENCY", "XOF"),
+        currency=getattr(settings, "FEDAPAY_CURRENCY", getattr(settings, "CHARIOW_CURRENCY", "XOF")),
         operator=operator,
         phone_number=normalized_phone,
         external_reference=ext_ref,
         status=Payment.STATUS_PENDING,
     )
 
-    # URL de retour enrichie du placeholder Chariow {sale_id}
+    # URL de retour sécurisée après la validation FedaPay
     return_url = reverse("payments:payment_return", kwargs={"reference": payment.external_reference})
-    redirect_url = request.build_absolute_uri(return_url)
-    if "{sale_id}" not in redirect_url:
-        separator = "&" if "?" in redirect_url else "?"
-        redirect_url = f"{redirect_url}{separator}sale_id={{sale_id}}"
+    callback_url = request.build_absolute_uri(return_url)
 
-    # Appel à l'API Chariow Checkout (/v1/checkout)
-    chariow_res = create_chariow_checkout(payment, redirect_url=redirect_url)
+    # Initialisation de la transaction via FedaPay (Gateway principale)
+    fedapay_res = create_fedapay_transaction(payment, callback_url=callback_url)
 
-    if chariow_res.get("success"):
-        checkout_url = chariow_res.get("checkout_url")
+    if fedapay_res.get("success"):
+        checkout_url = fedapay_res.get("checkout_url")
         if checkout_url:
             return redirect(checkout_url)
-        elif chariow_res.get("step") == "completed":
-            # Produit validé immédiatement
-            activate_pass_for_payment(payment)
-            messages.success(request, f"Félicitations ! Votre Pass Semestre pour {semester.label} est actif !")
-            return redirect("academics:matieres", semester_id=semester.id)
         else:
             return redirect("payments:payment_pending", reference=payment.external_reference)
     else:
-        error_msg = chariow_res.get("error", "Erreur lors de l'initialisation du paiement.")
+        # Fallback de secours vers Chariow si FedaPay échoue ou n'est pas encore configuré
+        if getattr(settings, "CHARIOW_API_KEY", "") and getattr(settings, "CHARIOW_PRODUCT_ID", ""):
+            logger.info("[Paiement] FedaPay non disponible, tentative de repli vers Chariow pour ref=%s", payment.external_reference)
+            chariow_return_url = f"{callback_url}?sale_id={{sale_id}}"
+            chariow_res = create_chariow_checkout(payment, redirect_url=chariow_return_url)
+            if chariow_res.get("success") and chariow_res.get("checkout_url"):
+                return redirect(chariow_res.get("checkout_url"))
+
+        error_msg = fedapay_res.get("error", "Erreur lors de l'initialisation du paiement.")
         payment.status = Payment.STATUS_REJECTED
         payment.save(update_fields=["status"])
         messages.error(request, error_msg)
@@ -162,9 +166,12 @@ def payment_pending_view(request, reference):
         user=request.user
     )
 
-    # Synchronisation immédiate avec l'API Chariow si pas encore approuvé
+    # Synchronisation immédiate avec l'API de paiement si pas encore approuvé
     if not payment.is_approved:
-        verify_and_sync_chariow_sale(payment)
+        if payment.fedapay_transaction_id:
+            verify_and_sync_fedapay_transaction(payment)
+        elif payment.chariow_sale_id:
+            verify_and_sync_chariow_sale(payment)
         payment.refresh_from_db()
 
     if payment.is_approved:
@@ -181,22 +188,23 @@ def payment_pending_view(request, reference):
 @login_required
 def payment_return_view(request, reference=None):
     """
-    Page de retour post-paiement Chariow (redirect_url).
-    
-    Effectue une vérification active auprès de l'API Chariow (via sale_id ou polling direct)
-    pour valider immédiatement le paiement et activer le Pass Semestre sans dépendre du Webhook.
+    Page de retour post-paiement FedaPay (ou Chariow legacy).
+    Effectue une vérification active auprès de l'API FedaPay
+    pour valider immédiatement le paiement et activer le Pass Semestre sans attendre le Webhook.
     """
     ref = reference or request.GET.get("external_reference") or request.GET.get("reference")
-    sale_id = (
-        request.GET.get("sale_id") or
-        request.GET.get("sale") or
-        request.GET.get("id")
-    )
+    tx_id = request.GET.get("id") or request.GET.get("transaction_id")
+    sale_id = request.GET.get("sale_id") or request.GET.get("sale")
     payment = None
 
     if ref:
         payment = Payment.objects.filter(
             external_reference=ref, user=request.user
+        ).select_related("semester", "semester__filiere").first()
+
+    if not payment and tx_id:
+        payment = Payment.objects.filter(
+            fedapay_transaction_id=str(tx_id), user=request.user
         ).select_related("semester", "semester__filiere").first()
 
     if not payment and sale_id:
@@ -219,9 +227,12 @@ def payment_return_view(request, reference=None):
             "is_rejected": True,
         })
 
-    # Synchronisation active directe avec l'API Chariow
+    # Synchronisation active directe avec l'API
     if not payment.is_approved:
-        verify_and_sync_chariow_sale(payment, sale_id=sale_id)
+        if payment.fedapay_transaction_id or tx_id:
+            verify_and_sync_fedapay_transaction(payment, transaction_id=tx_id)
+        elif payment.chariow_sale_id or sale_id:
+            verify_and_sync_chariow_sale(payment, sale_id=sale_id)
         payment.refresh_from_db()
 
     context = {
@@ -239,13 +250,18 @@ def payment_return_view(request, reference=None):
 def payment_status_api_view(request, reference):
     """
     API JSON d'état pour le sondage dynamique depuis les pages d'attente / retour.
-    Interroge l'API Chariow si le paiement local est encore PENDING pour une confirmation temps réel.
+    Interroge l'API FedaPay si le paiement local est encore PENDING pour une confirmation temps réel.
     """
     payment = get_object_or_404(Payment, external_reference=reference, user=request.user)
 
     if not payment.is_approved:
-        sale_id = request.GET.get("sale_id") or None
-        verify_and_sync_chariow_sale(payment, sale_id=sale_id)
+        tx_id = request.GET.get("id") or request.GET.get("transaction_id") or payment.fedapay_transaction_id
+        sale_id = request.GET.get("sale_id") or payment.chariow_sale_id
+
+        if tx_id:
+            verify_and_sync_fedapay_transaction(payment, transaction_id=tx_id)
+        elif sale_id:
+            verify_and_sync_chariow_sale(payment, sale_id=sale_id)
         payment.refresh_from_db()
 
     return JsonResponse({
@@ -254,22 +270,51 @@ def payment_status_api_view(request, reference):
         "is_approved": payment.is_approved,
         "is_rejected": payment.is_rejected,
         "is_pending": payment.is_pending,
+        "fedapay_transaction_id": payment.fedapay_transaction_id,
         "chariow_sale_id": payment.chariow_sale_id,
     })
 
 
 @csrf_exempt
 @require_POST
-def chariow_webhook_view(request):
+def fedapay_webhook_view(request):
     """
-    Endpoint Webhook sécurisé pour la réception des Pulses Chariow.
-    POST /pass/webhook/chariow/ et POST /webhook/chariow/
+    Endpoint Webhook sécurisé pour la réception des notifications d'événements FedaPay.
+    POST /pass/webhook/fedapay/ et POST /webhook/fedapay/
     
     Sécurité & Idempotence :
-    1. Vérification de la signature HMAC-SHA256 (header x-chariow-signature)
-    2. Dé-duplication via x-pulse-delivery-id et external_reference
-    3. Traitement des événements (successful.sale, failed.sale, abandoned.sale, refunded.sale)
+    1. Vérification de la signature HMAC-SHA256 (header X-FEDAPAY-SIGNATURE)
+    2. Décodage du payload JSON
+    3. Traitement des événements (transaction.approved, transaction.transferred, transaction.declined, transaction.canceled)
     4. Réponse HTTP 200 JSON
+    """
+    signature_header = (
+        request.headers.get("X-FEDAPAY-SIGNATURE") or
+        request.headers.get("x-fedapay-signature") or
+        request.META.get("HTTP_X_FEDAPAY_SIGNATURE", "")
+    )
+
+    if not verify_fedapay_webhook_signature(request.body, signature_header):
+        logger.warning("[FedaPay Webhook] Signature webhook invalide reçue.")
+        return HttpResponseForbidden("Signature Webhook FedaPay invalide.")
+
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        logger.error("[FedaPay Webhook] Payload JSON non décodable.")
+        return JsonResponse({"error": "Payload JSON invalide"}, status=400)
+
+    result = handle_fedapay_webhook_event(payload)
+    status_code = 200 if result.get("success", True) else result.get("status_code", 400)
+    return JsonResponse(result, status=status_code)
+
+
+@csrf_exempt
+@require_POST
+def chariow_webhook_view(request):
+    """
+    Endpoint Webhook hérité pour la réception des Pulses Chariow (legacy / fallback).
+    POST /pass/webhook/chariow/ et POST /webhook/chariow/
     """
     signature_header = (
         request.headers.get("X-Chariow-Signature") or
@@ -294,7 +339,6 @@ def chariow_webhook_view(request):
     )
 
     result = handle_chariow_pulse_event(payload, delivery_id=delivery_id)
-
     status_code = 200 if result.get("success", True) else result.get("status_code", 400)
     return JsonResponse(result, status=status_code)
 

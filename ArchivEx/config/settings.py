@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sitemaps",
 
     # Apps ArchivEx
     "accounts",
@@ -219,7 +220,10 @@ if USE_SUPABASE_STORAGE:
         "SUPABASE_STORAGE_ENDPOINT_URL",
         default="https://shqxnsswjffkhywljwzp.supabase.co/storage/v1/s3"
     )
-    AWS_S3_FILE_OVERWRITE = False
+    # file_overwrite=True évite le HeadObject que Supabase S3 ne supporte
+    # pas correctement (retourne 400 Bad Request au lieu de 404).
+    # Django génère ainsi un nom unique côté client sans interroger Supabase.
+    AWS_S3_FILE_OVERWRITE = True
     AWS_DEFAULT_ACL = None
     AWS_QUERYSTRING_AUTH = config("SUPABASE_STORAGE_QUERYSTRING_AUTH", default=False, cast=bool)
 
@@ -233,8 +237,13 @@ if USE_SUPABASE_STORAGE:
                 "endpoint_url": AWS_S3_ENDPOINT_URL,
                 "region_name": AWS_S3_REGION_NAME,
                 "default_acl": None,
-                "file_overwrite": False,
+                # True = pas de vérification HeadObject → résout l'erreur 400 Supabase
+                "file_overwrite": True,
                 "querystring_auth": AWS_QUERYSTRING_AUTH,
+                # Paramètres S3 pour Supabase
+                "object_parameters": {
+                    "ContentType": "application/octet-stream",
+                },
             },
         },
         "staticfiles": {
@@ -307,7 +316,15 @@ LOGGING = {
 
 PASS_SEMESTRE_PRIX_DEFAUT = config("PASS_SEMESTRE_PRIX_DEFAUT", default=3800, cast=int)
 
-# Chariow Payment Gateway Configuration (https://chariow.dev)
+# FedaPay Payment Gateway Configuration (https://fedapay.com)
+FEDAPAY_SECRET_KEY = config("FEDAPAY_SECRET_KEY", default="")
+FEDAPAY_PUBLIC_KEY = config("FEDAPAY_PUBLIC_KEY", default="")
+FEDAPAY_ENVIRONMENT = config("FEDAPAY_ENVIRONMENT", default="sandbox").strip().lower()  # "sandbox" ou "live"
+FEDAPAY_WEBHOOK_SECRET = config("FEDAPAY_WEBHOOK_SECRET", default="")
+FEDAPAY_CURRENCY = config("FEDAPAY_CURRENCY", default="XOF")
+FEDAPAY_CALLBACK_URL = config("FEDAPAY_CALLBACK_URL", default="")
+
+# Chariow Payment Gateway Configuration (Legacy / Fallback) (https://chariow.dev)
 CHARIOW_API_KEY = config("CHARIOW_API_KEY", default="")
 CHARIOW_PRODUCT_ID = config("CHARIOW_PRODUCT_ID", default="")
 CHARIOW_PULSE_SECRET = config("CHARIOW_PULSE_SECRET", default=config("CHARIOW_WEBHOOK_SECRET", default=""))
@@ -315,14 +332,6 @@ CHARIOW_BASE_URL = config("CHARIOW_BASE_URL", default="https://api.chariow.com/v
 CHARIOW_CURRENCY = config("CHARIOW_CURRENCY", default="XOF")
 
 
-# Patch de compatibilité Python 3.14 pour les tests Django (duplication de Context)
-import sys
-if sys.version_info >= (3, 14):
-    from django.template.context import BaseContext
-    def _base_context_copy(self):
-        duplicate = self.__class__.__new__(self.__class__)
-        duplicate.dicts = self.dicts[:]
-        return duplicate
-    BaseContext.__copy__ = _base_context_copy
+
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

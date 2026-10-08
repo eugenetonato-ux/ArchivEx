@@ -1,7 +1,27 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% block title %}{{ filiere.level.name|default:"L1" }} — {{ filiere.name }} — Semestres | ArchivEx{% endblock %}
+{% block title %}{{ filiere.level.name|default:"L1" }} {{ filiere.name }} — Semestres & Matières | ArchivEx{% endblock %}
+{% block meta_description %}Consultez les semestres et matières de la filière {{ filiere.name }} ({{ filiere.level.name|default:"Licence" }}) à {{ filiere.school.name|default:"l'Université" }}. Épreuves, corrigés et résumés disponibles sur ArchivEx.{% endblock %}
+{% block og_title %}{{ filiere.name }} — Semestres | ArchivEx{% endblock %}
+{% block og_description %}Accédez aux épreuves d'examen, corrigés et fiches de révision pour tous les semestres de {{ filiere.name }} ({{ filiere.school.name|default:"Université" }}).{% endblock %}
+{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{% url 'academics:semestres' filiere_id=filiere.id %}{% endblock %}
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "{{ filiere.name }} — Semestres & Matières",
+  "description": "Semestres et matières de {{ filiere.name }} ({{ filiere.level.name|default:"Licence" }}) à {{ filiere.school.name|default:"Université" }}",
+  "url": "{{ request.build_absolute_uri }}",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "ArchivEx",
+    "url": "{{ request.scheme }}://{{ request.get_host }}"
+  }
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">

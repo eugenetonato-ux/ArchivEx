@@ -448,6 +448,50 @@ def favicon_view(request):
     return response
 
 
+def robots_txt_view(request):
+    """
+    Génère dynamiquement le fichier robots.txt conforme aux standards SEO.
+    - Autorise l'indexation de tout le catalogue public (Accueil, Épreuves, Filières, Ressources, etc.)
+    - Bloque les répertoires d'administration et les flux privés
+    - Indique l'URL absolue du sitemap XML
+    """
+    from django.urls import reverse
+    from django.http import HttpResponse
+
+    try:
+        sitemap_url = request.build_absolute_uri(reverse("django.contrib.sitemaps.views.sitemap"))
+    except Exception:
+        sitemap_url = request.build_absolute_uri("/sitemap.xml")
+
+    lines = [
+        "User-agent: *",
+        "Disallow: /django-admin/",
+        "Disallow: /administration/",
+        "Disallow: /pass/attente/",
+        "Disallow: /pass/retour/",
+        "Disallow: /pass/webhook/",
+        "Disallow: /pass/*/payer/",
+        "Disallow: /webhook/",
+        "Disallow: /accounts/",
+        "Disallow: /recherche/",
+        "Disallow: /epreuves/*/favori/",
+        "Disallow: /epreuves/*/stream-watermarked/",
+        "",
+        "Allow: /",
+        "Allow: /filieres/",
+        "Allow: /epreuves/",
+        "Allow: /ressources/",
+        "Allow: /pass/",
+        "Allow: /static/",
+        "Allow: /media/",
+        "",
+        f"Sitemap: {sitemap_url}",
+    ]
+    response = HttpResponse("\n".join(lines), content_type="text/plain; charset=utf-8")
+    response["Cache-Control"] = "public, max-age=86400"
+    return response
+
+
 
 
 

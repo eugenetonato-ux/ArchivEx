@@ -22,7 +22,7 @@ class Summary(models.Model):
     subject = models.ForeignKey("academics.Subject", on_delete=models.CASCADE, related_name="summaries")
     introduction = models.TextField(blank=True, default="", help_text="Présentation succincte du résumé")
     content = models.TextField(blank=True, default="", help_text="Contenu ou note facultative du résumé")
-    file = models.FileField(upload_to="summaries_pdf/", blank=True, null=True, help_text="Document PDF du résumé")
+    file = models.FileField(upload_to="summaries_pdf/", blank=True, null=True, help_text="Document PDF du résumé — lié à l'UE, pas à une année académique")
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="authored_summaries")
     access_type = models.CharField(max_length=10, choices=ACCESS_CHOICES, default="PREMIUM")
     publication_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="DRAFT")
@@ -51,6 +51,10 @@ class Summary(models.Model):
 
     def __str__(self):
         return f"Résumé : {self.title} ({self.subject.name})"
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse("content:summary_detail", kwargs={"pk": self.pk})
 
 
 class Guide(models.Model):
@@ -96,6 +100,10 @@ class Guide(models.Model):
 
     def __str__(self):
         return f"Guide : {self.title} ({self.subject.name})"
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse("content:guide_detail", kwargs={"pk": self.pk})
 
 
 class Article(models.Model):
@@ -145,6 +153,10 @@ class Article(models.Model):
     def __str__(self):
         return f"Article : {self.title}"
 
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse("content:article_detail", kwargs={"pk": self.pk})
+
 
 class CloudFile(models.Model):
     """
@@ -159,7 +171,7 @@ class CloudFile(models.Model):
     ]
 
     title = models.CharField(max_length=255, verbose_name="Titre du fichier")
-    file = models.FileField(upload_to="cloud_library/%Y/%m/", help_text="Fichier PDF conservé dans le dépôt Cloud")
+    file = models.FileField(upload_to="cloud_library/%Y/", help_text="Fichier PDF conservé dans le dépôt Cloud")
     file_type = models.CharField(max_length=20, choices=FILE_TYPE_CHOICES, default="EXAM", verbose_name="Type de ressource")
 
     school = models.ForeignKey("academics.School", on_delete=models.SET_NULL, null=True, blank=True, related_name="cloud_files")

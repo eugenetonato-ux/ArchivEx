@@ -1,6 +1,27 @@
 {% extends "base/base.html" %}
 
-{% block title %}{{ article.title }} — Conseil ArchivEx{% endblock %}
+{% block title %}{{ article.title }} — Conseil Pédagogique | ArchivEx{% endblock %}
+{% block meta_description %}{% if article.summary %}{{ article.summary|truncatechars:160 }}{% else %}{{ article.title }} : conseils pratiques et méthodologiques pour les étudiants béninois. Retrouvez cet article sur ArchivEx.{% endif %}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ article.title }} | ArchivEx{% endblock %}
+{% block og_description %}{% if article.summary %}{{ article.summary|truncatechars:160 }}{% else %}Conseils pratiques pour les étudiants béninois sur ArchivEx.{% endif %}{% endblock %}
+{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{% url 'content:article_detail' pk=article.pk %}{% endblock %}
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "{{ article.title }}",
+  "description": "{% if article.summary %}{{ article.summary|truncatechars:200 }}{% else %}{{ article.title }}{% endif %}",
+  "url": "{{ request.build_absolute_uri }}",
+  "inLanguage": "fr",
+  "datePublished": "{{ article.published_at|date:'Y-m-d'|default:article.created_at|date:'Y-m-d' }}",
+  "dateModified": "{{ article.updated_at|date:'Y-m-d' }}",
+  "publisher": { "@type": "Organization", "name": "ArchivEx", "url": "{{ request.scheme }}://{{ request.get_host }}" },
+  "articleSection": "{{ article.get_category_display }}"
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

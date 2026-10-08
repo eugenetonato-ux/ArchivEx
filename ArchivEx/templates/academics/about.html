@@ -2,6 +2,30 @@
 {% load static %}
 
 {% block title %}À propos d'ArchivEx — Bibliothèque numérique d'Accompagnement Étudiant{% endblock %}
+{% block meta_description %}ArchivEx est la plateforme de référence pour les étudiants béninois : banque d'épreuves universitaires, corrigés détaillés, résumés de cours et guides méthodologiques. Créée pour réussir vos examens.{% endblock %}
+{% block og_title %}À propos d'ArchivEx — Bibliothèque Étudiante au Bénin{% endblock %}
+{% block og_description %}Apprenez comment ArchivEx aide les étudiants béninois à réussir leurs examens grâce à des milliers d'épreuves, de corrigés et de résumés de cours.{% endblock %}
+{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{% url 'academics:about' %}{% endblock %}
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  "name": "À propos d'ArchivEx",
+  "description": "ArchivEx est la plateforme d'épreuves universitaires et de ressources académiques pour les étudiants béninois.",
+  "url": "{{ request.build_absolute_uri }}",
+  "publisher": {
+    "@type": "Organization",
+    "name": "ArchivEx",
+    "url": "{{ request.scheme }}://{{ request.get_host }}",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "{{ request.scheme }}://{{ request.get_host }}{% static 'icons/icon-512.png' %}"
+    }
+  }
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <!-- HEADER BANNER -->

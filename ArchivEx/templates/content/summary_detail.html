@@ -1,6 +1,28 @@
 {% extends "base/base.html" %}
 
 {% block title %}{{ summary.title }} — Résumé {{ summary.subject.name }} | ArchivEx{% endblock %}
+{% block meta_description %}Résumé de cours : {{ summary.title }} — {{ summary.subject.name }}{% if summary.subject.semester %} ({{ summary.subject.semester.label }}, {{ summary.subject.semester.filiere.name }}){% endif %}. Téléchargeable sur ArchivEx, la bibliothèque étudiante du Bénin.{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ summary.title }} — Résumé {{ summary.subject.name }} | ArchivEx{% endblock %}
+{% block og_description %}{% if summary.introduction %}{{ summary.introduction|truncatechars:160 }}{% else %}Résumé de cours complet pour {{ summary.subject.name }} sur ArchivEx. Idéal pour préparer vos examens universitaires au Bénin.{% endif %}{% endblock %}
+{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{% url 'content:summary_detail' pk=summary.pk %}{% endblock %}
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LearningResource",
+  "name": "{{ summary.title }}",
+  "description": "{% if summary.introduction %}{{ summary.introduction|truncatechars:200 }}{% else %}Résumé de cours pour {{ summary.subject.name }}{% endif %}",
+  "url": "{{ request.build_absolute_uri }}",
+  "educationalLevel": "HigherEducation",
+  "inLanguage": "fr",
+  "datePublished": "{{ summary.published_at|date:'Y-m-d'|default:summary.created_at|date:'Y-m-d' }}",
+  "dateModified": "{{ summary.updated_at|date:'Y-m-d' }}",
+  "publisher": { "@type": "Organization", "name": "ArchivEx", "url": "{{ request.scheme }}://{{ request.get_host }}" },
+  "about": { "@type": "Course", "name": "{{ summary.subject.name }}", "provider": { "@type": "Organization", "name": "{{ summary.subject.semester.filiere.school.name|default:'Université' }}" } }
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">

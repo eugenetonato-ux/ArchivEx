@@ -1,7 +1,27 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% block title %}Guide étudiant ArchivEx — Méthodologie & Réussite Académique{% endblock %}
+{% block title %}Guide Étudiant ArchivEx — Méthodologie & Réussite Académique{% endblock %}
+{% block meta_description %}Le guide complet de l'étudiant béninois : comment utiliser ArchivEx, réviser efficacement avec les anciennes épreuves, maîtriser les méthodes de travail et réussir vos examens universitaires.{% endblock %}
+{% block og_title %}Guide Étudiant ArchivEx — Méthodologie & Réussite Académique{% endblock %}
+{% block og_description %}Découvrez les meilleures stratégies de révision, les méthodes de travail et les astuces pour réussir vos examens universitaires au Bénin avec ArchivEx.{% endblock %}
+{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{% url 'academics:student_guide' %}{% endblock %}
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "Guide étudiant ArchivEx — Méthodologie académique",
+  "description": "Guide complet pour utiliser ArchivEx efficacement et réussir ses études universitaires au Bénin.",
+  "url": "{{ request.build_absolute_uri }}",
+  "publisher": {
+    "@type": "Organization",
+    "name": "ArchivEx",
+    "url": "{{ request.scheme }}://{{ request.get_host }}"
+  }
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">

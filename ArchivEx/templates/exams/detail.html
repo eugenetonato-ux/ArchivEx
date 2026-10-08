@@ -1,7 +1,80 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% block title %}{{ exam.title }} — UE · {{ exam.subject.name }} | ArchivEx{% endblock %}
+{% block title %}{{ exam.title }} — {{ exam.subject.name }} ({{ exam.year }}) | ArchivEx{% endblock %}
+{% block meta_description %}Télécharger l'épreuve de {{ exam.title }} ({{ exam.year }}) en {{ exam.subject.name }}, {{ exam.filiere.name }} à {{ exam.filiere.school.name|default:'Université' }}. Sujet d'examen PDF{% if exam.has_correction %} avec corrigé détaillé{% endif %}{% if exam.has_summary %} et fiche de révision{% endif %} disponible sur ArchivEx Bénin.{% endblock %}
+{% block meta_keywords %}{{ exam.title }}, épreuve {{ exam.subject.name }}, examen {{ exam.filiere.school.code|default:exam.filiere.school.name }}, {{ exam.filiere.name }}, annales {{ exam.year }}, corrigé {{ exam.subject.name }}, sujet d'examen université bénin, ArchivEx{% endblock %}
+
+{% block og_title %}{{ exam.title }} — {{ exam.subject.name }} ({{ exam.year }}) | ArchivEx{% endblock %}
+{% block og_description %}Consultez et téléchargez l'épreuve universitaire de {{ exam.subject.name }} ({{ exam.year }}){% if exam.has_correction %} avec son corrigé détaillé{% endif %} sur ArchivEx.{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Accueil",
+          "item": "{{ request.scheme }}://{{ request.get_host }}/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Épreuves",
+          "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'exams:liste' %}"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "{{ exam.filiere.name|escapejs }}",
+          "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'academics:semestres' filiere_id=exam.filiere.id %}"
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "name": "{{ exam.subject.name|escapejs }}",
+          "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'exams:liste' %}?subject={{ exam.subject.id }}"
+        },
+        {
+          "@type": "ListItem",
+          "position": 5,
+          "name": "{{ exam.title|escapejs }}",
+          "item": "{{ request.build_absolute_uri }}"
+        }
+      ]
+    },
+    {
+      "@type": "LearningResource",
+      "@id": "{{ request.build_absolute_uri }}#resource",
+      "name": "{{ exam.title|escapejs }}",
+      "description": "Épreuve universitaire de {{ exam.subject.name|escapejs }} ({{ exam.year }}), filière {{ exam.filiere.name|escapejs }} dispensée à {{ exam.filiere.school.name|default:'Université'|escapejs }}.",
+      "educationalLevel": "{{ exam.filiere.level.name|escapejs }}",
+      "learningResourceType": "Exam Paper",
+      "about": {
+        "@type": "Thing",
+        "name": "{{ exam.subject.name|escapejs }}"
+      },
+      "inLanguage": "fr",
+      "isAccessibleForFree": {% if has_access or exam.is_free %}true{% else %}false{% endif %},
+      "provider": {
+        "@type": "EducationalOrganization",
+        "name": "{{ exam.filiere.school.name|default:'Université d\'Abomey-Calavi'|escapejs }}"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "ArchivEx",
+        "url": "{{ request.scheme }}://{{ request.get_host }}/"
+      }
+    }
+  ]
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

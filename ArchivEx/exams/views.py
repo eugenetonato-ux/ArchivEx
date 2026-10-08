@@ -560,7 +560,10 @@ def stream_exam_pdf(request, pk):
     if isinstance(file_obj, str):
         response = FileResponse(open(file_obj, "rb"), content_type="application/pdf")
     else:
-        return redirect(file_obj.url)
+        try:
+            response = FileResponse(file_obj.open("rb"), content_type="application/pdf")
+        except Exception:
+            return redirect(file_obj.url)
 
     disposition = "inline"
     subj_name = exam.subject.name if exam.subject else "Epreuve"
@@ -595,7 +598,10 @@ def stream_correction_pdf(request, pk):
     if isinstance(file_obj, str):
         response = FileResponse(open(file_obj, "rb"), content_type="application/pdf")
     else:
-        return redirect(file_obj.url)
+        try:
+            response = FileResponse(file_obj.open("rb"), content_type="application/pdf")
+        except Exception:
+            return redirect(file_obj.url)
 
     disposition = "inline"
     subj_name = exam.subject.name if exam.subject else "Correction"
@@ -642,7 +648,10 @@ def stream_summary_pdf(request, pk):
     if isinstance(file_obj, str):
         response = FileResponse(open(file_obj, "rb"), content_type="application/pdf")
     else:
-        return redirect(file_obj.url)
+        try:
+            response = FileResponse(file_obj.open("rb"), content_type="application/pdf")
+        except Exception:
+            return redirect(file_obj.url)
 
     disposition = "inline"
     subj_name = exam.subject.name if exam.subject else "Resume"

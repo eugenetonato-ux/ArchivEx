@@ -1,10 +1,31 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% block title %}ArchivEx — Banque d'épreuves, corrigés & examens universitaires{% endblock %}
-{% block meta_description %}ArchivEx est la banque d'épreuves universitaires de référence. Retrouvez des centaines d'épreuves, de corrigés détaillés et de résumés de cours pour toutes vos matières.{% endblock %}
-{% block og_title %}ArchivEx — Banque d'épreuves, corrigés & examens universitaires{% endblock %}
-{% block og_description %}Accédez facilement aux anciens sujets d'examens, aux corrigés détaillés et aux résumés de vos matières.{% endblock %}
+{% block title %}ArchivEx — Banque d'épreuves, corrigés & examens universitaires au Bénin{% endblock %}
+{% block meta_description %}ArchivEx est la plus grande banque d'épreuves universitaires du Bénin. Des centaines d'épreuves d'examens, de corrigés détaillés et de résumés de cours classés par université, filière et matière.{% endblock %}
+{% block og_title %}ArchivEx — Banque d'épreuves, corrigés & examens universitaires au Bénin{% endblock %}
+{% block og_description %}Accédez aux anciennes épreuves d'examens avec corrigés détaillés et résumés de cours pour toutes les filières universitaires du Bénin. Gratuit et Premium.{% endblock %}
+{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}/{% endblock %}
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "ArchivEx",
+  "description": "La plus grande banque d'épreuves universitaires du Bénin : épreuves d'examens, corrigés détaillés et résumés de cours.",
+  "url": "{{ request.scheme }}://{{ request.get_host }}/",
+  "inLanguage": "fr",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "{{ request.scheme }}://{{ request.get_host }}/recherche/?q={search_term_string}"
+    },
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+{% endblock %}
 
 {% block header %}
 <!-- ========================================================================= -->

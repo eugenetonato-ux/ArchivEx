@@ -16,6 +16,11 @@ from payments.services import (
     verify_chariow_pulse_signature,
     activate_pass_for_payment,
     create_chariow_checkout,
+    create_fedapay_transaction,
+    verify_fedapay_webhook_signature,
+    handle_fedapay_webhook_event,
+    verify_and_sync_fedapay_transaction,
+    get_fedapay_base_url,
 )
 from subscriptions.models import UserSubscription
 from subscriptions.services import has_user_valid_pass
@@ -479,4 +484,260 @@ class ChariowIntegrationTests(TestCase):
         payment.refresh_from_db()
         self.assertEqual(payment.status, Payment.STATUS_APPROVED)
         self.assertTrue(has_user_valid_pass(self.student, self.semester))
+
+
+@override_settings(
+    FEDAPAY_SECRET_KEY="sk_sandbox_mock_fedapay_secret_key_123",
+    FEDAPAY_PUBLIC_KEY="pk_sandbox_mock_fedapay_public_key_456",
+    FEDAPAY_ENVIRONMENT="sandbox",
+    FEDAPAY_WEBHOOK_SECRET="wh_sandbox_fedapay_secret_789",
+    FEDAPAY_CURRENCY="XOF",
+    PASS_SEMESTRE_PRIX_DEFAUT=3800,
+)
+class FedaPayIntegrationTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.school = School.objects.create(name="FASHS", code="FASHS", slug="fashs", is_active=True)
+        self.level = Level.objects.create(name="L2", code="L2")
+        self.filiere = Filiere.objects.create(school=self.school, level=self.level, name="Sociologie")
+        self.year = AcademicYear.objects.create(label="2025-2026")
+        self.semester = Semester.objects.create(filiere=self.filiere, academic_year=self.year, label="Semestre 3")
+
+        self.student = User.objects.create_user(
+            username="etudiant_fedapay",
+            email="fedapay.student@univ.bj",
+            first_name="Bio",
+            last_name="Guerra",
+            password="SecurePassword123!"
+        )
+
+    def test_fedapay_configuration_settings(self):
+        """Les variables de configuration FedaPay sont correctement définies."""
+        self.assertTrue(hasattr(settings, "FEDAPAY_SECRET_KEY"))
+        self.assertTrue(hasattr(settings, "FEDAPAY_PUBLIC_KEY"))
+        self.assertTrue(hasattr(settings, "FEDAPAY_ENVIRONMENT"))
+        self.assertTrue(hasattr(settings, "FEDAPAY_WEBHOOK_SECRET"))
+        self.assertEqual(settings.FEDAPAY_CURRENCY, "XOF")
+        self.assertEqual(settings.PASS_SEMESTRE_PRIX_DEFAUT, 3800)
+
+    def test_get_fedapay_base_url(self):
+        """L'URL de l'API change dynamiquement entre sandbox et live."""
+        with override_settings(FEDAPAY_ENVIRONMENT="sandbox"):
+            self.assertEqual(get_fedapay_base_url(), "https://sandbox-api.fedapay.com/v1")
+        with override_settings(FEDAPAY_ENVIRONMENT="live"):
+            self.assertEqual(get_fedapay_base_url(), "https://api.fedapay.com/v1")
+
+    def test_celtiis_operator_detection(self):
+        """Les numéros de l'opérateur Celtiis Bénin sont correctement détectés."""
+        self.assertEqual(detect_operator("0140123456"), "celtiis")
+        self.assertEqual(detect_operator("+229 01 41 23 45 67"), "celtiis")
+        self.assertEqual(detect_operator("0192345678"), "celtiis")
+        self.assertEqual(detect_operator("0193456789"), "celtiis")
+
+    @patch("payments.services.requests.post")
+    def test_initiate_payment_redirects_to_fedapay_checkout_url(self, mock_post):
+        """L'initiation de paiement appelle l'API FedaPay et redirige vers checkout_url."""
+        # 1er appel: POST /transactions -> retourne tx_id 42
+        mock_tx_response = MagicMock()
+        mock_tx_response.status_code = 201
+        mock_tx_response.json.return_value = {
+            "v1/transaction": {
+                "id": 42,
+                "status": "pending",
+                "amount": 3800,
+            }
+        }
+
+        # 2e appel: POST /transactions/42/token -> retourne l'URL de paiement
+        mock_token_response = MagicMock()
+        mock_token_response.status_code = 200
+        mock_token_response.json.return_value = {
+            "token": "tok_fedapay_xyz123",
+            "url": "https://checkout.fedapay.com/token/tok_fedapay_xyz123",
+        }
+
+        mock_post.side_effect = [mock_tx_response, mock_token_response]
+
+        self.client.force_login(self.student)
+        res = self.client.post(
+            reverse("payments:initier_paiement", kwargs={"semester_id": self.semester.id}),
+            {"phone_number": "0150196407"},
+        )
+
+        self.assertEqual(res.status_code, 302)
+        payment = Payment.objects.filter(user=self.student, semester=self.semester).first()
+        self.assertIsNotNone(payment)
+        self.assertEqual(payment.fedapay_transaction_id, "42")
+        self.assertEqual(payment.fedapay_checkout_url, "https://checkout.fedapay.com/token/tok_fedapay_xyz123")
+        self.assertEqual(payment.gateway_reference, "42")
+        self.assertRedirects(res, "https://checkout.fedapay.com/token/tok_fedapay_xyz123", fetch_redirect_response=False)
+
+    @patch("payments.services.requests.post")
+    def test_initiate_payment_fedapay_api_error_handles_gracefully(self, mock_post):
+        """Une erreur de l'API FedaPay marque le paiement REJECTED sans lever d'exception 500."""
+        mock_res = MagicMock()
+        mock_res.status_code = 400
+        mock_res.json.return_value = {
+            "message": "Erreur de validation du montant ou numéro",
+        }
+        mock_post.return_value = mock_res
+
+        self.client.force_login(self.student)
+        res = self.client.post(
+            reverse("payments:initier_paiement", kwargs={"semester_id": self.semester.id}),
+            {"phone_number": "0150196407"},
+        )
+
+        self.assertEqual(res.status_code, 302)
+        payment = Payment.objects.filter(user=self.student, semester=self.semester).first()
+        self.assertIsNotNone(payment)
+        self.assertEqual(payment.status, Payment.STATUS_REJECTED)
+
+    def test_fedapay_webhook_signature_verification_valid_and_tampered(self):
+        """Vérifie la robustesse de la signature HMAC-SHA256 FedaPay."""
+        raw_body = b'{"name":"transaction.approved","entity":{"id":100}}'
+        secret = settings.FEDAPAY_WEBHOOK_SECRET.encode("utf-8")
+        valid_digest = hmac.new(secret, raw_body, hashlib.sha256).hexdigest()
+
+        # Format 1: direct hex
+        self.assertTrue(verify_fedapay_webhook_signature(raw_body, valid_digest))
+        # Format 2: s=<hex>
+        self.assertTrue(verify_fedapay_webhook_signature(raw_body, f"s={valid_digest}"))
+        # Signature altérée
+        self.assertFalse(verify_fedapay_webhook_signature(raw_body, "s=bad_sig_abc123"))
+
+        # Format 3: avec horodatage t=<timestamp>,s=<sig>
+        ts = "1728345600"
+        ts_body = f"{ts}.".encode("utf-8") + raw_body
+        ts_digest = hmac.new(secret, ts_body, hashlib.sha256).hexdigest()
+        self.assertTrue(verify_fedapay_webhook_signature(raw_body, f"t={ts},s={ts_digest}"))
+
+    def test_fedapay_webhook_transaction_approved_activates_pass(self):
+        """Le webhook transaction.approved valide le paiement et active le pass semestre de manière idempotente."""
+        payment = Payment.objects.create(
+            user=self.student,
+            semester=self.semester,
+            amount=3800,
+            currency="XOF",
+            external_reference="ARCHIVEX-PASS-FEDAPAY-001",
+            fedapay_transaction_id="101",
+            status=Payment.STATUS_PENDING,
+        )
+
+        payload = {
+            "name": "transaction.approved",
+            "entity": {
+                "id": 101,
+                "reference": payment.external_reference,
+                "status": "approved",
+                "custom_metadata": {
+                    "external_reference": payment.external_reference,
+                }
+            }
+        }
+        body_bytes = json.dumps(payload).encode("utf-8")
+        secret = settings.FEDAPAY_WEBHOOK_SECRET.encode("utf-8")
+        sig_hex = hmac.new(secret, body_bytes, hashlib.sha256).hexdigest()
+
+        res = self.client.post(
+            reverse("payments:fedapay_webhook"),
+            data=body_bytes,
+            content_type="application/json",
+            HTTP_X_FEDAPAY_SIGNATURE=f"s={sig_hex}"
+        )
+
+        self.assertEqual(res.status_code, 200)
+        payment.refresh_from_db()
+        self.assertEqual(payment.status, Payment.STATUS_APPROVED)
+        self.assertTrue(has_user_valid_pass(self.student, self.semester))
+
+        # Idempotence: un second envoi ne déclenche pas d'erreur
+        res2 = self.client.post(
+            reverse("payments:fedapay_webhook"),
+            data=body_bytes,
+            content_type="application/json",
+            HTTP_X_FEDAPAY_SIGNATURE=f"s={sig_hex}"
+        )
+        self.assertEqual(res2.status_code, 200)
+        self.assertEqual(res2.json().get("status"), "already_approved")
+
+    def test_fedapay_webhook_transaction_declined_marks_rejected(self):
+        """Le webhook transaction.declined marque le paiement comme rejeté."""
+        payment = Payment.objects.create(
+            user=self.student,
+            semester=self.semester,
+            amount=3800,
+            currency="XOF",
+            external_reference="ARCHIVEX-PASS-FEDAPAY-002",
+            fedapay_transaction_id="102",
+            status=Payment.STATUS_PENDING,
+        )
+
+        payload = {
+            "name": "transaction.declined",
+            "entity": {
+                "id": 102,
+                "status": "declined",
+                "custom_metadata": {
+                    "external_reference": payment.external_reference,
+                }
+            }
+        }
+        body_bytes = json.dumps(payload).encode("utf-8")
+        secret = settings.FEDAPAY_WEBHOOK_SECRET.encode("utf-8")
+        sig_hex = hmac.new(secret, body_bytes, hashlib.sha256).hexdigest()
+
+        res = self.client.post(
+            reverse("payments:fedapay_webhook"),
+            data=body_bytes,
+            content_type="application/json",
+            HTTP_X_FEDAPAY_SIGNATURE=f"s={sig_hex}"
+        )
+
+        self.assertEqual(res.status_code, 200)
+        payment.refresh_from_db()
+        self.assertEqual(payment.status, Payment.STATUS_REJECTED)
+        self.assertFalse(has_user_valid_pass(self.student, self.semester))
+
+    @patch("payments.services.requests.get")
+    def test_verify_and_sync_fedapay_transaction_activates_pass(self, mock_get):
+        """L'interrogation active (GET /v1/transactions/{id}) synchronise le statut et active le pass."""
+        payment = Payment.objects.create(
+            user=self.student,
+            semester=self.semester,
+            amount=3800,
+            currency="XOF",
+            external_reference="ARCHIVEX-PASS-SYNC-FEDA-1",
+            fedapay_transaction_id="202",
+            status=Payment.STATUS_PENDING,
+        )
+
+        mock_res = MagicMock()
+        mock_res.status_code = 200
+        mock_res.json.return_value = {
+            "v1/transaction": {
+                "id": 202,
+                "status": "approved",
+                "amount": 3800,
+            }
+        }
+        mock_get.return_value = mock_res
+
+        self.client.force_login(self.student)
+        url = reverse("payments:payment_return", kwargs={"reference": payment.external_reference})
+        res = self.client.get(f"{url}?id=202")
+
+        self.assertEqual(res.status_code, 200)
+        payment.refresh_from_db()
+        self.assertEqual(payment.status, Payment.STATUS_APPROVED)
+        self.assertTrue(has_user_valid_pass(self.student, self.semester))
+
+    def test_fedapay_secret_keys_not_exposed_in_html(self):
+        """Aucune clé secrète FedaPay n'est exposée dans le HTML envoyé au navigateur."""
+        self.client.force_login(self.student)
+        res = self.client.get(reverse("payments:pass_semestre", kwargs={"semester_id": self.semester.id}))
+        self.assertEqual(res.status_code, 200)
+        html = res.content.decode("utf-8")
+        self.assertNotIn(settings.FEDAPAY_SECRET_KEY, html)
+        self.assertNotIn(settings.FEDAPAY_WEBHOOK_SECRET, html)
 

@@ -1,6 +1,22 @@
 {% extends "base/base.html" %}
 
-{% block title %}Guides de Matière — ArchivEx V2{% endblock %}
+{% block title %}Guides Méthodologiques de Matière — Réussir ses Examens | ArchivEx{% endblock %}
+{% block meta_description %}Découvrez nos guides méthodologiques par matière pour réussir vos examens universitaires au Bénin. Stratégies de révision, concepts clés et conseils d'experts pour chaque UE sur ArchivEx.{% endblock %}
+{% block og_title %}Guides Méthodologiques — Réussir vos Examens | ArchivEx{% endblock %}
+{% block og_description %}Nos guides de matière vous donnent les stratégies, concepts clés et techniques pour réussir chaque UE. Idéal pour les étudiants béninois.{% endblock %}
+{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{% url 'content:guide_list' %}{% endblock %}
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Guides méthodologiques — ArchivEx",
+  "description": "Guides méthodologiques par matière pour réussir les examens universitaires au Bénin.",
+  "url": "{{ request.build_absolute_uri }}",
+  "isPartOf": { "@type": "WebSite", "name": "ArchivEx", "url": "{{ request.scheme }}://{{ request.get_host }}" }
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

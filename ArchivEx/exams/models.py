@@ -1,4 +1,54 @@
 from django.db import models
+import os
+
+
+def exam_upload_to(instance, filename):
+    """Organise les épreuves par année et semestre : exams/2024-2025/S1/fichier.pdf"""
+    if instance.academic_year_id and hasattr(instance, 'academic_year') and instance.academic_year:
+        year_label = instance.academic_year.label
+    elif instance.year:
+        year_label = f"{instance.year - 1}-{instance.year}"
+    else:
+        year_label = "non-classe"
+
+    # Récupérer le numéro de semestre (S1, S2...)
+    sem_label = "S1"  # fallback
+    if instance.semester_id and hasattr(instance, 'semester') and instance.semester:
+        num = getattr(instance.semester, 'number', None)
+        if num:
+            sem_label = f"S{num}"
+        else:
+            lbl = getattr(instance.semester, 'label', '') or ""
+            sem_label = lbl[:10] if lbl else "S1"
+
+    return os.path.join("exams", year_label, sem_label, filename)
+
+
+def correction_upload_to(instance, filename):
+    """Organise les corrections par année et semestre : corrections/2024-2025/S1/fichier.pdf"""
+    if instance.academic_year_id and hasattr(instance, 'academic_year') and instance.academic_year:
+        year_label = instance.academic_year.label
+    elif instance.year:
+        year_label = f"{instance.year - 1}-{instance.year}"
+    else:
+        year_label = "non-classe"
+
+    sem_label = "S1"
+    if instance.semester_id and hasattr(instance, 'semester') and instance.semester:
+        num = getattr(instance.semester, 'number', None)
+        if num:
+            sem_label = f"S{num}"
+        else:
+            lbl = getattr(instance.semester, 'label', '') or ""
+            sem_label = lbl[:10] if lbl else "S1"
+
+    return os.path.join("corrections", year_label, sem_label, filename)
+
+
+def summary_upload_to(instance, filename):
+    """Les résumés sont liés à l'UE, pas à une année académique.
+    Chemin : summaries_pdf/fichier.pdf"""
+    return os.path.join("summaries_pdf", filename)
 
 
 class Exam(models.Model):
@@ -22,9 +72,9 @@ class Exam(models.Model):
     exam_type = models.CharField(max_length=20, choices=EXAM_TYPE_CHOICES, db_index=True)
     year = models.PositiveIntegerField(db_index=True)
     description = models.TextField(blank=True)
-    file = models.FileField(upload_to="exams/", help_text="Fichier PDF de l'épreuve")
-    correction_file = models.FileField(upload_to="corrections/", blank=True, null=True, help_text="Fichier PDF de la correction (optionnel)")
-    summary_file = models.FileField(upload_to="summaries_pdf/", blank=True, null=True, help_text="Fichier PDF du résumé/fiche (optionnel)")
+    file = models.FileField(upload_to=exam_upload_to, help_text="Fichier PDF de l'épreuve")
+    correction_file = models.FileField(upload_to=correction_upload_to, blank=True, null=True, help_text="Fichier PDF de la correction (optionnel)")
+    summary_file = models.FileField(upload_to=summary_upload_to, blank=True, null=True, help_text="Fichier PDF du résumé/fiche (optionnel)")
     summary = models.ForeignKey("content.Summary", on_delete=models.SET_NULL, blank=True, null=True, related_name="exams", help_text="Fiche résumé rédigée associée (optionnelle)")
 
     cloud_file = models.ForeignKey("content.CloudFile", on_delete=models.SET_NULL, blank=True, null=True, related_name="exams_as_primary", help_text="Fichier Cloud de l'épreuve")
@@ -76,3 +126,7 @@ class Exam(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse("exams:detail", kwargs={"pk": self.pk})

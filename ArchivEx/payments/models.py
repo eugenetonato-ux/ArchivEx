@@ -44,7 +44,8 @@ class Payment(models.Model):
         ("celtiis", "Celtiis Cash"),
         ("wave", "Wave"),
         ("card", "Carte bancaire"),
-        ("chariow", "Chariow Multi-Paiement"),
+        ("fedapay", "FedaPay Multi-Paiement"),
+        ("chariow", "Chariow Multi-Paiement (Ancien)"),
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="payments")
@@ -57,8 +58,10 @@ class Payment(models.Model):
     phone_number = models.CharField(max_length=20, blank=True)
     
     external_reference = models.CharField(max_length=64, unique=True, null=True, blank=True)
-    chariow_sale_id = models.CharField(max_length=100, blank=True, db_index=True, help_text="Identifiant de la vente sur Chariow (ex: sal_xxx)")
-    chariow_checkout_url = models.URLField(max_length=500, blank=True, help_text="URL de paiement sécurisée générée par Chariow")
+    fedapay_transaction_id = models.CharField(max_length=100, blank=True, db_index=True, help_text="Identifiant de la transaction sur FedaPay (ex: 12345)")
+    fedapay_checkout_url = models.URLField(max_length=500, blank=True, help_text="URL de paiement sécurisée générée par FedaPay")
+    chariow_sale_id = models.CharField(max_length=100, blank=True, db_index=True, help_text="Identifiant de la vente sur Chariow (legacy)")
+    chariow_checkout_url = models.URLField(max_length=500, blank=True, help_text="URL de paiement sécurisée générée par Chariow (legacy)")
     chariow_customer_id = models.CharField(max_length=100, blank=True, help_text="Identifiant client Chariow")
     sebpay_transaction_id = models.CharField(max_length=100, blank=True, help_text="Ancien identifiant SebPay (conservé pour historique)")
     
@@ -72,8 +75,8 @@ class Payment(models.Model):
 
     @property
     def gateway_reference(self):
-        """Référence retournée par la passerelle de paiement (Chariow ou legacy)."""
-        return self.chariow_sale_id or self.sebpay_transaction_id or ""
+        """Référence retournée par la passerelle de paiement (FedaPay, Chariow ou legacy)."""
+        return self.fedapay_transaction_id or self.chariow_sale_id or self.sebpay_transaction_id or ""
 
 
     @property

@@ -1,7 +1,27 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% block title %}Toutes les filières — ArchivEx{% endblock %}
+{% block title %}Filières & Formations Universitaires — ArchivEx Bénin{% endblock %}
+{% block meta_description %}Découvrez toutes les filières universitaires disponibles sur ArchivEx : ENEAM, FASEG, FLASH, FAST, ENAM et plus. Épreuves, corrigés et résumés classés par école et filière au Bénin.{% endblock %}
+{% block og_title %}Filières & Formations Universitaires — ArchivEx Bénin{% endblock %}
+{% block og_description %}Explorez notre catalogue complet de filières universitaires béninoises. Épreuves d'examen, corrigés détaillés et fiches de révision pour chaque formation.{% endblock %}
+{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{% url 'academics:filieres' %}{% endblock %}
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Filières universitaires — ArchivEx",
+  "description": "Toutes les filières universitaires du Bénin avec épreuves, corrigés et résumés de cours.",
+  "url": "{{ request.build_absolute_uri }}",
+  "publisher": {
+    "@type": "Organization",
+    "name": "ArchivEx",
+    "url": "{{ request.scheme }}://{{ request.get_host }}"
+  }
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

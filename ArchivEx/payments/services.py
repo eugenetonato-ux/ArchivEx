@@ -35,23 +35,54 @@ DEFAULT_CURRENCY = "XOF"
 # Opérateurs béninois
 OPERATOR_MTN = "mtn"
 OPERATOR_MOOV = "moov"
-SUPPORTED_OPERATORS = [OPERATOR_MTN, OPERATOR_MOOV]
+OPERATOR_CELTIIS = "celtiis"
+SUPPORTED_OPERATORS = [OPERATOR_MTN, OPERATOR_MOOV, OPERATOR_CELTIIS]
 
 # Indicatifs mobiles béninois (ARCEP 10 chiffres / 8 chiffres)
 _BJ_MOBILE_PREFIXES = {
+    # MTN Bénin
     "42": OPERATOR_MTN, "46": OPERATOR_MTN, "50": OPERATOR_MTN, "51": OPERATOR_MTN,
     "52": OPERATOR_MTN, "53": OPERATOR_MTN, "54": OPERATOR_MTN, "56": OPERATOR_MTN,
     "57": OPERATOR_MTN, "59": OPERATOR_MTN, "61": OPERATOR_MTN, "62": OPERATOR_MTN,
     "66": OPERATOR_MTN, "67": OPERATOR_MTN, "69": OPERATOR_MTN, "90": OPERATOR_MTN,
     "91": OPERATOR_MTN, "96": OPERATOR_MTN, "97": OPERATOR_MTN,
+    # Moov Bénin
     "45": OPERATOR_MOOV, "55": OPERATOR_MOOV, "58": OPERATOR_MOOV, "60": OPERATOR_MOOV,
     "63": OPERATOR_MOOV, "64": OPERATOR_MOOV, "65": OPERATOR_MOOV, "68": OPERATOR_MOOV,
     "94": OPERATOR_MOOV, "95": OPERATOR_MOOV, "98": OPERATOR_MOOV, "99": OPERATOR_MOOV,
+    # Celtiis Bénin
+    "40": OPERATOR_CELTIIS, "41": OPERATOR_CELTIIS, "43": OPERATOR_CELTIIS,
+    "44": OPERATOR_CELTIIS, "49": OPERATOR_CELTIIS, "92": OPERATOR_CELTIIS,
+    "93": OPERATOR_CELTIIS,
 }
 
 
+def get_fedapay_base_url():
+    """
+    Retourne l'URL de base de l'API FedaPay selon l'environnement configuré.
+    - 'sandbox' : https://sandbox-api.fedapay.com/v1
+    - 'live' : https://api.fedapay.com/v1
+    """
+    env = getattr(settings, "FEDAPAY_ENVIRONMENT", "sandbox").strip().lower()
+    if env in ["live", "production"]:
+        return "https://api.fedapay.com/v1"
+    return "https://sandbox-api.fedapay.com/v1"
+
+
+def _fedapay_headers():
+    """Génère les en-têtes d'authentification pour l'API FedaPay."""
+    api_key = getattr(settings, "FEDAPAY_SECRET_KEY", "").strip()
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+    return headers
+
+
 def _chariow_headers():
-    """Génère les headers d'authentification pour l'API Chariow."""
+    """Génère les headers d'authentification pour l'API Chariow (legacy)."""
     api_key = getattr(settings, "CHARIOW_API_KEY", "")
     headers = {
         "Content-Type": "application/json",
@@ -128,6 +159,164 @@ def generate_external_reference():
         code = uuid.uuid4().hex[:6].upper()
         ref = f"ARCHIVEX-PASS-{year}-{code}"
     return ref
+
+
+def create_fedapay_transaction(payment, callback_url=None):
+    """
+    Initialise une transaction sur la passerelle FedaPay (https://fedapay.com).
+    Processus conforme à la documentation officielle FedaPay :
+    1. POST /v1/transactions (création de l'objet transaction avec montant, devise, client, métadonnées)
+    2. POST /v1/transactions/{id}/token (génération du token et de l'URL sécurisée de checkout)
+
+    Met à jour l'enregistrement Payment avec :
+    - payment.fedapay_transaction_id
+    - payment.fedapay_checkout_url
+    """
+    secret_key = getattr(settings, "FEDAPAY_SECRET_KEY", "").strip()
+    if not secret_key:
+        logger.error("[FedaPay] FEDAPAY_SECRET_KEY non configurée dans settings / .env.")
+        return {
+            "success": False,
+            "error": "Le service de paiement est temporairement indisponible (clé API FedaPay non configurée).",
+        }
+
+    user = payment.user
+    email = getattr(user, "email", None) or f"{user.username}@archivex.bj"
+    raw_first = (getattr(user, "first_name", "") or "").strip()
+    raw_last = (getattr(user, "last_name", "") or "").strip()
+
+    if not raw_last:
+        if " " in raw_first:
+            first_name, last_name = raw_first.split(" ", 1)
+        elif " " in (user.username or ""):
+            first_name, last_name = user.username.split(" ", 1)
+        else:
+            first_name = raw_first or user.username or "Étudiant"
+            last_name = "ArchivEx"
+    else:
+        first_name = raw_first or user.username or "Étudiant"
+        last_name = raw_last
+
+    # Normalisation du numéro national (10 chiffres)
+    phone_digits = re.sub(r"[^\d]", "", str(payment.phone_number or ""))
+    if phone_digits.startswith("229") and len(phone_digits) == 13:
+        national_number = phone_digits[3:]
+    else:
+        national_number = phone_digits
+
+    base_url = get_fedapay_base_url()
+    headers = _fedapay_headers()
+    currency_iso = getattr(settings, "FEDAPAY_CURRENCY", "XOF")
+    semester_label = payment.semester.label if payment.semester else "Pass Semestre"
+
+    # Construction du payload transactionnel
+    tx_payload = {
+        "description": f"Pass Semestre ArchivEx - {semester_label}",
+        "amount": int(payment.amount),
+        "currency": {"iso": currency_iso},
+        "callback_url": callback_url or "",
+        "customer": {
+            "firstname": first_name,
+            "lastname": last_name,
+            "email": email,
+            "phone_number": {
+                "number": national_number or "0100000000",
+                "country": "bj",
+            }
+        },
+        "custom_metadata": {
+            "external_reference": payment.external_reference,
+            "archivex_payment_id": str(payment.id),
+            "archivex_user_id": str(user.id),
+            "archivex_semester_id": str(payment.semester_id) if payment.semester_id else "",
+            "plan": "semester_pass",
+        }
+    }
+
+    try:
+        logger.info(
+            "[FedaPay] Création transaction ref=%s, montant=%s %s, user=%s (base_url=%s)",
+            payment.external_reference, payment.amount, currency_iso, user.username, base_url
+        )
+
+        # 1. Création de la transaction
+        create_url = f"{base_url}/transactions"
+        tx_res = requests.post(create_url, json=tx_payload, headers=headers, timeout=_TIMEOUT)
+
+        try:
+            tx_data = tx_res.json()
+        except Exception:
+            tx_data = {"raw": tx_res.text}
+
+        if tx_res.status_code not in [200, 201]:
+            error_msg = (
+                tx_data.get("message") or
+                tx_data.get("error") or
+                tx_data.get("errors") or
+                f"Erreur API FedaPay (HTTP {tx_res.status_code})"
+            )
+            logger.warning("[FedaPay] Échec création transaction : %s", error_msg)
+            return {"success": False, "error": str(error_msg), "status_code": tx_res.status_code}
+
+        # Extraction de l'ID de la transaction créée
+        tx_obj = (
+            tx_data.get("v1/transaction") or
+            tx_data.get("transaction") or
+            tx_data.get("data") or
+            tx_data
+        )
+        tx_id = tx_obj.get("id") if isinstance(tx_obj, dict) else None
+
+        if not tx_id:
+            logger.error("[FedaPay] ID de transaction manquant dans la réponse: %s", tx_data)
+            return {"success": False, "error": "Identifiant de transaction introuvable dans la réponse FedaPay."}
+
+        # 2. Génération du token / URL de paiement FedaPay
+        token_url = f"{base_url}/transactions/{tx_id}/token"
+        token_res = requests.post(token_url, json={}, headers=headers, timeout=_TIMEOUT)
+
+        try:
+            token_data = token_res.json()
+        except Exception:
+            token_data = {"raw": token_res.text}
+
+        if token_res.status_code not in [200, 201]:
+            error_msg = token_data.get("message") or f"Erreur génération du lien FedaPay (HTTP {token_res.status_code})"
+            logger.warning("[FedaPay] Échec génération token pour tx #%s : %s", tx_id, error_msg)
+            return {"success": False, "error": str(error_msg), "status_code": token_res.status_code}
+
+        checkout_url = (
+            token_data.get("url") or
+            (token_data.get("token", {}).get("url") if isinstance(token_data.get("token"), dict) else None)
+        )
+
+        if not checkout_url and token_data.get("token") and isinstance(token_data.get("token"), str):
+            checkout_url = f"https://checkout.fedapay.com/token/{token_data['token']}"
+
+        # Persistance locale dans Payment
+        payment.fedapay_transaction_id = str(tx_id)
+        if checkout_url:
+            payment.fedapay_checkout_url = checkout_url
+        payment.save(update_fields=["fedapay_transaction_id", "fedapay_checkout_url"])
+
+        logger.info(
+            "[FedaPay] Checkout généré avec succès pour ref=%s (tx_id=%s, url=%s)",
+            payment.external_reference, tx_id, checkout_url
+        )
+
+        return {
+            "success": True,
+            "transaction_id": tx_id,
+            "checkout_url": checkout_url,
+            "data": token_data,
+        }
+
+    except requests.exceptions.Timeout:
+        logger.error("[FedaPay] Timeout lors de l'appel FedaPay pour ref=%s", payment.external_reference)
+        return {"success": False, "error": "Le service FedaPay n'a pas répondu à temps. Veuillez réessayer."}
+    except requests.exceptions.RequestException as e:
+        logger.error("[FedaPay] Exception de connexion lors de l'appel FedaPay : %s", e)
+        return {"success": False, "error": "Erreur de communication avec la plateforme de paiement FedaPay."}
 
 
 def create_chariow_checkout(payment, redirect_url=None):
@@ -293,6 +482,54 @@ def create_chariow_checkout(payment, redirect_url=None):
         return {"success": False, "error": "Erreur de communication avec la plateforme de paiement Chariow."}
 
 
+def verify_fedapay_webhook_signature(raw_body, signature_header):
+    """
+    Vérifie la signature HMAC-SHA256 du webhook FedaPay transmise dans l'en-tête 'X-FEDAPAY-SIGNATURE'.
+    Selon la documentation FedaPay :
+    - L'en-tête contient soit direct '<signature_hex>', soit 's=<signature_hex>',
+      ou au format horodaté 't=<timestamp>,s=<signature_hex>'.
+    - La signature est calculée avec la clé secrète de l'endpoint webhook (FEDAPAY_WEBHOOK_SECRET).
+    """
+    secret = getattr(settings, "FEDAPAY_WEBHOOK_SECRET", "").strip()
+    if not secret or not signature_header or not raw_body:
+        return False
+
+    if isinstance(raw_body, str):
+        raw_body_bytes = raw_body.encode("utf-8")
+    else:
+        raw_body_bytes = raw_body
+
+    secret_bytes = secret.encode("utf-8")
+    sig_str = signature_header.strip()
+
+    # Extraction des paires clé=valeur si présentes (t=..., s=...)
+    parts = dict(re.findall(r"([a-zA-Z0-9_]+)=([^,]+)", sig_str))
+    candidate_signatures = []
+
+    if "s" in parts:
+        candidate_signatures.append(parts["s"].strip().lower())
+    else:
+        candidate_signatures.append(sig_str.lower())
+
+    timestamp = parts.get("t")
+
+    # 1. Vérification avec horodatage (timestamp.payload)
+    if timestamp:
+        signed_payload = f"{timestamp}.".encode("utf-8") + raw_body_bytes
+        computed = hmac.new(secret_bytes, signed_payload, hashlib.sha256).hexdigest().lower()
+        for cand in candidate_signatures:
+            if hmac.compare_digest(computed, cand):
+                return True
+
+    # 2. Vérification directe sur le corps brut (standard HMAC-SHA256)
+    computed_direct = hmac.new(secret_bytes, raw_body_bytes, hashlib.sha256).hexdigest().lower()
+    for cand in candidate_signatures:
+        if hmac.compare_digest(computed_direct, cand):
+            return True
+
+    return False
+
+
 def verify_chariow_pulse_signature(raw_body, signature_header):
     """
     Vérifie la signature HMAC-SHA256 du webhook Pulse transmise dans l'en-tête 'x-chariow-signature'.
@@ -387,10 +624,187 @@ def activate_pass_for_payment(payment):
         sub.save()
 
     logger.info(
-        "[Chariow] Pass Semestre activé avec succès pour l'étudiant %s (Semestre: %s, Ref: %s)",
+        "[Pass Semestre] Activé avec succès pour l'étudiant %s (Semestre: %s, Ref: %s)",
         payment.user.username, semester.label, payment.external_reference
     )
     return True
+
+
+def verify_and_sync_fedapay_transaction(payment, transaction_id=None):
+    """
+    Interroge l'API FedaPay en direct (GET /v1/transactions/{id}) pour vérifier l'état réel de la transaction
+    et synchroniser le statut du paiement local.
+    Permet une validation immédiate et résiliente même en l'absence ou retard de webhook.
+    """
+    if payment.is_approved:
+        return {"success": True, "status": "already_approved", "is_approved": True}
+
+    target_id = transaction_id or payment.fedapay_transaction_id
+    if not target_id:
+        return {
+            "success": False,
+            "status": payment.status,
+            "is_approved": False,
+            "message": "Aucun identifiant de transaction FedaPay disponible pour la synchronisation.",
+        }
+
+    base_url = get_fedapay_base_url()
+    headers = _fedapay_headers()
+
+    try:
+        url = f"{base_url}/transactions/{target_id}"
+        res = requests.get(url, headers=headers, timeout=_TIMEOUT)
+
+        if res.status_code != 200:
+            logger.warning("[FedaPay Sync] Erreur HTTP %s lors de la récupération de la transaction #%s", res.status_code, target_id)
+            return {"success": False, "status": payment.status, "is_approved": False}
+
+        data = res.json()
+        tx = (
+            data.get("v1/transaction") or
+            data.get("transaction") or
+            data.get("data") or
+            data
+        )
+
+        status = (tx.get("status") or "").lower()
+        actual_id = tx.get("id") or target_id
+
+        if actual_id and not payment.fedapay_transaction_id:
+            payment.fedapay_transaction_id = str(actual_id)
+            payment.save(update_fields=["fedapay_transaction_id"])
+
+        if status in ["approved", "transferred"]:
+            payment.status = Payment.STATUS_APPROVED
+            payment.save(update_fields=["status"])
+            activate_pass_for_payment(payment)
+            logger.info(
+                "[FedaPay Sync] Paiement %s validé avec succès via l'API FedaPay (tx_id=%s)",
+                payment.external_reference, actual_id
+            )
+            return {
+                "success": True,
+                "status": "approved",
+                "is_approved": True,
+                "transaction_id": actual_id,
+                "message": "Pass Semestre activé avec succès.",
+            }
+
+        elif status in ["declined"]:
+            payment.status = Payment.STATUS_REJECTED
+            payment.save(update_fields=["status"])
+            return {
+                "success": True,
+                "status": "rejected",
+                "is_approved": False,
+                "transaction_id": actual_id,
+                "message": "Paiement décliné par FedaPay.",
+            }
+
+        elif status in ["canceled", "cancelled"]:
+            payment.status = Payment.STATUS_CANCELLED
+            payment.save(update_fields=["status"])
+            return {
+                "success": True,
+                "status": "cancelled",
+                "is_approved": False,
+                "transaction_id": actual_id,
+                "message": "Transaction annulée par l'utilisateur.",
+            }
+
+        return {
+            "success": True,
+            "status": payment.status,
+            "is_approved": False,
+            "transaction_id": actual_id,
+            "message": f"Transaction FedaPay en cours (statut: {status}).",
+        }
+
+    except requests.exceptions.RequestException as e:
+        logger.warning("[FedaPay Sync] Erreur lors de la synchronisation de la transaction #%s : %s", target_id, e)
+        return {"success": False, "status": payment.status, "is_approved": False, "error": str(e)}
+
+
+def handle_fedapay_webhook_event(payload):
+    """
+    Traite un événement Webhook reçu de FedaPay de façon sécurisée et idempotente.
+    Structure FedaPay :
+    - 'name' / 'event' : 'transaction.approved', 'transaction.declined', 'transaction.canceled', etc.
+    - 'entity' : objet transaction contenant id, status, amount, custom_metadata...
+    """
+    if not isinstance(payload, dict):
+        return {"success": False, "error": "Payload JSON invalide"}
+
+    event_name = (payload.get("name") or payload.get("event") or payload.get("type") or "").lower()
+    entity = payload.get("entity") or payload.get("data") or {}
+
+    custom_metadata = entity.get("custom_metadata") or {}
+    ext_ref = (
+        custom_metadata.get("external_reference") or
+        entity.get("reference") or
+        entity.get("external_reference")
+    )
+    payment_id = custom_metadata.get("archivex_payment_id")
+    tx_id = entity.get("id")
+
+    # Événements traités
+    FEDAPAY_EVENTS = [
+        "transaction.approved", "transaction.transferred",
+        "transaction.declined", "transaction.canceled", "transaction.cancelled",
+        "transaction.created",
+    ]
+
+    if event_name and event_name not in FEDAPAY_EVENTS:
+        logger.info("[FedaPay Webhook] Événement ignoré (non bloquant) : %s", event_name)
+        return {"success": True, "status": "ignored", "message": f"Événement {event_name} reçu."}
+
+    # Recherche du paiement correspondant
+    payment = None
+    if ext_ref:
+        payment = Payment.objects.filter(external_reference=ext_ref).first()
+    if not payment and payment_id:
+        payment = Payment.objects.filter(pk=payment_id).first()
+    if not payment and tx_id:
+        payment = Payment.objects.filter(fedapay_transaction_id=str(tx_id)).first()
+
+    if not payment:
+        logger.warning(
+            "[FedaPay Webhook] Aucun paiement trouvé pour ref=%s, payment_id=%s, tx_id=%s",
+            ext_ref, payment_id, tx_id
+        )
+        return {"success": False, "error": "Paiement introuvable", "status_code": 404}
+
+    if tx_id and not payment.fedapay_transaction_id:
+        payment.fedapay_transaction_id = str(tx_id)
+        payment.save(update_fields=["fedapay_transaction_id"])
+
+    # Traitement selon l'événement
+    if event_name in ["transaction.approved", "transaction.transferred"]:
+        if payment.is_approved:
+            logger.info("[FedaPay Webhook] Transaction %s déjà validée.", payment.external_reference)
+            return {"success": True, "status": "already_approved", "message": "Paiement déjà validé."}
+
+        payment.status = Payment.STATUS_APPROVED
+        payment.save(update_fields=["status"])
+        activate_pass_for_payment(payment)
+        logger.info("[FedaPay Webhook] Paiement %s validé avec succès !", payment.external_reference)
+        return {"success": True, "status": "approved", "message": "Pass Semestre activé avec succès."}
+
+    elif event_name in ["transaction.declined"]:
+        if not payment.is_approved:
+            payment.status = Payment.STATUS_REJECTED
+            payment.save(update_fields=["status"])
+        logger.info("[FedaPay Webhook] Transaction déclinée pour %s", payment.external_reference)
+        return {"success": True, "status": "rejected", "message": "Paiement marqué comme décliné."}
+
+    elif event_name in ["transaction.canceled", "transaction.cancelled"]:
+        if not payment.is_approved:
+            payment.status = Payment.STATUS_CANCELLED
+            payment.save(update_fields=["status"])
+        logger.info("[FedaPay Webhook] Transaction annulée pour %s", payment.external_reference)
+        return {"success": True, "status": "cancelled", "message": "Paiement marqué comme annulé."}
+
+    return {"success": True, "status": "acknowledged", "message": f"Événement {event_name} reçu."}
 
 
 def verify_and_sync_chariow_sale(payment, sale_id=None):

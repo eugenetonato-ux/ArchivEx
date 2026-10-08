@@ -31,6 +31,10 @@ class School(models.Model):
     def __str__(self):
         return f"{self.name} ({self.code})" if self.code else self.name
 
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return f"{reverse('academics:filieres')}?school={self.id}"
+
 
 class Level(models.Model):
     name = models.CharField(max_length=50)  # Licence 1, Licence 2, Licence 3, Master 1, etc.
@@ -62,6 +66,10 @@ class Filiere(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.level})"
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse("academics:semestres", kwargs={"filiere_id": self.id})
 
 
 class AcademicYear(models.Model):
@@ -97,6 +105,10 @@ class Semester(models.Model):
     def __str__(self):
         return f"{self.label} - {self.filiere}"
 
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse("academics:matieres", kwargs={"semester_id": self.id})
+
 
 class Subject(models.Model):
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE, related_name="subjects")
@@ -119,6 +131,10 @@ class Subject(models.Model):
 
     def __str__(self):
         return f"{self.code} - {self.name}" if self.code else self.name
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return f"{reverse('exams:liste')}?subject={self.id}"
 
     @property
     def exams_count(self):

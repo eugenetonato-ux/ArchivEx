@@ -1324,6 +1324,8 @@ def payment_list_view(request):
             Q(user__first_name__icontains=q) |
             Q(user__last_name__icontains=q) |
             Q(external_reference__icontains=q) |
+            Q(fedapay_transaction_id__icontains=q) |
+            Q(chariow_sale_id__icontains=q) |
             Q(sebpay_transaction_id__icontains=q) |
             Q(phone_number__icontains=q)
         )
@@ -2257,17 +2259,15 @@ def library_download_original_view(request, pk, file_type):
         raise Http404("Le fichier original réclamé est introuvable sur le serveur.")
 
     try:
-        file_path = target_file.path
-        if not os.path.exists(file_path):
-            raise Http404("Le fichier physique original est introuvable sur le disque serveur.")
+        f = target_file.open("rb")
     except Exception:
         raise Http404("Fichier introuvable.")
 
     response = FileResponse(
-        open(file_path, "rb"),
+        f,
         content_type="application/pdf"
     )
-    filename = os.path.basename(file_path)
+    filename = os.path.basename(target_file.name or "document.pdf")
     response["Content-Disposition"] = f'attachment; filename="ORIGINAL_{filename}"'
     return response
 

@@ -1,6 +1,22 @@
 {% extends "base/base.html" %}
 
-{% block title %}Conseils Pédagogiques — ArchivEx V2{% endblock %}
+{% block title %}Conseils Pédagogiques & Articles Étudiants | ArchivEx{% endblock %}
+{% block meta_description %}Découvrez nos conseils pédagogiques, astuces de révision et articles pratiques pour réussir vos études universitaires au Bénin. Méthodologie, organisation et stratégies d'examen sur ArchivEx.{% endblock %}
+{% block og_title %}Conseils Pédagogiques pour Étudiants | ArchivEx{% endblock %}
+{% block og_description %}Astuces de révision, méthodologie de travail et conseils pratiques pour améliorer vos performances à l'université au Bénin.{% endblock %}
+{% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{% url 'content:article_list' %}{% endblock %}
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  "name": "Conseils pédagogiques — ArchivEx",
+  "description": "Articles et conseils pratiques pour réussir les études universitaires au Bénin.",
+  "url": "{{ request.build_absolute_uri }}",
+  "publisher": { "@type": "Organization", "name": "ArchivEx", "url": "{{ request.scheme }}://{{ request.get_host }}" }
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
