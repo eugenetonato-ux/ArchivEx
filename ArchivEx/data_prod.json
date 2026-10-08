@@ -1,0 +1,1903 @@
+[
+{
+  "model": "academics.school",
+  "pk": 1,
+  "fields": {
+    "name": "ENEAM",
+    "code": "ENEAM",
+    "slug": "eneam",
+    "description": "",
+    "logo": "",
+    "is_active": true,
+    "created_at": "2026-10-04T21:11:27.354Z",
+    "updated_at": "2026-10-04T21:11:27.354Z"
+  }
+},
+{
+  "model": "academics.level",
+  "pk": 1,
+  "fields": {
+    "name": "L1",
+    "code": "L1",
+    "school": 1,
+    "is_active": true
+  }
+},
+{
+  "model": "academics.filiere",
+  "pk": 2,
+  "fields": {
+    "school": 1,
+    "level": 1,
+    "name": "PLAN",
+    "code": "PLAN",
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-10-04T21:11:27.363Z",
+    "updated_at": "2026-10-04T21:11:27.363Z"
+  }
+},
+{
+  "model": "academics.academicyear",
+  "pk": 3,
+  "fields": {
+    "label": "2026-2027"
+  }
+},
+{
+  "model": "academics.academicyear",
+  "pk": 4,
+  "fields": {
+    "label": "2025-2026"
+  }
+},
+{
+  "model": "academics.academicyear",
+  "pk": 5,
+  "fields": {
+    "label": "2024-2025"
+  }
+},
+{
+  "model": "academics.semester",
+  "pk": 2,
+  "fields": {
+    "filiere": 2,
+    "academic_year": null,
+    "label": "S1",
+    "number": 1,
+    "is_active": true
+  }
+},
+{
+  "model": "academics.semester",
+  "pk": 3,
+  "fields": {
+    "filiere": 2,
+    "academic_year": null,
+    "label": "S2",
+    "number": 2,
+    "is_active": true
+  }
+},
+{
+  "model": "academics.subject",
+  "pk": 12,
+  "fields": {
+    "semester": 2,
+    "name": "Analyse mathématique",
+    "code": "Analyse mathématique",
+    "description": "",
+    "image": "",
+    "is_free": false,
+    "is_free_correction": false,
+    "is_active": true
+  }
+},
+{
+  "model": "academics.subject",
+  "pk": 13,
+  "fields": {
+    "semester": 2,
+    "name": "Sociologie des organisations",
+    "code": "Sociologie des organisations",
+    "description": "",
+    "image": "",
+    "is_free": false,
+    "is_free_correction": false,
+    "is_active": true
+  }
+},
+{
+  "model": "academics.subject",
+  "pk": 14,
+  "fields": {
+    "semester": 2,
+    "name": "Statistique descriptive",
+    "code": "STATISTIQUE DESCRIPTIVE",
+    "description": "",
+    "image": "",
+    "is_free": false,
+    "is_free_correction": false,
+    "is_active": true
+  }
+},
+{
+  "model": "academics.subject",
+  "pk": 15,
+  "fields": {
+    "semester": 2,
+    "name": "Introduction au droit",
+    "code": "Introduction au droit",
+    "description": "",
+    "image": "",
+    "is_free": false,
+    "is_free_correction": false,
+    "is_active": true
+  }
+},
+{
+  "model": "academics.subject",
+  "pk": 16,
+  "fields": {
+    "semester": 2,
+    "name": "Comptabilité financière",
+    "code": "Comptabilité financière",
+    "description": "",
+    "image": "",
+    "is_free": false,
+    "is_free_correction": false,
+    "is_active": true
+  }
+},
+{
+  "model": "academics.subject",
+  "pk": 17,
+  "fields": {
+    "semester": 2,
+    "name": "Gestion de la qualité",
+    "code": "Gestion de la qualité",
+    "description": "",
+    "image": "",
+    "is_free": false,
+    "is_free_correction": false,
+    "is_active": true
+  }
+},
+{
+  "model": "academics.subject",
+  "pk": 18,
+  "fields": {
+    "semester": 2,
+    "name": "CIVE",
+    "code": "CIVE",
+    "description": "",
+    "image": "",
+    "is_free": false,
+    "is_free_correction": false,
+    "is_active": true
+  }
+},
+{
+  "model": "academics.subject",
+  "pk": 19,
+  "fields": {
+    "semester": 2,
+    "name": "Microéconomie",
+    "code": "Microéconomie",
+    "description": "",
+    "image": "",
+    "is_free": false,
+    "is_free_correction": false,
+    "is_active": true
+  }
+},
+{
+  "model": "academics.subject",
+  "pk": 20,
+  "fields": {
+    "semester": 2,
+    "name": "Entrepreneuriat et innovation",
+    "code": "Entrepreneuriat",
+    "description": "",
+    "image": "",
+    "is_free": false,
+    "is_free_correction": false,
+    "is_active": true
+  }
+},
+{
+  "model": "academics.subject",
+  "pk": 21,
+  "fields": {
+    "semester": 2,
+    "name": "Histoire de la pensée économique",
+    "code": "HISTOI",
+    "description": "",
+    "image": "",
+    "is_free": false,
+    "is_free_correction": false,
+    "is_active": true
+  }
+},
+{
+  "model": "academics.subject",
+  "pk": 22,
+  "fields": {
+    "semester": 3,
+    "name": "Algèbre linéaire",
+    "code": "ALGÈBR",
+    "description": "",
+    "image": "",
+    "is_free": false,
+    "is_free_correction": false,
+    "is_active": true
+  }
+},
+{
+  "model": "academics.subject",
+  "pk": 23,
+  "fields": {
+    "semester": 3,
+    "name": "Comptabilité nationale",
+    "code": "COMPTA",
+    "description": "",
+    "image": "",
+    "is_free": false,
+    "is_free_correction": false,
+    "is_active": true
+  }
+},
+{
+  "model": "academics.subject",
+  "pk": 24,
+  "fields": {
+    "semester": 3,
+    "name": "Développement personnel",
+    "code": "DÉVELO",
+    "description": "",
+    "image": "",
+    "is_free": false,
+    "is_free_correction": false,
+    "is_active": true
+  }
+},
+{
+  "model": "academics.subject",
+  "pk": 25,
+  "fields": {
+    "semester": 3,
+    "name": "Informatique",
+    "code": "INFORM",
+    "description": "",
+    "image": "",
+    "is_free": false,
+    "is_free_correction": false,
+    "is_active": true
+  }
+},
+{
+  "model": "academics.subject",
+  "pk": 26,
+  "fields": {
+    "semester": 3,
+    "name": "Introduction à la planification",
+    "code": "INTROD",
+    "description": "",
+    "image": "",
+    "is_free": false,
+    "is_free_correction": false,
+    "is_active": true
+  }
+},
+{
+  "model": "academics.subject",
+  "pk": 27,
+  "fields": {
+    "semester": 3,
+    "name": "Macroéconomie",
+    "code": "MACROÉ",
+    "description": "",
+    "image": "",
+    "is_free": false,
+    "is_free_correction": false,
+    "is_active": true
+  }
+},
+{
+  "model": "academics.subject",
+  "pk": 28,
+  "fields": {
+    "semester": 3,
+    "name": "Probabilités",
+    "code": "PROBAB",
+    "description": "",
+    "image": "",
+    "is_free": false,
+    "is_free_correction": false,
+    "is_active": true
+  }
+},
+{
+  "model": "academics.siteconfiguration",
+  "pk": 1,
+  "fields": {
+    "base_students_count": 0,
+    "base_exams_count": 0,
+    "base_summaries_count": 0,
+    "base_schools_count": 0,
+    "base_subjects_count": 0
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 1,
+  "fields": {
+    "title": "Examen Analyse mathématique — 2024-2025",
+    "subject": 12,
+    "semester": 2,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 5,
+    "exam_type": "examen",
+    "year": 2024,
+    "description": "",
+    "file": "exams/2024-2025/S1/Analyse_mathematique.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 1,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:56.741Z",
+    "updated_at": "2026-10-08T16:09:56.741Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 2,
+  "fields": {
+    "title": "Examen Introduction au droit — 2024-2025",
+    "subject": 15,
+    "semester": 2,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 5,
+    "exam_type": "examen",
+    "year": 2024,
+    "description": "",
+    "file": "exams/2024-2025/S1/Introduction_au_droit.pdf",
+    "correction_file": "corrections/2024-2025/S1/Corrige_type_Introduction_au_Droit.pdf",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 7,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:56.813Z",
+    "updated_at": "2026-10-08T16:41:39.982Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 3,
+  "fields": {
+    "title": "Examen Comptabilité financière — 2024-2025",
+    "subject": 16,
+    "semester": 2,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 5,
+    "exam_type": "examen",
+    "year": 2024,
+    "description": "",
+    "file": "exams/2024-2025/S1/Comptabilite_financiere.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 3,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:56.843Z",
+    "updated_at": "2026-10-08T16:09:56.843Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 4,
+  "fields": {
+    "title": "Examen Entrepreneuriat et innovation — 2024-2025",
+    "subject": 20,
+    "semester": 2,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 5,
+    "exam_type": "examen",
+    "year": 2024,
+    "description": "",
+    "file": "exams/2024-2025/S1/Entrepreneuriat_et_innovation.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 4,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:56.871Z",
+    "updated_at": "2026-10-08T16:09:56.871Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 5,
+  "fields": {
+    "title": "Examen Gestion de la qualité — 2024-2025",
+    "subject": 17,
+    "semester": 2,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 5,
+    "exam_type": "examen",
+    "year": 2024,
+    "description": "",
+    "file": "exams/2024-2025/S1/Gestion_de_la_qualite.pdf",
+    "correction_file": "corrections/2024-2025/S1/Corrige_type_Gestion_de_la_qualite.pdf",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 5,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:56.900Z",
+    "updated_at": "2026-10-08T16:09:56.900Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 6,
+  "fields": {
+    "title": "Examen Histoire de la pensée économique — 2024-2025",
+    "subject": 21,
+    "semester": 2,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 5,
+    "exam_type": "examen",
+    "year": 2024,
+    "description": "",
+    "file": "exams/2024-2025/S1/Histoire_de_la_pensee_economique.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 6,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:56.940Z",
+    "updated_at": "2026-10-08T16:09:56.940Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 7,
+  "fields": {
+    "title": "Examen Microéconomie — 2024-2025",
+    "subject": 19,
+    "semester": 2,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 5,
+    "exam_type": "examen",
+    "year": 2024,
+    "description": "",
+    "file": "exams/2024-2025/S1/Microeconomie.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 8,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:56.996Z",
+    "updated_at": "2026-10-08T16:09:56.996Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 8,
+  "fields": {
+    "title": "Examen Sociologie des organisations — 2024-2025",
+    "subject": 13,
+    "semester": 2,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 5,
+    "exam_type": "examen",
+    "year": 2024,
+    "description": "",
+    "file": "exams/2024-2025/S1/Sociologie des organisations.pdf",
+    "correction_file": "corrections/2024-2025/S1/Corrige_type_Sociologie_des_organisations.pdf",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 9,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.023Z",
+    "updated_at": "2026-10-08T16:09:57.023Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 9,
+  "fields": {
+    "title": "Examen Statistique descriptive — 2024-2025",
+    "subject": 14,
+    "semester": 2,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 5,
+    "exam_type": "examen",
+    "year": 2024,
+    "description": "",
+    "file": "exams/2024-2025/S1/Statistique_descriptive.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 10,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.057Z",
+    "updated_at": "2026-10-08T16:09:57.057Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 10,
+  "fields": {
+    "title": "Examen Algèbre linéaire — 2024-2025",
+    "subject": 22,
+    "semester": 3,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 5,
+    "exam_type": "examen",
+    "year": 2024,
+    "description": "",
+    "file": "exams/2024-2025/S2/Algebre_lineaire.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 11,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.128Z",
+    "updated_at": "2026-10-08T16:09:57.128Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 11,
+  "fields": {
+    "title": "Examen Comptabilité nationale — 2024-2025",
+    "subject": 23,
+    "semester": 3,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 5,
+    "exam_type": "examen",
+    "year": 2024,
+    "description": "",
+    "file": "exams/2024-2025/S2/Comptabilite_nationale.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 12,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.164Z",
+    "updated_at": "2026-10-08T16:09:57.165Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 12,
+  "fields": {
+    "title": "Examen Développement personnel — 2024-2025",
+    "subject": 24,
+    "semester": 3,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 5,
+    "exam_type": "examen",
+    "year": 2024,
+    "description": "",
+    "file": "exams/2024-2025/S2/Developpement_personnel.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 13,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.205Z",
+    "updated_at": "2026-10-08T16:09:57.205Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 13,
+  "fields": {
+    "title": "Examen Informatique — 2024-2025",
+    "subject": 25,
+    "semester": 3,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 5,
+    "exam_type": "examen",
+    "year": 2024,
+    "description": "",
+    "file": "exams/2024-2025/S2/Informatique.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 14,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.244Z",
+    "updated_at": "2026-10-08T16:09:57.244Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 14,
+  "fields": {
+    "title": "Examen Introduction à la planification — 2024-2025",
+    "subject": 26,
+    "semester": 3,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 5,
+    "exam_type": "examen",
+    "year": 2024,
+    "description": "",
+    "file": "exams/2024-2025/S2/Introduction_a_la_planification.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 15,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.281Z",
+    "updated_at": "2026-10-08T16:09:57.281Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 15,
+  "fields": {
+    "title": "Examen Macroéconomie — 2024-2025",
+    "subject": 27,
+    "semester": 3,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 5,
+    "exam_type": "examen",
+    "year": 2024,
+    "description": "",
+    "file": "exams/2024-2025/S2/Macroeconomie.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 16,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.325Z",
+    "updated_at": "2026-10-08T16:09:57.325Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 16,
+  "fields": {
+    "title": "Examen Probabilités — 2024-2025",
+    "subject": 28,
+    "semester": 3,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 5,
+    "exam_type": "examen",
+    "year": 2024,
+    "description": "",
+    "file": "exams/2024-2025/S2/Theorie_des_probabilites.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 17,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.368Z",
+    "updated_at": "2026-10-08T16:09:57.368Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 17,
+  "fields": {
+    "title": "Examen Statistique descriptive — 2025-2026",
+    "subject": 14,
+    "semester": 2,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 4,
+    "exam_type": "examen",
+    "year": 2025,
+    "description": "",
+    "file": "exams/2025-2026/S1/01_Statistiques_descriptives.pdf",
+    "correction_file": "corrections/2025-2026/S1/Corrige_Statistiques_descriptives.pdf",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 18,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.399Z",
+    "updated_at": "2026-10-08T16:09:57.399Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 18,
+  "fields": {
+    "title": "Examen Sociologie des organisations — 2025-2026",
+    "subject": 13,
+    "semester": 2,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 4,
+    "exam_type": "examen",
+    "year": 2025,
+    "description": "",
+    "file": "exams/2025-2026/S1/02_Sociologie_des_organisations.pdf",
+    "correction_file": "corrections/2025-2026/S1/Corrige_Sociologie_des_organisations.pdf",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 19,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.434Z",
+    "updated_at": "2026-10-08T16:09:57.434Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 19,
+  "fields": {
+    "title": "Examen Microéconomie — 2025-2026",
+    "subject": 19,
+    "semester": 2,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 4,
+    "exam_type": "examen",
+    "year": 2025,
+    "description": "",
+    "file": "exams/2025-2026/S1/03_Microeconomie.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 20,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.467Z",
+    "updated_at": "2026-10-08T16:09:57.467Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 20,
+  "fields": {
+    "title": "Rattrapage Entrepreneuriat et innovation — 2025-2026",
+    "subject": 20,
+    "semester": 2,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 4,
+    "exam_type": "rattrapage",
+    "year": 2025,
+    "description": "",
+    "file": "exams/2025-2026/S1/04_Entrepreneuriat_et_Innovation_Rattrapage.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 21,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.497Z",
+    "updated_at": "2026-10-08T16:09:57.497Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 21,
+  "fields": {
+    "title": "Examen Gestion de la qualité — 2025-2026",
+    "subject": 17,
+    "semester": 2,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 4,
+    "exam_type": "examen",
+    "year": 2025,
+    "description": "",
+    "file": "exams/2025-2026/S1/05_Introduction_a_la_gestion_de_la_qualite.pdf",
+    "correction_file": "corrections/2025-2026/S1/Corrige_Introduction_a_la_gestion_de_la_qualite.pdf",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 22,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.526Z",
+    "updated_at": "2026-10-08T16:09:57.526Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 22,
+  "fields": {
+    "title": "Examen Entrepreneuriat et innovation — 2025-2026",
+    "subject": 20,
+    "semester": 2,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 4,
+    "exam_type": "examen",
+    "year": 2025,
+    "description": "",
+    "file": "exams/2025-2026/S1/06_Entrepreneuriat_et_Innovation_Session_normale.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 23,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.557Z",
+    "updated_at": "2026-10-08T16:09:57.557Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 23,
+  "fields": {
+    "title": "Examen Analyse mathématique — 2025-2026",
+    "subject": 12,
+    "semester": 2,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 4,
+    "exam_type": "examen",
+    "year": 2025,
+    "description": "",
+    "file": "exams/2025-2026/S1/07_Analyse mathématique.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 24,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.584Z",
+    "updated_at": "2026-10-08T16:09:57.584Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 24,
+  "fields": {
+    "title": "Examen Comptabilité financière — 2025-2026",
+    "subject": 16,
+    "semester": 2,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 4,
+    "exam_type": "examen",
+    "year": 2025,
+    "description": "",
+    "file": "exams/2025-2026/S1/08_Introduction_a_la_comptabilite_financiere.pdf",
+    "correction_file": "corrections/2025-2026/S1/Corrige_Comptabilite_financiere.pdf",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 25,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.610Z",
+    "updated_at": "2026-10-08T16:09:57.610Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 25,
+  "fields": {
+    "title": "Examen Histoire de la pensée économique — 2025-2026",
+    "subject": 21,
+    "semester": 2,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 4,
+    "exam_type": "examen",
+    "year": 2025,
+    "description": "",
+    "file": "exams/2025-2026/S1/09_Histoire_de_la_pensee_economique.pdf",
+    "correction_file": "corrections/2025-2026/S1/Corrige_Histoire_de_la_pensee_economique.pdf",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 26,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.639Z",
+    "updated_at": "2026-10-08T16:09:57.639Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 26,
+  "fields": {
+    "title": "Examen CIVE — 2025-2026",
+    "subject": 18,
+    "semester": 2,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 4,
+    "exam_type": "examen",
+    "year": 2025,
+    "description": "",
+    "file": "exams/2025-2026/S1/10_Cadre_juridique_des_affaires_CIVE.pdf",
+    "correction_file": "corrections/2025-2026/S1/Corrige_CIVE.pdf",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 27,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.671Z",
+    "updated_at": "2026-10-08T16:09:57.671Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 27,
+  "fields": {
+    "title": "Examen Comptabilité nationale — 2025-2026",
+    "subject": 23,
+    "semester": 3,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 4,
+    "exam_type": "examen",
+    "year": 2025,
+    "description": "",
+    "file": "exams/2025-2026/S2/01_Comptabilite_nationale.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 28,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.700Z",
+    "updated_at": "2026-10-08T16:09:57.700Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 28,
+  "fields": {
+    "title": "Examen Introduction à la planification — 2025-2026",
+    "subject": 26,
+    "semester": 3,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 4,
+    "exam_type": "examen",
+    "year": 2025,
+    "description": "",
+    "file": "exams/2025-2026/S2/02_Introduction_a_la_planification.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 29,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.727Z",
+    "updated_at": "2026-10-08T16:09:57.727Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 29,
+  "fields": {
+    "title": "Examen Probabilités — 2025-2026",
+    "subject": 28,
+    "semester": 3,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 4,
+    "exam_type": "examen",
+    "year": 2025,
+    "description": "",
+    "file": "exams/2025-2026/S2/03_Probabilites.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 30,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.752Z",
+    "updated_at": "2026-10-08T16:09:57.752Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 30,
+  "fields": {
+    "title": "Examen Macroéconomie — 2025-2026",
+    "subject": 27,
+    "semester": 3,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 4,
+    "exam_type": "examen",
+    "year": 2025,
+    "description": "",
+    "file": "exams/2025-2026/S2/04_Macroeconomie.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 31,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.781Z",
+    "updated_at": "2026-10-08T16:09:57.781Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 31,
+  "fields": {
+    "title": "Examen Informatique — 2025-2026",
+    "subject": 25,
+    "semester": 3,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 4,
+    "exam_type": "examen",
+    "year": 2025,
+    "description": "",
+    "file": "exams/2025-2026/S2/05_Informatique.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 32,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.810Z",
+    "updated_at": "2026-10-08T16:09:57.810Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 32,
+  "fields": {
+    "title": "Examen Développement personnel — 2025-2026",
+    "subject": 24,
+    "semester": 3,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 4,
+    "exam_type": "examen",
+    "year": 2025,
+    "description": "",
+    "file": "exams/2025-2026/S2/06_Developpement_personnel.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 33,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.840Z",
+    "updated_at": "2026-10-08T16:09:57.840Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 33,
+  "fields": {
+    "title": "Examen Algèbre linéaire — 2025-2026",
+    "subject": 22,
+    "semester": 3,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 4,
+    "exam_type": "examen",
+    "year": 2025,
+    "description": "",
+    "file": "exams/2025-2026/S2/07_Algebre_lineaire.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 34,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:09:57.869Z",
+    "updated_at": "2026-10-08T16:09:57.869Z"
+  }
+},
+{
+  "model": "exams.exam",
+  "pk": 34,
+  "fields": {
+    "title": "Examen Introduction au droit — 2024-2025",
+    "subject": 15,
+    "semester": 2,
+    "filiere": 2,
+    "level": 1,
+    "academic_year": 5,
+    "exam_type": "examen",
+    "year": 2025,
+    "description": "",
+    "file": "exams/2024-2025/S1/CIVE.pdf",
+    "correction_file": "",
+    "summary_file": "",
+    "summary": null,
+    "cloud_file": 2,
+    "cloud_correction_file": null,
+    "cloud_summary_file": null,
+    "is_free": false,
+    "is_free_correction": false,
+    "is_published": true,
+    "created_at": "2026-10-08T16:41:39.994Z",
+    "updated_at": "2026-10-08T16:41:39.994Z"
+  }
+},
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$tKKbjhSovVg8BtOVH40k5E$iC7MqP1YLG+hb9qxuK+dAIF3MF1jYSG4ylnPBEDY9t8=",
+    "last_login": "2026-10-04T20:56:43.454Z",
+    "is_superuser": true,
+    "username": "Sandro",
+    "first_name": "",
+    "last_name": "",
+    "email": "eugenetonato@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-09-07T11:32:54.272Z",
+    "must_change_password": false,
+    "active_session_key": "4myh8366xkghp2qgagf69xvtf0oqh44h",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "pbkdf2_sha256$870000$FiKoJ6AE4ag8iZFs1qUxff$/WTnXJMt3mSOTL4hjRo5dZt+HcZoGV/8XE9xCIE+uJ0=",
+    "last_login": "2026-09-07T12:33:44.312Z",
+    "is_superuser": false,
+    "username": "luc@gmail.com",
+    "first_name": "LUC",
+    "last_name": "SIS",
+    "email": "luc@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-09-07T12:33:44.091Z",
+    "must_change_password": false,
+    "active_session_key": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "fields": {
+    "password": "pbkdf2_sha256$870000$2sw4oCw4fXuO6N3CZJRzY9$leAUUf2Ceu0heG9wE0jRRsYeqMjzQ+KEWxDBOhJsem0=",
+    "last_login": null,
+    "is_superuser": true,
+    "username": "ArchivEx",
+    "first_name": "",
+    "last_name": "",
+    "email": "eugenetonato@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-09-17T20:25:58.568Z",
+    "must_change_password": false,
+    "active_session_key": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "subscriptions.subscriptionplan",
+  "pk": 1,
+  "fields": {
+    "name": "Pass Semestriel",
+    "code": "pass_semestriel",
+    "scope": "semester",
+    "price": 3800,
+    "duration_days": 180,
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-09-02T21:16:09.422Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 1,
+  "fields": {
+    "title": "Épreuve — Examen Analyse mathématique — 2024-2025",
+    "file": "exams/2024-2025/S1/Analyse_mathematique.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 2,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:56.725Z",
+    "updated_at": "2026-10-08T16:09:56.725Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 2,
+  "fields": {
+    "title": "Épreuve — Examen Introduction au droit — 2024-2025",
+    "file": "exams/2024-2025/S1/CIVE.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 2,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:56.800Z",
+    "updated_at": "2026-10-08T16:09:56.800Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 3,
+  "fields": {
+    "title": "Épreuve — Examen Comptabilité financière — 2024-2025",
+    "file": "exams/2024-2025/S1/Comptabilite_financiere.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 2,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:56.833Z",
+    "updated_at": "2026-10-08T16:09:56.833Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 4,
+  "fields": {
+    "title": "Épreuve — Examen Entrepreneuriat et innovation — 2024-2025",
+    "file": "exams/2024-2025/S1/Entrepreneuriat_et_innovation.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 2,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:56.860Z",
+    "updated_at": "2026-10-08T16:09:56.860Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 5,
+  "fields": {
+    "title": "Épreuve — Examen Gestion de la qualité — 2024-2025",
+    "file": "exams/2024-2025/S1/Gestion_de_la_qualite.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 2,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:56.887Z",
+    "updated_at": "2026-10-08T16:09:56.887Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 6,
+  "fields": {
+    "title": "Épreuve — Examen Histoire de la pensée économique — 2024-2025",
+    "file": "exams/2024-2025/S1/Histoire_de_la_pensee_economique.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 2,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:56.928Z",
+    "updated_at": "2026-10-08T16:09:56.928Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 7,
+  "fields": {
+    "title": "Épreuve — Examen Introduction au droit — 2024-2025",
+    "file": "exams/2024-2025/S1/Introduction_au_droit.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 2,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:56.957Z",
+    "updated_at": "2026-10-08T16:09:56.958Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 8,
+  "fields": {
+    "title": "Épreuve — Examen Microéconomie — 2024-2025",
+    "file": "exams/2024-2025/S1/Microeconomie.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 2,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:56.985Z",
+    "updated_at": "2026-10-08T16:09:56.985Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 9,
+  "fields": {
+    "title": "Épreuve — Examen Sociologie des organisations — 2024-2025",
+    "file": "exams/2024-2025/S1/Sociologie des organisations.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 2,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.012Z",
+    "updated_at": "2026-10-08T16:09:57.012Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 10,
+  "fields": {
+    "title": "Épreuve — Examen Statistique descriptive — 2024-2025",
+    "file": "exams/2024-2025/S1/Statistique_descriptive.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 2,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.043Z",
+    "updated_at": "2026-10-08T16:09:57.043Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 11,
+  "fields": {
+    "title": "Épreuve — Examen Algèbre linéaire — 2024-2025",
+    "file": "exams/2024-2025/S2/Algebre_lineaire.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 3,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.115Z",
+    "updated_at": "2026-10-08T16:09:57.115Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 12,
+  "fields": {
+    "title": "Épreuve — Examen Comptabilité nationale — 2024-2025",
+    "file": "exams/2024-2025/S2/Comptabilite_nationale.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 3,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.153Z",
+    "updated_at": "2026-10-08T16:09:57.153Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 13,
+  "fields": {
+    "title": "Épreuve — Examen Développement personnel — 2024-2025",
+    "file": "exams/2024-2025/S2/Developpement_personnel.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 3,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.193Z",
+    "updated_at": "2026-10-08T16:09:57.193Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 14,
+  "fields": {
+    "title": "Épreuve — Examen Informatique — 2024-2025",
+    "file": "exams/2024-2025/S2/Informatique.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 3,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.231Z",
+    "updated_at": "2026-10-08T16:09:57.231Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 15,
+  "fields": {
+    "title": "Épreuve — Examen Introduction à la planification — 2024-2025",
+    "file": "exams/2024-2025/S2/Introduction_a_la_planification.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 3,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.270Z",
+    "updated_at": "2026-10-08T16:09:57.270Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 16,
+  "fields": {
+    "title": "Épreuve — Examen Macroéconomie — 2024-2025",
+    "file": "exams/2024-2025/S2/Macroeconomie.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 3,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.310Z",
+    "updated_at": "2026-10-08T16:09:57.310Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 17,
+  "fields": {
+    "title": "Épreuve — Examen Probabilités — 2024-2025",
+    "file": "exams/2024-2025/S2/Theorie_des_probabilites.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 3,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.354Z",
+    "updated_at": "2026-10-08T16:09:57.354Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 18,
+  "fields": {
+    "title": "Épreuve — Examen Statistique descriptive — 2025-2026",
+    "file": "exams/2025-2026/S1/01_Statistiques_descriptives.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 2,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.388Z",
+    "updated_at": "2026-10-08T16:09:57.388Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 19,
+  "fields": {
+    "title": "Épreuve — Examen Sociologie des organisations — 2025-2026",
+    "file": "exams/2025-2026/S1/02_Sociologie_des_organisations.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 2,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.420Z",
+    "updated_at": "2026-10-08T16:09:57.421Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 20,
+  "fields": {
+    "title": "Épreuve — Examen Microéconomie — 2025-2026",
+    "file": "exams/2025-2026/S1/03_Microeconomie.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 2,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.455Z",
+    "updated_at": "2026-10-08T16:09:57.455Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 21,
+  "fields": {
+    "title": "Épreuve — Rattrapage Entrepreneuriat et innovation — 2025-2026",
+    "file": "exams/2025-2026/S1/04_Entrepreneuriat_et_Innovation_Rattrapage.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 2,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.485Z",
+    "updated_at": "2026-10-08T16:09:57.485Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 22,
+  "fields": {
+    "title": "Épreuve — Examen Gestion de la qualité — 2025-2026",
+    "file": "exams/2025-2026/S1/05_Introduction_a_la_gestion_de_la_qualite.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 2,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.515Z",
+    "updated_at": "2026-10-08T16:09:57.515Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 23,
+  "fields": {
+    "title": "Épreuve — Examen Entrepreneuriat et innovation — 2025-2026",
+    "file": "exams/2025-2026/S1/06_Entrepreneuriat_et_Innovation_Session_normale.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 2,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.546Z",
+    "updated_at": "2026-10-08T16:09:57.546Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 24,
+  "fields": {
+    "title": "Épreuve — Examen Analyse mathématique — 2025-2026",
+    "file": "exams/2025-2026/S1/07_Analyse mathématique.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 2,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.575Z",
+    "updated_at": "2026-10-08T16:09:57.575Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 25,
+  "fields": {
+    "title": "Épreuve — Examen Comptabilité financière — 2025-2026",
+    "file": "exams/2025-2026/S1/08_Introduction_a_la_comptabilite_financiere.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 2,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.600Z",
+    "updated_at": "2026-10-08T16:09:57.600Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 26,
+  "fields": {
+    "title": "Épreuve — Examen Histoire de la pensée économique — 2025-2026",
+    "file": "exams/2025-2026/S1/09_Histoire_de_la_pensee_economique.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 2,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.629Z",
+    "updated_at": "2026-10-08T16:09:57.629Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 27,
+  "fields": {
+    "title": "Épreuve — Examen CIVE — 2025-2026",
+    "file": "exams/2025-2026/S1/10_Cadre_juridique_des_affaires_CIVE.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 2,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.659Z",
+    "updated_at": "2026-10-08T16:09:57.659Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 28,
+  "fields": {
+    "title": "Épreuve — Examen Comptabilité nationale — 2025-2026",
+    "file": "exams/2025-2026/S2/01_Comptabilite_nationale.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 3,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.690Z",
+    "updated_at": "2026-10-08T16:09:57.690Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 29,
+  "fields": {
+    "title": "Épreuve — Examen Introduction à la planification — 2025-2026",
+    "file": "exams/2025-2026/S2/02_Introduction_a_la_planification.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 3,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.716Z",
+    "updated_at": "2026-10-08T16:09:57.716Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 30,
+  "fields": {
+    "title": "Épreuve — Examen Probabilités — 2025-2026",
+    "file": "exams/2025-2026/S2/03_Probabilites.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 3,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.743Z",
+    "updated_at": "2026-10-08T16:09:57.743Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 31,
+  "fields": {
+    "title": "Épreuve — Examen Macroéconomie — 2025-2026",
+    "file": "exams/2025-2026/S2/04_Macroeconomie.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 3,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.770Z",
+    "updated_at": "2026-10-08T16:09:57.770Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 32,
+  "fields": {
+    "title": "Épreuve — Examen Informatique — 2025-2026",
+    "file": "exams/2025-2026/S2/05_Informatique.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 3,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.799Z",
+    "updated_at": "2026-10-08T16:09:57.799Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 33,
+  "fields": {
+    "title": "Épreuve — Examen Développement personnel — 2025-2026",
+    "file": "exams/2025-2026/S2/06_Developpement_personnel.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 3,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.828Z",
+    "updated_at": "2026-10-08T16:09:57.828Z"
+  }
+},
+{
+  "model": "content.cloudfile",
+  "pk": 34,
+  "fields": {
+    "title": "Épreuve — Examen Algèbre linéaire — 2025-2026",
+    "file": "exams/2025-2026/S2/07_Algebre_lineaire.pdf",
+    "file_type": "EXAM",
+    "school": 1,
+    "filiere": 2,
+    "semester": 3,
+    "uploaded_by": null,
+    "created_at": "2026-10-08T16:09:57.859Z",
+    "updated_at": "2026-10-08T16:09:57.859Z"
+  }
+},
+{
+  "model": "content.summary",
+  "pk": 14,
+  "fields": {
+    "title": "Fiche de synthèse Introduction au Droit",
+    "slug": "fiche-de-synthese-introduction-au-droit-15",
+    "subject": 15,
+    "introduction": "Fiche de cours et synthèse essentielle pour Introduction au droit.",
+    "content": "",
+    "file": "summaries_pdf/Fiche_Introduction_au_Droit.pdf",
+    "author": null,
+    "access_type": "PREMIUM",
+    "publication_status": "PUBLISHED",
+    "published_at": null,
+    "created_at": "2026-10-08T16:09:57.891Z",
+    "updated_at": "2026-10-08T16:09:57.891Z"
+  }
+},
+{
+  "model": "content.summary",
+  "pk": 15,
+  "fields": {
+    "title": "Fiche de synthèse Management Qualite",
+    "slug": "fiche-de-synthese-management-qualite-17",
+    "subject": 17,
+    "introduction": "Fiche de cours et synthèse essentielle pour Gestion de la qualité.",
+    "content": "",
+    "file": "summaries_pdf/Fiche_Management_Qualite.pdf",
+    "author": null,
+    "access_type": "PREMIUM",
+    "publication_status": "PUBLISHED",
+    "published_at": null,
+    "created_at": "2026-10-08T16:09:57.912Z",
+    "updated_at": "2026-10-08T16:09:57.912Z"
+  }
+},
+{
+  "model": "academics.subjectconsultation",
+  "pk": 11,
+  "fields": {
+    "user": [
+      "Sandro"
+    ],
+    "subject": 22,
+    "exam": 33,
+    "created_at": "2026-10-08T16:43:14.732Z"
+  }
+},
+{
+  "model": "academics.subjectconsultation",
+  "pk": 12,
+  "fields": {
+    "user": [
+      "Sandro"
+    ],
+    "subject": 22,
+    "exam": 33,
+    "created_at": "2026-10-08T16:43:30.074Z"
+  }
+},
+{
+  "model": "academics.subjectconsultation",
+  "pk": 13,
+  "fields": {
+    "user": [
+      "Sandro"
+    ],
+    "subject": 22,
+    "exam": 33,
+    "created_at": "2026-10-08T16:55:04.731Z"
+  }
+}
+]
