@@ -194,6 +194,20 @@ def dashboard_view(request):
 
     user_school = profile.school if profile else current_school
 
+    # Auto-healing : activation immédiate des paiements validés en attente de liaison
+    from payments.models import Payment, SemesterAccess
+    from payments.services import activate_pass_for_payment
+    unlinked_payments = Payment.objects.filter(
+        user=request.user,
+        status__in=["APPROVED", "reussi", "approved", "success"],
+        semester_access__isnull=True,
+    )
+    for unp in unlinked_payments:
+        try:
+            activate_pass_for_payment(unp)
+        except Exception:
+            pass
+
     # Active accesses (Legacy & V2)
     active_accesses = SemesterAccess.objects.filter(
         Q(user=request.user) & (Q(activated_at__isnull=False) | Q(payments__status__in=["APPROVED", "reussi", "approved", "success"]))
@@ -447,6 +461,20 @@ def profile_view(request):
             "first_name": request.user.first_name,
             "last_name": request.user.last_name,
         })
+
+    # Auto-healing : activation immédiate des paiements validés en attente de liaison
+    from payments.models import Payment, SemesterAccess
+    from payments.services import activate_pass_for_payment
+    unlinked_payments = Payment.objects.filter(
+        user=request.user,
+        status__in=["APPROVED", "reussi", "approved", "success"],
+        semester_access__isnull=True,
+    )
+    for unp in unlinked_payments:
+        try:
+            activate_pass_for_payment(unp)
+        except Exception:
+            pass
 
     active_accesses = SemesterAccess.objects.filter(
         Q(user=request.user) & (Q(activated_at__isnull=False) | Q(payments__status__in=["APPROVED", "reussi", "approved", "success"]))

@@ -4,10 +4,10 @@ from django.db import models
 
 class SemesterAccess(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="accesses")
-    school = models.ForeignKey("academics.School", on_delete=models.PROTECT)
-    level = models.ForeignKey("academics.Level", on_delete=models.PROTECT)
-    filiere = models.ForeignKey("academics.Filiere", on_delete=models.PROTECT)
-    academic_year = models.ForeignKey("academics.AcademicYear", on_delete=models.PROTECT)
+    school = models.ForeignKey("academics.School", on_delete=models.PROTECT, null=True, blank=True)
+    level = models.ForeignKey("academics.Level", on_delete=models.PROTECT, null=True, blank=True)
+    filiere = models.ForeignKey("academics.Filiere", on_delete=models.PROTECT, null=True, blank=True)
+    academic_year = models.ForeignKey("academics.AcademicYear", on_delete=models.PROTECT, null=True, blank=True)
     semester = models.ForeignKey("academics.Semester", on_delete=models.PROTECT)
     activated_at = models.DateTimeField(null=True, blank=True)
 

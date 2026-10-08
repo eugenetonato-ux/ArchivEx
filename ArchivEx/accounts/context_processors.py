@@ -24,7 +24,19 @@ def user_pass_context(request):
     active_accesses = get_user_active_accesses(user)
     active_sem_ids = set(active_accesses.values_list("semester_id", flat=True))
 
+    from payments.models import Payment
+    from subscriptions.models import UserSubscription
+    payment_sem_ids = set(Payment.objects.filter(
+        user=user, semester__isnull=False,
+        status__in=["APPROVED", "reussi", "approved", "success"]
+    ).values_list("semester_id", flat=True))
+    sub_sem_ids = set(UserSubscription.objects.filter(
+        user=user, semester__isnull=False, is_active=True
+    ).values_list("semester_id", flat=True))
+
+    all_sem_ids = active_sem_ids | payment_sem_ids | sub_sem_ids
+
     return {
-        "user_has_active_pass": has_pass,
-        "user_active_semester_ids": active_sem_ids,
+        "user_has_active_pass": has_pass or bool(all_sem_ids),
+        "user_active_semester_ids": all_sem_ids,
     }

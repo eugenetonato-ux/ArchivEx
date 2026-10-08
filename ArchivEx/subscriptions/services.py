@@ -24,6 +24,10 @@ def user_has_any_active_pass(user):
     if get_user_active_accesses(user).exists():
         return True
 
+    from payments.models import Payment
+    if Payment.objects.filter(user=user, status__in=["APPROVED", "reussi", "approved", "success"]).exists():
+        return True
+
     from subscriptions.models import UserSubscription
     now = timezone.now()
     return UserSubscription.objects.filter(
@@ -52,6 +56,8 @@ def has_user_valid_pass(user, resource=None):
 
     # Extraire le contexte académique de la ressource
     from academics.models import Semester, Filiere, Subject, School
+    from payments.models import Payment, SemesterAccess
+    from subscriptions.models import UserSubscription
 
     res_subject = getattr(resource, "subject", None)
     if isinstance(resource, Subject):
@@ -75,14 +81,34 @@ def has_user_valid_pass(user, resource=None):
     elif not res_school and res_filiere:
         res_school = getattr(res_filiere, "school", None)
 
-    # 1. Vérification SemesterAccess (Strictement par semestre)
+    # Si la ressource est liée à un semestre désactivé (ex: S2 fermé administrativement)
+    if res_semester and not getattr(res_semester, "is_active", True):
+        return False
+
     legacy_query = Q(user=user) & (
         Q(activated_at__isnull=False) |
         Q(payments__status__in=["APPROVED", "reussi", "approved", "success"])
     )
+
     if res_semester:
+        # 1. Vérification SemesterAccess pour ce semestre
         if SemesterAccess.objects.filter(legacy_query & Q(semester=res_semester)).exists():
             return True
+
+        # 2. Vérification directe dans Payment pour ce semestre
+        if Payment.objects.filter(
+            user=user, semester=res_semester,
+            status__in=["APPROVED", "reussi", "approved", "success"]
+        ).exists():
+            return True
+
+        # 3. Vérification UserSubscription pour ce semestre
+        if UserSubscription.objects.filter(
+            user=user, semester=res_semester, is_active=True,
+            start_date__lte=now,
+        ).filter(Q(end_date__isnull=True) | Q(end_date__gte=now)).exists():
+            return True
+
         # Règle d'or : Si la ressource appartient à un semestre (ex: S2), un Pass acheté
         # pour un autre semestre (ex: S1) ne donne AUCUN accès. L'achat de chaque semestre est obligatoire.
         return False
@@ -90,24 +116,19 @@ def has_user_valid_pass(user, resource=None):
     if res_filiere:
         if SemesterAccess.objects.filter(legacy_query & Q(filiere=res_filiere)).exists():
             return True
-
-    # 2. Vérification UserSubscription (V2)
-    from subscriptions.models import UserSubscription
-
-    active_subs = UserSubscription.objects.filter(
-        user=user,
-        is_active=True,
-        start_date__lte=now,
-    ).filter(Q(end_date__isnull=True) | Q(end_date__gte=now))
-
-    for sub in active_subs:
-        if not sub.school and not sub.filiere and not sub.semester:
+        if UserSubscription.objects.filter(
+            user=user, filiere=res_filiere, is_active=True,
+            start_date__lte=now,
+        ).filter(Q(end_date__isnull=True) | Q(end_date__gte=now)).exists():
             return True
-        if sub.semester and res_semester and sub.semester_id == res_semester.id:
+
+    if res_school:
+        if SemesterAccess.objects.filter(legacy_query & Q(school=res_school)).exists():
             return True
-        if sub.filiere and res_filiere and sub.filiere_id == res_filiere.id:
-            return True
-        if sub.school and res_school and sub.school_id == res_school.id:
+        if UserSubscription.objects.filter(
+            user=user, school=res_school, is_active=True,
+            start_date__lte=now,
+        ).filter(Q(end_date__isnull=True) | Q(end_date__gte=now)).exists():
             return True
 
     return False

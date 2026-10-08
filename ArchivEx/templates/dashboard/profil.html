@@ -61,8 +61,8 @@
             </span>
         </div>
 
-        <!-- CURRENT SEMESTER -->
-        <p class="text-xs sm:text-sm font-semibold text-blue-100/90 tracking-wide">
+        <!-- CURRENT SEMESTER & STATUS -->
+        <p class="text-xs sm:text-sm font-semibold text-blue-100/90 tracking-wide mb-1">
             {% if active_accesses %}
                 {% for access in active_accesses %}
                     {% if forloop.first %}{{ access.semester.label }}{% endif %}
@@ -71,6 +71,19 @@
                 Semestre 1
             {% endif %}
         </p>
+
+        <!-- PASS STATUS BADGE -->
+        {% if active_accesses or user_has_active_pass %}
+            <div class="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 text-xs font-black shadow-sm">
+                <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                <span>Pass Semestre Actif — Accès Illimité</span>
+            </div>
+        {% else %}
+            <div class="inline-flex items-center space-x-1.5 px-3.5 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-xs font-bold">
+                <i class="fa-solid fa-lock text-amber-300"></i>
+                <span>Pass Semestre Non Actif</span>
+            </div>
+        {% endif %}
     </div>
 
     <!-- MAIN CONTENT CONTAINER -->
