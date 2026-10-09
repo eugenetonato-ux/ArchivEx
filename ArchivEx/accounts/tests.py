@@ -195,3 +195,105 @@ class AccountsAndAcademicsTest(TestCase):
         self.assertEqual(res_dash2.status_code, 200)
 
 
+class AutomatedForgotPasswordFlowTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.student = User.objects.create_user(
+            username="sophia@univ.edu",
+            email="sophia@univ.edu",
+            password="AncienMotDePasse123!",
+            first_name="Sophia",
+            last_name="Lokossou"
+        )
+
+    def test_forgot_password_get_page(self):
+        """Vérifie l'affichage de la page mot de passe oublié avec pré-remplissage."""
+        res = self.client.get(reverse("accounts:forgot_password") + "?email=sophia@univ.edu")
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "Mot de passe oublié ?")
+        self.assertContains(res, "sophia@univ.edu")
+        self.assertContains(res, "Instantané & 100% Automatisé")
+
+    def test_forgot_password_post_success_and_email_dispatched(self):
+        """Vérifie que l'étudiant reçoit immédiatement un mot de passe temporaire par email."""
+        from django.core import mail
+        import re
+
+        mail.outbox.clear()
+        res = self.client.post(reverse("accounts:forgot_password"), {
+            "identifier": "sophia@univ.edu"
+        }, follow=False)
+
+        # Doit rediriger vers la page de connexion avec pré-remplissage
+        self.assertEqual(res.status_code, 302)
+        self.assertIn(reverse("accounts:login"), res.url)
+
+        # Vérification en base de données
+        self.student.refresh_from_db()
+        self.assertTrue(self.student.must_change_password)
+        self.assertFalse(self.student.check_password("AncienMotDePasse123!"))
+
+        # Vérification de l'envoi de l'e-mail
+        self.assertEqual(len(mail.outbox), 1)
+        sent_email = mail.outbox[0]
+        self.assertIn("Réinitialisation de votre mot de passe", sent_email.subject)
+        self.assertIn(self.student.email, sent_email.to)
+
+        # Extraction du mot de passe temporaire
+        match = re.search(r"ArchivEx-\d{4}", sent_email.body)
+        self.assertIsNotNone(match)
+        temp_pwd = match.group(0)
+        self.assertTrue(self.student.check_password(temp_pwd))
+
+    def test_forgot_password_full_lifecycle_with_forced_change(self):
+        """
+        Cycle de vie complet :
+        1. Demande de mot de passe oublié
+        2. Consultation du mot de passe temporaire dans la boîte de réception
+        3. Connexion sur /connexion/
+        4. Interception immédiate par le système obligeant à changer le mot de passe
+        5. Définition du mot de passe personnel définitif
+        6. L'ancien mot de passe temporaire est désormais inutilisable.
+        """
+        from django.core import mail
+        import re
+
+        # 1. Demande mot de passe oublié
+        mail.outbox.clear()
+        self.client.post(reverse("accounts:forgot_password"), {"identifier": "sophia@univ.edu"})
+        self.student.refresh_from_db()
+        self.assertTrue(self.student.must_change_password)
+
+        temp_pwd = re.search(r"ArchivEx-\d{4}", mail.outbox[0].body).group(0)
+
+        # 2. Tentative de connexion avec le mot de passe temporaire reçu par email
+        login_res = self.client.post(reverse("accounts:login"), {
+            "username": "sophia@univ.edu",
+            "password": temp_pwd
+        }, follow=False)
+
+        # Le système redirige immédiatement vers la sécurisation obligatoire
+        self.assertEqual(login_res.status_code, 302)
+        self.assertEqual(login_res.url, reverse("accounts:force_password_change"))
+
+        # 3. Tentative de contourner en allant sur le profil ou tableau de bord -> bloqué par le middleware
+        bypass_res = self.client.get(reverse("accounts:dashboard"), follow=False)
+        self.assertEqual(bypass_res.status_code, 302)
+        self.assertEqual(bypass_res.url, reverse("accounts:force_password_change"))
+
+        # 4. L'étudiant enregistre son propre mot de passe personnel
+        mon_nouveau_mot_de_passe = "MonSecretPersonnel2026@"
+        change_res = self.client.post(reverse("accounts:force_password_change"), {
+            "new_password1": mon_nouveau_mot_de_passe,
+            "new_password2": mon_nouveau_mot_de_passe,
+        }, follow=False)
+
+        self.assertEqual(change_res.status_code, 302)
+
+        # 5. Le compte est sécurisé et le flag must_change_password est levé
+        self.student.refresh_from_db()
+        self.assertFalse(self.student.must_change_password)
+        self.assertTrue(self.student.check_password(mon_nouveau_mot_de_passe))
+        self.assertFalse(self.student.check_password(temp_pwd), "Le mot de passe temporaire ne doit plus fonctionner")
+
+

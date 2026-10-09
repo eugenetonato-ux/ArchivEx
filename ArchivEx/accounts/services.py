@@ -57,17 +57,17 @@ def send_password_reset_email(user, temp_password: str, request=None, admin_user
     # Corps texte brut
     text_content = f"""Bonjour {user_full_name},
 
-Votre demande de réinitialisation d'accès a été traitée par l'équipe support ArchivEx.
+Votre demande de réinitialisation d'accès sur ArchivEx a été prise en compte.
 
-Voici vos identifiants pour vous connecter :
+Voici vos identifiants temporaires pour vous connecter :
 - Identifiant : {user.username}
 - Mot de passe temporaire : {temp_password}
 
-Lien de connexion :
+Lien de connexion direct :
 {login_url}
 
-Recommandation de sécurité :
-Dès votre connexion, personnalisez votre mot de passe depuis la rubrique "Mon Profil".
+Consigne de sécurité obligatoire :
+Dès votre connexion avec ce code temporaire, le système vous demandera obligatoirement de définir votre propre mot de passe personnel confidentiel. Cela désactivera immédiatement ce mot de passe temporaire.
 
 L'équipe ArchivEx
 """
@@ -95,3 +95,44 @@ L'équipe ArchivEx
     except Exception as e:
         logger.error(f"[Password Reset Email] Échec de l'envoi d'e-mail à {recipient_email}: {e}")
         return False, f"Impossible d'envoyer l'e-mail ({e})."
+
+
+def process_automated_password_reset(user, request=None, admin_user=None) -> tuple[bool, str, str]:
+    """
+    Exécute automatiquement la procédure complète de réinitialisation :
+    1. Génération d'un mot de passe temporaire sécurisé (ex: ArchivEx-8392)
+    2. Affectation sur le compte utilisateur et activation du drapeau `must_change_password = True`
+    3. Création d'une notification interne dans la plateforme
+    4. Envoi immédiat de l'email contenant le mot de passe temporaire
+    5. Retourne (succès_envoi: bool, message_info: str, mot_de_passe_temporaire: str)
+    """
+    if not user:
+        return False, "Aucun utilisateur spécifié.", ""
+
+    temp_pwd = generate_temporary_password()
+    user.set_password(temp_pwd)
+    user.must_change_password = True
+    user.save(update_fields=["password", "must_change_password"])
+
+    # Notification interne
+    try:
+        from notifications.models import Notification
+        Notification.objects.create(
+            recipient=user,
+            notification_type="SUPPORT_REPLY",
+            title="Nouveau mot de passe temporaire généré",
+            message=f"Votre mot de passe temporaire est prêt. Consultez votre boîte email ({user.email}) pour vous connecter.",
+            link=reverse("accounts:login"),
+        )
+    except Exception as err:
+        logger.error(f"[process_automated_password_reset] Erreur création notification : {err}")
+
+    # Envoi officiel par email
+    email_sent, email_info = send_password_reset_email(
+        user=user,
+        temp_password=temp_pwd,
+        request=request,
+        admin_user=admin_user,
+    )
+
+    return email_sent, email_info, temp_pwd

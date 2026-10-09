@@ -226,3 +226,24 @@ class ForcePasswordChangeForm(SetPasswordForm):
             'id': 'id_new_password2',
         }),
     )
+
+
+class ForgotPasswordForm(forms.Form):
+    """Formulaire de demande de mot de passe temporaire pour compte oublié."""
+
+    identifier = forms.CharField(
+        label="Adresse Email ou Nom d'utilisateur",
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'cosmic-pill-input w-full px-5 py-3.5 rounded-full text-xs sm:text-sm text-white placeholder-slate-400/80 bg-[#0B1528] border border-white/[0.14] focus:border-cyan-400 focus:bg-[#0E1A33] focus:outline-none focus:ring-2 focus:ring-cyan-400/30 transition-all font-medium shadow-inner',
+            'placeholder': 'etudiant@gmail.com ou nom d\'utilisateur',
+            'id': 'id_forgot_identifier',
+            'autocomplete': 'email',
+        })
+    )
+
+    def clean_identifier(self):
+        identifier = self.cleaned_data.get("identifier", "").strip()
+        if not identifier:
+            raise forms.ValidationError("Veuillez renseigner votre adresse e-mail ou identifiant.")
+        return identifier

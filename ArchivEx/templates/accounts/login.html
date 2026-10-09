@@ -94,7 +94,7 @@
                                id="id_username_field" 
                                name="username" 
                                required 
-                               value="{{ request.POST.username|default:'' }}" 
+                               value="{{ initial_identifier|default:form.username.value|default:'' }}" 
                                placeholder="Adresse e-mail ou identifiant" 
                                autocomplete="username"
                                class="cosmic-pill-input w-full px-5 py-3.5 rounded-full text-xs sm:text-sm text-white placeholder-slate-400/80 bg-[#0B1528] border border-white/[0.14] focus:border-cyan-400 focus:bg-[#0E1A33] focus:outline-none focus:ring-2 focus:ring-cyan-400/30 transition-all font-medium shadow-inner">
@@ -137,10 +137,10 @@
                         <span class="text-slate-300 text-xs font-normal">Se souvenir de moi</span>
                     </label>
 
-                    <a href="{% url 'support:create' %}?category=recuperation_mot_de_passe" 
+                    <a href="{% url 'accounts:forgot_password' %}" 
                        onclick="redirectToForgotPassword(event);" 
                        class="text-xs text-slate-300 hover:text-cyan-300 transition-colors" 
-                       title="Récupérer l'accès à votre compte via le support">
+                       title="Recevoir immédiatement un mot de passe temporaire par email">
                         Mot de passe oublié ?
                     </a>
                 </div>
@@ -229,9 +229,9 @@
         if (e) e.preventDefault();
         const input = document.getElementById('id_username_field');
         const val = input ? encodeURIComponent(input.value.trim()) : '';
-        let target = "{% url 'support:create' %}?category=recuperation_mot_de_passe";
+        let target = "{% url 'accounts:forgot_password' %}";
         if (val) {
-            target += "&email=" + val;
+            target += "?email=" + val;
         }
         window.location.href = target;
     }

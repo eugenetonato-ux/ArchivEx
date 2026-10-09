@@ -7,9 +7,11 @@ from django.db.models import Q, Count
 from django.http import JsonResponse
 
 from exams.models import Exam
-from .forms import StudentRegistrationForm, StudentLoginForm, StudentProfileForm, ForcePasswordChangeForm
+from .forms import StudentRegistrationForm, StudentLoginForm, StudentProfileForm, ForcePasswordChangeForm, ForgotPasswordForm
 from .models import StudentProfile, Favorite, SiteLog
 from .utils import log_user_action
+from django.contrib.auth import get_user_model
+from django.urls import reverse
 from payments.models import SemesterAccess
 
 def register_view(request):
@@ -87,7 +89,11 @@ def login_view(request):
     else:
         form = StudentLoginForm()
 
-    return render(request, "accounts/login.html", {"form": form})
+    initial_identifier = request.POST.get("username") or request.GET.get("email") or ""
+    return render(request, "accounts/login.html", {
+        "form": form,
+        "initial_identifier": initial_identifier,
+    })
 
 
 @login_required
@@ -131,6 +137,100 @@ def force_password_change_view(request):
         form = ForcePasswordChangeForm(user=request.user)
 
     return render(request, "accounts/force_password_change.html", {"form": form})
+
+
+def mask_email(email: str) -> str:
+    """Masque une adresse email pour protéger la confidentialité (ex: jean.dupont@gmail.com -> je***t@gmail.com)."""
+    if not email or "@" not in email:
+        return email or ""
+    local, domain = email.split("@", 1)
+    if len(local) <= 2:
+        masked_local = local[0] + "***"
+    else:
+        masked_local = f"{local[:2]}***{local[-1]}"
+    return f"{masked_local}@{domain}"
+
+
+def forgot_password_view(request):
+    """
+    Permet à l'étudiant d'obtenir IMMÉDIATEMENT un mot de passe temporaire par email
+    sans dépendre d'une action manuelle de l'administrateur.
+    """
+    if request.user.is_authenticated:
+        if getattr(request.user, "must_change_password", False):
+            return redirect("accounts:force_password_change")
+        return redirect("accounts:dashboard")
+
+    if request.method == "POST":
+        form = ForgotPasswordForm(request.POST)
+        if form.is_valid():
+            identifier = form.cleaned_data["identifier"]
+            User = get_user_model()
+            user = User.objects.filter(
+                Q(email__iexact=identifier) | Q(username__iexact=identifier)
+            ).first()
+
+            if user and user.email:
+                from .services import process_automated_password_reset
+                email_sent, email_info, temp_pwd = process_automated_password_reset(
+                    user=user,
+                    request=request,
+                )
+
+                log_user_action(
+                    request,
+                    "MODIFICATION",
+                    f"Réinitialisation automatique du mot de passe pour {user.username}"
+                )
+
+                # Traçabilité dans SupportRequest
+                try:
+                    from support.models import SupportRequest, SupportReply
+                    sr = SupportRequest.objects.create(
+                        user=user,
+                        guest_name=user.get_full_name() or user.username,
+                        guest_email=user.email,
+                        category="recuperation_mot_de_passe",
+                        message="Demande de mot de passe oublié déclenchée en libre-service par l'utilisateur.",
+                        status="repondu",
+                    )
+                    SupportReply.objects.create(
+                        request=sr,
+                        admin_user=None,
+                        message=f"Mot de passe temporaire ({temp_pwd}) généré et envoyé automatiquement par e-mail à {user.email}.",
+                    )
+                except Exception as e:
+                    import logging
+                    logging.getLogger("django").error(f"[forgot_password_view] Erreur trace support: {e}")
+
+                masked = mask_email(user.email)
+                if email_sent:
+                    messages.success(
+                        request,
+                        f"Un mot de passe temporaire a été généré et envoyé à l'adresse {masked}. "
+                        "Consultez votre messagerie (y compris vos courriers indésirables / spams Gmail), "
+                        "puis connectez-vous. Le système vous invitera obligatoirement à choisir votre mot de passe personnel dès votre connexion."
+                    )
+                else:
+                    messages.warning(
+                        request,
+                        f"Le mot de passe temporaire a été activé sur votre compte, mais le service d'envoi d'e-mail a rencontré une difficulté ({email_info}). "
+                        "Veuillez vérifier votre messagerie ou contacter le support si vous ne recevez rien."
+                    )
+
+                return redirect(f"{reverse('accounts:login')}?email={user.username or user.email}")
+            else:
+                messages.error(
+                    request,
+                    "Aucun compte associé à cette adresse e-mail ou cet identifiant n'a été trouvé. "
+                    "Veuillez vérifier l'adresse saisie ou créer un nouveau compte si vous n'êtes pas encore inscrit."
+                )
+    else:
+        initial_email = request.GET.get("email", "").strip()
+        form = ForgotPasswordForm(initial={"identifier": initial_email} if initial_email else None)
+
+    return render(request, "accounts/forgot_password.html", {"form": form})
+
 
 
 def logout_view(request):

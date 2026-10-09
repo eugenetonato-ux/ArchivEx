@@ -58,6 +58,40 @@ def support_create_view(request):
         support_req.status = "non_lu"
         support_req.save()
 
+        # Traitement automatique immédiat pour les demandes de réinitialisation de mot de passe
+        if support_req.category == "recuperation_mot_de_passe" and support_req.user and support_req.user.email:
+            from accounts.services import process_automated_password_reset
+            target_student = support_req.user
+            email_sent, email_info, temp_pwd = process_automated_password_reset(
+                user=target_student,
+                request=request,
+                admin_user=None,
+            )
+
+            reply_msg = (
+                f"Bonjour {target_student.get_full_name() or target_student.username},\n\n"
+                f"Votre mot de passe a été réinitialisé automatiquement par le système ArchivEx.\n\n"
+                f"Identifiant : {target_student.username}\n"
+                f"Mot de passe temporaire : {temp_pwd}\n\n"
+                f"Un e-mail officiel contenant vos accès vous a été envoyé à {target_student.email}.\n"
+                f"Dès votre première connexion, vous serez obligatoirement invité(e) à choisir votre mot de passe personnel définitif pour sécuriser votre compte.\n\n"
+                f"L'équipe ArchivEx"
+            )
+            SupportReply.objects.create(
+                request=support_req,
+                admin_user=None,
+                message=reply_msg,
+            )
+            support_req.status = "repondu"
+            support_req.save(update_fields=["status"])
+
+            messages.success(
+                request,
+                f"Votre mot de passe a été réinitialisé automatiquement ! Un mot de passe temporaire vient d'être envoyé à votre adresse e-mail ({target_student.email}). "
+                "Consultez votre boîte email (pensez aux spams/courriers indésirables), puis connectez-vous avec ce code temporaire."
+            )
+            return redirect(f"{reverse('accounts:login')}?email={target_student.username or target_student.email}")
+
         # 1. Notification interne pour les administrateurs
         try:
             admin_users = User.objects.filter(Q(is_staff=True) | Q(is_superuser=True)).distinct()
