@@ -7,6 +7,7 @@ from django.db.models import Q, Count
 from django.http import JsonResponse
 
 from exams.models import Exam
+from academics.models import School, Level, Filiere, Semester, Subject
 from .forms import StudentRegistrationForm, StudentLoginForm, StudentProfileForm, ForcePasswordChangeForm, ForgotPasswordForm
 from .models import StudentProfile, Favorite, SiteLog, UserDevice, DeviceRevocationLog
 from .utils import (
@@ -470,8 +471,6 @@ def dashboard_view(request):
     profile = getattr(request.user, "profile", None)
     if not profile:
         # Pour les administrateurs / staff qui consultent l'espace étudiant,
-        # associer leur profil d'aperçu à leur école active courante (ex: FASEG)
-        from academics.models import Filiere, School, Level
         default_school = current_school or School.objects.first()
         if default_school:
             default_filiere = Filiere.objects.filter(school=default_school).first()
@@ -542,7 +541,6 @@ def dashboard_view(request):
     from subscriptions.models import UserSubscription
     from subscriptions.services import can_user_access
     from content.models import Summary, Guide, Article
-    from academics.models import Semester, Subject, Filiere
 
     user_subscriptions = UserSubscription.objects.filter(
         user=request.user, is_active=True
