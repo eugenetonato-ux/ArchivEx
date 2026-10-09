@@ -8,10 +8,19 @@ from django.http import JsonResponse
 
 from exams.models import Exam
 from .forms import StudentRegistrationForm, StudentLoginForm, StudentProfileForm, ForcePasswordChangeForm, ForgotPasswordForm
-from .models import StudentProfile, Favorite, SiteLog
-from .utils import log_user_action
+from .models import StudentProfile, Favorite, SiteLog, UserDevice, DeviceRevocationLog
+from .utils import (
+    log_user_action,
+    get_or_create_device_id,
+    parse_device_info,
+    get_client_ip,
+    MAX_ALLOWED_DEVICES,
+    MAX_DAILY_REVOCATIONS,
+    check_revocation_limit_status,
+)
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.conf import settings
 from payments.models import SemesterAccess
 
 def register_view(request):
@@ -28,9 +37,34 @@ def register_view(request):
             # Enregistrer la clé de session pour la protection anti-partage
             user.active_session_key = request.session.session_key
             user.save(update_fields=["active_session_key"])
-            log_user_action(request, "CONNECTION", f"Nouvelle inscription et connexion automatique de l'utilisateur : {user.username}")
+
+            # Enregistrement du premier appareil autorisé
+            device_id, _ = get_or_create_device_id(request)
+            ua_str = request.META.get("HTTP_USER_AGENT", "")
+            device_name = parse_device_info(ua_str)
+            client_ip = get_client_ip(request)
+            UserDevice.objects.get_or_create(
+                user=user,
+                device_id=device_id,
+                defaults={
+                    "device_name": device_name,
+                    "ip_address": client_ip,
+                    "user_agent": ua_str[:500],
+                }
+            )
+
+            log_user_action(request, "CONNECTION", f"Nouvelle inscription et connexion automatique de l'utilisateur : {user.username} (Appareil: {device_name})")
             messages.success(request, f"Bienvenue {user.first_name} ! Ton compte a été créé avec succès.")
-            return redirect("accounts:dashboard")
+            response = redirect("accounts:dashboard")
+            response.set_cookie(
+                "ax_device_id",
+                device_id,
+                max_age=365 * 24 * 3600,
+                httponly=True,
+                samesite="Lax",
+                secure=getattr(settings, "SESSION_COOKIE_SECURE", False),
+            )
+            return response
         else:
             messages.error(request, "Veuillez corriger les erreurs ci-dessous.")
     else:
@@ -51,11 +85,48 @@ def login_view(request):
         form = StudentLoginForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
+
+            # --- CONTRÔLE DE VERROUILLAGE À 2 APPAREILS ---
+            is_exempt = user.is_staff or user.is_superuser or getattr(user, "contributor_profile", None)
+            device_id, _ = get_or_create_device_id(request)
+            ua_str = request.META.get("HTTP_USER_AGENT", "")
+            device_name = parse_device_info(ua_str)
+            client_ip = get_client_ip(request)
+
+            if not is_exempt:
+                existing_device = user.devices.filter(device_id=device_id).first()
+                if existing_device:
+                    existing_device.device_name = device_name
+                    existing_device.ip_address = client_ip
+                    existing_device.user_agent = ua_str[:500]
+                    existing_device.save()
+                else:
+                    if user.devices.count() >= MAX_ALLOWED_DEVICES:
+                        # Limite atteinte : redirection vers l'écran de sélection de remplacement
+                        request.session["pending_device_user_id"] = user.id
+                        request.session["pending_device_id"] = device_id
+                        request.session["pending_device_name"] = device_name
+                        request.session["pending_next_url"] = request.GET.get("next") or ""
+                        messages.warning(
+                            request,
+                            "Votre compte ArchivEx est limité à 2 appareils autorisés. "
+                            "Pour connecter cet appareil, sélectionnez celui que vous souhaitez remplacer."
+                        )
+                        return redirect("accounts:device_limit")
+                    else:
+                        UserDevice.objects.create(
+                            user=user,
+                            device_id=device_id,
+                            device_name=device_name,
+                            ip_address=client_ip,
+                            user_agent=ua_str[:500],
+                        )
+
             login(request, user)
             # Enregistrer la clé de session active pour la protection anti-partage de compte
             user.active_session_key = request.session.session_key
             user.save(update_fields=["active_session_key"])
-            log_user_action(request, "CONNECTION", f"Connexion réussie de l'utilisateur : {user.username}")
+            log_user_action(request, "CONNECTION", f"Connexion réussie de l'utilisateur : {user.username} (Appareil: {device_name})")
             
             # Vérification de sécurité : l'étudiant doit changer son mot de passe temporaire
             if getattr(user, "must_change_password", False):
@@ -63,16 +134,29 @@ def login_view(request):
                     request,
                     "Pour votre sécurité, veuillez définir votre nouveau mot de passe personnel avant de continuer."
                 )
-                return redirect("accounts:force_password_change")
+                response = redirect("accounts:force_password_change")
+            else:
+                messages.success(request, f"Ravi de te revoir, {user.first_name or user.username} !")
+                next_url = request.GET.get("next")
+                from django.urls import reverse
+                if not next_url or next_url == "/" or next_url == reverse("academics:home"):
+                    if user.is_staff or user.is_superuser or getattr(user, "contributor_profile", None):
+                        response = redirect("contributors:admin_dashboard")
+                    else:
+                        response = redirect("accounts:dashboard")
+                else:
+                    response = redirect(next_url)
 
-            messages.success(request, f"Ravi de te revoir, {user.first_name or user.username} !")
-            next_url = request.GET.get("next")
-            from django.urls import reverse
-            if not next_url or next_url == "/" or next_url == reverse("academics:home"):
-                if user.is_staff or user.is_superuser or getattr(user, "contributor_profile", None):
-                    return redirect("contributors:admin_dashboard")
-                return redirect("accounts:dashboard")
-            return redirect(next_url)
+            # Poser le cookie d'appareil persistant (1 an)
+            response.set_cookie(
+                "ax_device_id",
+                device_id,
+                max_age=365 * 24 * 3600,
+                httponly=True,
+                samesite="Lax",
+                secure=getattr(settings, "SESSION_COOKIE_SECURE", False),
+            )
+            return response
         else:
             if getattr(form, "account_not_found", False):
                 messages.error(
@@ -94,6 +178,137 @@ def login_view(request):
         "form": form,
         "initial_identifier": initial_identifier,
     })
+
+
+def device_limit_view(request):
+    """
+    Vue affichée lorsqu'un étudiant tente de se connecter sur un 3e appareil.
+    Présente ses 2 appareils actuels et lui permet d'en révoquer un pour autoriser le nouveau.
+    Règle anti-partage stricte : Maximum 2 révocations par 24h. Au-delà, blocage 24h.
+    """
+    user_id = request.session.get("pending_device_user_id")
+    device_id = request.session.get("pending_device_id")
+    new_device_name = request.session.get("pending_device_name", "Nouvel appareil")
+    next_url = request.session.get("pending_next_url")
+
+    if not user_id or not device_id:
+        return redirect("accounts:login")
+
+    User = get_user_model()
+    user = get_object_or_404(User, pk=user_id)
+    current_devices = user.devices.all()
+
+    can_revoke, remaining_revocations, cooldown_until = check_revocation_limit_status(user)
+
+    if request.method == "POST":
+        if not can_revoke:
+            cooldown_str = cooldown_until.strftime("%d/%m/%Y à %H:%M") if cooldown_until else "24 heures"
+            messages.error(
+                request,
+                f"Remplacement refusé : Votre compte a atteint la limite de 2 révocations par 24h. "
+                f"Par mesure de sécurité anti-partage de compte, les remplacements sont bloqués jusqu'au {cooldown_str}."
+            )
+            return redirect("accounts:device_limit")
+
+        replace_device_id = request.POST.get("replace_device_id")
+        if replace_device_id:
+            old_device = user.devices.filter(device_id=replace_device_id).first()
+            old_device_name = old_device.device_name if old_device else "Ancien appareil"
+            user.devices.filter(device_id=replace_device_id).delete()
+
+            # Enregistrer la révocation dans le journal anti-partage
+            client_ip = get_client_ip(request)
+            DeviceRevocationLog.objects.create(
+                user=user,
+                revoked_device_name=old_device_name,
+                ip_address=client_ip,
+            )
+
+            # Enregistrer le nouvel appareil
+            ua_str = request.META.get("HTTP_USER_AGENT", "")
+            UserDevice.objects.create(
+                user=user,
+                device_id=device_id,
+                device_name=new_device_name,
+                ip_address=client_ip,
+                user_agent=ua_str[:500],
+            )
+
+            # Connecter l'utilisateur
+            login(request, user)
+            user.active_session_key = request.session.session_key
+            user.save(update_fields=["active_session_key"])
+
+            # Nettoyer la session temporaire
+            request.session.pop("pending_device_user_id", None)
+            request.session.pop("pending_device_id", None)
+            request.session.pop("pending_device_name", None)
+            request.session.pop("pending_next_url", None)
+
+            log_user_action(request, "CONNECTION", f"Remplacement d'appareil effectué : {new_device_name} autorisé, {old_device_name} révoqué.")
+            messages.success(request, f"Votre appareil « {new_device_name} » a été activé avec succès !")
+
+            from django.urls import reverse
+            redirect_target = next_url if next_url and next_url != "/" else reverse("accounts:dashboard")
+            response = redirect(redirect_target)
+            response.set_cookie(
+                "ax_device_id",
+                device_id,
+                max_age=365 * 24 * 3600,
+                httponly=True,
+                samesite="Lax",
+                secure=getattr(settings, "SESSION_COOKIE_SECURE", False),
+            )
+            return response
+
+    return render(request, "accounts/device_limit.html", {
+        "user_target": user,
+        "new_device_name": new_device_name,
+        "current_devices": current_devices,
+        "can_revoke": can_revoke,
+        "remaining_revocations": remaining_revocations,
+        "cooldown_until": cooldown_until,
+        "max_daily_revocations": MAX_DAILY_REVOCATIONS,
+    })
+
+
+@login_required
+def revoke_device_view(request, device_pk):
+    """Permet à un étudiant de révoquer l'un de ses appareils enregistrés depuis son profil."""
+    if request.method == "POST":
+        can_revoke, remaining_revocations, cooldown_until = check_revocation_limit_status(request.user)
+        if not can_revoke:
+            cooldown_str = cooldown_until.strftime("%d/%m/%Y à %H:%M") if cooldown_until else "24 heures"
+            messages.error(
+                request,
+                f"Action refusée : Vous avez atteint la limite de 2 révocations par 24h. "
+                f"Tout nouveau changement d'appareil est suspendu jusqu'au {cooldown_str}."
+            )
+            return redirect("accounts:profile")
+
+        device = get_object_or_404(UserDevice, pk=device_pk, user=request.user)
+        device_name = device.device_name
+        current_device_id = request.COOKIES.get("ax_device_id")
+        is_current = (device.device_id == current_device_id)
+
+        device.delete()
+
+        # Enregistrer la révocation dans le journal anti-partage
+        DeviceRevocationLog.objects.create(
+            user=request.user,
+            revoked_device_name=device_name,
+            ip_address=get_client_ip(request),
+        )
+
+        log_user_action(request, "MODIFICATION", f"Révocation d'appareil : {device_name}")
+
+        if is_current:
+            logout(request)
+            messages.info(request, "Cet appareil a été révoqué. Votre session a été fermée.")
+            return redirect("accounts:login")
+
+        messages.success(request, f"L'appareil « {device_name} » a été retiré de votre compte. Un nouvel emplacement est libre.")
+    return redirect("accounts:profile")
 
 
 @login_required
@@ -271,8 +486,16 @@ def dashboard_view(request):
                     }
                 )
     elif profile and (request.user.is_staff or request.user.is_superuser or getattr(request.user, "contributor_profile", None)):
-        # Si un admin a changé d'école active dans l'administration, synchroniser son aperçu
-        if current_school and profile.school_id != current_school.id:
+        # Si un admin a changé de filière ou d'école active dans l'administration, synchroniser son aperçu
+        admin_filiere_id = request.session.get("admin_active_filiere_id")
+        if admin_filiere_id and admin_filiere_id != "all":
+            admin_fil = Filiere.objects.filter(id=admin_filiere_id).first()
+            if admin_fil and profile.filiere_id != admin_fil.id:
+                profile.filiere = admin_fil
+                profile.school = admin_fil.school
+                profile.level = admin_fil.level or profile.level
+                profile.save()
+        elif current_school and profile.school_id != current_school.id:
             profile.school = current_school
             filiere_cand = Filiere.objects.filter(school=current_school).first()
             if filiere_cand:
@@ -397,10 +620,16 @@ def dashboard_view(request):
     for exam in recent_exams:
         exam.user_has_access = can_user_access(request.user, exam)
 
-    # Summaries, Guides, Articles - scopés sur l'école
+    # Summaries, Guides, Articles - scopés sur la filière et le semestre
     recent_summaries_qs = Summary.objects.filter(publication_status="PUBLISHED")
     recent_guides_qs = Guide.objects.filter(publication_status="PUBLISHED")
-    if user_school:
+    if active_semester:
+        recent_summaries_qs = recent_summaries_qs.filter(subject__semester=active_semester)
+        recent_guides_qs = recent_guides_qs.filter(subject__semester=active_semester)
+    elif filiere:
+        recent_summaries_qs = recent_summaries_qs.filter(subject__semester__filiere=filiere)
+        recent_guides_qs = recent_guides_qs.filter(subject__semester__filiere=filiere)
+    elif user_school:
         recent_summaries_qs = recent_summaries_qs.filter(subject__semester__filiere__school=user_school)
         recent_guides_qs = recent_guides_qs.filter(subject__semester__filiere__school=user_school)
 
@@ -580,10 +809,21 @@ def profile_view(request):
         Q(user=request.user) & (Q(activated_at__isnull=False) | Q(payments__status__in=["APPROVED", "reussi", "approved", "success"]))
     ).select_related("semester", "filiere", "level", "school").distinct()
 
+    devices = request.user.devices.all()
+    current_device_id = request.COOKIES.get("ax_device_id", "")
+    can_revoke, remaining_revocations, cooldown_until = check_revocation_limit_status(request.user)
+
     context = {
         "profile": profile,
         "form": form,
         "active_accesses": active_accesses,
+        "devices": devices,
+        "max_devices": MAX_ALLOWED_DEVICES,
+        "current_device_id": current_device_id,
+        "can_revoke": can_revoke,
+        "remaining_revocations": remaining_revocations,
+        "cooldown_until": cooldown_until,
+        "max_daily_revocations": MAX_DAILY_REVOCATIONS,
     }
     return render(request, "dashboard/profil.html", context)
 
@@ -619,9 +859,9 @@ def api_log_click_view(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            button_label = data.get("label", "Bouton inconnu")
-            element_id = data.get("element_id", "")
-            page_title = data.get("page_title", "")
+            button_label = str(data.get("label", "Bouton inconnu"))[:100]
+            element_id = str(data.get("element_id", ""))[:100]
+            page_title = str(data.get("page_title", ""))[:150]
             
             desc = f"Clic public : '{button_label}'"
             if element_id:

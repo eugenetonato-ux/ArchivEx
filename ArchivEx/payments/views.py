@@ -39,6 +39,22 @@ def pass_semestre(request, semester_id):
         Semester.objects.select_related("filiere", "filiere__school", "filiere__level", "academic_year"),
         pk=semester_id
     )
+
+    # Sécurité filière : Un étudiant ordinaire ne peut accéder qu'aux pass de sa propre filière
+    if not request.user.is_superuser and hasattr(request.user, "profile") and request.user.profile.filiere:
+        user_filiere = request.user.profile.filiere
+        if semester.filiere_id != user_filiere.id:
+            student_sem = Semester.objects.filter(filiere=user_filiere, is_active=True).first()
+            if student_sem:
+                messages.info(
+                    request,
+                    f"Ce Pass concerne la filière « {semester.filiere.name} ». Vous avez été redirigé vers le Pass de votre propre filière ({user_filiere.name})."
+                )
+                return redirect("payments:pass_semestre", semester_id=student_sem.id)
+            else:
+                messages.warning(request, "Aucun semestre actif n'est configuré pour votre filière.")
+                return redirect("accounts:dashboard")
+
     price = getattr(settings, "PASS_SEMESTRE_PRIX_DEFAUT", 3800)
 
     from subscriptions.services import has_user_valid_pass
@@ -90,6 +106,19 @@ def initier_paiement(request, semester_id):
         Semester.objects.select_related("filiere", "filiere__school", "filiere__level", "academic_year"),
         pk=semester_id
     )
+
+    # Sécurité filière : Empêcher le paiement pour une autre filière
+    if not request.user.is_superuser and hasattr(request.user, "profile") and request.user.profile.filiere:
+        user_filiere = request.user.profile.filiere
+        if semester.filiere_id != user_filiere.id:
+            messages.warning(
+                request,
+                f"Vous ne pouvez souscrire qu'aux semestres de votre propre filière ({user_filiere.name})."
+            )
+            student_sem = Semester.objects.filter(filiere=user_filiere, is_active=True).first()
+            if student_sem:
+                return redirect("payments:pass_semestre", semester_id=student_sem.id)
+            return redirect("accounts:dashboard")
     price = getattr(settings, "PASS_SEMESTRE_PRIX_DEFAUT", 3800)
 
     already_active = has_user_valid_pass(request.user, semester)
@@ -317,6 +346,8 @@ def fedapay_webhook_view(request):
                     api_data = check_res.json()
                     api_tx = api_data.get("v1/transaction") or api_data.get("transaction") or api_data
                     if str(api_tx.get("id")) == str(tx_id):
+                        # Sécurité critique : on utilise les données authentiques retournées par l'API FedaPay
+                        payload["entity"] = api_tx
                         is_sig_valid = True
                         logger.info("[FedaPay Webhook] Transaction #%s vérifiée avec succès auprès de l'API FedaPay !", tx_id)
             except Exception as e:

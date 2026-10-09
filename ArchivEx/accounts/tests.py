@@ -296,4 +296,117 @@ class AutomatedForgotPasswordFlowTests(TestCase):
         self.assertTrue(self.student.check_password(mon_nouveau_mot_de_passe))
         self.assertFalse(self.student.check_password(temp_pwd), "Le mot de passe temporaire ne doit plus fonctionner")
 
+    def test_two_device_locking_and_replacement(self):
+        """
+        Vérifie le verrouillage strict à 2 appareils :
+        1. Connexion sur l'appareil 1 -> autorisé (1/2)
+        2. Connexion sur l'appareil 2 -> autorisé (2/2)
+        3. Connexion sur l'appareil 3 -> bloqué et redirigé vers limite d'appareils
+        4. Remplacement de l'appareil 1 par l'appareil 3 -> autorisé et ancien révoqué.
+        """
+        from accounts.models import UserDevice
+
+        student = User.objects.create_user(
+            username="device_test_student",
+            email="device@univ.edu",
+            password="Password123!"
+        )
+
+        # 1. Appareil 1 (Smartphone)
+        client1 = Client()
+        client1.cookies["ax_device_id"] = "device_id_phone_111"
+        res1 = client1.post(reverse("accounts:login"), {
+            "username": "device@univ.edu",
+            "password": "Password123!",
+        }, follow=False)
+        self.assertEqual(res1.status_code, 302)
+        self.assertEqual(student.devices.count(), 1)
+        self.assertTrue(student.devices.filter(device_id="device_id_phone_111").exists())
+
+        # 2. Appareil 2 (PC portable)
+        client2 = Client()
+        client2.cookies["ax_device_id"] = "device_id_laptop_222"
+        res2 = client2.post(reverse("accounts:login"), {
+            "username": "device@univ.edu",
+            "password": "Password123!",
+        }, follow=False)
+        self.assertEqual(res2.status_code, 302)
+        self.assertEqual(student.devices.count(), 2)
+        self.assertTrue(student.devices.filter(device_id="device_id_laptop_222").exists())
+
+        # 3. Appareil 3 (tentative de connexion sur un 3e appareil)
+        client3 = Client()
+        client3.cookies["ax_device_id"] = "device_id_friend_333"
+        res3 = client3.post(reverse("accounts:login"), {
+            "username": "device@univ.edu",
+            "password": "Password123!",
+        }, follow=False)
+        # Redirigé vers la page de limite d'appareils !
+        self.assertEqual(res3.status_code, 302)
+        self.assertEqual(res3.url, reverse("accounts:device_limit"))
+        # Le 3e appareil n'est pas encore enregistré
+        self.assertEqual(student.devices.count(), 2)
+
+        # 4. Remplacement : l'étudiant choisit de remplacer l'appareil 1
+        replace_res = client3.post(reverse("accounts:device_limit"), {
+            "replace_device_id": "device_id_phone_111",
+        }, follow=False)
+        self.assertEqual(replace_res.status_code, 302)
+
+        # Vérification : l'appareil 1 a disparu, l'appareil 3 est maintenant actif
+        self.assertEqual(student.devices.count(), 2)
+        self.assertFalse(student.devices.filter(device_id="device_id_phone_111").exists())
+        self.assertTrue(student.devices.filter(device_id="device_id_friend_333").exists())
+
+    def test_daily_revocation_limit_blocks_after_two(self):
+        """
+        Vérifie le blocage automatique pendant 24h après 2 révocations dans la même journée :
+        1. Révocation 1 -> Autorisée (1/2)
+        2. Révocation 2 -> Autorisée (2/2)
+        3. Révocation 3 -> Bloquée avec interdiction de remplacer pendant 24h !
+        """
+        from accounts.models import UserDevice
+        from accounts.utils import check_revocation_limit_status
+
+        student = User.objects.create_user(
+            username="cooldown_student",
+            email="cooldown@univ.edu",
+            password="Password123!"
+        )
+
+        dev1 = UserDevice.objects.create(user=student, device_id="dev_1", device_name="Appareil 1")
+        dev2 = UserDevice.objects.create(user=student, device_id="dev_2", device_name="Appareil 2")
+
+        client = Client()
+        client.force_login(student)
+
+        # 1. Révocation 1 -> Autorisée
+        can_rev, rem, cd = check_revocation_limit_status(student)
+        self.assertTrue(can_rev)
+        self.assertEqual(rem, 2)
+        res1 = client.post(reverse("accounts:revoke_device", kwargs={"device_pk": dev1.pk}), follow=False)
+        self.assertEqual(res1.status_code, 302)
+        self.assertEqual(student.device_revocations.count(), 1)
+
+        # 2. Révocation 2 -> Autorisée
+        can_rev, rem, cd = check_revocation_limit_status(student)
+        self.assertTrue(can_rev)
+        self.assertEqual(rem, 1)
+        res2 = client.post(reverse("accounts:revoke_device", kwargs={"device_pk": dev2.pk}), follow=False)
+        self.assertEqual(res2.status_code, 302)
+        self.assertEqual(student.device_revocations.count(), 2)
+
+        # 3. Révocation 3 -> Doit être strictement BLOQUÉE pendant 24h
+        dev3 = UserDevice.objects.create(user=student, device_id="dev_3", device_name="Appareil 3")
+        can_rev, rem, cd = check_revocation_limit_status(student)
+        self.assertFalse(can_rev)
+        self.assertEqual(rem, 0)
+        self.assertIsNotNone(cd)
+
+        res3 = client.post(reverse("accounts:revoke_device", kwargs={"device_pk": dev3.pk}), follow=False)
+        self.assertEqual(res3.status_code, 302)
+        # dev3 ne doit PAS avoir été supprimé !
+        self.assertTrue(student.devices.filter(device_id="dev_3").exists())
+        self.assertEqual(student.device_revocations.count(), 2)
+
 

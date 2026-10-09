@@ -1,4 +1,5 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q
@@ -221,6 +222,16 @@ def filiere_list_view(request):
 def semester_list_view(request, filiere_id):
     """Page listant les semestres d'une filière avec counts réels et statut d'accès."""
     filiere = get_object_or_404(Filiere.objects.select_related("school", "level"), pk=filiere_id)
+
+    # Sécurité filière : Un étudiant ordinaire ne peut naviguer que dans les semestres de sa filière
+    if not request.user.is_superuser and hasattr(request.user, "profile") and request.user.profile.filiere:
+        if filiere.id != request.user.profile.filiere_id:
+            messages.warning(
+                request,
+                f"Cette page appartient à la filière « {filiere.name} ». Vous avez été redirigé vers votre filière ({request.user.profile.filiere.name})."
+            )
+            return redirect("academics:semestres", filiere_id=request.user.profile.filiere_id)
+
     semesters = list(Semester.objects.filter(filiere=filiere, is_active=True).select_related("academic_year").annotate(
         subjects_num=Count("subjects")
     ))
@@ -272,6 +283,18 @@ def subject_list_view(request, semester_id):
         Semester.objects.select_related("filiere", "filiere__school", "filiere__level", "academic_year"),
         pk=semester_id
     )
+
+    # Sécurité filière : Un étudiant ordinaire ne peut naviguer que dans les UE de sa filière
+    if not request.user.is_superuser and hasattr(request.user, "profile") and request.user.profile.filiere:
+        if semester.filiere_id != request.user.profile.filiere_id:
+            messages.warning(
+                request,
+                f"Ce semestre appartient à la filière « {semester.filiere.name} ». Vous avez été redirigé vers les matières de votre propre filière ({request.user.profile.filiere.name})."
+            )
+            student_sem = Semester.objects.filter(filiere=request.user.profile.filiere, is_active=True).first()
+            if student_sem:
+                return redirect("academics:matieres", semester_id=student_sem.id)
+            return redirect("accounts:dashboard")
     subjects = list(Subject.objects.filter(semester=semester))
 
     # Batch counts to eliminate N+1 queries

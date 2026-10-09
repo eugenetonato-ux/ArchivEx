@@ -1,0 +1,135 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Limite d'appareils atteinte (2/2) — ArchivEx{% endblock %}
+
+{% block content %}
+<div class="univ-hero-wrapper relative min-h-[calc(100vh-64px)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <!-- Image d'arrière-plan avec voile sombre -->
+    <div class="univ-hero-bg" style="background-image: url('{% static 'images/hero_study.webp' %}');"></div>
+    <div class="univ-hero-voile"></div>
+
+    <!-- CENTERED FROSTED GLASS CARD -->
+    <div class="relative z-10 w-full max-w-[480px] mx-auto">
+        <!-- Badge sécurité ArchivEx -->
+        <div class="text-center mb-4">
+            <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-200 text-xs font-bold backdrop-blur-md shadow-inner">
+                <i class="fa-solid fa-shield-halved text-amber-400"></i>
+                <span>Sécurité & Protection Anti-Partage</span>
+            </div>
+        </div>
+
+        <div class="cosmic-glass-card rounded-[28px] p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85),0_0_40px_-10px_rgba(245,158,11,0.2)] border border-white/[0.18] bg-[#071A49]/80 backdrop-blur-2xl transition-all duration-300">
+            
+            <!-- HEADER -->
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400 text-2xl shadow-lg mb-3">
+                    <i class="fa-solid fa-laptop-mobile"></i>
+                </div>
+                <h1 class="text-2xl font-black text-white tracking-tight">
+                    Limite d'Appareils Atteinte
+                </h1>
+                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+                    Votre compte est limité à <span class="font-extrabold text-amber-300">2 appareils autorisés</span> simultanés.
+                </p>
+            </div>
+
+            <!-- NOUVEL APPAREIL ACTUEL -->
+            <div class="p-4 rounded-2xl bg-blue-950/60 border border-blue-400/30 mb-6 backdrop-blur-md">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-cyan-400/20 text-cyan-300 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-display text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-bold uppercase tracking-wider text-cyan-300">Nouvel appareil détecté</p>
+                        <p class="text-sm font-black text-white mt-0.5">{{ new_device_name }}</p>
+                    </div>
+                </div>
+            </div>
+
+            {% if not can_revoke %}
+                <!-- BANNIÈRE DE BLOCAGE TEMPORAIRE 24H -->
+                <div class="p-4 rounded-2xl bg-rose-950/80 border border-rose-500/50 text-rose-100 text-xs shadow-xl backdrop-blur-md space-y-2 mb-6">
+                    <div class="flex items-start space-x-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 mt-0.5">
+                            <i class="fa-solid fa-lock text-base"></i>
+                        </div>
+                        <div>
+                            <p class="font-extrabold text-rose-300 text-xs uppercase tracking-wider">Verrouillage de Sécurité 24H Actif</p>
+                            <p class="text-[11px] text-slate-200 mt-1 leading-relaxed">
+                                Vous avez atteint la limite de <span class="font-bold text-white">2 révocations d'appareils par 24h</span>. Afin de contrer le partage de compte entre camarades, les remplacements sont temporairement bloqués.
+                            </p>
+                            {% if cooldown_until %}
+                                <div class="mt-2.5 inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-rose-900/60 border border-rose-500/30 text-rose-200 font-bold text-[10px]">
+                                    <i class="fa-regular fa-clock text-amber-300"></i>
+                                    <span>Déblocage prévu le : {{ cooldown_until|date:"d/m/Y à H:i" }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="mb-4 flex items-center justify-between text-[11px] px-1 text-slate-300">
+                    <span class="font-semibold text-slate-300">Remplacements disponibles aujourd'hui :</span>
+                    <span class="px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30">
+                        {{ remaining_revocations }} / {{ max_daily_revocations }} restant{{ remaining_revocations|pluralize }}
+                    </span>
+                </div>
+
+                <p class="text-xs text-slate-300 font-semibold mb-3">
+                    Pour connecter cet appareil, sélectionnez lequel de vos 2 appareils existants vous souhaitez <span class="text-rose-400 font-bold">déconnecter et remplacer</span> :
+                </p>
+            {% endif %}
+
+            <!-- LISTE DES APPAREILS EXISTANTS -->
+            <div class="space-y-3 mb-6">
+                {% for dev in current_devices %}
+                    <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-700/60 hover:border-blue-400/50 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center shrink-0">
+                                {% if "phone" in dev.device_name|lower or "android" in dev.device_name|lower or "iphone" in dev.device_name|lower %}
+                                    <i class="fa-solid fa-mobile-screen text-sm text-cyan-400"></i>
+                                {% else %}
+                                    <i class="fa-solid fa-laptop text-sm text-blue-400"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-white">{{ dev.device_name }}</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">
+                                    Vu le : {{ dev.last_login|date:"d/m/Y à H:i" }}
+                                </p>
+                            </div>
+                        </div>
+
+                        {% if can_revoke %}
+                            <form method="post" action="{% url 'accounts:device_limit' %}" class="shrink-0">
+                                {% csrf_token %}
+                                <input type="hidden" name="replace_device_id" value="{{ dev.device_id }}">
+                                <button type="submit" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] shadow-lg shadow-rose-600/30 transition-all transform hover:scale-[1.02] flex items-center justify-center space-x-1.5">
+                                    <i class="fa-solid fa-arrow-right-arrow-left text-[10px]"></i>
+                                    <span>Remplacer</span>
+                                </button>
+                            </form>
+                        {% else %}
+                            <span class="text-[10px] text-slate-400 italic px-3 py-1 rounded-lg bg-slate-800/80 border border-slate-700/50 text-center">
+                                Bloqué 24h
+                            </span>
+                        {% endif %}
+                    </div>
+                {% empty %}
+                    <p class="text-xs text-slate-400 text-center py-4">Aucun appareil enregistré.</p>
+                {% endfor %}
+            </div>
+
+            <!-- BOUTON RETOUR / ANNULATION -->
+            <div class="pt-4 border-t border-white/10 text-center">
+                <a href="{% url 'accounts:login' %}" class="text-xs font-bold text-slate-400 hover:text-white transition-colors inline-flex items-center space-x-1.5">
+                    <i class="fa-solid fa-arrow-left text-[11px]"></i>
+                    <span>Annuler et retourner à la connexion</span>
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,4 +1,4 @@
-from django.test import TestCase, Client
+from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
@@ -15,15 +15,32 @@ User = get_user_model()
 
 def make_valid_pdf_content(title="Sample PDF"):
     from io import BytesIO
-    from reportlab.pdfgen import canvas
-    buf = BytesIO()
-    c = canvas.Canvas(buf, pagesize=(595, 842))
-    c.drawString(100, 800, title)
-    c.showPage()
-    c.save()
-    return buf.getvalue()
+    try:
+        from reportlab.pdfgen import canvas
+        buf = BytesIO()
+        c = canvas.Canvas(buf, pagesize=(595, 842))
+        c.drawString(100, 800, title)
+        c.showPage()
+        c.save()
+        return buf.getvalue()
+    except ImportError:
+        return (
+            b"%PDF-1.4\n"
+            b"1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n"
+            b"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n"
+            b"3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] >>\nendobj\n"
+            b"xref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n"
+            b"trailer\n<< /Size 4 /Root 1 0 R >>\nstartxref\n190\n%%EOF"
+        )
 
 
+@override_settings(
+    USE_SUPABASE_STORAGE=False,
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    },
+)
 class ArchivExFlowTest(TestCase):
     def setUp(self):
         self.client = Client()

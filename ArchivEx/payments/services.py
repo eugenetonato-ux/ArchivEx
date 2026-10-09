@@ -886,6 +886,37 @@ def verify_and_sync_fedapay_transaction(payment, transaction_id=None):
         status = (tx.get("status") or "").lower()
         actual_id = tx.get("id") or target_id
 
+        # Vérification de sécurité absolue : la transaction FedaPay DOIT correspondre à ce paiement précis
+        tx_meta = tx.get("custom_metadata") or {}
+        tx_ref = tx_meta.get("external_reference") or tx.get("reference") or tx.get("external_reference")
+        tx_pay_id = tx_meta.get("archivex_payment_id")
+
+        matches_ref = bool(tx_ref and str(tx_ref).strip() == str(payment.external_reference).strip())
+        matches_pay_id = bool(tx_pay_id and str(tx_pay_id).strip() == str(payment.id).strip())
+        matches_tx_id = bool(payment.fedapay_transaction_id and str(payment.fedapay_transaction_id).strip() == str(actual_id).strip())
+
+        if not (matches_ref or matches_pay_id or matches_tx_id):
+            logger.critical(
+                "[Security Alert] Tentative de validation de paiement avec une transaction FedaPay non concordante ! "
+                "payment_ref=%s, user=%s, attempted_tx_id=%s",
+                payment.external_reference, payment.user_id, actual_id
+            )
+            return {"success": False, "status": payment.status, "is_approved": False, "error": "Transaction non concordante."}
+
+        # Vérification stricte du montant payé
+        tx_amount = tx.get("amount")
+        if tx_amount is not None:
+            try:
+                if int(float(tx_amount)) < int(float(payment.amount)):
+                    logger.critical(
+                        "[Security Alert] Montant de transaction FedaPay inférieur au montant requis ! "
+                        "reçu=%s, attendu=%s pour ref=%s",
+                        tx_amount, payment.amount, payment.external_reference
+                    )
+                    return {"success": False, "status": payment.status, "is_approved": False, "error": "Montant invalide."}
+            except (ValueError, TypeError):
+                pass
+
         if actual_id and not payment.fedapay_transaction_id:
             payment.fedapay_transaction_id = str(actual_id)
             payment.save(update_fields=["fedapay_transaction_id"])

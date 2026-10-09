@@ -15,7 +15,11 @@ SECRET_KEY = config("SECRET_KEY")
 
 DEBUG = config("DEBUG", default=False, cast=bool)
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = config(
+    "ALLOWED_HOSTS",
+    default="*" if DEBUG else "archivex.bj,www.archivex.bj,localhost,127.0.0.1",
+    cast=Csv()
+)
 
 CSRF_TRUSTED_ORIGINS = config(
     "CSRF_TRUSTED_ORIGINS",
@@ -27,6 +31,10 @@ CSRF_TRUSTED_ORIGINS = config(
 # En production : SESSION_COOKIE_SECURE=True, CSRF_COOKIE_SECURE=True, SECURE_SSL_REDIRECT=True (dans .env)
 SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=False, cast=bool)
 CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=False, cast=bool)
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False  # Permet la lecture côté client pour les requêtes AJAX/Fetch (X-CSRFToken)
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=False, cast=bool)
 
@@ -37,11 +45,12 @@ SECURE_HSTS_SECONDS = config("SECURE_HSTS_SECONDS", default=0, cast=int)
 SECURE_HSTS_INCLUDE_SUBDOMAINS = config("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=False, cast=bool)
 SECURE_HSTS_PRELOAD = config("SECURE_HSTS_PRELOAD", default=False, cast=bool)
 
-# Security Headers
+# Security Headers & Defense
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
-# DENY empêche tout framing (clickjacking) — requis pour le check --deploy (W019)
-X_FRAME_OPTIONS = "DENY"
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+# SAMEORIGIN protège contre le clickjacking externe tout en permettant le lecteur PDF interne
+X_FRAME_OPTIONS = "SAMEORIGIN"
 
 
 # Application definition
@@ -335,7 +344,8 @@ FEDAPAY_CALLBACK_URL = config("FEDAPAY_CALLBACK_URL", default="")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Silence les warnings de sécurité intentionnellement désactivés en local.
+# Silence les warnings de sécurité intentionnellement configurés :
 # W008 : SECURE_SSL_REDIRECT=False en local (géré par Nginx sur le VPS en prod).
 # W021 : SECURE_HSTS_PRELOAD=False — à activer après 6 mois de prod stable.
-SILENCED_SYSTEM_CHECKS = ["security.W008", "security.W021"]
+# W019 : X_FRAME_OPTIONS='SAMEORIGIN' requis pour le lecteur PDF interne (interdit tout domaine tiers).
+SILENCED_SYSTEM_CHECKS = ["security.W008", "security.W021", "security.W019"]

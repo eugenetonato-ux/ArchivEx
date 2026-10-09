@@ -62,3 +62,42 @@ class SiteLog(models.Model):
     def __str__(self):
         user_str = self.user.username if self.user else "Anonyme"
         return f"[{self.get_action_type_display()}] {user_str} - {self.description[:50]}"
+
+
+class UserDevice(models.Model):
+    """
+    Appareil autorisé pour le compte étudiant.
+    Limite stricte à 2 appareils maximum simultanés pour neutraliser le partage de compte.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="devices")
+    device_id = models.CharField(max_length=64, db_index=True)
+    device_name = models.CharField(max_length=100, default="Appareil")
+    ip_address = models.CharField(max_length=45, blank=True, null=True)
+    user_agent = models.TextField(blank=True, null=True)
+    last_login = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "device_id")
+        ordering = ["-last_login"]
+
+    def __str__(self):
+        return f"{self.user.username} — {self.device_name}"
+
+
+class DeviceRevocationLog(models.Model):
+    """
+    Journalise chaque révocation ou remplacement d'appareil pour imposer
+    la règle de sécurité anti-partage : maximum 2 révocations par 24h.
+    Au-delà, tout nouveau remplacement est suspendu pendant 24h.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="device_revocations")
+    revoked_device_name = models.CharField(max_length=100, blank=True)
+    ip_address = models.CharField(max_length=45, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user.username} — Révocation {self.revoked_device_name} ({self.created_at})"

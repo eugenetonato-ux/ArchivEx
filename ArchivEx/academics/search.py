@@ -170,7 +170,9 @@ def execute_intelligent_search(query_string, category="all", user=None, current_
             subj_q |= Q(name__icontains=v) | Q(semester__filiere__name__icontains=v)
 
         subj_filter = Subject.objects.filter(subj_q)
-        if target_school:
+        if not (user and user.is_superuser) and user_filiere:
+            subj_filter = subj_filter.filter(semester__filiere=user_filiere)
+        elif target_school:
             subj_filter = subj_filter.filter(semester__filiere__school=target_school)
         subj_qs = list(subj_filter.select_related(
             "semester", "semester__filiere", "semester__filiere__school", "semester__filiere__level"
@@ -181,7 +183,9 @@ def execute_intelligent_search(query_string, category="all", user=None, current_
         all_subjs = Subject.objects.select_related(
             "semester", "semester__filiere", "semester__filiere__school", "semester__filiere__level"
         )
-        if target_school:
+        if not (user and user.is_superuser) and user_filiere:
+            all_subjs = all_subjs.filter(semester__filiere=user_filiere)
+        elif target_school:
             all_subjs = all_subjs.filter(semester__filiere__school=target_school)
         for s in all_subjs:
             if s.id not in matched_ids:
@@ -215,7 +219,9 @@ def execute_intelligent_search(query_string, category="all", user=None, current_
             exam_q |= Q(title__icontains=v) | Q(subject__name__icontains=v) | Q(description__icontains=v)
 
         exam_filter = Exam.objects.filter(is_published=True).filter(exam_q)
-        if target_school:
+        if not (user and user.is_superuser) and user_filiere:
+            exam_filter = exam_filter.filter(filiere=user_filiere)
+        elif target_school:
             exam_filter = exam_filter.filter(filiere__school=target_school)
         exam_qs = exam_filter.select_related(
             "subject", "filiere", "level", "semester", "filiere__school", "summary"
@@ -251,7 +257,9 @@ def execute_intelligent_search(query_string, category="all", user=None, current_
             sum_q |= Q(title__icontains=v) | Q(introduction__icontains=v) | Q(subject__name__icontains=v)
 
         sum_filter = Summary.objects.filter(publication_status="PUBLISHED").filter(sum_q)
-        if target_school:
+        if not (user and user.is_superuser) and user_filiere:
+            sum_filter = sum_filter.filter(subject__semester__filiere=user_filiere)
+        elif target_school:
             sum_filter = sum_filter.filter(subject__semester__filiere__school=target_school)
         sum_qs = sum_filter.select_related(
             "subject", "subject__semester", "subject__semester__filiere", "author"

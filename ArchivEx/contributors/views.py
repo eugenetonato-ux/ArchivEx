@@ -184,28 +184,57 @@ def admin_dashboard_view(request):
     active_school, active_filiere, active_semester = get_active_academic_context(request)
 
     # Context-aware metrics
-    if active_school:
-        students_count = StudentProfile.objects.filter(school=active_school).count()
-        exams_count = Exam.objects.filter(filiere__school=active_school).count()
-        published_exams = Exam.objects.filter(filiere__school=active_school, is_published=True).count()
-        summaries_count = Summary.objects.filter(subject__semester__filiere__school=active_school).count()
-        corrections_count = Exam.objects.filter(filiere__school=active_school).filter(
+    if active_filiere:
+        students_count = StudentProfile.objects.filter(filiere=active_filiere).count()
+        if active_semester:
+            exams_qs = Exam.objects.filter(semester=active_semester)
+            summaries_qs = Summary.objects.filter(subject__semester=active_semester)
+            active_pass_count = SemesterAccess.objects.filter(semester=active_semester, activated_at__isnull=False).count()
+        else:
+            exams_qs = Exam.objects.filter(filiere=active_filiere)
+            summaries_qs = Summary.objects.filter(subject__semester__filiere=active_filiere)
+            active_pass_count = SemesterAccess.objects.filter(filiere=active_filiere, activated_at__isnull=False).count()
+
+        exams_count = exams_qs.count()
+        published_exams = exams_qs.filter(is_published=True).count()
+        summaries_count = summaries_qs.count()
+        corrections_count = exams_qs.filter(
             Q(correction_file__isnull=False) & ~Q(correction_file="") | Q(cloud_correction_file__isnull=False)
         ).count()
-        recent_exams = Exam.objects.filter(filiere__school=active_school).select_related("subject", "semester", "filiere").order_by("-created_at")[:6]
+        recent_exams = exams_qs.select_related("subject", "semester", "filiere").order_by("-created_at")[:6]
+        recent_summaries = summaries_qs.select_related("subject").order_by("-created_at")[:5]
+
+    elif active_school:
+        students_count = StudentProfile.objects.filter(school=active_school).count()
+        exams_qs = Exam.objects.filter(filiere__school=active_school)
+        summaries_qs = Summary.objects.filter(subject__semester__filiere__school=active_school)
+        active_pass_count = SemesterAccess.objects.filter(filiere__school=active_school, activated_at__isnull=False).count()
+
+        exams_count = exams_qs.count()
+        published_exams = exams_qs.filter(is_published=True).count()
+        summaries_count = summaries_qs.count()
+        corrections_count = exams_qs.filter(
+            Q(correction_file__isnull=False) & ~Q(correction_file="") | Q(cloud_correction_file__isnull=False)
+        ).count()
+        recent_exams = exams_qs.select_related("subject", "semester", "filiere").order_by("-created_at")[:6]
+        recent_summaries = summaries_qs.select_related("subject").order_by("-created_at")[:5]
+
     else:
         students_count = StudentProfile.objects.count()
-        exams_count = Exam.objects.count()
-        published_exams = Exam.objects.filter(is_published=True).count()
-        summaries_count = Summary.objects.count()
-        corrections_count = Exam.objects.filter(
+        exams_qs = Exam.objects.all()
+        summaries_qs = Summary.objects.all()
+        active_pass_count = SemesterAccess.objects.filter(activated_at__isnull=False).count()
+
+        exams_count = exams_qs.count()
+        published_exams = exams_qs.filter(is_published=True).count()
+        summaries_count = summaries_qs.count()
+        corrections_count = exams_qs.filter(
             Q(correction_file__isnull=False) & ~Q(correction_file="") | Q(cloud_correction_file__isnull=False)
         ).count()
-        recent_exams = Exam.objects.select_related("subject", "semester", "filiere").order_by("-created_at")[:6]
+        recent_exams = exams_qs.select_related("subject", "semester", "filiere").order_by("-created_at")[:6]
+        recent_summaries = summaries_qs.select_related("subject").order_by("-created_at")[:5]
 
     articles_count = Article.objects.count()
-    active_pass_count = SemesterAccess.objects.filter(activated_at__isnull=False).count()
-    recent_summaries = Summary.objects.select_related("subject").order_by("-created_at")[:5]
 
     available_schools = School.objects.filter(is_active=True)
     if not request.user.is_superuser:
@@ -217,7 +246,13 @@ def admin_dashboard_view(request):
     available_semesters = Semester.objects.filter(filiere=active_filiere) if active_filiere else Semester.objects.none()
 
     # Chart data: Distribution des documents par filière
-    filieres_qs = Filiere.objects.filter(school=active_school) if active_school else Filiere.objects.all()
+    if active_filiere:
+        filieres_qs = Filiere.objects.filter(pk=active_filiere.pk)
+    elif active_school:
+        filieres_qs = Filiere.objects.filter(school=active_school)
+    else:
+        filieres_qs = Filiere.objects.all()
+
     filieres_qs = filieres_qs.annotate(
         exams_cnt=Count('exams', distinct=True),
         summaries_cnt=Count('semesters__subjects__summaries', distinct=True),
@@ -271,10 +306,10 @@ def set_context_view(request):
 
     if school_id:
         if school_id == "all":
-            request.session["admin_active_school_id"] = None
+            request.session["admin_active_school_id"] = "all"
             request.session["current_school_id"] = None
-            request.session["admin_active_filiere_id"] = None
-            request.session["admin_active_semester_id"] = None
+            request.session["admin_active_filiere_id"] = "all"
+            request.session["admin_active_semester_id"] = "all"
             messages.info(request, "Contexte réinitialisé : Toutes les universités")
         else:
             school = get_object_or_404(School, pk=school_id)
@@ -287,25 +322,25 @@ def set_context_view(request):
 
             if filiere_id:
                 if filiere_id == "all":
-                    request.session["admin_active_filiere_id"] = None
-                    request.session["admin_active_semester_id"] = None
+                    request.session["admin_active_filiere_id"] = "all"
+                    request.session["admin_active_semester_id"] = "all"
                 else:
                     filiere = Filiere.objects.filter(pk=filiere_id, school=school).first()
                     request.session["admin_active_filiere_id"] = filiere.id if filiere else None
                     if semester_id and semester_id != "all":
                         sem = Semester.objects.filter(pk=semester_id, filiere=filiere).first()
                         request.session["admin_active_semester_id"] = sem.id if sem else None
+                    elif semester_id == "all":
+                        request.session["admin_active_semester_id"] = "all"
                     else:
-                        first_sem = Semester.objects.filter(filiere=filiere).first() if filiere else None
-                        request.session["admin_active_semester_id"] = first_sem.id if first_sem else None
+                        request.session["admin_active_semester_id"] = "all"
             elif old_school_id != school.id:
                 first_filiere = Filiere.objects.filter(school=school).first()
                 request.session["admin_active_filiere_id"] = first_filiere.id if first_filiere else None
-                first_sem = Semester.objects.filter(filiere=first_filiere).first() if first_filiere else None
-                request.session["admin_active_semester_id"] = first_sem.id if first_sem else None
+                request.session["admin_active_semester_id"] = "all"
 
             filiere_name = ""
-            if request.session.get("admin_active_filiere_id"):
+            if request.session.get("admin_active_filiere_id") and request.session.get("admin_active_filiere_id") != "all":
                 f = Filiere.objects.filter(pk=request.session.get("admin_active_filiere_id")).first()
                 if f:
                     filiere_name = f" — {f.name}"
@@ -314,8 +349,8 @@ def set_context_view(request):
 
     elif filiere_id:
         if filiere_id == "all":
-            request.session["admin_active_filiere_id"] = None
-            request.session["admin_active_semester_id"] = None
+            request.session["admin_active_filiere_id"] = "all"
+            request.session["admin_active_semester_id"] = "all"
             messages.info(request, "Filière réinitialisée : Toutes les filières")
         else:
             filiere = Filiere.objects.filter(pk=filiere_id).first()
@@ -325,15 +360,16 @@ def set_context_view(request):
                 if semester_id and semester_id != "all":
                     sem = Semester.objects.filter(pk=semester_id, filiere=filiere).first()
                     request.session["admin_active_semester_id"] = sem.id if sem else None
+                elif semester_id == "all":
+                    request.session["admin_active_semester_id"] = "all"
                 else:
-                    first_sem = Semester.objects.filter(filiere=filiere).first()
-                    request.session["admin_active_semester_id"] = first_sem.id if first_sem else None
+                    request.session["admin_active_semester_id"] = "all"
                 messages.success(request, f"Filière active : {filiere.name} ({filiere.school.name})")
 
     elif semester_id:
         if semester_id == "all":
-            request.session["admin_active_semester_id"] = None
-            messages.info(request, "Semestre réinitialisé")
+            request.session["admin_active_semester_id"] = "all"
+            messages.info(request, "Semestre réinitialisé : Tous les semestres")
         else:
             sem = Semester.objects.filter(pk=semester_id).first()
             if sem:

@@ -229,6 +229,90 @@
             </div>
         </div>
 
+        <!-- 5. APPAREILS AUTORISÉS & SÉCURITÉ DU COMPTE -->
+        <div class="card-profile-section mt-4">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-laptop-mobile"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-extrabold text-[#071A49]">
+                            Appareils Autorisés
+                        </h2>
+                        <p class="text-[11px] text-slate-500">Protection anti-partage : maximum 2 appareils simultanés</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs font-black px-2.5 py-1 rounded-full {% if devices|length >= max_devices %}bg-amber-100 text-amber-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                        {{ devices|length }} / {{ max_devices }} appareils
+                    </span>
+                    {% if not can_revoke %}
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
+                            🔒 Révocations bloquées 24h
+                        </span>
+                    {% else %}
+                        <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                            {{ remaining_revocations }}/{{ max_daily_revocations }} révocation{{ remaining_revocations|pluralize }} restante{{ remaining_revocations|pluralize }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if not can_revoke and cooldown_until %}
+                <div class="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-[11px] flex items-center space-x-2">
+                    <i class="fa-solid fa-lock text-rose-500 text-sm shrink-0"></i>
+                    <span>Limite de 2 révocations par 24h atteinte. Par mesure de sécurité anti-partage de compte, vous pourrez à nouveau révoquer un appareil le <strong>{{ cooldown_until|date:"d/m/Y à H:i" }}</strong>.</span>
+                </div>
+            {% endif %}
+
+            {% if devices %}
+                <div class="space-y-2.5">
+                    {% for dev in devices %}
+                        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-600 flex items-center justify-center shrink-0 shadow-sm">
+                                    {% if "phone" in dev.device_name|lower or "android" in dev.device_name|lower or "iphone" in dev.device_name|lower %}
+                                        <i class="fa-solid fa-mobile-screen text-cyan-600"></i>
+                                    {% else %}
+                                        <i class="fa-solid fa-laptop text-blue-600"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="flex items-center space-x-2">
+                                        <p class="text-xs font-bold text-[#071A49]">{{ dev.device_name }}</p>
+                                        {% if dev.device_id == current_device_id %}
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">
+                                                Cet appareil
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">Dernière activité : {{ dev.last_login|date:"d/m/Y à H:i" }}</p>
+                                </div>
+                            </div>
+
+                            {% if can_revoke %}
+                                <form method="post" action="{% url 'accounts:revoke_device' dev.id %}" onsubmit="return confirm('Êtes-vous sûr de vouloir révoquer cet appareil ?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg border border-rose-200 transition-colors">
+                                        Révoquer
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="text-[10px] font-medium text-slate-400 italic px-2.5 py-1 rounded bg-slate-100">
+                                    Bloqué
+                                </span>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-400">
+                    Aucun appareil enregistré pour le moment.
+                </div>
+            {% endif %}
+        </div>
+
     </div>
 
 </div>

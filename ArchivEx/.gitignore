@@ -33,9 +33,14 @@ ENV/
 env.bak/
 venv.bak/
 
-# Database
+# Database & Exports
 *.sqlite3
 db.sqlite3
+data_prod.json
+*.json.gz
+*.sql
+*.sql.gz
+*.dump
 
 # Static & Media Files
 staticfiles/
