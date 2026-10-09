@@ -19,36 +19,94 @@ def clean_subject_name(raw_name):
 
 
 class Command(BaseCommand):
-    help = "Scanne le dossier media/ et importe/synchronise toutes les épreuves, corrigés et résumés dans la base de données."
+    help = "Scanne le dossier media/ et importe/synchronise toutes les épreuves, corrigés et résumés dans la base de données avec détection multi-filières."
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--filiere",
+            type=str,
+            default=None,
+            help="Code ou nom de la filière cible par défaut (ex: PLAN, GL, FC).",
+        )
+        parser.add_argument(
+            "--school",
+            type=str,
+            default=None,
+            help="Nom de l'université / école cible.",
+        )
 
     def handle(self, *args, **options):
         self.stdout.write(self.style.MIGRATE_HEADING("[+] Début de l'indexation automatique des fichiers médias..."))
 
-        school = School.objects.filter(is_active=True).first()
+        target_school_name = options.get("school")
+        if target_school_name:
+            school = School.objects.filter(name__icontains=target_school_name, is_active=True).first()
+        else:
+            school = School.objects.filter(is_active=True).first()
+
         if not school:
             school = School.objects.create(name="ENEAM — École Nationale d'Économie Appliquée et de Management", is_active=True)
 
-        filiere = Filiere.objects.filter(school=school).first()
-        if not filiere:
-            level, _ = Level.objects.get_or_create(name="L1")
-            filiere = Filiere.objects.create(name="PLAN", code="PLAN", school=school, level=level)
+        target_filiere_arg = options.get("filiere")
+        default_filiere = None
+        if target_filiere_arg:
+            default_filiere = Filiere.objects.filter(
+                Q(code__iexact=target_filiere_arg) | Q(name__icontains=target_filiere_arg),
+                school=school
+            ).first()
 
-        level = filiere.level or Level.objects.first()
+        if not default_filiere:
+            default_filiere = Filiere.objects.filter(school=school).first()
+
+        if not default_filiere:
+            level, _ = Level.objects.get_or_create(name="L1")
+            default_filiere = Filiere.objects.create(name="PLAN", code="PLAN", school=school, level=level)
+
+        all_filieres = list(Filiere.objects.filter(school=school).select_related("level", "school"))
+        if default_filiere not in all_filieres:
+            all_filieres.append(default_filiere)
 
         # Années académiques
         ay_2024, _ = AcademicYear.objects.get_or_create(label="2024-2025")
         ay_2025, _ = AcademicYear.objects.get_or_create(label="2025-2026")
-
-        # Semestres S1 et S2
-        s1, _ = Semester.objects.get_or_create(filiere=filiere, number=1, defaults={"label": "S1"})
-        s2, _ = Semester.objects.get_or_create(filiere=filiere, number=2, defaults={"label": "S2"})
 
         media_dir = Path(settings.MEDIA_ROOT)
         exams_dir = media_dir / "exams"
         corrections_dir = media_dir / "corrections"
         summaries_dir = media_dir / "summaries_pdf"
 
-        # 1. Scanner les corrections pour pouvoir les mapper par (année, semestre, mot-clé UE)
+        KNOWN_FILIERES_INFO = {
+            "stat": ("Statistique", "STAT"),
+            "plan": ("PLAN", "PLAN"),
+            "gl": ("Génie Logiciel", "GL"),
+            "fc": ("Finance et Comptabilité", "FC"),
+            "grh": ("Gestion des Ressources Humaines", "GRH"),
+        }
+
+        def detect_filiere_from_path(rel_path_str):
+            """Détecte la filière depuis les dossiers du chemin relatif (ex: exams/STAT/2024-2025/S1/...)."""
+            parts = [p.lower() for p in rel_path_str.replace("\\", "/").split("/")]
+            for fil in all_filieres:
+                if (fil.code and fil.code.lower() in parts) or (fil.name and fil.name.lower() in parts):
+                    return fil
+
+            # Auto-création dynamique si un dossier de filière connu est rencontré
+            for part in parts:
+                if part in KNOWN_FILIERES_INFO:
+                    f_name, f_code = KNOWN_FILIERES_INFO[part]
+                    level_obj = Level.objects.first() or Level.objects.create(name="L1", code="L1")
+                    new_fil, _ = Filiere.objects.get_or_create(
+                        code=f_code,
+                        school=school,
+                        defaults={"name": f_name, "level": level_obj, "is_active": True}
+                    )
+                    if new_fil not in all_filieres:
+                        all_filieres.append(new_fil)
+                    return new_fil
+
+            return default_filiere
+
+        # 1. Scanner les corrections pour pouvoir les mapper par (filiere_id, année, semestre, mot-clé UE)
         corrections_map = {}
         if corrections_dir.exists():
             for root, _, files in os.walk(corrections_dir):
@@ -57,17 +115,16 @@ class Command(BaseCommand):
                         full_p = Path(root) / f
                         rel_p = full_p.relative_to(media_dir).as_posix()
                         
-                        # Extraire année et semestre si présents dans le chemin
+                        filiere_corr = detect_filiere_from_path(rel_p)
                         yr_match = re.search(r"(\d{4}-\d{4})", rel_p)
                         sem_match = re.search(r"/(S[12])/", rel_p, re.IGNORECASE)
                         yr_key = yr_match.group(1) if yr_match else ""
                         sem_key = sem_match.group(1).upper() if sem_match else ""
                         
-                        # Clé basée sur le nom épuré
                         clean_corr_name = f.lower().replace("corrige_type_", "").replace("corrige_", "").replace(".pdf", "")
                         clean_corr_name = re.sub(r"^\d+_", "", clean_corr_name).replace("_", " ").strip()
                         
-                        corrections_map[(yr_key, sem_key, clean_corr_name)] = rel_p
+                        corrections_map[(filiere_corr.id if filiere_corr else None, yr_key, sem_key, clean_corr_name)] = rel_p
 
         created_count = 0
         updated_count = 0
@@ -123,10 +180,17 @@ class Command(BaseCommand):
                         ay_obj = ay_2025
                         yr_int = 2025
 
+                    # Identifier la filière et le niveau
+                    target_filiere = detect_filiere_from_path(rel_path)
+                    target_level = target_filiere.level or Level.objects.first()
+
                     # Identifier le semestre
-                    target_sem = s1
-                    if "/S2/" in rel_path.upper() or "\\S2\\" in str(full_path).upper():
-                        target_sem = s2
+                    sem_num = 2 if ("/S2/" in rel_path.upper() or "\\S2\\" in str(full_path).upper()) else 1
+                    target_sem, _ = Semester.objects.get_or_create(
+                        filiere=target_filiere,
+                        number=sem_num,
+                        defaults={"label": f"S{sem_num}"}
+                    )
 
                     # Nettoyer le nom de la matière
                     raw_subj = clean_subject_name(f)
@@ -164,15 +228,25 @@ class Command(BaseCommand):
                     # Chercher la correction correspondante
                     corr_file_rel = None
                     yr_key = ay_obj.label
-                    sem_key = "S1" if target_sem == s1 else "S2"
+                    sem_key = f"S{sem_num}"
                     
-                    for (c_yr, c_sem, c_name), c_path in corrections_map.items():
-                        if (c_yr == yr_key or not c_yr) and (c_sem == sem_key or not c_sem):
+                    # 1. Chercher d'abord avec la même filière
+                    for (c_fil_id, c_yr, c_sem, c_name), c_path in corrections_map.items():
+                        if c_fil_id == target_filiere.id and (c_yr == yr_key or not c_yr) and (c_sem == sem_key or not c_sem):
                             c_name_clean = c_name.replace("é", "e").replace("è", "e").replace("à", "a")
                             s_name_clean = subj_name.lower().replace("é", "e").replace("è", "e").replace("à", "a")
                             if (c_name_clean in s_name_clean) or (s_name_clean in c_name_clean) or (lookup_key in c_name_clean):
                                 corr_file_rel = c_path
                                 break
+                    # 2. Si non trouvée, fallback sur corrections sans filière stricte
+                    if not corr_file_rel:
+                        for (c_fil_id, c_yr, c_sem, c_name), c_path in corrections_map.items():
+                            if (c_fil_id is None or c_fil_id == target_filiere.id) and (c_yr == yr_key or not c_yr) and (c_sem == sem_key or not c_sem):
+                                c_name_clean = c_name.replace("é", "e").replace("è", "e").replace("à", "a")
+                                s_name_clean = subj_name.lower().replace("é", "e").replace("è", "e").replace("à", "a")
+                                if (c_name_clean in s_name_clean) or (s_name_clean in c_name_clean) or (lookup_key in c_name_clean):
+                                    corr_file_rel = c_path
+                                    break
 
                     # Créer le CloudFile correspondant
                     cf, _ = CloudFile.objects.get_or_create(
@@ -181,7 +255,7 @@ class Command(BaseCommand):
                         defaults={
                             "file_type": "EXAM",
                             "school": school,
-                            "filiere": filiere,
+                            "filiere": target_filiere,
                             "semester": target_sem,
                         }
                     )
@@ -195,8 +269,8 @@ class Command(BaseCommand):
                         exam_type=exam_type,
                         defaults={
                             "title": title,
-                            "filiere": filiere,
-                            "level": level,
+                            "filiere": target_filiere,
+                            "level": target_level,
                             "file": rel_path,
                             "correction_file": corr_file_rel,
                             "cloud_file": cf,

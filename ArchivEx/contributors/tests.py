@@ -1,4 +1,4 @@
-from django.test import TestCase, Client
+from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from academics.models import School, Level, Filiere, AcademicYear, Semester, Subject
@@ -9,6 +9,13 @@ from django.http import HttpResponse
 User = get_user_model()
 
 
+@override_settings(
+    USE_SUPABASE_STORAGE=False,
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    },
+)
 class ContributorSchoolSecurityTest(TestCase):
     def setUp(self):
         self.client = Client()
@@ -59,6 +66,13 @@ class ContributorSchoolSecurityTest(TestCase):
             mock_view(req_tampered, school_id=self.school_flash.id)
 
 
+@override_settings(
+    USE_SUPABASE_STORAGE=False,
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    },
+)
 class Phase11AdministrationTests(TestCase):
     """Suite de tests automatisés pour le Portail d'Administration Privé (/administration/)."""
 
@@ -491,6 +505,13 @@ class SiteLogsClearTest(TestCase):
         self.assertEqual(SiteLog.objects.count(), 2)
 
 
+@override_settings(
+    USE_SUPABASE_STORAGE=False,
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    },
+)
 class SupportAndNotificationSeparationTest(TestCase):
     def setUp(self):
         self.client = Client()

@@ -205,19 +205,19 @@ class ExamAdminForm(forms.ModelForm):
     )
 
     cloud_file = forms.ModelChoiceField(
-        queryset=CloudFile.objects.all(),
+        queryset=CloudFile.objects.filter(file_type__in=["EXAM", "OTHER"]).order_by("-created_at"),
         required=False,
         label="Sélectionner depuis la Bibliothèque Cloud (Optionnel)",
         widget=forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"})
     )
     cloud_correction_file = forms.ModelChoiceField(
-        queryset=CloudFile.objects.all(),
+        queryset=CloudFile.objects.filter(file_type="CORRECTION").order_by("-created_at"),
         required=False,
         label="Sélectionner la correction depuis le Cloud (Optionnel)",
         widget=forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"})
     )
     cloud_summary_file = forms.ModelChoiceField(
-        queryset=CloudFile.objects.all(),
+        queryset=CloudFile.objects.filter(file_type="SUMMARY").order_by("-created_at"),
         required=False,
         label="Sélectionner le résumé depuis le Cloud (Optionnel)",
         widget=forms.Select(attrs={"class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#071A49]"})
@@ -287,11 +287,23 @@ class ExamAdminForm(forms.ModelForm):
             if self.instance.academic_year:
                 self.fields["year"].initial = self.instance.academic_year.label
 
+        base_cloud = CloudFile.objects.all()
         if active_filiere:
             self.fields["semester"].queryset = Semester.objects.filter(filiere=active_filiere)
-            self.fields["cloud_file"].queryset = CloudFile.objects.filter(Q(filiere=active_filiere) | Q(filiere__isnull=True))
-            self.fields["cloud_correction_file"].queryset = CloudFile.objects.filter(Q(filiere=active_filiere) | Q(filiere__isnull=True))
-            self.fields["cloud_summary_file"].queryset = CloudFile.objects.filter(Q(filiere=active_filiere) | Q(filiere__isnull=True))
+            base_cloud = CloudFile.objects.filter(Q(filiere=active_filiere) | Q(filiere__isnull=True))
+
+        self.fields["cloud_file"].queryset = base_cloud.filter(file_type__in=["EXAM", "OTHER"]).order_by("-created_at")
+        self.fields["cloud_correction_file"].queryset = base_cloud.filter(file_type="CORRECTION").order_by("-created_at")
+        self.fields["cloud_summary_file"].queryset = base_cloud.filter(file_type="SUMMARY").order_by("-created_at")
+
+        # Conserver les fichiers actuellement assignés si modification d'une épreuve existante
+        if self.instance and self.instance.pk:
+            if self.instance.cloud_file_id:
+                self.fields["cloud_file"].queryset = (self.fields["cloud_file"].queryset | CloudFile.objects.filter(pk=self.instance.cloud_file_id)).distinct()
+            if self.instance.cloud_correction_file_id:
+                self.fields["cloud_correction_file"].queryset = (self.fields["cloud_correction_file"].queryset | CloudFile.objects.filter(pk=self.instance.cloud_correction_file_id)).distinct()
+            if self.instance.cloud_summary_file_id:
+                self.fields["cloud_summary_file"].queryset = (self.fields["cloud_summary_file"].queryset | CloudFile.objects.filter(pk=self.instance.cloud_summary_file_id)).distinct()
 
         if active_semester and not self.fields["semester"].initial:
             self.fields["semester"].initial = active_semester
