@@ -178,8 +178,8 @@
         <!-- RIGHT COLUMN: PRICE & ACTION CARD (5 COLS) -->
         <div class="lg:col-span-5 space-y-6 sticky top-20">
 
-            <div
-                class="bg-white border-2 border-[#2563EB]/20 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+            <div id="formulaire-paiement"
+                class="bg-white border-2 border-[#2563EB]/30 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden scroll-mt-24">
 
                 <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
                     <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Pass Semestriel</span>
@@ -425,5 +425,22 @@
             input.value = raw;
         }
     }
+
+    // Défilement automatique instantané vers le formulaire de paiement
+    document.addEventListener("DOMContentLoaded", function() {
+        const formTarget = document.getElementById("formulaire-paiement");
+        const phoneInput = document.getElementById("phone_number");
+        // Sur mobile ou si l'ancre #formulaire-paiement est demandée
+        if (window.location.hash === "#formulaire-paiement" || window.innerWidth < 1024) {
+            if (formTarget) {
+                setTimeout(function() {
+                    formTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    if (phoneInput && !phoneInput.disabled) {
+                        setTimeout(() => phoneInput.focus(), 500);
+                    }
+                }, 300);
+            }
+        }
+    });
 </script>
 {% endblock %}

@@ -103,17 +103,25 @@ def login_view(request):
                     existing_device.save()
                 else:
                     if user.devices.count() >= MAX_ALLOWED_DEVICES:
-                        # Limite atteinte : redirection vers l'écran de sélection de remplacement
-                        request.session["pending_device_user_id"] = user.id
-                        request.session["pending_device_id"] = device_id
-                        request.session["pending_device_name"] = device_name
-                        request.session["pending_next_url"] = request.GET.get("next") or ""
-                        messages.warning(
+                        # --- TENTATIVE DE CONNEXION SUR UN 3E APPAREIL INTERDITE ---
+                        # Désactivation immédiate du compte pour suspicion de partage
+                        user.is_active = False
+                        user.save(update_fields=["is_active"])
+
+                        log_user_action(
                             request,
-                            "Votre compte ArchivEx est limité à 2 appareils autorisés. "
-                            "Pour connecter cet appareil, sélectionnez celui que vous souhaitez remplacer."
+                            "SECURITY_LOCK",
+                            f"Compte {user.username} désactivé automatiquement : tentative de connexion sur un 3e appareil non autorisé ({device_name}, IP: {client_ip})."
                         )
-                        return redirect("accounts:device_limit")
+
+                        messages.error(
+                            request,
+                            f"Compte suspendu pour sécurité : Une tentative de connexion a été détectée sur un 3ᵉ appareil non autorisé (« {device_name} »). "
+                            "Conformément aux règles de sécurité ArchivEx, chaque compte est strictement personnel et limité à 2 appareils personnels maximum. "
+                            "Toute tentative d'accès sur un 3ᵉ appareil entraîne la désactivation immédiate du compte. "
+                            "Veuillez contacter le support pour solliciter le déblocage de votre compte."
+                        )
+                        return redirect("accounts:login")
                     else:
                         UserDevice.objects.create(
                             user=user,

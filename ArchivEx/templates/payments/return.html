@@ -27,7 +27,7 @@
                 Votre paiement pour <strong>{{ semester.label }} ({{ semester.filiere.name }})</strong> a été validé avec succès. Vous disposez désormais d'un accès illimité à l'intégralité des épreuves et résumés.
             </p>
 
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left text-xs space-y-2 max-w-md mx-auto mb-8 font-medium text-slate-600">
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left text-xs space-y-2 max-w-md mx-auto mb-6 font-medium text-slate-600">
                 <div class="flex justify-between">
                     <span class="text-slate-400">Référence transaction :</span>
                     <span class="font-mono font-bold text-[#071A49]">{{ payment.external_reference }}</span>
@@ -35,6 +35,21 @@
                 <div class="flex justify-between">
                     <span class="text-slate-400">Montant réglé :</span>
                     <span class="font-bold text-[#071A49]">{{ payment.amount }} {{ payment.currency }}</span>
+                </div>
+            </div>
+
+            <!-- RÈGLES DE SÉCURITÉ & RESTRICTION 2 APPAREILS -->
+            <div class="max-w-md mx-auto mb-8 p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-left text-xs">
+                <div class="flex items-start space-x-3">
+                    <div class="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
+                        <i class="fa-solid fa-shield-halved text-xs"></i>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="font-bold text-[#071A49]">Sécurité du compte & Règle des 2 appareils</p>
+                        <p class="text-slate-600 leading-relaxed text-[11px]">
+                            Votre Pass Semestre est strictement individuel. Vous êtes autorisé à connecter un <strong>maximum de 2 appareils personnels</strong>. Toute tentative de connexion depuis un 3<sup>ème</sup> appareil entraînera la <strong>désactivation immédiate de votre compte</strong>.
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -103,7 +118,7 @@
             </p>
 
             <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
-                <a href="{% url 'payments:pass_semestre' semester_id=semester.id %}" class="btn-gold text-xs px-6 py-3.5 font-bold rounded-2xl inline-flex items-center space-x-1.5">
+                <a href="{% url 'payments:pass_semestre' semester_id=semester.id %}#formulaire-paiement" class="btn-gold text-xs px-6 py-3.5 font-bold rounded-2xl inline-flex items-center space-x-1.5">
                     <i class="fa-solid fa-rotate-right text-xs" aria-hidden="true"></i>
                     <span>Réessayer le paiement ({{ payment.amount|default:2000 }} FCFA)</span>
                 </a>

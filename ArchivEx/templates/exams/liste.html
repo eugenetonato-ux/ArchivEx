@@ -270,7 +270,7 @@
                                                         </a>
                                                     {% else %}
                                                         <button type="button"
-                                                                onclick="openPassLockedModal('{{ ue.subject.name|escapejs }}', '{{ item.year_label|escapejs }} — {{ item.session|escapejs }}', '{% url 'payments:pass_semestre' semester_id=ue.subject.semester_id %}')"
+                                                                onclick="openPassLockedModal('{{ ue.subject.name|escapejs }}', '{{ item.year_label|escapejs }} — {{ item.session|escapejs }}', '{% url 'payments:pass_semestre' semester_id=ue.subject.semester_id %}#formulaire-paiement')"
                                                                 class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold text-[10px] transition-colors inline-flex items-center space-x-1">
                                                             <i class="fa-solid fa-lock text-[8px] text-amber-600" aria-hidden="true"></i>
                                                             <span>Activer Pass</span>

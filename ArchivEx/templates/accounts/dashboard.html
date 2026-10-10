@@ -39,6 +39,31 @@
         </div>
     </div>
 
+    <!-- RÈGLES DE SÉCURITÉ & UTILISATION DU COMPTE -->
+    <div class="mb-8 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-400/30 dark:border-amber-400/20 backdrop-blur-sm">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5 text-lg">
+                    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>Sécurité du compte & Règles importantes</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-700 dark:text-amber-300">À respecter</span>
+                    </h3>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                        Chaque compte est <strong>strictement personnel</strong> et limité à <strong>2 appareils autorisés</strong> (ex: téléphone + ordinateur). 
+                        Toute tentative de connexion sur un 3ᵉ appareil entraîne la <strong>désactivation automatique et immédiate du compte</strong>.
+                    </p>
+                </div>
+            </div>
+            <a href="{% url 'academics:about' %}" class="shrink-0 text-xs font-bold text-amber-700 dark:text-amber-300 hover:underline flex items-center gap-1.5 self-end sm:self-center">
+                <span>En savoir plus</span>
+                <i class="fa-solid fa-arrow-right text-[10px]" aria-hidden="true"></i>
+            </a>
+        </div>
+    </div>
+
     <!-- METRICS CARDS -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-10">
         <!-- Consultations -->

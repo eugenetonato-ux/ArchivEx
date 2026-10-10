@@ -148,6 +148,11 @@ class StudentLoginForm(AuthenticationForm):
             self.user_cache = authenticate(self.request, username=user_obj.username, password=password)
 
             if self.user_cache is None:
+                if user_obj.check_password(password) and not user_obj.is_active:
+                    raise forms.ValidationError(
+                        "Ce compte a été suspendu par mesure de sécurité : une tentative de connexion a été détectée sur un 3ᵉ appareil non autorisé (suspicion de partage de compte). Conformément aux règles d'ArchivEx, chaque compte est strictement personnel et limité à 2 appareils maximum. Veuillez contacter le support pour demander son déblocage.",
+                        code="account_inactive",
+                    )
                 self.password_incorrect = True
                 raise forms.ValidationError(
                     "Votre identifiant est reconnu, mais le mot de passe saisi est incorrect.",

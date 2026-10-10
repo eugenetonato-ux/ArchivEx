@@ -388,7 +388,9 @@
  <button type="button" id="notification-bell-btn" onclick="toggleNotifications()" aria-label="Notifications" aria-expanded="false" aria-haspopup="true" aria-controls="notification-dropdown" class="p-2 rounded-xl text-slate-200 hover:text-white hover:bg-white/10 transition-all relative">
  <i class="fa-solid fa-bell text-base" aria-hidden="true"></i>
  {% if unread_notifications_count > 0 %}
- <span id="notification-badge" class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#FBBF24] ring-2 ring-[#071A49]"></span>
+ <span id="notification-badge" class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#EF4444] text-white text-[10px] font-black flex items-center justify-center ring-2 ring-[#071A49] shadow-sm">
+     {{ unread_notifications_count }}
+ </span>
  {% endif %}
  </button>
 
@@ -541,7 +543,7 @@
 
  <!-- NOTIFICATION MESSAGES FLASH ALERTS -->
  {% if messages %}
- <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+ <div id="django-flash-messages" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 transition-all duration-500">
  {% for message in messages %}
  <div class="mb-3 p-4 rounded-xl flex items-center justify-between border {% if message.tags == 'error' %}bg-rose-50 border-rose-200 text-rose-700{% elif message.tags == 'success' %}bg-emerald-50 border-emerald-200 text-emerald-700{% else %}bg-blue-50 border-blue-200 text-blue-700{% endif %} shadow-sm">
  <div class="flex items-center space-x-3">
@@ -554,9 +556,23 @@
  {% endif %}
  <p class="text-sm font-medium">{{ message }}</p>
  </div>
+ <button type="button" onclick="this.closest('.mb-3').remove()" aria-label="Fermer le message" class="text-slate-400 hover:text-slate-600 ml-4 p-1">
+ <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+ </button>
  </div>
  {% endfor %}
  </div>
+ <script>
+ setTimeout(function() {
+     const flashBox = document.getElementById('django-flash-messages');
+     if (flashBox) {
+         flashBox.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+         flashBox.style.opacity = '0';
+         flashBox.style.transform = 'translateY(-10px)';
+         setTimeout(function() { flashBox.remove(); }, 600);
+     }
+ }, 5000);
+ </script>
  {% endif %}
 
  <!-- MAIN CONTENT AREA -->
@@ -648,7 +664,9 @@
  <a href="{% url 'notifications:list' %}" id="dock-tab-notifs" class="dock-item {% if request.resolver_match.url_name == 'list' and 'notifications' in request.path %}dock-item-active{% endif %} relative">
  <i class="fa-solid fa-bell text-base mb-0.5" aria-hidden="true"></i>
  {% if unread_notifications_count > 0 %}
- <span class="absolute top-1 right-3 w-2 h-2 rounded-full bg-[#FBBF24] ring-2 ring-white"></span>
+ <span class="absolute top-0.5 right-2 min-w-[17px] h-[17px] px-1 rounded-full bg-[#EF4444] text-white text-[9px] font-black flex items-center justify-center ring-2 ring-white shadow-xs">
+     {{ unread_notifications_count }}
+ </span>
  {% endif %}
  <span>Notifs</span>
  </a>

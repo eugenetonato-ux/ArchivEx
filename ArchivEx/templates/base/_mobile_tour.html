@@ -3,10 +3,10 @@
 <!-- ======================================================== -->
 <!-- INTERACTIVE MOBILE ONBOARDING WALKTHROUGH TOUR           -->
 <!-- ======================================================== -->
-<div id="mobile-tour-overlay" class="fixed inset-0 z-[9990] bg-slate-950/80 backdrop-blur-[3px] opacity-0 pointer-events-none transition-opacity duration-300 md:hidden"></div>
+<div id="mobile-tour-overlay" class="fixed top-0 left-0 right-0 bottom-[60px] z-[9990] bg-slate-950/80 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 md:hidden"></div>
 
 <!-- Pulsing spotlight frame on active menu item -->
-<div id="mobile-tour-spotlight" class="fixed z-[9995] rounded-2xl border-2 border-amber-400 bg-amber-400/15 shadow-[0_0_25px_rgba(245,158,11,0.65)] pointer-events-none opacity-0 transition-all duration-300 ease-out md:hidden">
+<div id="mobile-tour-spotlight" class="fixed z-[9999] rounded-2xl border-2 border-amber-400 bg-amber-400/20 shadow-[0_0_25px_rgba(245,158,11,0.8)] pointer-events-none opacity-0 transition-all duration-300 ease-out md:hidden">
     <span class="absolute -top-1 -right-1 flex h-3 w-3">
         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
         <span class="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
@@ -221,6 +221,12 @@
         if (!overlay || !card) return;
 
         isTourActive = true;
+        const dock = document.querySelector('.mobile-bottom-dock');
+        if (dock) {
+            dock.style.zIndex = '9998';
+            dock.style.boxShadow = '0 -8px 30px rgba(0,0,0,0.6)';
+        }
+
         overlay.classList.remove('opacity-0', 'pointer-events-none');
         overlay.classList.add('opacity-100');
 
@@ -234,6 +240,12 @@
         const overlay = document.getElementById('mobile-tour-overlay');
         const card = document.getElementById('mobile-tour-card');
         const spotlight = document.getElementById('mobile-tour-spotlight');
+        const dock = document.querySelector('.mobile-bottom-dock');
+
+        if (dock) {
+            dock.style.zIndex = '';
+            dock.style.boxShadow = '';
+        }
 
         if (overlay) {
             overlay.classList.add('opacity-0', 'pointer-events-none');

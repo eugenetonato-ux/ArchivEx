@@ -49,7 +49,7 @@
                                     </span>
                                 {% else %}
                                     {% if active_semester %}
-                                    <a href="{% url 'payments:pass_semestre' semester_id=active_semester.id %}" class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-amber-400/25 hover:bg-amber-400/35 text-amber-300 border border-amber-400/40 text-xs font-black transition-all">
+                                    <a href="{% url 'payments:pass_semestre' semester_id=active_semester.id %}#formulaire-paiement" class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-amber-400/25 hover:bg-amber-400/35 text-amber-300 border border-amber-400/40 text-xs font-black transition-all">
                                         <i class="fa-solid fa-lock text-amber-300"></i>
                                         <span>Activer mon Pass</span>
                                     </a>
@@ -532,7 +532,7 @@
                             Débloquez l'intégralité des sujets d'examens, corrigés et résumés de cours de votre semestre sans restriction.
                         </p>
                         {% if active_semester %}
-                            <a href="{% url 'payments:pass_semestre' active_semester.id %}" class="btn-gold w-full text-xs py-3.5 font-black block text-center rounded-2xl shadow-lg shadow-amber-500/25 flex items-center justify-center space-x-2 transition-transform hover:scale-[1.02]">
+                            <a href="{% url 'payments:pass_semestre' active_semester.id %}#formulaire-paiement" class="btn-gold w-full text-xs py-3.5 font-black block text-center rounded-2xl shadow-lg shadow-amber-500/25 flex items-center justify-center space-x-2 transition-transform hover:scale-[1.02]">
                                 <i class="fa-solid fa-lock text-xs"></i>
                                 <span>Débloquer mon Pass</span>
                             </a>

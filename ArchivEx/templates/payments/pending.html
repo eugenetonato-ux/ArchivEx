@@ -64,7 +64,7 @@
             <button onclick="checkStatus(true)" class="w-full py-3 bg-[#071A49] hover:bg-blue-900 text-white font-extrabold text-xs rounded-xl transition-colors">
                 Rafraîchir maintenant
             </button>
-            <a href="{% url 'payments:pass_semestre' semester_id=semester.id %}" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-extrabold text-xs rounded-xl transition-colors">
+            <a href="{% url 'payments:pass_semestre' semester_id=semester.id %}#formulaire-paiement" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-extrabold text-xs rounded-xl transition-colors">
                 Réessayer avec un autre numéro
             </a>
         </div>
@@ -91,7 +91,7 @@
                     window.location.href = "{% url 'academics:matieres' semester_id=semester.id %}";
                 } else if (data.is_rejected) {
                     alert("Le paiement n'a pas été validé. Vous pouvez réessayer.");
-                    window.location.href = "{% url 'payments:pass_semestre' semester_id=semester.id %}";
+                    window.location.href = "{% url 'payments:pass_semestre' semester_id=semester.id %}#formulaire-paiement";
                 }
             })
             .catch(err => console.error("Status check error:", err));
