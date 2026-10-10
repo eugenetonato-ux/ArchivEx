@@ -169,9 +169,10 @@
     /* Countdown */
     .countdown {
       display: flex;
-      gap: 1rem;
+      gap: 0.5rem;
       justify-content: center;
       margin-bottom: 2rem;
+      flex-wrap: wrap;
     }
     .countdown-unit {
       display: flex;
@@ -180,15 +181,19 @@
       gap: 4px;
     }
     .countdown-num {
-      font-size: 2rem;
+      font-size: 1.5rem;
       font-weight: 900;
       color: #f8fafc;
       background: rgba(255,255,255,0.07);
       border: 1px solid rgba(255,255,255,0.1);
       border-radius: 12px;
-      width: 70px; height: 70px;
+      width: 60px; height: 60px;
       display: flex; align-items: center; justify-content: center;
       transition: all 0.3s;
+    }
+    @media (min-width: 480px) {
+      .countdown { gap: 0.85rem; }
+      .countdown-num { width: 70px; height: 70px; font-size: 1.85rem; }
     }
     .countdown-label {
       font-size: 0.65rem;
@@ -277,18 +282,22 @@
 
     <div class="badge">
       <div class="badge-dot"></div>
-      Lancement imminent
+      Ouverture prévue Lundi
     </div>
 
     <h1>On arrive très bientôt.<br><span>Restez branchés !</span></h1>
 
     <p>
       Notre plateforme d'épreuves universitaires est en cours de finalisation.<br>
-      Retrouvez bientôt vos corrigés, résumés et annales au même endroit.
+      Retrouvez très bientôt vos corrigés, résumés et annales au même endroit.
     </p>
 
-    <!-- Countdown -->
+    <!-- Countdown avec Jours, Heures, Minutes, Secondes -->
     <div class="countdown">
+      <div class="countdown-unit">
+        <div class="countdown-num" id="cd-d">00</div>
+        <div class="countdown-label">Jours</div>
+      </div>
       <div class="countdown-unit">
         <div class="countdown-num" id="cd-h">00</div>
         <div class="countdown-label">Heures</div>
@@ -341,29 +350,39 @@
     container.appendChild(p);
   }
 
-  // --- Countdown : demain minuit (00:00) ---
+  // --- Date cible du lancement : Lundi 12 Octobre 2026 à 08h00 ---
   function getTarget() {
-    const now = new Date();
-    // Cible : demain matin 08h00 (heure locale)
-    const t = new Date(now);
-    t.setDate(t.getDate() + 1);
-    t.setHours(8, 0, 0, 0);
-    return t;
+    // Cible par défaut : Lundi 12 Octobre à 08h00 (heure locale)
+    // Vous pouvez changer l'heure ici (ex: setHours(8, 0, 0, 0) pour 8h)
+    const target = new Date('2026-10-12T08:00:00');
+    // Si la date est déjà passée, calcule automatiquement le prochain lundi
+    if (isNaN(target.getTime()) || target - new Date() <= 0) {
+      const now = new Date();
+      const daysUntilMonday = ((1 + 7 - now.getDay()) % 7) || 7;
+      const nextMon = new Date(now);
+      nextMon.setDate(now.getDate() + daysUntilMonday);
+      nextMon.setHours(8, 0, 0, 0);
+      return nextMon;
+    }
+    return target;
   }
 
-  function pad(n) { return String(n).padStart(2, '0'); }
+  function pad(n) { return String(Math.max(0, n)).padStart(2, '0'); }
 
   function tick() {
     const diff = getTarget() - new Date();
     if (diff <= 0) {
+      document.getElementById('cd-d').textContent = '00';
       document.getElementById('cd-h').textContent = '00';
       document.getElementById('cd-m').textContent = '00';
       document.getElementById('cd-s').textContent = '00';
       return;
     }
-    const h = Math.floor(diff / 3600000);
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
     const m = Math.floor((diff % 3600000) / 60000);
     const s = Math.floor((diff % 60000) / 1000);
+    document.getElementById('cd-d').textContent = pad(d);
     document.getElementById('cd-h').textContent = pad(h);
     document.getElementById('cd-m').textContent = pad(m);
     document.getElementById('cd-s').textContent = pad(s);
