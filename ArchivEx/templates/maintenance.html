@@ -350,18 +350,17 @@
     container.appendChild(p);
   }
 
-  // --- Date cible du lancement : Lundi 12 Octobre 2026 à 08h00 ---
+  // --- Date cible du lancement : Lundi 12 Octobre 2026 à 00h00 (Minuit) ---
   function getTarget() {
-    // Cible par défaut : Lundi 12 Octobre à 08h00 (heure locale)
-    // Vous pouvez changer l'heure ici (ex: setHours(8, 0, 0, 0) pour 8h)
-    const target = new Date('2026-10-12T08:00:00');
-    // Si la date est déjà passée, calcule automatiquement le prochain lundi
+    // Cible : Dès le début de lundi (00h00 heure locale)
+    const target = new Date('2026-10-12T00:00:00');
+    // Si la date est déjà passée, calcule automatiquement le prochain lundi à 00h00
     if (isNaN(target.getTime()) || target - new Date() <= 0) {
       const now = new Date();
       const daysUntilMonday = ((1 + 7 - now.getDay()) % 7) || 7;
       const nextMon = new Date(now);
       nextMon.setDate(now.getDate() + daysUntilMonday);
-      nextMon.setHours(8, 0, 0, 0);
+      nextMon.setHours(0, 0, 0, 0);
       return nextMon;
     }
     return target;
