@@ -480,6 +480,7 @@ def robots_txt_view(request):
     Génère dynamiquement le fichier robots.txt conforme aux standards SEO.
     - Autorise l'indexation de tout le catalogue public (Accueil, Épreuves, Filières, Ressources, etc.)
     - Bloque les répertoires d'administration et les flux privés
+    - Bloque les bots d'IA et de scraping pour protéger le contenu
     - Indique l'URL absolue du sitemap XML
     """
     from django.urls import reverse
@@ -491,24 +492,51 @@ def robots_txt_view(request):
         sitemap_url = request.build_absolute_uri("/sitemap.xml")
 
     lines = [
+        # --- Bots d'IA / scraping : accès bloqué ---
+        "User-agent: GPTBot",
+        "Disallow: /",
+        "",
+        "User-agent: CCBot",
+        "Disallow: /",
+        "",
+        "User-agent: anthropic-ai",
+        "Disallow: /",
+        "",
+        "User-agent: PerplexityBot",
+        "Disallow: /",
+        "",
+        "User-agent: Google-Extended",
+        "Disallow: /",
+        "",
+        # --- Règles générales pour tous les autres robots ---
         "User-agent: *",
+        # Zones d'administration et back-office
         "Disallow: /django-admin/",
         "Disallow: /administration/",
-        "Disallow: /pass/attente/",
-        "Disallow: /pass/retour/",
-        "Disallow: /pass/webhook/",
-        "Disallow: /pass/*/payer/",
-        "Disallow: /webhook/",
+        # Comptes et authentification
         "Disallow: /accounts/",
-        "Disallow: /recherche/",
+        "Disallow: /connexion/",
+        "Disallow: /inscription/",
+        "Disallow: /dashboard/",
+        # Paiements — toute la section /pass/ est privée
+        "Disallow: /pass/",
+        # Webhooks et endpoints techniques
+        "Disallow: /webhook/",
+        "Disallow: /payment/",
+        # Fonctions AJAX / actions dynamiques
         "Disallow: /epreuves/*/favori/",
         "Disallow: /epreuves/*/stream-watermarked/",
+        # Recherche (contenu dupliqué / dynamique)
+        "Disallow: /recherche/",
+        # Notifications et support (pages privées)
+        "Disallow: /notifications/",
+        "Disallow: /support/",
         "",
+        # Pages publiques explicitement autorisées
         "Allow: /",
         "Allow: /filieres/",
         "Allow: /epreuves/",
         "Allow: /ressources/",
-        "Allow: /pass/",
         "Allow: /static/",
         "Allow: /media/",
         "",
