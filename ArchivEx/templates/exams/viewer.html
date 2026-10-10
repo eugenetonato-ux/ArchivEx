@@ -128,6 +128,10 @@
                     <i class="fa-solid fa-arrows-left-right text-[9px]"></i>
                     <span class="hidden xs:inline">Ajuster</span>
                 </button>
+                <button id="toggle-viewer-mode" type="button" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center space-x-1 text-[11px] text-cyan-300 font-extrabold transition-all" title="Basculer entre le lecteur interactif et le lecteur natif haute vitesse">
+                    <i class="fa-solid fa-bolt text-[10px]"></i>
+                    <span id="viewer-mode-text" class="hidden sm:inline">Mode Rapide</span>
+                </button>
                 <button id="toggle-fullscreen" type="button" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center space-x-1 text-[11px] text-amber-300 font-extrabold transition-all" title="Basculer en plein écran">
                     <i id="fullscreen-icon" class="fa-solid fa-expand text-[10px]"></i>
                     <span id="fullscreen-text" class="hidden sm:inline">Plein écran</span>
@@ -145,8 +149,8 @@
         <!-- LOADING SPINNER -->
         <div id="pdf-loader-spinner" class="absolute inset-0 z-10 bg-slate-900/90 backdrop-blur-sm flex flex-col items-center justify-center space-y-3 p-6 text-center">
             <div class="w-12 h-12 border-4 border-blue-400/30 border-t-blue-500 rounded-full animate-spin"></div>
-            <p class="text-xs font-bold text-white">Chargement du document PDF...</p>
-            <p id="pdf-loading-progress" class="text-[11px] font-bold text-blue-300">Initialisation rapide...</p>
+            <p class="text-xs font-bold text-white">Chargement immédiat du document...</p>
+            <p id="pdf-loading-progress" class="text-[11px] font-bold text-blue-300">Initialisation haute vitesse...</p>
         </div>
 
         <!-- TAB SWITCH SECURITY BLUR MASK -->
@@ -170,8 +174,8 @@
             <canvas id="pdf-canvas" class="shadow-2xl rounded-xl bg-white block"></canvas>
         </div>
 
-        <!-- FALLBACK IFRAME (IF PDF.JS UNSUPPORTED OR BLOCKED) -->
-        <iframe id="pdf-fallback-frame" src="{{ stream_url }}" class="w-full h-full border-0 no-select relative z-30 hidden" title="Lecteur PDF de secours"></iframe>
+        <!-- FALLBACK NATIVE VIEWER IFRAME (SE DÉCLENCHE SANS TÉLÉCHARGEMENT INITIAL DOUBLE) -->
+        <iframe id="pdf-fallback-frame" data-src="{{ stream_url }}" class="w-full h-full min-h-[680px] border-0 no-select relative z-30 hidden rounded-xl bg-white" title="Lecteur PDF haute vitesse"></iframe>
     </div>
     </div> <!-- /#viewer-fullscreen-root -->
 
@@ -184,12 +188,81 @@
         pageNum = 1,
         pageRendering = false,
         pageNumPending = null,
+        currentRenderTask = null,
         scale = 1.25,
+        isFirstPageRendered = false,
         canvas = document.getElementById('pdf-canvas'),
-        ctx = canvas.getContext('2d');
+        ctx = canvas ? canvas.getContext('2d') : null;
+
+    // --- FONCTIONS DE BASCULEMENT DE MODE (CANVAS INTERACTIF VS LECTEUR NATIF HAUTE VITESSE) ---
+    function activateNativeViewer(reason) {
+        console.warn("ArchivEx Viewer : activation du lecteur haute vitesse natif (" + (reason || 'auto') + ")");
+        const spinner = document.getElementById('pdf-loader-spinner');
+        if (spinner) spinner.classList.add('hidden');
+        
+        const canvasWrapper = document.getElementById('canvas-wrapper');
+        if (canvasWrapper) canvasWrapper.classList.add('hidden');
+
+        const fallbackFrame = document.getElementById('pdf-fallback-frame');
+        if (fallbackFrame) {
+            const dataSrc = fallbackFrame.getAttribute('data-src') || url;
+            if (!fallbackFrame.src || fallbackFrame.src === 'about:blank' || !fallbackFrame.src.includes('stream')) {
+                fallbackFrame.src = dataSrc;
+            }
+            fallbackFrame.classList.remove('hidden');
+        }
+
+        const modeText = document.getElementById('viewer-mode-text');
+        if (modeText) modeText.textContent = 'Mode Canvas';
+        isFirstPageRendered = true;
+    }
+
+    function activateCanvasViewer() {
+        const fallbackFrame = document.getElementById('pdf-fallback-frame');
+        if (fallbackFrame) fallbackFrame.classList.add('hidden');
+
+        const canvasWrapper = document.getElementById('canvas-wrapper');
+        if (canvasWrapper) canvasWrapper.classList.remove('hidden');
+
+        const modeText = document.getElementById('viewer-mode-text');
+        if (modeText) modeText.textContent = 'Mode Rapide';
+
+        if (pdfDoc) {
+            renderPage(pageNum);
+        }
+    }
+
+    // Bouton de bascule manuelle rapide
+    const toggleViewerModeBtn = document.getElementById('toggle-viewer-mode');
+    if (toggleViewerModeBtn) {
+        toggleViewerModeBtn.addEventListener('click', () => {
+            const fallbackFrame = document.getElementById('pdf-fallback-frame');
+            if (fallbackFrame && !fallbackFrame.classList.contains('hidden')) {
+                activateCanvasViewer();
+            } else {
+                activateNativeViewer('Choix manuel utilisateur');
+            }
+        });
+    }
+
+    // SÉCURITÉ ANTI-BLOCAGE : Si le rendu canvas ne s'affiche pas dans les 4 secondes,
+    // basculer automatiquement et instantanément sur le lecteur natif sécurisé
+    const safetyTimeout = setTimeout(() => {
+        if (!isFirstPageRendered) {
+            activateNativeViewer('Délai d\'initialisation dépassé (>4s)');
+        }
+    }, 4000);
 
     function renderPage(num) {
+        if (!pdfDoc || !ctx) return;
         pageRendering = true;
+
+        if (currentRenderTask) {
+            try {
+                currentRenderTask.cancel();
+            } catch (e) {}
+        }
+
         pdfDoc.getPage(num).then(function(page) {
             let viewport = page.getViewport({scale: scale});
             canvas.height = viewport.height;
@@ -199,19 +272,38 @@
                 canvasContext: ctx,
                 viewport: viewport
             };
-            let renderTask = page.render(renderContext);
+            currentRenderTask = page.render(renderContext);
 
-            renderTask.promise.then(function() {
+            currentRenderTask.promise.then(function() {
                 pageRendering = false;
+                isFirstPageRendered = true;
+                clearTimeout(safetyTimeout);
+                const spinner = document.getElementById('pdf-loader-spinner');
+                if (spinner) spinner.classList.add('hidden');
+
                 if (pageNumPending !== null) {
                     renderPage(pageNumPending);
                     pageNumPending = null;
                 }
+            }).catch(function(err) {
+                pageRendering = false;
+                if (err && err.name === 'RenderingCancelledException') {
+                    // Annulation normale lors du zoom ou redimensionnement rapide
+                    return;
+                }
+                console.warn('Erreur rendu page canvas :', err);
+                activateNativeViewer('Erreur de rendu canvas');
             });
+        }).catch(function(err) {
+            pageRendering = false;
+            console.warn('Erreur chargement page :', err);
+            activateNativeViewer('Erreur getPage');
         });
 
-        document.getElementById('page-num').textContent = num;
-        document.getElementById('zoom-level').textContent = Math.round(scale * 100) + '%';
+        const pNumElem = document.getElementById('page-num');
+        if (pNumElem) pNumElem.textContent = num;
+        const zElem = document.getElementById('zoom-level');
+        if (zElem) zElem.textContent = Math.round(scale * 100) + '%';
         const vc = document.getElementById('viewer-container');
         if (vc) vc.scrollTop = 0;
     }
@@ -221,7 +313,6 @@
         const containerWidth = (container ? container.clientWidth : window.innerWidth) - 16;
         const unscaledViewport = page.getViewport({scale: 1.0});
         
-        // Cale l'épreuve à la largeur du conteneur sombre pour une lecture directe, lisible et spacieuse
         let calculated = containerWidth / unscaledViewport.width;
         if (calculated < 0.75) calculated = 0.75;
         if (calculated > 3.0) calculated = 3.0;
@@ -277,40 +368,55 @@
         }
     }
 
-    function onPrevPage() {
-        if (pageNum <= 1) return;
-        pageNum--;
-        queueRenderPage(pageNum);
-    }
-    document.getElementById('prev-page').addEventListener('click', onPrevPage);
-
-    function onNextPage() {
-        if (pageNum >= pdfDoc.numPages) return;
-        pageNum++;
-        queueRenderPage(pageNum);
-    }
-    document.getElementById('next-page').addEventListener('click', onNextPage);
-
-    document.getElementById('zoom-in').addEventListener('click', () => {
-        if (scale < 3.0) {
-            scale += 0.20;
-            queueRenderPage(pageNum);
-        }
-    });
-
-    document.getElementById('zoom-out').addEventListener('click', () => {
-        if (scale > 0.6) {
-            scale -= 0.20;
-            queueRenderPage(pageNum);
-        }
-    });
-
-    document.getElementById('fit-width').addEventListener('click', () => {
-        pdfDoc.getPage(pageNum).then(function(page) {
-            scale = calculateOptimalScale(page);
+    const prevBtn = document.getElementById('prev-page');
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (pageNum <= 1) return;
+            pageNum--;
             queueRenderPage(pageNum);
         });
-    });
+    }
+
+    const nextBtn = document.getElementById('next-page');
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            if (!pdfDoc || pageNum >= pdfDoc.numPages) return;
+            pageNum++;
+            queueRenderPage(pageNum);
+        });
+    }
+
+    const zoomInBtn = document.getElementById('zoom-in');
+    if (zoomInBtn) {
+        zoomInBtn.addEventListener('click', () => {
+            if (scale < 3.0) {
+                scale += 0.20;
+                queueRenderPage(pageNum);
+            }
+        });
+    }
+
+    const zoomOutBtn = document.getElementById('zoom-out');
+    if (zoomOutBtn) {
+        zoomOutBtn.addEventListener('click', () => {
+            if (scale > 0.6) {
+                scale -= 0.20;
+                queueRenderPage(pageNum);
+            }
+        });
+    }
+
+    const fitWidthBtn = document.getElementById('fit-width');
+    if (fitWidthBtn) {
+        fitWidthBtn.addEventListener('click', () => {
+            if (pdfDoc) {
+                pdfDoc.getPage(pageNum).then(function(page) {
+                    scale = calculateOptimalScale(page);
+                    queueRenderPage(pageNum);
+                });
+            }
+        });
+    }
 
     // Auto-adaptation fluide en cas de rotation d'écran ou redimensionnement
     let resizeTimer = null;
@@ -325,12 +431,14 @@
         }, 200);
     });
 
-    // Initialize PDF.js loading
+    // Initialisation intelligente et progressive de PDF.js
     if (window.pdfjsLib) {
         const loadingTask = pdfjsLib.getDocument({
             url: url,
             withCredentials: true,
             cMapPacked: true,
+            disableAutoFetch: true, // Optimisation mobile : charge page par page sans saturer
+            disableStream: false,
         });
 
         loadingTask.onProgress = function(progressData) {
@@ -343,33 +451,24 @@
 
         loadingTask.promise.then(function(pdfDoc_) {
             pdfDoc = pdfDoc_;
-            document.getElementById('page-count').textContent = pdfDoc.numPages;
+            const countElem = document.getElementById('page-count');
+            if (countElem) countElem.textContent = pdfDoc.numPages;
             
-            // Calcul automatique de l'ajustement optimal dès la 1ère page (lecture directe sans zoomer/rétrécir)
+            // Calcul automatique de l'ajustement optimal dès la 1ère page
             pdfDoc.getPage(1).then(function(firstPage) {
                 scale = calculateOptimalScale(firstPage);
-
-                const spinner = document.getElementById('pdf-loader-spinner');
-                if (spinner) spinner.classList.add('hidden');
-
                 renderPage(1);
+            }).catch(function(err) {
+                console.warn('Erreur getPage 1 :', err);
+                activateNativeViewer('Erreur getPage 1');
             });
         }).catch(function(error) {
-            console.error('PDF.js loading error:', error);
-            // Fallback to iframe if pdf.js fails
-            const spinner = document.getElementById('pdf-loader-spinner');
-            if (spinner) spinner.classList.add('hidden');
-            document.getElementById('canvas-wrapper').classList.add('hidden');
-            document.getElementById('pdf-toolbar').classList.add('hidden');
-            document.getElementById('pdf-fallback-frame').classList.remove('hidden');
+            console.warn('PDF.js loading error :', error);
+            activateNativeViewer('Échec chargement PDF.js');
         });
     } else {
-        // Fallback if pdfjsLib not available
-        const spinner = document.getElementById('pdf-loader-spinner');
-        if (spinner) spinner.classList.add('hidden');
-        document.getElementById('canvas-wrapper').classList.add('hidden');
-        document.getElementById('pdf-toolbar').classList.add('hidden');
-        document.getElementById('pdf-fallback-frame').classList.remove('hidden');
+        // Fallback immédiat si pdfjsLib non disponible (blocage CDN ou réseau lent)
+        activateNativeViewer('pdfjsLib non disponible');
     }
 
     // 1. GESTES MOBILES TACTILES NATURELS (PINCH-TO-ZOOM & DOUBLE TAP)
@@ -389,7 +488,6 @@
             } else if (e.touches.length === 1) {
                 const now = Date.now();
                 if (now - lastTapTime < 300) {
-                    // Double tap : alterner entre ajustement optimal et zoom confort 1.5x
                     if (pdfDoc) {
                         pdfDoc.getPage(pageNum).then(function(page) {
                             const optimal = calculateOptimalScale(page);

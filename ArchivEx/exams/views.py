@@ -561,12 +561,24 @@ def _get_safe_file_path(field_file):
     """Retourne le chemin système du fichier ou son objet s'il existe."""
     if not field_file or not bool(field_file):
         return None
+    # 1. Chemin système standard si disponible
     try:
         path = field_file.path
         if os.path.exists(path):
             return path
     except Exception:
         pass
+    # 2. Vérification physique dans MEDIA_ROOT (évite latence réseau S3 si fichier présent localement)
+    try:
+        from django.conf import settings
+        fname = getattr(field_file, "name", "")
+        if fname:
+            local_path = os.path.join(settings.MEDIA_ROOT, str(fname))
+            if os.path.exists(local_path):
+                return local_path
+    except Exception:
+        pass
+    # 3. Repli objet FieldFile distant
     try:
         if hasattr(field_file, "url") and field_file.url:
             return field_file
@@ -921,16 +933,37 @@ def stream_watermarked_pdf_view(request, pk):
         except Exception:
             return _render_pdf_error_response("Le fichier PDF n'a pas pu être lu par le serveur.")
 
-    # 1. Vérification du cache serveur (réponse instantanée sous ~5ms)
+    # 1. Vérification du cache disque persistant (réponse instantanée < 2ms)
+    from django.conf import settings
     from django.core.cache import cache
     from io import BytesIO
+
+    cache_dir = os.path.join(settings.MEDIA_ROOT, "cache", "watermarked")
+    try:
+        os.makedirs(cache_dir, exist_ok=True)
+    except Exception:
+        pass
+
     file_mtime = 0
     if isinstance(file_obj, str) and os.path.exists(file_obj):
         file_mtime = int(os.path.getmtime(file_obj))
 
+    cache_disk_file = os.path.join(cache_dir, f"wm_{exam.id}_{res_type}_{request.user.id}_{file_mtime}.pdf")
+    if os.path.exists(cache_disk_file) and os.path.getsize(cache_disk_file) > 100:
+        response = FileResponse(open(cache_disk_file, "rb"), content_type="application/pdf")
+        response["Content-Length"] = os.path.getsize(cache_disk_file)
+        response["Accept-Ranges"] = "bytes"
+        response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
+        return response
+
     cache_key = f"wm_pdf_{exam.id}_{res_type}_{request.user.id}_{file_mtime}"
     cached_pdf = cache.get(cache_key)
     if cached_pdf:
+        try:
+            with open(cache_disk_file, "wb") as f:
+                f.write(cached_pdf)
+        except Exception:
+            pass
         response = FileResponse(BytesIO(cached_pdf), content_type="application/pdf")
         response["Content-Length"] = len(cached_pdf)
         response["Accept-Ranges"] = "bytes"
@@ -940,8 +973,13 @@ def stream_watermarked_pdf_view(request, pk):
     try:
         watermarked_io = apply_student_watermark(file_obj, request.user)
         pdf_bytes = watermarked_io.getvalue()
-        # Enregistrement en cache pour 3 heures (10800s)
+        # Enregistrement en cache pour 3 heures
         cache.set(cache_key, pdf_bytes, timeout=10800)
+        try:
+            with open(cache_disk_file, "wb") as f:
+                f.write(pdf_bytes)
+        except Exception:
+            pass
 
         response = FileResponse(BytesIO(pdf_bytes), content_type="application/pdf")
         response["Content-Length"] = len(pdf_bytes)
@@ -951,16 +989,17 @@ def stream_watermarked_pdf_view(request, pk):
     except Exception:
         try:
             if isinstance(file_obj, str) and os.path.exists(file_obj):
-                watermarked_io = open(file_obj, "rb")
+                raw_io = open(file_obj, "rb")
             elif hasattr(file_obj, "open"):
-                watermarked_io = file_obj.open("rb")
+                raw_io = file_obj.open("rb")
             else:
                 return redirect(getattr(file_obj, "url", "/"))
             
             response = FileResponse(
-                watermarked_io,
+                raw_io,
                 content_type="application/pdf"
             )
+            response["Accept-Ranges"] = "bytes"
             response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
             return response
         except Exception:
