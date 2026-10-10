@@ -106,7 +106,19 @@ class Command(BaseCommand):
                 existing_subject = target_sem.subjects.filter(name__iexact=src_subject.name).first()
                 if existing_subject:
                     target_subject = existing_subject
-                    self.stdout.write(f"  [EXISTE DEJA] UE: {src_subject.name}")
+                    # Mettre à jour l'image ou le code si la source a été enrichie
+                    fields_to_update = []
+                    if src_subject.image and str(target_subject.image) != str(src_subject.image):
+                        target_subject.image = src_subject.image.name
+                        fields_to_update.append("image")
+                    if src_subject.code and target_subject.code != src_subject.code:
+                        target_subject.code = src_subject.code
+                        fields_to_update.append("code")
+                    if fields_to_update:
+                        target_subject.save(update_fields=fields_to_update)
+                        self.stdout.write(self.style.SUCCESS(f"  [SYNCHRONISEE] UE: {src_subject.name} (champs: {', '.join(fields_to_update)})"))
+                    else:
+                        self.stdout.write(f"  [EXISTE DEJA] UE: {src_subject.name}")
                 else:
                     target_subject = Subject.objects.create(
                         semester=target_sem,
