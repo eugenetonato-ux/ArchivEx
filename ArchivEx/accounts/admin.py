@@ -40,7 +40,7 @@ class CustomUserAdmin(UserAdmin):
         count = obj.devices.count()
         return f"{count}/2"
 
-    @admin.action(description="🔓 Réactiver le(s) compte(s) et réinitialiser les appareils")
+    @admin.action(description="Réactiver le(s) compte(s) et réinitialiser les appareils")
     def reactivate_and_reset_devices(self, request, queryset):
         count = 0
         for user in queryset:
@@ -55,7 +55,7 @@ class CustomUserAdmin(UserAdmin):
             count += 1
         self.message_user(request, f"{count} compte(s) réactivé(s) et appareils réinitialisés avec succès.")
 
-    @admin.action(description="📱 Réinitialiser uniquement les appareils (vider quota)")
+    @admin.action(description="Réinitialiser uniquement les appareils (vider quota)")
     def reset_devices_only(self, request, queryset):
         count = 0
         for user in queryset:

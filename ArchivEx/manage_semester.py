@@ -86,12 +86,12 @@ if __name__ == "__main__":
             num = int(sys.argv[2])
             activate_semester(num)
         except ValueError:
-            print("❌ Le numéro de semestre doit être un entier (ex: 2).")
+            print("[Erreur] Le numéro de semestre doit être un entier (ex: 2).")
     elif action == "deactivate" and len(sys.argv) >= 3:
         try:
             num = int(sys.argv[2])
             deactivate_semester(num)
         except ValueError:
-            print("❌ Le numéro de semestre doit être un entier (ex: 2).")
+            print("[Erreur] Le numéro de semestre doit être un entier (ex: 2).")
     else:
-        print(f"❌ Commande inconnue ou arguments manquants: {' '.join(sys.argv[1:])}")
+        print(f"[Erreur] Commande inconnue ou arguments manquants: {' '.join(sys.argv[1:])}")

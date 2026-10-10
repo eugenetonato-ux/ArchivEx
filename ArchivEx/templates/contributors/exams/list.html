@@ -666,7 +666,7 @@
     .then(r => r.json())
     .then(data => {
       if (data.success) {
-        statusText.innerHTML = `✓ Terminé : <span class="text-emerald-400 font-bold">${data.created_count} créée(s)</span>, <span class="text-blue-400 font-bold">${data.updated_count} mise(s) à jour</span>.`;
+        statusText.innerHTML = `Terminé : <span class="text-emerald-400 font-bold">${data.created_count} créée(s)</span>, <span class="text-blue-400 font-bold">${data.updated_count} mise(s) à jour</span>.`;
         data.results.forEach(res => {
           const div = document.createElement('div');
           div.className = "flex items-center justify-between p-2.5 rounded-xl bg-white/10 border border-white/10 text-xs";

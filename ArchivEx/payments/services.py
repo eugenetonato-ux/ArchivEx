@@ -554,7 +554,7 @@ def create_payment_notification(payment):
         filiere_name = semester.filiere.name if (semester and semester.filiere) else ""
         link = reverse("academics:matieres", kwargs={"semester_id": semester.id}) if semester else reverse("accounts:dashboard")
 
-        title = f"Pass {sem_label} activé avec succès ! 🎉"
+        title = f"Pass {sem_label} activé avec succès !"
         message = (
             f"Votre règlement de {payment.amount} {payment.currency} a été validé. "
             f"L'intégralité des épreuves, corrigés détaillés et résumés de {sem_label} "
@@ -624,7 +624,7 @@ def send_payment_confirmation_email(payment):
     <p>La référence universitaire des étudiants d'excellence</p>
   </div>
   <div class="content">
-    <div class="badge">✓ Paiement Confirmé</div>
+    <div class="badge">Paiement Confirmé</div>
     <div class="title">Votre Pass Semestre est actif !</div>
     <p class="text">
       Bonjour <strong>{user.first_name or user.username}</strong>,<br><br>

@@ -37,7 +37,7 @@
     <!-- Content: Title, Description & Badge -->
     <div class="mb-4">
         <h3 id="tour-title" class="text-base font-black text-white flex items-center gap-2 tracking-tight">
-            🏠 Accueil
+            Accueil
         </h3>
         <p id="tour-desc" class="text-xs text-slate-200 mt-1.5 leading-relaxed">
             Votre point de départ : retrouvez vos raccourcis rapides, vos dernières consultations et les nouveautés de la plateforme.
@@ -74,7 +74,7 @@
     const TOUR_STEPS = [
         {
             targetId: 'dock-tab-home',
-            title: '🏠 Votre Accueil',
+            title: 'Votre Accueil',
             desc: 'Votre point de départ au quotidien : retrouvez les raccourcis de navigation, vos annales récentes et les nouveautés.',
             tag: 'Navigation Principale',
             tagClass: 'text-blue-300 bg-blue-500/20 border-blue-400/30',
@@ -82,7 +82,7 @@
         },
         {
             targetId: 'dock-tab-resources',
-            title: '🔓 Ressources Gratuites',
+            title: 'Ressources Gratuites',
             desc: 'Accédez librement et sans abonnement à une sélection de sujets d\'examens et fiches pour vous entraîner gratuitement dès maintenant.',
             tag: '100% En Accès Libre',
             tagClass: 'text-emerald-300 bg-emerald-500/20 border-emerald-400/30',
@@ -90,7 +90,7 @@
         },
         {
             targetId: 'dock-tab-resources',
-            title: '👑 Ressources Premium',
+            title: 'Ressources Premium',
             desc: 'La bibliothèque complète : toutes les annales, l\'intégralité des corrigés détaillés rédigés pas à pas et les synthèses complètes grâce au Pass Semestre.',
             tag: 'Bibliothèque Intégrale · Pass Semestre',
             tagClass: 'text-amber-300 bg-amber-500/20 border-amber-400/30',
@@ -98,7 +98,7 @@
         },
         {
             targetId: 'dock-tab-notifs',
-            title: '🔔 Notifications en direct',
+            title: 'Notifications en direct',
             desc: 'Restez informé en temps réel dès qu\'une nouvelle épreuve ou un nouveau corrigé officiel est publié pour votre parcours.',
             tag: 'Alertes Nouvelles Épreuves',
             tagClass: 'text-purple-300 bg-purple-500/20 border-purple-400/30',
@@ -106,7 +106,7 @@
         },
         {
             targetId: 'dock-tab-profile',
-            title: '👤 Profil & Sécurité Appareils',
+            title: 'Profil & Sécurité Appareils',
             desc: 'Gérez vos favoris, votre Pass Semestre et vérifiez vos 2 appareils autorisés protégés contre les partages et connexions non désirées.',
             tag: 'Espace Personnel & 2 Appareils max',
             tagClass: 'text-cyan-300 bg-cyan-500/20 border-cyan-400/30',
@@ -187,7 +187,7 @@
 
         if (nextBtn && nextText) {
             if (index === TOUR_STEPS.length - 1) {
-                nextText.textContent = "C'est parti ! 🚀";
+                nextText.textContent = "C'est parti !";
                 nextBtn.className = "px-4 py-2 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/40 transition-all flex items-center gap-1.5";
             } else {
                 nextText.textContent = "Suivant";
