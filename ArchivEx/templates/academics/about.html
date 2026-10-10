@@ -2,17 +2,18 @@
 {% load static %}
 
 {% block title %}À propos d'ArchivEx — Bibliothèque Numérique d'Accompagnement Étudiant{% endblock %}
-{% block meta_description %}ArchivEx est la plateforme d'épreuves universitaires, corrigés détaillés et résumés de cours au Bénin. Retrouvez vos annales pour l'ENEAM (UAC) : filières PLAN, STAT, IG, GFC, GBA, GTL.{% endblock %}
-{% block og_title %}À propos d'ArchivEx — Bibliothèque Étudiante au Bénin{% endblock %}
-{% block og_description %}Accédez aux épreuves d'examens, corrigés détaillés et résumés de cours au Bénin. Retrouvez les annales de l'ENEAM : filières PLAN, STAT, IG, GFC, GBA, GTL.{% endblock %}
+{% block meta_description %}ArchivEx est la plateforme académique d'épreuves, corrigés détaillés et fiches de révision pour les étudiants. Retrouvez vos annales pour l'ENEAM (UAC) : filières PLAN, STAT, IG, GFC, GBA, GTL.{% endblock %}
+{% block og_title %}À propos d'ArchivEx — Bibliothèque Numérique au service des étudiants{% endblock %}
+{% block og_description %}ArchivEx accompagne les étudiants dans leur réussite : sujets d'examens, corrigés détaillés et fiches synthétiques pour réviser avec sérénité.{% endblock %}
 {% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{% url 'academics:about' %}{% endblock %}
+
 {% block extra_schema %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "AboutPage",
   "name": "À propos d'ArchivEx",
-  "description": "ArchivEx est la plateforme d'épreuves universitaires et de ressources académiques au Bénin (ENEAM : PLAN, STAT, IG, GFC, GBA, GTL).",
+  "description": "Bibliothèque numérique et banque d'épreuves universitaires dédiée à l'accompagnement et à la réussite des étudiants.",
   "url": "{{ request.build_absolute_uri }}",
   "publisher": {
     "@type": "Organization",
@@ -34,96 +35,205 @@
         <span class="text-xs font-bold uppercase tracking-widest text-[#3B82F6] mb-3 block">Présentation d'ArchivEx</span>
         <h1 class="text-3xl sm:text-5xl font-black text-white tracking-tight mb-4">À propos d'ArchivEx</h1>
         <p class="text-base sm:text-xl font-semibold text-slate-300 max-w-2xl mx-auto">
-            La plateforme d'accompagnement conçue pour les étudiants.
+            La plateforme d'accompagnement conçue pour réviser efficacement et réussir ses examens.
         </p>
     </div>
 </section>
 
 <!-- MAIN EDITORIAL CONTENT -->
-<section class="py-14 sm:py-20 bg-[#F7F9FC] dark:bg-[#070D1E]">
+<section class="py-14 sm:py-20 bg-[#F7F9FC] dark:bg-[#070D1E] transition-colors">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
 
-        <!-- INTRO BLOCK: CONTEXT & MISSION -->
+        <!-- SECTION 1 : NOTRE MISSION -->
         <div class="bg-white dark:bg-[#0f172a] p-8 sm:p-12 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
             <div class="flex items-center space-x-3 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-[#2563EB] dark:text-blue-400 flex items-center justify-center font-bold text-lg shrink-0">
                     <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
                 </div>
                 <h2 class="text-xl sm:text-2xl font-extrabold text-[#071A49] dark:text-slate-100 tracking-tight">
-                    Une solution centralisée aux défis académiques
+                    Notre Mission
                 </h2>
             </div>
 
             <p class="text-slate-700 dark:text-slate-200 text-sm sm:text-base leading-relaxed">
-                <strong>ArchivEx</strong> est une plateforme numérique d'accompagnement académique spécialement développée pour répondre aux besoins des étudiants de premier cycle universitaire.
+                <strong>ArchivEx</strong> est une plateforme numérique d'accompagnement académique conçue pour répondre aux défis quotidiens des étudiants.
             </p>
 
             <p class="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
-                Dans le cadre des études supérieures, les sujets d'examens des années précédentes, les résumés de cours et les conseils méthodologiques sont souvent éparpillés dans des groupes informels ou mal archivés. Trouver le bon document au bon moment s'avère inutilement complexe et chronophage.
+                Pendant les périodes de révision, retrouver les vrais sujets des années passées, des corrigés fiables et des fiches synthétiques est souvent un parcours du combattant : documents éparpillés, photos illisibles ou ressources incomplètes. Trouver le bon document au bon moment s'avère inutilement complexe et chronophage.
             </p>
 
             <p class="text-slate-700 dark:text-slate-200 text-sm sm:text-base font-medium leading-relaxed bg-slate-50 dark:bg-slate-900/60 p-5 rounded-xl border border-slate-200/80 dark:border-slate-800">
-                ArchivEx rassemble l'ensemble des ressources académiques essentielles au sein d'un environnement unique, clair, sécurisé et rigoureusement structuré par filière, niveau, semestre et Unité d'Enseignement (UE).
+                ArchivEx rassemble au même endroit tout le matériel pédagogique nécessaire pour vous permettre d'aborder vos examens avec sérénité et confiance.
             </p>
         </div>
 
-        <!-- SECTION 2: NOS COMPOSANTES ACADÉMIQUES -->
+        <!-- SECTION 2 : CE QUE VOUS TROUVEZ SUR ARCHIVEX -->
         <div class="bg-white dark:bg-[#0f172a] p-8 sm:p-12 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
-            <h2 class="text-xl sm:text-2xl font-extrabold text-[#071A49] dark:text-slate-100 tracking-tight border-b border-slate-100 dark:border-slate-800 pb-4">
-                Une offre académique complète
-            </h2>
+            <div class="flex items-center space-x-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-lg shrink-0">
+                    <i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-extrabold text-[#071A49] dark:text-slate-100 tracking-tight">
+                    Ce que vous trouvez sur ArchivEx
+                </h2>
+            </div>
 
-            <p class="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed mb-6">
-                ArchivEx a évolué d'une simple banque d'annales vers une véritable bibliothèque de ressources pédagogiques intégrée :
+            <p class="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed mb-4">
+                Une sélection de ressources pédagogiques complètes adaptées aux exigences académiques :
             </p>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 pt-2">
+                <!-- Épreuves -->
                 <div class="p-5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
-                    <h3 class="text-sm font-extrabold text-[#071A49] dark:text-slate-100 mb-2 flex items-center space-x-2">
-                        <i class="fa-solid fa-file-lines text-[#2563EB] dark:text-blue-400" aria-hidden="true"></i>
-                        <span>Épreuves d'examens</span>
+                    <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg mb-3">
+                        <i class="fa-solid fa-file-pdf" aria-hidden="true"></i>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-[#071A49] dark:text-slate-100 mb-2">
+                        Les Épreuves
                     </h3>
                     <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                        Consultation des annales d'examens officielles classées par année académique.
+                        Accédez aux annales d'examens et devoirs des années antérieures, numérisés en haute qualité pour un confort de lecture optimal.
                     </p>
                 </div>
 
+                <!-- Corrigés -->
                 <div class="p-5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
-                    <h3 class="text-sm font-extrabold text-[#071A49] dark:text-slate-100 mb-2 flex items-center space-x-2">
-                        <i class="fa-solid fa-book-open text-emerald-600 dark:text-emerald-400" aria-hidden="true"></i>
-                        <span>Résumés de cours</span>
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg mb-3">
+                        <i class="fa-solid fa-pen-ruler" aria-hidden="true"></i>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-[#071A49] dark:text-slate-100 mb-2">
+                        Les Corrigés Détaillés
                     </h3>
                     <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                        Fiches synthétiques de cours et résumés thématiques rédigés pour faciliter l'assimilation des concepts.
+                        Bénéficiez de corrections rédigées pas à pas pour assimiler la méthodologie et comprendre les attentes des correcteurs.
+                    </p>
+                </div>
+
+                <!-- Fiches de Révision -->
+                <div class="p-5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
+                    <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 flex items-center justify-center text-lg mb-3">
+                        <i class="fa-solid fa-book-bookmark" aria-hidden="true"></i>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-[#071A49] dark:text-slate-100 mb-2">
+                        Les Fiches de Révision
+                    </h3>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Consultez des synthèses claires des notions essentielles pour fixer les concepts clés avant chaque épreuve.
                     </p>
                 </div>
             </div>
         </div>
 
-        <!-- SECTION 3: MODÈLE ET PASS SEMESTRE -->
+        <!-- SECTION 3 : NOTRE VISION DE L'ACCÈS -->
         <div class="bg-white dark:bg-[#0f172a] p-8 sm:p-12 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
-            <h2 class="text-xl sm:text-2xl font-extrabold text-[#071A49] dark:text-slate-100 tracking-tight border-b border-slate-100 dark:border-slate-800 pb-4">
-                Le Pass Semestre & la Pérennité du Service
-            </h2>
+            <div class="flex items-center space-x-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-lg shrink-0">
+                    <i class="fa-solid fa-unlock-keyhole" aria-hidden="true"></i>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-extrabold text-[#071A49] dark:text-slate-100 tracking-tight">
+                    Notre Vision de l'Accès
+                </h2>
+            </div>
+
             <p class="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
-                Afin de garantir un accès équitable tout en finançant la numérisation, le stockage sécurisé et la maintenance continue des ressources, ArchivEx propose un modèle mixte comprenant :
+                Pour garantir un service durable, sécurisé et sans publicités intrusives, ArchivEx propose :
             </p>
-            <ul class="list-disc list-inside text-xs sm:text-sm text-slate-700 dark:text-slate-200 space-y-2 font-medium">
-                <li>Un accès gratuit à de nombreuses épreuves fondamentales et résumés de cours.</li>
-                <li>Le <strong>Pass Semestre</strong>, débloquant l'intégralité des ressources avancées et corrigés d'un semestre d'études.</li>
-            </ul>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="p-5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
+                    <h3 class="font-extrabold text-sm text-[#071A49] dark:text-slate-100 mb-1.5 flex items-center gap-2">
+                        <span class="text-blue-500"><i class="fa-solid fa-gift"></i></span>
+                        <span>Un Espace Découverte</span>
+                    </h3>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Une sélection d'épreuves et de résumés fondamentaux accessibles librement pour permettre à chaque étudiant de tester la qualité des contenus.
+                    </p>
+                </div>
+
+                <div class="p-5 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-900/60">
+                    <h3 class="font-extrabold text-sm text-blue-950 dark:text-blue-200 mb-1.5 flex items-center gap-2">
+                        <span class="text-blue-600 dark:text-blue-400"><i class="fa-solid fa-crown"></i></span>
+                        <span>Le Pass Semestre</span>
+                    </h3>
+                    <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                        Une formule accessible permettant de débloquer l'intégralité des ressources et des corrigés détaillés pour approfondir son travail en toute autonomie.
+                    </p>
+                </div>
+            </div>
         </div>
 
-        <!-- SECTION 4: VISION ET ENGAGEMENT -->
+        <!-- SECTION 4 : SÉCURITÉ & BONNES PRATIQUES D'UTILISATION -->
+        <div class="bg-white dark:bg-[#0f172a] p-8 sm:p-12 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+            <div class="flex items-center space-x-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+                <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-lg shrink-0">
+                    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-extrabold text-[#071A49] dark:text-slate-100 tracking-tight">
+                        Règles d'Utilisation & Sécurité du Compte
+                    </h2>
+                    <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">À savoir pour un usage fluide sans interruption</span>
+                </div>
+            </div>
+
+            <p class="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
+                Afin de protéger vos données et garantir un accès équitable pour chaque étudiant, la plateforme applique des règles automatiques de sécurité :
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
+                    <h4 class="font-bold text-xs text-[#071A49] dark:text-slate-200 mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-user-lock text-blue-500"></i>
+                        <span>1. Compte strictement personnel</span>
+                    </h4>
+                    <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Chaque compte ArchivEx est nominatif. Vos identifiants ne doivent pas être partagés à des tiers.
+                    </p>
+                </div>
+
+                <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
+                    <h4 class="font-bold text-xs text-[#071A49] dark:text-slate-200 mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-laptop-mobile text-emerald-500"></i>
+                        <span>2. Utilisation sur 2 appareils</span>
+                    </h4>
+                    <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Vous pouvez utiliser votre compte sur vos 2 appareils personnels (par exemple votre téléphone et votre ordinateur).
+                    </p>
+                </div>
+
+                <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
+                    <h4 class="font-bold text-xs text-[#071A49] dark:text-slate-200 mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-arrow-right-from-bracket text-amber-500"></i>
+                        <span>3. Sécurité de session</span>
+                    </h4>
+                    <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Une seule connexion active est autorisée à la fois. Si une connexion survient depuis un autre appareil, la session précédente est automatiquement fermée pour sécuriser votre compte.
+                    </p>
+                </div>
+
+                <div class="p-4 rounded-xl bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-900/60">
+                    <h4 class="font-bold text-xs text-rose-900 dark:text-rose-200 mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-rose-500"></i>
+                        <span>4. Verrouillage temporaire anti-partage</span>
+                    </h4>
+                    <p class="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed">
+                        Le remplacement d'un appareil est limité à 2 fois par 24 heures. Au-delà, l'ajout de nouveaux appareils est suspendu pendant 24h. <em>(Ce verrou automatique est une sécurité normale et non un dysfonctionnement).</em>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 5 : CALL TO ACTION -->
         <div class="bg-white dark:bg-[#0f172a] p-8 sm:p-12 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
             <h2 class="text-xl sm:text-2xl font-extrabold text-[#071A49] dark:text-slate-100 tracking-tight border-b border-slate-100 dark:border-slate-800 pb-4">
-                Notre engagement académique
+                Prêt à commencer vos révisions ?
             </h2>
             <p class="text-slate-700 dark:text-slate-200 text-sm sm:text-base font-semibold leading-relaxed">
-                Apporter de la clarté, de l'organisation et de la sérénité dans le parcours universitaire de chaque étudiant.
+                Retrouvez dès maintenant vos sujets d'examens et fiches de révision sur ArchivEx.
             </p>
             <p class="text-slate-600 text-xs sm:text-sm leading-relaxed">
-                ArchivEx s'engage à enrichir continuellement ses bases de données, à maintenir une haute qualité de service et à fournir des outils de recherche fiables et intuitifs.
+                ArchivEx s'engage à enrichir continuellement ses bases de données et à fournir des outils de recherche fiables, rapides et intuitifs.
             </p>
 
             <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
