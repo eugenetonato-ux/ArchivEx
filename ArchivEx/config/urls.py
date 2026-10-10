@@ -30,6 +30,17 @@ sitemaps = {
     "articles": ArticleSitemap,
 }
 
+
+def clean_sitemap_view(request, **kwargs):
+    """Génère le sitemap sans l'en-tête X-Robots-Tag noindex de Django."""
+    response = sitemap(request, **kwargs)
+    try:
+        del response["X-Robots-Tag"]
+    except KeyError:
+        pass
+    return response
+
+
 urlpatterns = [
     path("django-admin/", admin.site.urls),
     path("administration/", include("contributors.urls")),
@@ -44,7 +55,7 @@ urlpatterns = [
     path("notifications/", include("notifications.urls")),
     path("support/", include("support.urls")),
     path("robots.txt", academic_views.robots_txt_view, name="robots_txt"),
-    path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="django.contrib.sitemaps.views.sitemap"),
+    path("sitemap.xml", clean_sitemap_view, {"sitemaps": sitemaps}, name="django.contrib.sitemaps.views.sitemap"),
     path("google4fc7f01109e31c86.html", lambda request: HttpResponse("google-site-verification: google4fc7f01109e31c86.html", content_type="text/html")),
     path("service-worker.js", academic_views.service_worker_view, name="service_worker"),
     path("manifest.json", academic_views.manifest_view, name="manifest_json"),
