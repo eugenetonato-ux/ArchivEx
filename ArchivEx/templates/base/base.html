@@ -633,19 +633,19 @@
  <!-- MOBILE BOTTOM NAVIGATION DOCK (AUTHENTICATED ONLY) -->
  <nav class="md:hidden mobile-bottom-dock" aria-label="Navigation principale mobile">
  <!-- ACCUEIL -->
- <a href="{% url 'academics:home' %}" class="dock-item {% if request.resolver_match.url_name == 'home' %}dock-item-active{% endif %}">
+ <a href="{% url 'academics:home' %}" id="dock-tab-home" class="dock-item {% if request.resolver_match.url_name == 'home' %}dock-item-active{% endif %}">
  <i class="fa-solid fa-house text-base mb-0.5" aria-hidden="true"></i>
  <span>Accueil</span>
  </a>
 
  <!-- RESSOURCES -->
- <button type="button" onclick="openMobileResourcesSheet()" aria-label="Menu des ressources" aria-haspopup="true" aria-expanded="false" class="dock-item {% if 'epreuves' in request.path or 'resumes' in request.path %}dock-item-active{% endif %}">
+ <button type="button" id="dock-tab-resources" onclick="openMobileResourcesSheet()" aria-label="Menu des ressources" aria-haspopup="true" aria-expanded="false" class="dock-item {% if 'epreuves' in request.path or 'resumes' in request.path %}dock-item-active{% endif %}">
  <i class="fa-solid fa-layer-group text-base mb-0.5" aria-hidden="true"></i>
  <span>Ressources</span>
  </button>
 
  <!-- NOTIFICATIONS -->
- <a href="{% url 'notifications:list' %}" class="dock-item {% if request.resolver_match.url_name == 'list' and 'notifications' in request.path %}dock-item-active{% endif %} relative">
+ <a href="{% url 'notifications:list' %}" id="dock-tab-notifs" class="dock-item {% if request.resolver_match.url_name == 'list' and 'notifications' in request.path %}dock-item-active{% endif %} relative">
  <i class="fa-solid fa-bell text-base mb-0.5" aria-hidden="true"></i>
  {% if unread_notifications_count > 0 %}
  <span class="absolute top-1 right-3 w-2 h-2 rounded-full bg-[#FBBF24] ring-2 ring-white"></span>
@@ -654,7 +654,7 @@
  </a>
 
  <!-- PROFIL -->
- <a href="{% url 'accounts:profile' %}" class="dock-item {% if request.resolver_match.url_name == 'profile' or request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'favoris' %}dock-item-active{% endif %}">
+ <a href="{% url 'accounts:profile' %}" id="dock-tab-profile" class="dock-item {% if request.resolver_match.url_name == 'profile' or request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'favoris' %}dock-item-active{% endif %}">
  <i class="fa-solid fa-user text-base mb-0.5" aria-hidden="true"></i>
  <span>Profil</span>
  </a>
@@ -844,6 +844,11 @@
 
  <!-- PWA MODAL & 20S POPUP -->
  {% include "base/_pwa_modal.html" %}
+
+ {% if user.is_authenticated %}
+ <!-- INTERACTIVE MOBILE ONBOARDING WALKTHROUGH -->
+ {% include "base/_mobile_tour.html" %}
+ {% endif %}
 
   <!-- DYNAMIC CLICK EVENT TRACKER -->
   <script>
