@@ -1,29 +1,26 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% block title %}À propos d'ArchivEx — Bibliothèque Numérique Universitaire au Bénin{% endblock %}
-{% block meta_description %}ArchivEx est la plateforme académique d'épreuves, corrigés et fiches de cours pour les étudiants au Bénin. Lancement officiel avec l'ENEAM (UAC) comme école pilote (filières PLAN, STAT, IG, GFC...).{% endblock %}
-{% block og_title %}À propos d'ArchivEx — Plateforme Universitaire au Bénin (Pilote ENEAM){% endblock %}
-{% block og_description %}Découvrez la vision d'ArchivEx pour l'enseignement supérieur au Bénin, avec un premier déploiement opérationnel à l'ENEAM (UAC) sur les filières PLAN, STAT et suivantes.{% endblock %}
+{% block title %}À propos d'ArchivEx — Bibliothèque Numérique d'Accompagnement Étudiant{% endblock %}
+{% block meta_description %}ArchivEx est la plateforme d'épreuves universitaires, corrigés détaillés et résumés de cours au Bénin. Retrouvez vos annales pour l'ENEAM (UAC) : filières PLAN, STAT, IG, GFC, GBA, GTL.{% endblock %}
+{% block og_title %}À propos d'ArchivEx — Bibliothèque Étudiante au Bénin{% endblock %}
+{% block og_description %}Accédez aux épreuves d'examens, corrigés détaillés et résumés de cours au Bénin. Retrouvez les annales de l'ENEAM : filières PLAN, STAT, IG, GFC, GBA, GTL.{% endblock %}
 {% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}{% url 'academics:about' %}{% endblock %}
-
 {% block extra_schema %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "AboutPage",
   "name": "À propos d'ArchivEx",
-  "description": "Bibliothèque numérique et banque d'épreuves universitaires pour l'enseignement supérieur au Bénin, débutant avec l'ENEAM (UAC) comme première école intégrée.",
+  "description": "ArchivEx est la plateforme d'épreuves universitaires et de ressources académiques au Bénin (ENEAM : PLAN, STAT, IG, GFC, GBA, GTL).",
   "url": "{{ request.build_absolute_uri }}",
-  "mainEntity": {
-    "@type": "EducationalOrganization",
+  "publisher": {
+    "@type": "Organization",
     "name": "ArchivEx",
     "url": "{{ request.scheme }}://{{ request.get_host }}",
-    "logo": "{{ request.scheme }}://{{ request.get_host }}{% static 'icons/icon-512.png' %}",
-    "description": "Plateforme globale d'accompagnement universitaire au Bénin, initialement déployée à l'ENEAM (UAC).",
-    "areaServed": {
-      "@type": "Country",
-      "name": "Bénin"
+    "logo": {
+      "@type": "ImageObject",
+      "url": "{{ request.scheme }}://{{ request.get_host }}{% static 'icons/icon-512.png' %}"
     }
   }
 }
@@ -31,258 +28,111 @@
 {% endblock %}
 
 {% block content %}
-<!-- ======================================================== -->
-<!-- 1. HERO BANNER : VISION NATIONALE & ÉCOLE DE LANCEMENT  -->
-<!-- ======================================================== -->
-<section class="relative bg-gradient-to-b from-[#071330] via-[#0B1D4B] to-[#0A183D] text-white pt-16 pb-20 sm:pt-24 sm:pb-28 overflow-hidden border-b border-blue-900/40">
-    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none"></div>
-    <div class="absolute -bottom-10 right-10 w-96 h-96 bg-purple-600/15 rounded-full blur-[100px] pointer-events-none"></div>
-
+<!-- HEADER BANNER -->
+<section class="bg-[#071A49] text-white py-14 sm:py-20 border-b border-blue-900/40 relative overflow-hidden">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-        <!-- Double badge : Vision Globale + École Pilote -->
-        <div class="inline-flex flex-wrap items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/15 border border-blue-400/30 text-blue-300 text-xs sm:text-sm font-bold tracking-wide uppercase mb-6 backdrop-blur-md shadow-sm">
-            <span>🇧🇯 Enseignement Supérieur au Bénin</span>
-            <span class="text-blue-400/60">•</span>
-            <span class="text-amber-300">Phase 1 : École Pilote ENEAM (UAC)</span>
-        </div>
-
-        <!-- Grand titre fédérateur -->
-        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight mb-6">
-            La bibliothèque numérique d'excellence pour les <span class="bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent">étudiants au Bénin</span>
-        </h1>
-
-        <!-- Sous-titre avec explication limpide -->
-        <p class="text-base sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed font-normal">
-            <strong>ArchivEx</strong> a pour vocation de rassembler les annales, corrigés et fiches de révision des universités et grandes écoles béninoises. 
-            Pour garantir un service irréprochable, nos débuts opérationnels sont consacrés à l'<strong>ENEAM</strong> comme première école intégrée.
+        <span class="text-xs font-bold uppercase tracking-widest text-[#3B82F6] mb-3 block">Présentation d'ArchivEx</span>
+        <h1 class="text-3xl sm:text-5xl font-black text-white tracking-tight mb-4">À propos d'ArchivEx</h1>
+        <p class="text-base sm:text-xl font-semibold text-slate-300 max-w-2xl mx-auto">
+            La plateforme d'accompagnement conçue pour les étudiants.
         </p>
-
-        <!-- Cartes statistiques dynamiques -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto mt-12">
-            <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-5 text-center transition-all hover:bg-white/10 hover:-translate-y-0.5">
-                <div class="text-2xl sm:text-3xl font-black text-blue-400">Bénin</div>
-                <div class="text-[11px] sm:text-xs text-slate-300 font-medium uppercase tracking-wider mt-1">Vision Nationale</div>
-            </div>
-            <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-5 text-center transition-all hover:bg-white/10 hover:-translate-y-0.5">
-                <div class="text-2xl sm:text-3xl font-black text-amber-400">ENEAM (UAC)</div>
-                <div class="text-[11px] sm:text-xs text-slate-300 font-medium uppercase tracking-wider mt-1">1ère École Intégrée</div>
-            </div>
-            <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-5 text-center transition-all hover:bg-white/10 hover:-translate-y-0.5">
-                <div class="text-2xl sm:text-3xl font-black text-emerald-400">PLAN & STAT</div>
-                <div class="text-[11px] sm:text-xs text-slate-300 font-medium uppercase tracking-wider mt-1">Filières en ligne</div>
-            </div>
-            <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-5 text-center transition-all hover:bg-white/10 hover:-translate-y-0.5">
-                <div class="text-2xl sm:text-3xl font-black text-indigo-400">IG, GFC...</div>
-                <div class="text-[11px] sm:text-xs text-slate-300 font-medium uppercase tracking-wider mt-1">Filières à venir</div>
-            </div>
-        </div>
     </div>
 </section>
 
-<!-- ========================================== -->
-<!-- 2. MISSION & ÉCOLE PILOTE                 -->
-<!-- ========================================== -->
-<section class="py-14 sm:py-20 bg-slate-50 dark:bg-[#070D1E] transition-colors">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+<!-- MAIN EDITORIAL CONTENT -->
+<section class="py-14 sm:py-20 bg-[#F7F9FC] dark:bg-[#070D1E]">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
 
-        <!-- Carte Vision & Démarche -->
-        <div class="bg-white dark:bg-[#0f172a] rounded-3xl p-6 sm:p-10 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
-            <div class="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-5 mb-6">
-                <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xl shrink-0">
+        <!-- INTRO BLOCK: CONTEXT & MISSION -->
+        <div class="bg-white dark:bg-[#0f172a] p-8 sm:p-12 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+            <div class="flex items-center space-x-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+                <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-[#2563EB] dark:text-blue-400 flex items-center justify-center font-bold text-lg shrink-0">
                     <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
                 </div>
-                <div>
-                    <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest block">Notre Vision Globale</span>
-                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                        Une plateforme générale débutant par l'ENEAM
-                    </h2>
-                </div>
+                <h2 class="text-xl sm:text-2xl font-extrabold text-[#071A49] dark:text-slate-100 tracking-tight">
+                    Une solution centralisée aux défis académiques
+                </h2>
             </div>
 
-            <div class="space-y-4 text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
-                <p>
-                    <strong>ArchivEx</strong> est conçue pour devenir la référence académique de l'enseignement supérieur au Bénin. Notre ambition est d'offrir à chaque faculté et grande école un espace centralisé où trouver les sujets d'examens officiels, des corrigés méthodologiques et des synthèses de cours.
-                </p>
-                <p>
-                    Plutôt que d'ouvrir simultanément des dizaines d'établissements avec des données incomplètes, nous avons fait le choix de la <strong>rigueur et de l'exhaustivité</strong>. 
-                    C'est pourquoi <strong>l'ENEAM (École Nationale d'Économie Appliquée et de Management)</strong> est la première grande école où ArchivEx fait ses débuts sur le terrain.
-                </p>
-                <div class="p-5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/60 text-slate-800 dark:text-slate-200">
-                    <p class="font-semibold flex items-start gap-2.5">
-                        <i class="fa-solid fa-bullseye text-blue-600 dark:text-blue-400 text-lg mt-0.5 shrink-0" aria-hidden="true"></i>
-                        <span>
-                            <strong>Notre méthode :</strong> réussir parfaitement l'intégration de l'ENEAM filière par filière, avant d'étendre la technologie ArchivEx à d'autres écoles et facultés partenaires de l'UAC et du pays.
-                        </span>
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========================================== -->
-        <!-- 3. ÉCOLE ACTUELLE & FEUILLE DE ROUTE       -->
-        <!-- ========================================== -->
-        <div class="bg-white dark:bg-[#0f172a] rounded-3xl p-6 sm:p-10 border border-slate-200/80 dark:border-slate-800 shadow-sm">
-            <div class="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-5 mb-6">
-                <div class="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xl shrink-0">
-                    <i class="fa-solid fa-school" aria-hidden="true"></i>
-                </div>
-                <div>
-                    <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block">Déploiement Opérationnel</span>
-                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                        L'ENEAM : la première école bénéficiaire
-                    </h2>
-                </div>
-            </div>
-
-            <p class="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed mb-6">
-                À l'heure actuelle, la totalité de nos ressources actives est concentrée sur l'ENEAM. Les filières sont intégrées par étapes successives :
+            <p class="text-slate-700 dark:text-slate-200 text-sm sm:text-base leading-relaxed">
+                <strong>ArchivEx</strong> est une plateforme numérique d'accompagnement académique spécialement développée pour répondre aux besoins des étudiants de premier cycle universitaire.
             </p>
 
-            <div class="space-y-4">
-                <!-- Étape 1 : Filières déjà implémentées -->
-                <div class="p-5 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/60">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-600 text-white uppercase tracking-wider">
-                            <i class="fa-solid fa-check-circle" aria-hidden="true"></i> Déjà implémentées à l'ENEAM
-                        </span>
-                        <span class="text-xs font-bold text-emerald-700 dark:text-emerald-400">Opérationnel</span>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-                        <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-emerald-100 dark:border-slate-800 shadow-xs">
-                            <h3 class="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
-                                <span class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-xs font-black">PLAN</span>
-                                <span>Planification du Développement</span>
-                            </h3>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                                Épreuves et corrigés de microéconomie, macroéconomie, gestion de projets, planification et politiques publiques.
-                            </p>
-                        </div>
-                        <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-emerald-100 dark:border-slate-800 shadow-xs">
-                            <h3 class="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
-                                <span class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-xs font-black">STAT</span>
-                                <span>Statistique Appliquée</span>
-                            </h3>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                                Annales de probabilités, inférence statistique, analyse de données, algèbre et modélisation économétrique.
-                            </p>
-                        </div>
-                    </div>
-                </div>
+            <p class="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
+                Dans le cadre des études supérieures, les sujets d'examens des années précédentes, les résumés de cours et les conseils méthodologiques sont souvent éparpillés dans des groupes informels ou mal archivés. Trouver le bon document au bon moment s'avère inutilement complexe et chronophage.
+            </p>
 
-                <!-- Étape 2 : Filières ENEAM qui arrivent ensuite -->
-                <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-blue-600 text-white uppercase tracking-wider">
-                            <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Prochainement à l'ENEAM
-                        </span>
-                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">En préparation</span>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-1">
-                        <div class="bg-white dark:bg-[#0f172a] p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800">
-                            <span class="font-extrabold text-blue-600 dark:text-blue-400 text-xs block mb-1">IG</span>
-                            <h4 class="font-bold text-slate-800 dark:text-slate-200 text-xs">Informatique de Gestion</h4>
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Algorithmique, BDD, Réseaux, Systèmes</p>
-                        </div>
-                        <div class="bg-white dark:bg-[#0f172a] p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800">
-                            <span class="font-extrabold text-indigo-600 dark:text-indigo-400 text-xs block mb-1">GFC</span>
-                            <h4 class="font-bold text-slate-800 dark:text-slate-200 text-xs">Gestion Financière & Comptable</h4>
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Comptabilité approfondie, Finance, Fiscalité</p>
-                        </div>
-                        <div class="bg-white dark:bg-[#0f172a] p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800">
-                            <span class="font-extrabold text-purple-600 dark:text-purple-400 text-xs block mb-1">GBA</span>
-                            <h4 class="font-bold text-slate-800 dark:text-slate-200 text-xs">Gestion Banque & Assurance</h4>
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Techniques bancaires & Analyse du risque</p>
-                        </div>
-                        <div class="bg-white dark:bg-[#0f172a] p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800">
-                            <span class="font-extrabold text-teal-600 dark:text-teal-400 text-xs block mb-1">GTL</span>
-                            <h4 class="font-bold text-slate-800 dark:text-slate-200 text-xs">Transports & Logistique</h4>
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Logistique internationale & Douanes</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Étape 3 : Extension future aux autres écoles -->
-                <div class="p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-100 dark:border-blue-900/40 flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
-                    <span class="flex items-center gap-2">
-                        <i class="fa-solid fa-map-location-dot text-blue-600 dark:text-blue-400 text-sm"></i>
-                        <span><strong>Et ensuite ?</strong> ArchivEx ouvrira progressivement ses portes aux autres facultés et grandes écoles universitaires du Bénin.</span>
-                    </span>
-                    <span class="hidden sm:inline-block font-semibold text-blue-600 dark:text-blue-400">Expansion progressive</span>
-                </div>
-            </div>
+            <p class="text-slate-700 dark:text-slate-200 text-sm sm:text-base font-medium leading-relaxed bg-slate-50 dark:bg-slate-900/60 p-5 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                ArchivEx rassemble l'ensemble des ressources académiques essentielles au sein d'un environnement unique, clair, sécurisé et rigoureusement structuré par filière, niveau, semestre et Unité d'Enseignement (UE).
+            </p>
         </div>
 
-        <!-- ========================================== -->
-        <!-- 4. RESSOURCES ET QUALITÉ PÉDAGOGIQUE       -->
-        <!-- ========================================== -->
-        <div class="bg-white dark:bg-[#0f172a] rounded-3xl p-6 sm:p-10 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-6">
-            <div class="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-5">
-                <div class="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xl shrink-0">
-                    <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
-                </div>
-                <div>
-                    <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest block">Notre Engagement Qualité</span>
-                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                        Ce que nous apportons aux étudiants
-                    </h2>
-                </div>
-            </div>
+        <!-- SECTION 2: NOS COMPOSANTES ACADÉMIQUES -->
+        <div class="bg-white dark:bg-[#0f172a] p-8 sm:p-12 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+            <h2 class="text-xl sm:text-2xl font-extrabold text-[#071A49] dark:text-slate-100 tracking-tight border-b border-slate-100 dark:border-slate-800 pb-4">
+                Une offre académique complète
+            </h2>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
-                    <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg mb-3">
-                        <i class="fa-solid fa-file-pdf" aria-hidden="true"></i>
-                    </div>
-                    <h3 class="font-extrabold text-slate-900 dark:text-white text-sm mb-1.5">Épreuves Numérisées & Propres</h3>
+            <p class="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed mb-6">
+                ArchivEx a évolué d'une simple banque d'annales vers une véritable bibliothèque de ressources pédagogiques intégrée :
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+                <div class="p-5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
+                    <h3 class="text-sm font-extrabold text-[#071A49] dark:text-slate-100 mb-2 flex items-center space-x-2">
+                        <i class="fa-solid fa-file-lines text-[#2563EB] dark:text-blue-400" aria-hidden="true"></i>
+                        <span>Épreuves d'examens</span>
+                    </h3>
                     <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                        Fini les photos floues. Tous les sujets sont traités, lisibles et classés par semestre et Unité d'Enseignement.
+                        Consultation des annales d'examens officielles classées par année académique.
                     </p>
                 </div>
 
-                <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg mb-3">
-                        <i class="fa-solid fa-pen-ruler" aria-hidden="true"></i>
-                    </div>
-                    <h3 class="font-extrabold text-slate-900 dark:text-white text-sm mb-1.5">Corrigés Détaillés</h3>
+                <div class="p-5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
+                    <h3 class="text-sm font-extrabold text-[#071A49] dark:text-slate-100 mb-2 flex items-center space-x-2">
+                        <i class="fa-solid fa-book-open text-emerald-600 dark:text-emerald-400" aria-hidden="true"></i>
+                        <span>Résumés de cours</span>
+                    </h3>
                     <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                        Des corrigés rédigés pour comprendre la démarche méthodologique et les critères de notation.
-                    </p>
-                </div>
-
-                <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
-                    <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 flex items-center justify-center text-lg mb-3">
-                        <i class="fa-solid fa-book-bookmark" aria-hidden="true"></i>
-                    </div>
-                    <h3 class="font-extrabold text-slate-900 dark:text-white text-sm mb-1.5">Résumés de Cours</h3>
-                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                        Des fiches synthétiques pour réviser l'essentiel et consolider ses bases avant les examens.
+                        Fiches synthétiques de cours et résumés thématiques rédigés pour faciliter l'assimilation des concepts.
                     </p>
                 </div>
             </div>
         </div>
 
-        <!-- ========================================== -->
-        <!-- 5. APPEL À L'ACTION (CTA FINAL)            -->
-        <!-- ========================================== -->
-        <div class="bg-gradient-to-br from-[#071330] via-[#0B1D4B] to-[#1E1B4B] rounded-3xl p-8 sm:p-12 text-white text-center shadow-xl relative overflow-hidden border border-blue-800/40">
-            <div class="relative z-10 max-w-2xl mx-auto space-y-4">
-                <div class="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-2xl mx-auto text-blue-300">
-                    <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
-                </div>
-                <h2 class="text-2xl sm:text-3xl font-black tracking-tight">
-                    Prenez une longueur d'avance sur vos examens
-                </h2>
-                <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
-                    Découvrez les annales disponibles pour votre parcours et commencez vos révisions dès maintenant.
-                </p>
-                <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-                    <a href="{% url 'academics:filieres' %}" class="w-full sm:w-auto px-7 py-3.5 rounded-xl font-bold text-xs sm:text-sm bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/30 transition-all hover:-translate-y-0.5">
-                        <i class="fa-solid fa-magnifying-glass mr-2"></i> Consulter les filières ENEAM
-                    </a>
-                    <a href="{% url 'exams:liste' %}" class="w-full sm:w-auto px-7 py-3.5 rounded-xl font-bold text-xs sm:text-sm bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-md transition-all hover:-translate-y-0.5">
-                        <i class="fa-solid fa-file-lines mr-2"></i> Explorer les épreuves
-                    </a>
-                </div>
+        <!-- SECTION 3: MODÈLE ET PASS SEMESTRE -->
+        <div class="bg-white dark:bg-[#0f172a] p-8 sm:p-12 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+            <h2 class="text-xl sm:text-2xl font-extrabold text-[#071A49] dark:text-slate-100 tracking-tight border-b border-slate-100 dark:border-slate-800 pb-4">
+                Le Pass Semestre & la Pérennité du Service
+            </h2>
+            <p class="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
+                Afin de garantir un accès équitable tout en finançant la numérisation, le stockage sécurisé et la maintenance continue des ressources, ArchivEx propose un modèle mixte comprenant :
+            </p>
+            <ul class="list-disc list-inside text-xs sm:text-sm text-slate-700 dark:text-slate-200 space-y-2 font-medium">
+                <li>Un accès gratuit à de nombreuses épreuves fondamentales et résumés de cours.</li>
+                <li>Le <strong>Pass Semestre</strong>, débloquant l'intégralité des ressources avancées et corrigés d'un semestre d'études.</li>
+            </ul>
+        </div>
+
+        <!-- SECTION 4: VISION ET ENGAGEMENT -->
+        <div class="bg-white dark:bg-[#0f172a] p-8 sm:p-12 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+            <h2 class="text-xl sm:text-2xl font-extrabold text-[#071A49] dark:text-slate-100 tracking-tight border-b border-slate-100 dark:border-slate-800 pb-4">
+                Notre engagement académique
+            </h2>
+            <p class="text-slate-700 dark:text-slate-200 text-sm sm:text-base font-semibold leading-relaxed">
+                Apporter de la clarté, de l'organisation et de la sérénité dans le parcours universitaire de chaque étudiant.
+            </p>
+            <p class="text-slate-600 text-xs sm:text-sm leading-relaxed">
+                ArchivEx s'engage à enrichir continuellement ses bases de données, à maintenir une haute qualité de service et à fournir des outils de recherche fiables et intuitifs.
+            </p>
+
+            <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <a href="{% url 'exams:liste' %}" class="btn-primary w-full sm:w-auto text-xs sm:text-sm px-6 py-3 font-bold text-center">
+                    Explorer la banque d'épreuves
+                </a>
+                <a href="{% url 'academics:filieres' %}" class="btn-secondary w-full sm:w-auto text-xs sm:text-sm px-6 py-3 font-bold border border-slate-200 text-center">
+                    Consulter mon parcours
+                </a>
             </div>
         </div>
 
