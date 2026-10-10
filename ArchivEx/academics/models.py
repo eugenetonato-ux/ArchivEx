@@ -5,6 +5,11 @@ from django.db import models
 from django.utils import timezone
 
 
+from django.core.files.storage import FileSystemStorage
+
+fs_storage = FileSystemStorage()
+
+
 def validate_academic_year_format(value):
     val = str(value).strip()
     pattern = r"^\d{4}-\d{4}$"
@@ -20,7 +25,7 @@ class School(models.Model):
     code = models.CharField(max_length=50, blank=True, default="", help_text="Code unique de l'école (ex: ENEAM, FLASH)")
     slug = models.SlugField(unique=True)
     description = models.TextField(blank=True)
-    logo = models.ImageField(upload_to="schools/", blank=True)
+    logo = models.ImageField(upload_to="schools/", storage=fs_storage, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)
@@ -117,6 +122,7 @@ class Subject(models.Model):
     description = models.TextField(blank=True, default="")
     image = models.ImageField(
         upload_to="subjects/",
+        storage=fs_storage,
         blank=True,
         null=True,
         verbose_name="Image de couverture",

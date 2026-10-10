@@ -68,6 +68,21 @@ handler403 = "academics.views.custom_403_view"
 handler404 = "academics.views.custom_404_view"
 handler500 = "academics.views.custom_500_view"
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+from django.views.static import serve
+from django.urls import re_path
+from django.http import HttpResponseForbidden
+
+def safe_media_serve(request, path, document_root=None, show_indexes=False):
+    """
+    Sert les fichiers médias publics (couvertures d'UE, logos, avatars).
+    Bloque l'accès direct aux épreuves brutes non filigranées (exams/, corrections/, cache/).
+    """
+    normalized_path = path.replace("\\", "/").strip("/")
+    if any(normalized_path.startswith(prefix) for prefix in ["exams/", "corrections/", "cache/"]):
+        return HttpResponseForbidden("Accès restreint. Document protégé par ArchivEx.")
+    return serve(request, path, document_root=document_root, show_indexes=show_indexes)
+
+urlpatterns += [
+    re_path(r"^media/(?P<path>.*)$", safe_media_serve, {"document_root": settings.MEDIA_ROOT}),
+]
 

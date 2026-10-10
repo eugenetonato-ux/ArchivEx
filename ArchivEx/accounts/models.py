@@ -17,12 +17,17 @@ class User(AbstractUser):
     )
 
 
+from django.core.files.storage import FileSystemStorage
+
+fs_storage = FileSystemStorage()
+
+
 class StudentProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     school = models.ForeignKey("academics.School", on_delete=models.PROTECT)
     level = models.ForeignKey("academics.Level", on_delete=models.PROTECT)
     filiere = models.ForeignKey("academics.Filiere", on_delete=models.PROTECT)
-    avatar = models.ImageField(upload_to="avatars/", blank=True)
+    avatar = models.ImageField(upload_to="avatars/", storage=fs_storage, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

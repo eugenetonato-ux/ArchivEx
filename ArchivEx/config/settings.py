@@ -267,7 +267,7 @@ if USE_SUPABASE_STORAGE:
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
-    MEDIA_URL = f"{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/"
+    MEDIA_URL = "/media/"
 else:
     MEDIA_URL = "/media/"
     STORAGES = {
