@@ -81,6 +81,28 @@
                             </a>
                         </div>
                     </div>
+                {% elif form.account_inactive %}
+                    <!-- ALERTE COMPTE SUSPENDU POUR 3E APPAREIL + CONTACT SUPPORT DIRECT -->
+                    <div class="p-4 rounded-2xl bg-amber-950/80 border border-amber-500/40 text-amber-100 text-xs shadow-xl backdrop-blur-md space-y-3 animate-in fade-in duration-200">
+                        <div class="flex items-start space-x-2.5">
+                            <div class="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                                <i class="fa-solid fa-shield-halved text-sm"></i>
+                            </div>
+                            <div class="flex-grow">
+                                <p class="font-extrabold text-amber-300 text-xs uppercase tracking-wider">Compte suspendu pour sécurité</p>
+                                <p class="text-[11px] text-slate-200 mt-1 leading-relaxed">
+                                    Une tentative de connexion a été détectée sur un <strong>3ᵉ appareil non autorisé</strong>. Conformément aux règles de sécurité ArchivEx, chaque compte est strictement personnel et limité à 2 appareils maximum.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-t border-amber-500/20 flex flex-col sm:flex-row items-center justify-between gap-2">
+                            <span class="text-[11px] text-amber-200/80">Besoin d'aide pour débloquer votre accès ?</span>
+                            <a href="{% url 'support:create' %}?category=probleme_compte&email={{ form.tried_identifier|default:request.POST.username|urlencode }}" class="w-full sm:w-auto px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#020510] font-black text-[11px] shadow-md shadow-amber-500/30 transition-all transform hover:scale-105 text-center inline-flex items-center justify-center space-x-1 shrink-0">
+                                <i class="fa-solid fa-headset text-[10px]"></i>
+                                <span>Contacter le support</span>
+                            </a>
+                        </div>
+                    </div>
                 {% elif form.non_field_errors %}
                     <div class="p-3.5 rounded-2xl bg-rose-950/70 border border-rose-500/40 text-rose-200 text-xs font-semibold flex items-center space-x-2.5 shadow-lg backdrop-blur-md">
                         <i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm flex-shrink-0"></i>

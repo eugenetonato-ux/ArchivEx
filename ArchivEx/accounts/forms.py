@@ -149,6 +149,7 @@ class StudentLoginForm(AuthenticationForm):
 
             if self.user_cache is None:
                 if user_obj.check_password(password) and not user_obj.is_active:
+                    self.account_inactive = True
                     raise forms.ValidationError(
                         "Ce compte a été suspendu par mesure de sécurité : une tentative de connexion a été détectée sur un 3ᵉ appareil non autorisé (suspicion de partage de compte). Conformément aux règles d'ArchivEx, chaque compte est strictement personnel et limité à 2 appareils maximum. Veuillez contacter le support pour demander son déblocage.",
                         code="account_inactive",

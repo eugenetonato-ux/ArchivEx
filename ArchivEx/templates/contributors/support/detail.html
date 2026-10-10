@@ -138,11 +138,23 @@
                 <span class="font-black text-[#071A49] text-xs block truncate" title="{{ target_student.email }}">{{ target_student.email|default:"Non renseigné" }}</span>
             </div>
             <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
-                <span class="text-[10px] font-bold text-slate-400 block uppercase">Statut du compte</span>
-                <span class="font-black text-emerald-600 text-xs flex items-center space-x-1 mt-0.5">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span>Actif</span>
-                </span>
+                <span class="text-[10px] font-bold text-slate-400 block uppercase">Statut & Appareils</span>
+                <div class="flex items-center justify-between mt-0.5">
+                    {% if target_student.is_active %}
+                        <span class="font-black text-emerald-600 text-xs flex items-center space-x-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span>Actif</span>
+                        </span>
+                    {% else %}
+                        <span class="font-black text-rose-600 text-xs flex items-center space-x-1">
+                            <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                            <span>Suspendu (3ᵉ appareil)</span>
+                        </span>
+                    {% endif %}
+                    <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                        {{ target_student.devices.count }}/2 app.
+                    </span>
+                </div>
             </div>
         </div>
 
@@ -163,15 +175,28 @@
         </div>
         {% endif %}
 
-        <!-- Formulaire d'action en 1 clic -->
-        <form method="post" action="{% url 'contributors:admin_support_detail' pk=support_request.pk %}" onsubmit="return confirm('Confirmez-vous la réinitialisation du mot de passe pour cet étudiant ? Un mot de passe temporaire sera généré et envoyé à {{ target_student.email }}.');">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="reset_temp_password">
-            <button type="submit" class="w-full sm:w-auto bg-gradient-to-r from-[#071A49] to-[#2563EB] hover:from-[#0E2461] hover:to-blue-700 text-white text-xs font-black px-5 py-3 rounded-xl shadow-md transition-all flex items-center justify-center space-x-2 active:scale-95 cursor-pointer">
-                <i class="fa-solid fa-rotate-right text-amber-400"></i>
-                <span>Générer un mot de passe temporaire (ArchivEx-XXXX) &amp; Envoyer par e-mail</span>
-            </button>
-        </form>
+        <!-- ACTIONS SUPPORT EN 1 CLIC -->
+        <div class="flex flex-col sm:flex-row gap-2.5">
+            <!-- 1. Réactiver le compte et réinitialiser les appareils -->
+            <form method="post" action="{% url 'contributors:admin_support_detail' pk=support_request.pk %}" onsubmit="return confirm('Confirmez-vous la réactivation du compte pour {{ target_student.username }} et la réinitialisation de ses appareils ? Un message de confirmation sera envoyé à l\'étudiant.');">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reactivate_and_reset_devices">
+                <button type="submit" class="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-black px-4 py-3 rounded-xl shadow-md transition-all flex items-center justify-center space-x-2 active:scale-95 cursor-pointer">
+                    <i class="fa-solid fa-shield-check text-emerald-200"></i>
+                    <span>{% if not target_student.is_active %}Réactiver le compte &amp; Réinitialiser les appareils{% else %}Réinitialiser les appareils enregistrés{% endif %}</span>
+                </button>
+            </form>
+
+            <!-- 2. Réinitialiser le mot de passe -->
+            <form method="post" action="{% url 'contributors:admin_support_detail' pk=support_request.pk %}" onsubmit="return confirm('Confirmez-vous la réinitialisation du mot de passe pour cet étudiant ? Un mot de passe temporaire sera généré et envoyé à {{ target_student.email }}.');">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reset_temp_password">
+                <button type="submit" class="w-full sm:w-auto bg-gradient-to-r from-[#071A49] to-[#2563EB] hover:from-[#0E2461] hover:to-blue-700 text-white text-xs font-black px-4 py-3 rounded-xl shadow-md transition-all flex items-center justify-center space-x-2 active:scale-95 cursor-pointer">
+                    <i class="fa-solid fa-rotate-right text-amber-400"></i>
+                    <span>Nouveau mot de passe temporaire</span>
+                </button>
+            </form>
+        </div>
     </div>
     {% endif %}
 

@@ -34,6 +34,8 @@ def support_create_view(request):
         initial_data["category"] = cat_param
         if cat_param == "recuperation_mot_de_passe":
             initial_data["message"] = "Bonjour, j'ai oublié mon mot de passe et je n'arrive plus à me connecter à mon compte ArchivEx. Merci de m'aider à le réinitialiser."
+        elif cat_param == "probleme_compte":
+            initial_data["message"] = "Bonjour, mon compte a été suspendu suite à une tentative de connexion sur un nouvel appareil. Pourriez-vous s'il vous plaît réactiver mon compte et réinitialiser mes appareils autorisés ? Merci."
     email_param = request.GET.get("email")
     if email_param:
         initial_data["guest_email"] = email_param
@@ -380,6 +382,78 @@ Merci d'utiliser ArchivEx !
                 )
 
             request.session[f"last_temp_pwd_{pk}"] = temp_pwd
+            return redirect("contributors:admin_support_detail", pk=pk)
+
+        elif action == "reactivate_and_reset_devices":
+            if not target_student:
+                messages.error(request, "Aucun compte étudiant correspondant n'a été trouvé pour cette demande.")
+                return redirect("contributors:admin_support_detail", pk=pk)
+
+            # 1. Réactiver le compte
+            target_student.is_active = True
+            target_student.save(update_fields=["is_active"])
+
+            # 2. Supprimer les appareils enregistrés pour réinitialiser le quota des 2 appareils
+            devices_count = target_student.devices.count()
+            target_student.devices.all().delete()
+
+            # 3. Journaliser l'action d'administration
+            from accounts.models import SiteLog
+            SiteLog.objects.create(
+                user=request.user,
+                action_type="SECURITY_UNLOCK",
+                description=f"Compte {target_student.username} réactivé et {devices_count} appareil(s) réinitialisé(s) par {request.user.username} via le Support."
+            )
+
+            # 4. Message officiel dans le fil de discussion du ticket
+            reply_msg = (
+                f"Bonjour {target_student.get_full_name() or target_student.username},\n\n"
+                f"Bonne nouvelle ! Votre compte ArchivEx a été réactivé avec succès par notre équipe Support.\n\n"
+                f"Vos anciens appareils enregistrés ont été réinitialisés afin de vous permettre de reconnecter vos appareils actuels en toute fluidité. "
+                f"Vous pouvez dès à présent vous reconnecter avec votre identifiant ({target_student.username}) et votre mot de passe habituel.\n\n"
+                f"Rappel de sécurité : chaque compte est strictement personnel et limité à 2 appareils maximum. "
+                f"Toute connexion ultérieure depuis un 3ᵉ appareil non autorisé provoquera une nouvelle suspension automatique.\n\n"
+                f"L'équipe Support ArchivEx"
+            )
+            SupportReply.objects.create(
+                request=support_request,
+                admin_user=request.user,
+                message=reply_msg,
+            )
+
+            support_request.status = "repondu"
+            support_request.save(update_fields=["status"])
+
+            # 5. Notification interne pour l'étudiant
+            try:
+                Notification.objects.create(
+                    recipient=target_student,
+                    notification_type="SUPPORT_REPLY",
+                    title="Compte réactivé par le support",
+                    message="Votre compte a été réactivé et vos appareils ont été réinitialisés. Vous pouvez vous reconnecter.",
+                    link=reverse("accounts:login"),
+                )
+            except Exception as err:
+                logger.error(f"Erreur notification réactivation support : {err}")
+
+            # 6. E-mail à l'étudiant
+            student_email = target_student.email or support_request.guest_email
+            if student_email:
+                try:
+                    send_mail(
+                        subject="[ArchivEx Support] Réactivation de votre compte",
+                        message=reply_msg,
+                        from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "support@archivex.bj"),
+                        recipient_list=[student_email],
+                        fail_silently=True,
+                    )
+                except Exception as err:
+                    logger.error(f"Erreur email réactivation support : {err}")
+
+            messages.success(
+                request,
+                f"Succès ! Le compte de {target_student.username} a été réactivé et ses {devices_count} appareil(s) ont été réinitialisés."
+            )
             return redirect("contributors:admin_support_detail", pk=pk)
 
         elif action == "set_status":
