@@ -88,11 +88,15 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "config.middleware.MaintenanceModeMiddleware",
     "accounts.middleware.SingleSessionMiddleware",
     "accounts.middleware.SiteLoggingMiddleware",
     "accounts.middleware.MustChangePasswordMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+# Mode maintenance — mettre True pour activer, False pour désactiver
+MAINTENANCE_MODE = config("MAINTENANCE_MODE", default=False, cast=bool)
 
 # High performance cache configuration
 CACHES = {
