@@ -499,11 +499,7 @@ exam_list = resources_view
 
 
 def exam_detail(request, pk):
-    """Page de détail d'une épreuve."""
-    if not request.user.is_authenticated:
-        messages.info(request, "Connectez-vous pour consulter les détails de cette épreuve.")
-        return redirect(f"{reverse('accounts:login')}?next={request.get_full_path()}")
-
+    """Page de détail d'une épreuve accessible publiquement (freemium/SEO)."""
     exam = get_object_or_404(
         Exam.objects.select_related(
             "subject", "semester", "filiere", "level", "academic_year", "filiere__school", "summary"
@@ -512,7 +508,7 @@ def exam_detail(request, pk):
         is_published=True
     )
 
-    if not request.user.is_superuser and hasattr(request.user, "profile") and request.user.profile.filiere:
+    if request.user.is_authenticated and not request.user.is_superuser and hasattr(request.user, "profile") and request.user.profile.filiere:
         if exam.filiere_id and exam.filiere_id != request.user.profile.filiere_id:
             messages.warning(
                 request,

@@ -140,15 +140,24 @@ def student_guide_view(request):
     return redirect("academics:home")
 
 
-@login_required
 def filiere_list_view(request):
     """
-    Vue principale UE ("Mes UE").
-    Charge DIRECTEMENT les UE correspondant au contexte académique de l'étudiant connecté
-    (École + Filière + Niveau + Semestre), sans AUCUN mélange inter-écoles !
+    Vue principale des filières :
+    - Visiteur non connecté / Googlebot : affiche le catalogue complet des filières pour l'exploration et le SEO.
+    - Étudiant connecté : charge directement ses UE ou le contexte de sa session.
     """
     from .context import get_current_school
     current_school = get_current_school(request)
+
+    if not request.user.is_authenticated:
+        filieres_qs = Filiere.objects.filter(is_active=True).select_related("school", "level").order_by("school__name", "name")
+        if current_school:
+            filieres_qs = filieres_qs.filter(school=current_school)
+        return render(request, "academics/filieres.html", {
+            "filieres": filieres_qs,
+            "current_school": current_school,
+        })
+
     profile = getattr(request.user, "profile", None)
     
     semester = None
@@ -218,13 +227,12 @@ def filiere_list_view(request):
     return render(request, "academics/matieres.html", context)
 
 
-@login_required
 def semester_list_view(request, filiere_id):
     """Page listant les semestres d'une filière avec counts réels et statut d'accès."""
     filiere = get_object_or_404(Filiere.objects.select_related("school", "level"), pk=filiere_id)
 
-    # Sécurité filière : Un étudiant ordinaire ne peut naviguer que dans les semestres de sa filière
-    if not request.user.is_superuser and hasattr(request.user, "profile") and request.user.profile.filiere:
+    # Sécurité filière : Un étudiant ordinaire connecté ne peut naviguer que dans les semestres de sa filière
+    if request.user.is_authenticated and not request.user.is_superuser and hasattr(request.user, "profile") and request.user.profile.filiere:
         if filiere.id != request.user.profile.filiere_id:
             messages.warning(
                 request,
@@ -276,7 +284,6 @@ def semester_list_view(request, filiere_id):
     return render(request, "academics/semestres.html", context)
 
 
-@login_required
 def subject_list_view(request, semester_id):
     """Page listant les UE d'un semestre spécifié avec counts par ressource."""
     semester = get_object_or_404(
@@ -284,8 +291,8 @@ def subject_list_view(request, semester_id):
         pk=semester_id
     )
 
-    # Sécurité filière : Un étudiant ordinaire ne peut naviguer que dans les UE de sa filière
-    if not request.user.is_superuser and hasattr(request.user, "profile") and request.user.profile.filiere:
+    # Sécurité filière : Un étudiant ordinaire connecté ne peut naviguer que dans les UE de sa filière
+    if request.user.is_authenticated and not request.user.is_superuser and hasattr(request.user, "profile") and request.user.profile.filiere:
         if semester.filiere_id != request.user.profile.filiere_id:
             messages.warning(
                 request,

@@ -6,9 +6,8 @@ from .models import Summary, Guide, Article
 from subscriptions.services import can_user_access
 
 
-@login_required
 def summary_list(request):
-    """Liste des résumés de cours publiés."""
+    """Liste des résumés de cours publiés accessible publiquement (SEO)."""
     from academics.models import Subject
     from academics.context import get_current_school
     current_school = get_current_school(request)
@@ -31,7 +30,7 @@ def summary_list(request):
         summaries = summaries.filter(Q(title__icontains=q) | Q(introduction__icontains=q))
 
     for item in summaries:
-        item.user_has_access = can_user_access(request.user, item)
+        item.user_has_access = can_user_access(request.user, item) if request.user.is_authenticated else False
 
     context = {
         "summaries": summaries,
@@ -43,12 +42,7 @@ def summary_list(request):
 
 
 def summary_detail(request, pk):
-    """Lecture directe d'un résumé de cours avec contrôle d'accès."""
-    if not request.user.is_authenticated:
-        from django.urls import reverse
-        messages.info(request, "Connectez-vous pour consulter ce résumé de cours.")
-        return redirect(f"{reverse('accounts:login')}?next={request.get_full_path()}")
-
+    """Lecture directe d'un résumé de cours avec contrôle d'accès freemium/SEO."""
     summary = get_object_or_404(
         Summary.objects.select_related(
             "subject", "subject__semester", "subject__semester__filiere", "subject__semester__filiere__school", "author"
@@ -57,7 +51,7 @@ def summary_detail(request, pk):
         publication_status="PUBLISHED"
     )
 
-    has_access = can_user_access(request.user, summary)
+    has_access = can_user_access(request.user, summary) if request.user.is_authenticated else False
     if summary.subject and request.user.is_authenticated:
         from academics.models import record_ue_consultation
         record_ue_consultation(request.user, summary.subject)
