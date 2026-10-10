@@ -534,6 +534,8 @@ def robots_txt_view(request):
         "",
         # Pages publiques explicitement autorisées
         "Allow: /",
+        "Allow: /sitemap.xml",
+        "Allow: /robots.txt",
         "Allow: /filieres/",
         "Allow: /epreuves/",
         "Allow: /ressources/",
