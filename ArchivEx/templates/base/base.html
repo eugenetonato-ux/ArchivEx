@@ -169,8 +169,8 @@
  
   <!-- SEO Meta Tags -->
   <meta name="google-site-verification" content="google4fc7f01109e31c86">
-  <meta name="description" content="{% block meta_description %}ArchivEx — La plus grande banque d'épreuves universitaires, corrigés détaillés et résumés de cours au Bénin. Organisé par université, école, filière, semestre et matière.{% endblock %}">
-  <meta name="keywords" content="{% block meta_keywords %}ArchivEx, épreuves universitaires Bénin, examens UAC, épreuves ENEAM, FASEG, FLASH, FAST, ENAM, corrigés d'examens, résumés de cours, annales universitaires, fiches de révision, examens passés{% endblock %}">
+  <meta name="description" content="{% block meta_description %}ArchivEx — Banque d'épreuves, corrigés détaillés et résumés de cours pour l'ENEAM (UAC). Retrouvez les annales par filière : PLAN, STAT, IG, GFC, GBA, GTL par semestre et matière.{% endblock %}">
+  <meta name="keywords" content="{% block meta_keywords %}ArchivEx, ENEAM, épreuves ENEAM, examens ENEAM, corrigés ENEAM, filière PLAN, Planification, filière STAT, Statistique ENEAM, Informatique de Gestion IG, Gestion Financière et Comptable GFC, Banque et Assurance GBA, Transport et Logistique GTL, UAC, annales examens ENEAM{% endblock %}">
   <meta name="author" content="ArchivEx">
   <meta name="robots" content="{% block meta_robots %}index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1{% endblock %}">
   <meta name="geo.region" content="BJ">
@@ -180,19 +180,19 @@
   <!-- Open Graph (OG) Meta Tags for Facebook, WhatsApp, LinkedIn -->
   <meta property="og:site_name" content="ArchivEx">
   <meta property="og:type" content="{% block og_type %}website{% endblock %}">
-  <meta property="og:title" content="{% block og_title %}{% block title_og %}ArchivEx — Banque d'Épreuves, Corrigés & Examens Universitaires{% endblock %}{% endblock %}">
-  <meta property="og:description" content="{% block og_description %}Accédez aux anciennes épreuves d'examens, corrigés détaillés et résumés de cours pour valider tous vos semestres.{% endblock %}">
+  <meta property="og:title" content="{% block og_title %}{% block title_og %}ArchivEx — Banque d'Épreuves & Corrigés ENEAM (UAC){% endblock %}{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Accédez aux anciennes épreuves d'examens, corrigés détaillés et résumés de cours de l'ENEAM (UAC) : PLAN, STAT, IG, GFC, GBA, GTL pour valider vos semestres.{% endblock %}">
   <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'icons/icon-512.png' %}{% endblock %}">
   <meta property="og:image:width" content="512">
   <meta property="og:image:height" content="512">
-  <meta property="og:image:alt" content="ArchivEx — Plateforme d'épreuves universitaires">
+  <meta property="og:image:alt" content="ArchivEx — Plateforme d'épreuves ENEAM">
   <meta property="og:url" content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}">
   <meta property="og:locale" content="fr_FR">
 
   <!-- Twitter Card Meta Tags -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{% block twitter_title %}{% block title_twitter %}ArchivEx — Banque d'Épreuves Universitaires{% endblock %}{% endblock %}">
-  <meta name="twitter:description" content="{% block twitter_description %}Accédez aux anciennes épreuves, corrigés et résumés de cours pour réussir vos semestres.{% endblock %}">
+  <meta name="twitter:title" content="{% block twitter_title %}{% block title_twitter %}ArchivEx — Banque d'Épreuves ENEAM (UAC){% endblock %}{% endblock %}">
+  <meta name="twitter:description" content="{% block twitter_description %}Accédez aux anciennes épreuves, corrigés et résumés de cours pour les filières de l'ENEAM (PLAN, STAT, IG, GFC...).{% endblock %}">
   <meta name="twitter:image" content="{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'icons/icon-512.png' %}{% endblock %}">
   
   <!-- Performance Resource Hints -->
@@ -214,7 +214,7 @@
         "@id": "{{ request.scheme }}://{{ request.get_host }}/#website",
         "url": "{{ request.scheme }}://{{ request.get_host }}/",
         "name": "ArchivEx",
-        "description": "Plateforme SaaS de banque d'épreuves universitaires organisée par école, niveau, filière, semestre et matière.",
+        "description": "Banque d'épreuves et corrigés d'examens pour l'ENEAM (UAC) : PLAN, STAT, IG, GFC, GBA, GTL organisée par filière, semestre et matière.",
         "inLanguage": "fr-FR",
         "potentialAction": {
           "@type": "SearchAction",

@@ -1,10 +1,10 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% block title %}ArchivEx — Banque d'épreuves, corrigés & examens universitaires au Bénin{% endblock %}
-{% block meta_description %}ArchivEx est la plus grande banque d'épreuves universitaires du Bénin. Des centaines d'épreuves d'examens, de corrigés détaillés et de résumés de cours classés par université, filière et matière.{% endblock %}
-{% block og_title %}ArchivEx — Banque d'épreuves, corrigés & examens universitaires au Bénin{% endblock %}
-{% block og_description %}Accédez aux anciennes épreuves d'examens avec corrigés détaillés et résumés de cours pour toutes les filières universitaires du Bénin. Gratuit et Premium.{% endblock %}
+{% block title %}ArchivEx — Banque d'Épreuves & Corrigés d'Examens ENEAM (UAC){% endblock %}
+{% block meta_description %}ArchivEx est la plateforme d'épreuves d'examens, corrigés détaillés et résumés de cours pour l'ENEAM (UAC). Retrouvez vos annales par filière : PLAN, STAT, IG, GFC, GBA, GTL.{% endblock %}
+{% block og_title %}ArchivEx — Banque d'Épreuves & Corrigés ENEAM (UAC){% endblock %}
+{% block og_description %}Accédez aux anciennes épreuves d'examens avec corrigés détaillés et résumés de cours pour les filières de l'ENEAM : PLAN, STAT, IG, GFC, GBA, GTL. Gratuit et Premium.{% endblock %}
 {% block canonical_url %}{{ request.scheme }}://{{ request.get_host }}/{% endblock %}
 {% block extra_schema %}
 <script type="application/ld+json">
@@ -12,7 +12,7 @@
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "ArchivEx",
-  "description": "La plus grande banque d'épreuves universitaires du Bénin : épreuves d'examens, corrigés détaillés et résumés de cours.",
+  "description": "Banque d'épreuves d'examens, corrigés détaillés et résumés de cours pour l'ENEAM (UAC) : PLAN, STAT, IG, GFC, GBA, GTL.",
   "url": "{{ request.scheme }}://{{ request.get_host }}/",
   "inLanguage": "fr",
   "potentialAction": {
