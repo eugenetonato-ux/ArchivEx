@@ -6,16 +6,16 @@ from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 
-from academics.models import School, Level, Filiere, AcademicYear, Semester
+from academics.models import School, Level, Filiere, AcademicYear, Semester, Subject
+from exams.models import Exam
 from payments.models import SemesterAccess, Payment
 from payments.services import (
     normalize_benin_phone,
     detect_operator,
     generate_external_reference,
-    verify_chariow_pulse_signature,
     activate_pass_for_payment,
-    create_chariow_checkout,
     create_fedapay_transaction,
     verify_fedapay_webhook_signature,
     handle_fedapay_webhook_event,
@@ -23,20 +23,25 @@ from payments.services import (
     get_fedapay_base_url,
 )
 from subscriptions.models import UserSubscription
-from subscriptions.services import has_user_valid_pass
+from subscriptions.services import (
+    has_user_valid_pass,
+    can_user_access_exam_pdf,
+    can_user_access_correction,
+    can_user_access_summary,
+)
 
 User = get_user_model()
 
 
 @override_settings(
-    CHARIOW_API_KEY="sk_test_mock_chariow_api_key",
-    CHARIOW_PRODUCT_ID="prd_pass_semestre_test",
-    CHARIOW_PULSE_SECRET="chariow_pulse_secret_test_123",
-    CHARIOW_BASE_URL="https://api.chariow.com/v1",
-    CHARIOW_CURRENCY="XOF",
+    FEDAPAY_SECRET_KEY="sk_sandbox_mock_fedapay_secret_key_123",
+    FEDAPAY_PUBLIC_KEY="pk_sandbox_mock_fedapay_public_key_456",
+    FEDAPAY_ENVIRONMENT="sandbox",
+    FEDAPAY_WEBHOOK_SECRET="wh_sandbox_fedapay_secret_789",
+    FEDAPAY_CURRENCY="XOF",
     PASS_SEMESTRE_PRIX_DEFAUT=3800,
 )
-class ChariowIntegrationTests(TestCase):
+class PaymentCoreAndUtilityTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.school = School.objects.create(name="ENEAM", code="ENEAM", slug="eneam", is_active=True)
@@ -53,14 +58,6 @@ class ChariowIntegrationTests(TestCase):
             password="Password123!"
         )
 
-    def test_chariow_configuration_settings(self):
-        """Les variables de configuration Chariow sont correctement définies."""
-        self.assertTrue(hasattr(settings, "CHARIOW_API_KEY"))
-        self.assertTrue(hasattr(settings, "CHARIOW_PRODUCT_ID"))
-        self.assertTrue(hasattr(settings, "CHARIOW_PULSE_SECRET"))
-        self.assertEqual(settings.CHARIOW_CURRENCY, "XOF")
-        self.assertEqual(settings.PASS_SEMESTRE_PRIX_DEFAUT, 3800)
-
     def test_phone_number_normalization(self):
         """Les numéros béninois sont correctement normalisés."""
         self.assertEqual(normalize_benin_phone("0150196407"), "2290150196407")
@@ -73,11 +70,12 @@ class ChariowIntegrationTests(TestCase):
             normalize_benin_phone("123")
 
     def test_operator_detection(self):
-        """Détection correcte des opérateurs béninois (MTN et Moov)."""
+        """Détection correcte des opérateurs béninois (MTN, Moov, Celtiis)."""
         self.assertEqual(detect_operator("0150196407"), "mtn")
         self.assertEqual(detect_operator("53000000"), "mtn")
         self.assertEqual(detect_operator("0195000000"), "moov")
         self.assertEqual(detect_operator("60000000"), "moov")
+        self.assertEqual(detect_operator("0140123456"), "celtiis")
 
     def test_unique_external_reference_generation(self):
         """Génération de références externes uniques format ARCHIVEX-PASS-YYYY-XXXXXX."""
@@ -87,59 +85,11 @@ class ChariowIntegrationTests(TestCase):
         self.assertNotEqual(ref1, ref2)
 
     def test_user_can_access_pass_semestre_page(self):
-        """Un utilisateur connecté accède à la page Pass Semestre avec le prix de 2000 FCFA."""
+        """Un utilisateur connecté accède à la page Pass Semestre avec le prix de 3800 FCFA."""
         self.client.login(username="etudiant_test", password="Password123!")
         res = self.client.get(reverse("payments:pass_semestre", kwargs={"semester_id": self.semester.id}))
         self.assertEqual(res.status_code, 200)
         self.assertContains(res, "3800")
-
-    @patch("payments.services.requests.post")
-    def test_initiate_payment_success_redirects_to_chariow_checkout_url(self, mock_post):
-        """L'initiation de paiement appelle l'API Chariow et redirige vers payment.checkout_url."""
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "step": "payment",
-            "checkout_url": "https://payment.chariow.com/checkout?session=sess_123456",
-            "sale_id": "sal_abc789",
-        }
-        mock_post.return_value = mock_response
-
-        self.client.login(username="etudiant_test", password="Password123!")
-        res = self.client.post(
-            reverse("payments:initier_paiement", kwargs={"semester_id": self.semester.id}),
-            {"phone_number": "0150196407"}
-        )
-
-        payment = Payment.objects.filter(user=self.student, semester=self.semester).first()
-        self.assertIsNotNone(payment)
-        self.assertEqual(payment.amount, 3800)
-        self.assertEqual(payment.status, Payment.STATUS_PENDING)
-        self.assertEqual(payment.chariow_sale_id, "sal_abc789")
-        self.assertEqual(payment.chariow_checkout_url, "https://payment.chariow.com/checkout?session=sess_123456")
-
-        self.assertRedirects(res, "https://payment.chariow.com/checkout?session=sess_123456", fetch_redirect_response=False)
-
-    @patch("payments.services.requests.post")
-    def test_initiate_payment_api_error_handled_gracefully(self, mock_post):
-        """Une erreur renvoyée par Chariow marque le paiement REJECTED sans planter."""
-        mock_response = MagicMock()
-        mock_response.status_code = 400
-        mock_response.json.return_value = {
-            "error": "Produit non publié ou invalide.",
-        }
-        mock_post.return_value = mock_response
-
-        self.client.login(username="etudiant_test", password="Password123!")
-        res = self.client.post(
-            reverse("payments:initier_paiement", kwargs={"semester_id": self.semester.id}),
-            {"phone_number": "0150196407"},
-            follow=True
-        )
-
-        payment = Payment.objects.filter(user=self.student, semester=self.semester).first()
-        self.assertEqual(payment.status, Payment.STATUS_REJECTED)
-        self.assertContains(res, "Produit non publié")
 
     def test_pending_payment_does_not_grant_pass(self):
         """Un paiement PENDING n'active pas le Pass."""
@@ -197,293 +147,12 @@ class ChariowIntegrationTests(TestCase):
         self.assertEqual(SemesterAccess.objects.filter(user=self.student, semester=self.semester).count(), 1)
         self.assertEqual(UserSubscription.objects.filter(user=self.student, semester=self.semester).count(), 1)
 
-    def test_webhook_invalid_signature_rejected_with_403(self):
-        """Un webhook avec une signature invalide est rejeté avec HTTP 403."""
-        payload = {"event": "successful.sale", "data": {}}
-        body_bytes = json.dumps(payload).encode("utf-8")
-
-        res = self.client.post(
-            reverse("payments:chariow_webhook"),
-            data=body_bytes,
-            content_type="application/json",
-            HTTP_X_CHARIOW_SIGNATURE="sha256=mauvaisesignature123"
-        )
-        self.assertEqual(res.status_code, 403)
-
-    def test_webhook_successful_sale_approves_payment_and_activates_pass(self):
-        """Un webhook successful.sale avec signature valide valide le paiement et active le Pass."""
-        payment = Payment.objects.create(
-            user=self.student,
-            semester=self.semester,
-            amount=3800,
-            currency="XOF",
-            external_reference="ARCHIVEX-PASS-2026-WBK01",
-            status=Payment.STATUS_PENDING,
-        )
-
-        payload = {
-            "event": "successful.sale",
-            "data": {
-                "sale": {
-                    "id": "sal_998877",
-                    "amount": 3800,
-                    "currency": "XOF",
-                    "custom_metadata": {
-                        "archivex_user_id": str(self.student.id),
-                        "archivex_semester_id": str(self.semester.id),
-                        "external_reference": payment.external_reference,
-                        "archivex_payment_id": str(payment.id),
-                    }
-                }
-            }
-        }
-        body_bytes = json.dumps(payload).encode("utf-8")
-
-        secret = settings.CHARIOW_PULSE_SECRET.encode("utf-8")
-        sig_hex = hmac.new(secret, body_bytes, hashlib.sha256).hexdigest()
-        signature_header = f"sha256={sig_hex}"
-
-        res = self.client.post(
-            reverse("payments:chariow_webhook"),
-            data=body_bytes,
-            content_type="application/json",
-            HTTP_X_CHARIOW_SIGNATURE=signature_header,
-            HTTP_X_PULSE_DELIVERY_ID="del_12345"
-        )
-
-        self.assertEqual(res.status_code, 200)
-        payment.refresh_from_db()
-        self.assertTrue(payment.is_approved)
-        self.assertEqual(payment.chariow_sale_id, "sal_998877")
-        self.assertTrue(has_user_valid_pass(self.student, self.semester))
-
-    def test_webhook_duplicate_event_is_idempotent(self):
-        """Deux réceptions consécutives du même webhook successful.sale ne dupliquent rien."""
-        payment = Payment.objects.create(
-            user=self.student,
-            semester=self.semester,
-            amount=3800,
-            currency="XOF",
-            external_reference="ARCHIVEX-PASS-2026-WBK-IDEMP",
-            status=Payment.STATUS_PENDING,
-        )
-
-        payload = {
-            "event": "successful.sale",
-            "data": {
-                "sale": {
-                    "id": "sal_dupl123",
-                    "amount": 3800,
-                    "currency": "XOF",
-                    "custom_metadata": {
-                        "external_reference": payment.external_reference,
-                    }
-                }
-            }
-        }
-        body_bytes = json.dumps(payload).encode("utf-8")
-        secret = settings.CHARIOW_PULSE_SECRET.encode("utf-8")
-        sig_hex = hmac.new(secret, body_bytes, hashlib.sha256).hexdigest()
-
-        # Premier webhook
-        res1 = self.client.post(
-            reverse("payments:chariow_webhook"),
-            data=body_bytes,
-            content_type="application/json",
-            HTTP_X_CHARIOW_SIGNATURE=f"sha256={sig_hex}"
-        )
-        self.assertEqual(res1.status_code, 200)
-
-        # Deuxième webhook identique
-        res2 = self.client.post(
-            reverse("payments:chariow_webhook"),
-            data=body_bytes,
-            content_type="application/json",
-            HTTP_X_CHARIOW_SIGNATURE=f"sha256={sig_hex}"
-        )
-        self.assertEqual(res2.status_code, 200)
-        self.assertIn("already_approved", res2.json().get("status", ""))
-
-        self.assertEqual(UserSubscription.objects.filter(user=self.student, semester=self.semester).count(), 1)
-
-    def test_webhook_failed_and_abandoned_sale(self):
-        """Les webhooks failed.sale et abandoned.sale mettent à jour le statut du paiement."""
-        payment = Payment.objects.create(
-            user=self.student,
-            semester=self.semester,
-            amount=3800,
-            currency="XOF",
-            external_reference="ARCHIVEX-PASS-FAIL-01",
-            status=Payment.STATUS_PENDING,
-        )
-
-        payload = {
-            "event": "failed.sale",
-            "data": {
-                "sale": {
-                    "id": "sal_fail",
-                    "custom_metadata": {"external_reference": payment.external_reference}
-                }
-            }
-        }
-        body_bytes = json.dumps(payload).encode("utf-8")
-        secret = settings.CHARIOW_PULSE_SECRET.encode("utf-8")
-        sig_hex = hmac.new(secret, body_bytes, hashlib.sha256).hexdigest()
-
-        res = self.client.post(
-            reverse("payments:chariow_webhook"),
-            data=body_bytes,
-            content_type="application/json",
-            HTTP_X_CHARIOW_SIGNATURE=f"sha256={sig_hex}"
-        )
-        self.assertEqual(res.status_code, 200)
-        payment.refresh_from_db()
-        self.assertTrue(payment.is_rejected)
-        self.assertFalse(has_user_valid_pass(self.student, self.semester))
-
-    def test_webhook_unknown_event_handled_gracefully(self):
-        """Un événement inconnu reçu de Chariow retourne 200 sans lever d'exception."""
-        payload = {"event": "some.future.event", "data": {}}
-        body_bytes = json.dumps(payload).encode("utf-8")
-        secret = settings.CHARIOW_PULSE_SECRET.encode("utf-8")
-        sig_hex = hmac.new(secret, body_bytes, hashlib.sha256).hexdigest()
-
-        res = self.client.post(
-            reverse("payments:chariow_webhook"),
-            data=body_bytes,
-            content_type="application/json",
-            HTTP_X_CHARIOW_SIGNATURE=f"sha256={sig_hex}"
-        )
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.json().get("status"), "ignored")
-
-    def test_no_secret_key_exposed_in_rendered_html(self):
-        """Aucune clé secrète Chariow n'est exposée dans le HTML envoyé au client."""
-        self.client.login(username="etudiant_test", password="Password123!")
-
-        res_pass = self.client.get(reverse("payments:pass_semestre", kwargs={"semester_id": self.semester.id}))
-        self.assertNotIn(settings.CHARIOW_API_KEY, res_pass.content.decode("utf-8"))
-        self.assertNotIn(settings.CHARIOW_PULSE_SECRET, res_pass.content.decode("utf-8"))
-
-        payment = Payment.objects.create(
-            user=self.student,
-            semester=self.semester,
-            amount=3800,
-            currency="XOF",
-            external_reference="ARCHIVEX-PASS-NOSEC",
-            status=Payment.STATUS_PENDING,
-        )
-        res_ret = self.client.get(reverse("payments:payment_return", kwargs={"reference": payment.external_reference}))
-        self.assertNotIn(settings.CHARIOW_API_KEY, res_ret.content.decode("utf-8"))
-        self.assertNotIn(settings.CHARIOW_PULSE_SECRET, res_ret.content.decode("utf-8"))
-
     def test_direct_access_to_payment_success_does_not_activate_pass(self):
         """L'accès direct à /payment/success/ n'active PAS le Pass sans confirmation serveur."""
         self.client.login(username="etudiant_test", password="Password123!")
-
         res = self.client.get(reverse("payment_success_return"))
         self.assertEqual(res.status_code, 200)
         self.assertFalse(has_user_valid_pass(self.student, self.semester))
-
-    @patch("payments.services.requests.get")
-    def test_verify_and_sync_chariow_sale_activates_pass(self, mock_get):
-        """La synchronisation directe valide le paiement et active le pass si la vente Chariow est completed."""
-        from payments.services import verify_and_sync_chariow_sale
-
-        payment = Payment.objects.create(
-            user=self.student,
-            semester=self.semester,
-            amount=3800,
-            currency="XOF",
-            external_reference="ARCHIVEX-PASS-SYNC-01",
-            status=Payment.STATUS_PENDING,
-        )
-
-        mock_resp = MagicMock()
-        mock_resp.status_code = 200
-        mock_resp.json.return_value = {
-            "data": {
-                "id": "SALE_MOCK_123",
-                "status": "completed",
-                "payment": {"status": "success"},
-            }
-        }
-        mock_get.return_value = mock_resp
-
-        result = verify_and_sync_chariow_sale(payment, sale_id="SALE_MOCK_123")
-        self.assertTrue(result["is_approved"])
-
-        payment.refresh_from_db()
-        self.assertEqual(payment.status, Payment.STATUS_APPROVED)
-        self.assertEqual(payment.chariow_sale_id, "SALE_MOCK_123")
-        self.assertTrue(has_user_valid_pass(self.student, self.semester))
-
-    @patch("payments.services.requests.get")
-    def test_payment_return_view_with_sale_id_activates_pass_instantly(self, mock_get):
-        """À la redirection post-paiement, la présence de sale_id valide immédiatement le Pass."""
-        self.client.login(username="etudiant_test", password="Password123!")
-
-        payment = Payment.objects.create(
-            user=self.student,
-            semester=self.semester,
-            amount=3800,
-            currency="XOF",
-            external_reference="ARCHIVEX-PASS-RET-01",
-            status=Payment.STATUS_PENDING,
-        )
-
-        mock_resp = MagicMock()
-        mock_resp.status_code = 200
-        mock_resp.json.return_value = {
-            "data": {
-                "id": "SALE_RET_999",
-                "status": "completed",
-                "payment": {"status": "success"},
-            }
-        }
-        mock_get.return_value = mock_resp
-
-        url = reverse("payments:payment_return", kwargs={"reference": payment.external_reference})
-        res = self.client.get(f"{url}?sale_id=SALE_RET_999")
-
-        self.assertEqual(res.status_code, 200)
-        self.assertContains(res, "Paiement confirmé")
-        self.assertTrue(has_user_valid_pass(self.student, self.semester))
-
-    def test_webhook_supports_successful_sale_underscore(self):
-        """Le webhook Chariow valide le paiement avec le format d'événement successful_sale."""
-        payment = Payment.objects.create(
-            user=self.student,
-            semester=self.semester,
-            amount=3800,
-            currency="XOF",
-            external_reference="ARCHIVEX-PASS-PULSE-US",
-            status=Payment.STATUS_PENDING,
-        )
-
-        payload = {
-            "event": "successful_sale",
-            "data": {
-                "id": "SALE_PULSE_US_1",
-                "custom_metadata": {
-                    "external_reference": payment.external_reference,
-                }
-            }
-        }
-        body_bytes = json.dumps(payload).encode("utf-8")
-        secret = settings.CHARIOW_PULSE_SECRET.encode("utf-8")
-        sig_hex = hmac.new(secret, body_bytes, hashlib.sha256).hexdigest()
-
-        res = self.client.post(
-            reverse("payments:chariow_webhook"),
-            data=body_bytes,
-            content_type="application/json",
-            HTTP_X_CHARIOW_SIGNATURE=f"sha256={sig_hex}"
-        )
-        self.assertEqual(res.status_code, 200)
-        payment.refresh_from_db()
-        self.assertEqual(payment.status, Payment.STATUS_APPROVED)
-        self.assertTrue(has_user_valid_pass(self.student, self.semester))
 
 
 @override_settings(
@@ -741,3 +410,220 @@ class FedaPayIntegrationTests(TestCase):
         self.assertNotIn(settings.FEDAPAY_SECRET_KEY, html)
         self.assertNotIn(settings.FEDAPAY_WEBHOOK_SECRET, html)
 
+
+@override_settings(
+    FEDAPAY_SECRET_KEY="sk_sandbox_mock_fedapay_secret_key_123",
+    FEDAPAY_PUBLIC_KEY="pk_sandbox_mock_fedapay_public_key_456",
+    FEDAPAY_ENVIRONMENT="sandbox",
+    FEDAPAY_WEBHOOK_SECRET="wh_sandbox_fedapay_secret_789",
+    FEDAPAY_CURRENCY="XOF",
+    PASS_SEMESTRE_PRIX_DEFAUT=3800,
+)
+class PaymentEndToEndUnlockTests(TestCase):
+    """
+    Test complet de bout en bout (End-to-End) :
+    1. L'épreuve principale, sa correction et sa fiche résumé sont STRICTEMENT verrouillées pour l'étudiant.
+    2. L'étudiant initie le paiement (création du Payment PENDING).
+    3. Le paiement est validé (soit par Webhook FedaPay, soit par retour avec synchronisation active).
+    4. Dès validation :
+       - Le Pass Semestre s'active instantanément.
+       - can_user_access_exam_pdf devient True.
+       - can_user_access_correction devient True.
+       - can_user_access_summary devient True.
+       - Le lecteur plein écran (student_viewer) affiche le document avec succès (HTTP 200).
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.school = School.objects.create(name="IFRI", code="IFRI", slug="ifri", is_active=True)
+        self.level = Level.objects.create(name="L3", code="L3")
+        self.filiere = Filiere.objects.create(school=self.school, level=self.level, name="Génie Logiciel")
+        self.year = AcademicYear.objects.create(label="2025-2026")
+        self.semester = Semester.objects.create(filiere=self.filiere, academic_year=self.year, label="Semestre 5")
+
+        self.subject = Subject.objects.create(
+            name="Architecture Logicielle",
+            code="ARCH501",
+            semester=self.semester,
+            is_free=False,
+            is_free_correction=False,
+        )
+
+        dummy_pdf = SimpleUploadedFile("test_epreuve.pdf", b"%PDF-1.4 mock content", content_type="application/pdf")
+        dummy_corr = SimpleUploadedFile("test_corr.pdf", b"%PDF-1.4 correction content", content_type="application/pdf")
+        dummy_sum = SimpleUploadedFile("test_sum.pdf", b"%PDF-1.4 resume content", content_type="application/pdf")
+
+        self.exam = Exam.objects.create(
+            title="Examen Session Normale 2025",
+            exam_type="examen",
+            year=2025,
+            level=self.level,
+            academic_year=self.year,
+            subject=self.subject,
+            semester=self.semester,
+            filiere=self.filiere,
+            file=dummy_pdf,
+            correction_file=dummy_corr,
+            summary_file=dummy_sum,
+            is_published=True,
+            is_free=False,
+            is_free_correction=False,
+        )
+
+        self.student = User.objects.create_user(
+            username="student_e2e",
+            email="student_e2e@univ.bj",
+            first_name="Koffi",
+            last_name="Mensah",
+            password="SecurePassword123!"
+        )
+
+    def test_end_to_end_payment_unlocks_all_exam_resources(self):
+        """Vérifie le déverrouillage automatique complet des épreuves, corrections et résumés post-paiement."""
+        # --- ÉTAPE 1 : AVANT PAIEMENT (RESSOURCES TOTALEMENT VERROUILLÉES) ---
+        self.assertFalse(has_user_valid_pass(self.student, self.semester))
+        self.assertFalse(can_user_access_exam_pdf(self.student, self.exam))
+        self.assertFalse(can_user_access_correction(self.student, self.exam))
+        self.assertFalse(can_user_access_summary(self.student, self.exam))
+
+        # Connexion de l'étudiant
+        self.client.force_login(self.student)
+
+        # L'accès au lecteur sécurisé avant paiement redirige vers la page d'achat du Pass
+        res_viewer_before = self.client.get(
+            reverse("exams:student_viewer", kwargs={"pk": self.exam.pk}) + "?type=exam"
+        )
+        self.assertEqual(res_viewer_before.status_code, 302)
+        self.assertIn(f"/pass/{self.semester.id}/", res_viewer_before.url)
+
+        # --- ÉTAPE 2 : INITIATION DU PAIEMENT ---
+        with patch("payments.services.requests.post") as mock_post:
+            mock_tx = MagicMock(status_code=201)
+            mock_tx.json.return_value = {
+                "v1/transaction": {"id": 999, "status": "pending", "amount": 3800}
+            }
+            mock_tok = MagicMock(status_code=200)
+            mock_tok.json.return_value = {
+                "token": "tok_e2e_999",
+                "url": "https://checkout.fedapay.com/token/tok_e2e_999"
+            }
+            mock_post.side_effect = [mock_tx, mock_tok]
+
+            res_init = self.client.post(
+                reverse("payments:initier_paiement", kwargs={"semester_id": self.semester.id}),
+                {"phone_number": "0150196407"},
+            )
+            self.assertEqual(res_init.status_code, 302)
+            self.assertEqual(res_init.url, "https://checkout.fedapay.com/token/tok_e2e_999")
+
+        payment = Payment.objects.filter(user=self.student, semester=self.semester).first()
+        self.assertIsNotNone(payment)
+        self.assertEqual(payment.status, Payment.STATUS_PENDING)
+        self.assertEqual(payment.fedapay_transaction_id, "999")
+
+        # Avant approbation, les ressources sont TOUJOURS verrouillées
+        self.assertFalse(has_user_valid_pass(self.student, self.exam))
+
+        # --- ÉTAPE 3 : NOTIFICATION WEBHOOK FEDAPAY APPROUVÉE ---
+        payload = {
+            "name": "transaction.approved",
+            "entity": {
+                "id": 999,
+                "reference": payment.external_reference,
+                "status": "approved",
+                "amount": 3800,
+                "custom_metadata": {
+                    "external_reference": payment.external_reference,
+                }
+            }
+        }
+        body_bytes = json.dumps(payload).encode("utf-8")
+        secret = settings.FEDAPAY_WEBHOOK_SECRET.encode("utf-8")
+        sig_hex = hmac.new(secret, body_bytes, hashlib.sha256).hexdigest()
+
+        res_webhook = self.client.post(
+            reverse("payments:fedapay_webhook"),
+            data=body_bytes,
+            content_type="application/json",
+            HTTP_X_FEDAPAY_SIGNATURE=f"s={sig_hex}"
+        )
+        self.assertEqual(res_webhook.status_code, 200)
+
+        # --- ÉTAPE 4 : VÉRIFICATION DU DÉVERROUILLAGE AUTOMATIQUE IMMÉDIAT ---
+        payment.refresh_from_db()
+        self.assertEqual(payment.status, Payment.STATUS_APPROVED)
+        self.assertIsNotNone(payment.paid_at)
+
+        # 1. Le Pass Semestre est validé
+        self.assertTrue(has_user_valid_pass(self.student, self.semester))
+        self.assertTrue(has_user_valid_pass(self.student, self.exam))
+
+        # 2. L'épreuve principale est déverrouillée
+        self.assertTrue(can_user_access_exam_pdf(self.student, self.exam))
+
+        # 3. La correction est déverrouillée
+        self.assertTrue(can_user_access_correction(self.student, self.exam))
+
+        # 4. Le résumé est déverrouillé
+        self.assertTrue(can_user_access_summary(self.student, self.exam))
+
+        # 5. Le lecteur d'épreuve est directement accessible (HTTP 200)
+        res_viewer_exam = self.client.get(
+            reverse("exams:student_viewer", kwargs={"pk": self.exam.pk}) + "?type=exam"
+        )
+        self.assertEqual(res_viewer_exam.status_code, 200)
+
+        # 6. Le lecteur de correction est directement accessible (HTTP 200)
+        res_viewer_corr = self.client.get(
+            reverse("exams:student_viewer", kwargs={"pk": self.exam.pk}) + "?type=correction"
+        )
+        self.assertEqual(res_viewer_corr.status_code, 200)
+
+        # 7. Le lecteur de résumé est directement accessible (HTTP 200)
+        res_viewer_sum = self.client.get(
+            reverse("exams:student_viewer", kwargs={"pk": self.exam.pk}) + "?type=summary"
+        )
+        self.assertEqual(res_viewer_sum.status_code, 200)
+
+    @patch("payments.services.requests.get")
+    def test_end_to_end_payment_via_return_sync_unlocks_immediately(self, mock_get):
+        """
+        Vérifie la résilience : Si le webhook a du retard, la simple redirection de retour
+        interroge l'API FedaPay et déverrouille immédiatement toutes les épreuves.
+        """
+        payment = Payment.objects.create(
+            user=self.student,
+            semester=self.semester,
+            amount=3800,
+            currency="XOF",
+            external_reference="ARCHIVEX-PASS-E2E-RETURN",
+            fedapay_transaction_id="888",
+            status=Payment.STATUS_PENDING,
+        )
+
+        self.assertFalse(can_user_access_exam_pdf(self.student, self.exam))
+
+        mock_res = MagicMock(status_code=200)
+        mock_res.json.return_value = {
+            "v1/transaction": {
+                "id": 888,
+                "status": "approved",
+                "amount": 3800,
+            }
+        }
+        mock_get.return_value = mock_res
+
+        self.client.force_login(self.student)
+        url = reverse("payments:payment_return", kwargs={"reference": payment.external_reference})
+        res_return = self.client.get(f"{url}?id=888")
+
+        self.assertEqual(res_return.status_code, 200)
+        self.assertContains(res_return, "Paiement confirmé")
+
+        # Vérification du déverrouillage immédiat
+        payment.refresh_from_db()
+        self.assertEqual(payment.status, Payment.STATUS_APPROVED)
+        self.assertTrue(has_user_valid_pass(self.student, self.exam))
+        self.assertTrue(can_user_access_exam_pdf(self.student, self.exam))
+        self.assertTrue(can_user_access_correction(self.student, self.exam))
+        self.assertTrue(can_user_access_summary(self.student, self.exam))

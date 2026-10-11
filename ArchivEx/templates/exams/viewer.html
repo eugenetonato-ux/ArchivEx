@@ -1,7 +1,7 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% block title %}Lecteur Académique — {{ exam.title }} | ArchivEx{% endblock %}
+{% block title %}Lecteur Académique PWA — {{ exam.title }} | ArchivEx{% endblock %}
 
 {% block content %}
 <style>
@@ -10,7 +10,7 @@
         display: none !important;
     }
 
-    /* Protection anti-impression et anti-copie */
+    /* Protection anti-impression et anti-copie absolue */
     @media print {
         body { display: none !important; }
     }
@@ -23,7 +23,7 @@
         user-select: none;
     }
 
-    /* Barre de défilement verticale visible et ergonomique pour lire l'épreuve sans rétrécir */
+    /* Barre de défilement verticale visible et ergonomique */
     #viewer-container {
         scrollbar-width: thin;
         scrollbar-color: #475569 #0f172a;
@@ -44,13 +44,28 @@
     #viewer-container::-webkit-scrollbar-thumb:hover {
         background: #64748b;
     }
+
+    /* Rendu net des pages PDF */
+    .pdf-page-canvas {
+        box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6), 0 5px 15px rgba(0, 0, 0, 0.4);
+        border-radius: 10px;
+        background-color: #ffffff;
+        margin-bottom: 24px;
+        max-width: 100%;
+        height: auto !important;
+    }
 </style>
 
-<!-- Load PDF.js CDN for robust mobile & desktop canvas rendering -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<!-- Chargement prioritaire de PDF.js en local (PWA hors-ligne) avec secours CDN -->
+<script src="{% static 'vendor/pdfjs/pdf.min.js' %}"></script>
+<script>
+    if (!window.pdfjsLib) {
+        document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"><\/script>');
+    }
+</script>
 <script>
     if (window.pdfjsLib) {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "{% static 'vendor/pdfjs/pdf.worker.min.js' %}";
     }
 </script>
 
@@ -66,10 +81,10 @@
         <span>/</span>
         <a href="{% url 'exams:liste' %}?subject={{ exam.subject.id }}" class="hover:text-[#2563EB] font-bold">{{ exam.subject.name }}</a>
         <span>/</span>
-        <span class="text-[#071A49] font-black">Lecteur Plein Écran</span>
+        <span class="text-[#071A49] font-black">Lecteur Académique</span>
     </nav>
 
-    <!-- VIEWER CONTROL HEADER CARD (COMPACT ET ÉPURÉ) -->
+    <!-- VIEWER CONTROL HEADER CARD -->
     <div class="bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 mb-3 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
         <div class="min-w-0">
             <div class="flex items-center space-x-2 mb-1 flex-wrap gap-1">
@@ -79,6 +94,10 @@
                 <span class="text-[11px] font-bold text-slate-500">{{ exam.year }} · {{ exam.get_exam_type_display|default:"Session Normale" }}</span>
                 <span class="text-[11px] text-slate-300 hidden sm:inline">•</span>
                 <span class="text-[11px] font-bold text-[#2563EB] hidden sm:inline">{{ exam.subject.name }} ({{ exam.filiere.name }})</span>
+                <span id="pwa-status-badge" class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black inline-flex items-center space-x-1">
+                    <i class="fa-solid fa-cloud-check text-emerald-600"></i>
+                    <span>Mode PWA Hors-ligne</span>
+                </span>
             </div>
 
             <h1 class="text-base sm:text-lg font-black text-[#071A49] truncate">
@@ -86,7 +105,7 @@
             </h1>
         </div>
 
-        <div class="flex items-center space-x-2 w-full md:w-auto shrink-0 justify-end">
+        <div class="flex items-center space-x-2 w-full md:w-auto shrink-0 justify-end flex-wrap gap-1">
             <a href="{% url 'exams:detail' pk=exam.id %}" class="btn-secondary text-[11px] px-3.5 py-1.5 font-bold inline-flex items-center space-x-1">
                 <i class="fa-solid fa-arrow-left text-[10px]" aria-hidden="true"></i>
                 <span>Fiche</span>
@@ -100,14 +119,15 @@
 
     <!-- WRAPPER POUR BASCULE PLEIN ÉCRAN TOTAL -->
     <div id="viewer-fullscreen-root" class="flex flex-col">
-        <!-- PDF.JS TOOLBAR CONTROLS (MOBILE & DESKTOP FRIENDLY) -->
+        <!-- TOOLBAR CONTROLS (OPTIMISÉE MOBILE & DESKTOP) -->
         <div id="pdf-toolbar" class="bg-slate-900 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl mb-2 shadow-lg flex flex-wrap items-center justify-between gap-2 text-xs font-bold shrink-0">
+            <!-- Navigation de page -->
             <div class="flex items-center space-x-1.5">
                 <button id="prev-page" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 transition-all flex items-center space-x-1 text-[11px]">
                     <i class="fa-solid fa-chevron-left text-[9px]"></i>
                     <span class="hidden sm:inline">Précédent</span>
                 </button>
-                <span class="px-2.5 py-1 bg-slate-800/80 rounded-lg text-[11px]">
+                <span class="px-2.5 py-1 bg-slate-800/80 rounded-lg text-[11px] whitespace-nowrap">
                     Page <span id="page-num" class="text-amber-400 font-black">1</span> / <span id="page-count">?</span>
                 </span>
                 <button id="next-page" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 transition-all flex items-center space-x-1 text-[11px]">
@@ -116,7 +136,15 @@
                 </button>
             </div>
 
-            <div class="flex items-center space-x-1.5">
+            <!-- Mode de lecture et zoom -->
+            <div class="flex items-center space-x-1.5 flex-wrap">
+                <!-- Bascule Défilement Continu (Idéal Mobile) / Page par Page -->
+                <button id="toggle-scroll-mode" type="button" class="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center space-x-1 text-[11px] font-black transition-all" title="Basculer entre défilement continu et page par page">
+                    <i class="fa-solid fa-scroll text-[10px]"></i>
+                    <span id="scroll-mode-label" class="hidden xs:inline">Défilement continu</span>
+                </button>
+
+                <!-- Zoom -->
                 <button id="zoom-out" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center transition-all" title="Zoom arrière">
                     <i class="fa-solid fa-magnifying-glass-minus text-[11px]"></i>
                 </button>
@@ -124,18 +152,17 @@
                 <button id="zoom-in" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center transition-all" title="Zoom avant">
                     <i class="fa-solid fa-magnifying-glass-plus text-[11px]"></i>
                 </button>
-                <button id="fit-width" class="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 transition-all text-white text-[11px] flex items-center space-x-1" title="Ajuster à la largeur de l'écran">
+                <button id="fit-width" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-[11px] flex items-center space-x-1" title="Ajuster à la largeur de l'écran">
                     <i class="fa-solid fa-arrows-left-right text-[9px]"></i>
                     <span class="hidden xs:inline">Ajuster</span>
                 </button>
-                <button id="toggle-viewer-mode" type="button" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center space-x-1 text-[11px] text-cyan-300 font-extrabold transition-all" title="Basculer entre le lecteur interactif et le lecteur natif haute vitesse">
-                    <i class="fa-solid fa-bolt text-[10px]"></i>
-                    <span id="viewer-mode-text" class="hidden sm:inline">Mode Rapide</span>
-                </button>
+
+                <!-- Plein Écran -->
                 <button id="toggle-fullscreen" type="button" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center space-x-1 text-[11px] text-amber-300 font-extrabold transition-all" title="Basculer en plein écran">
                     <i id="fullscreen-icon" class="fa-solid fa-expand text-[10px]"></i>
                     <span id="fullscreen-text" class="hidden sm:inline">Plein écran</span>
                 </button>
+
                 <a href="{% url 'exams:detail' pk=exam.id %}" class="px-2.5 py-1.5 rounded-lg bg-rose-600/80 hover:bg-rose-600 flex items-center justify-center space-x-1 transition-all text-white ml-1 text-[11px]" title="Fermer l'aperçu">
                     <i class="fa-solid fa-xmark text-xs"></i>
                     <span class="hidden sm:inline">Fermer</span>
@@ -143,301 +170,251 @@
             </div>
         </div>
 
-        <!-- ZONE SOMBRE DU LECTEUR PDF (AGRANDIE EN PLEIN ÉCRAN CONFORTABLE) -->
-        <div id="viewer-container" class="w-full h-[88vh] sm:h-[91vh] min-h-[680px] rounded-2xl overflow-y-auto overflow-x-auto bg-slate-950 border border-slate-800 shadow-2xl relative transition-all duration-200 flex flex-col items-center justify-start p-1 sm:p-2">
-        
-        <!-- LOADING SPINNER -->
-        <div id="pdf-loader-spinner" class="absolute inset-0 z-10 bg-slate-900/90 backdrop-blur-sm flex flex-col items-center justify-center space-y-3 p-6 text-center">
-            <div class="w-12 h-12 border-4 border-blue-400/30 border-t-blue-500 rounded-full animate-spin"></div>
-            <p class="text-xs font-bold text-white">Chargement immédiat du document...</p>
-            <p id="pdf-loading-progress" class="text-[11px] font-bold text-blue-300">Initialisation haute vitesse...</p>
-        </div>
-
-        <!-- TAB SWITCH SECURITY BLUR MASK -->
-        <div id="tab-blur-mask" class="absolute inset-0 z-40 bg-[#071a49]/95 backdrop-blur-md hidden flex-col items-center justify-center text-center p-6 transition-all duration-150">
-            <div class="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-amber-300 flex items-center justify-center text-2xl mb-3 shadow-lg">
-                <i class="fa-solid fa-user-shield" aria-hidden="true"></i>
+        <!-- ZONE DU LECTEUR PDF HAUTE PERFORMANCE -->
+        <div id="viewer-container" class="w-full h-[88vh] sm:h-[91vh] min-h-[680px] rounded-2xl overflow-y-auto overflow-x-auto bg-slate-950 border border-slate-800 shadow-2xl relative transition-all duration-200 flex flex-col items-center justify-start p-2 sm:p-4">
+            
+            <!-- SPINNER DE CHARGEMENT INTÉLIGENT -->
+            <div id="pdf-loader-spinner" class="absolute inset-0 z-10 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center space-y-3 p-6 text-center">
+                <div class="w-12 h-12 border-4 border-blue-400/30 border-t-blue-500 rounded-full animate-spin"></div>
+                <p class="text-xs font-bold text-white">Chargement du document pédagogique...</p>
+                <p id="pdf-loading-progress" class="text-[11px] font-bold text-blue-300">Initialisation du moteur PWA...</p>
+                <p class="text-[10px] text-slate-400 max-w-sm pt-2">
+                    Une fois ouvert, ce document reste lisible sur votre téléphone même en cas de coupure de connexion Internet.
+                </p>
             </div>
-            <h3 class="text-white font-extrabold text-lg mb-1">Protection ArchivEx Active</h3>
-            <p class="text-blue-200 text-xs max-w-md">Le document est temporairement flouté pendant que vous consultez un autre onglet du navigateur.</p>
-        </div>
 
-        <!-- UNIQUE FILIGRANE CENTRAL DISCRET (LISIBILITÉ AMÉLIORÉE) -->
-        <div class="absolute inset-0 z-20 pointer-events-none flex items-center justify-center select-none overflow-hidden p-6" aria-hidden="true">
-            <div class="transform -rotate-25 text-slate-400/35 text-sm sm:text-base font-black tracking-widest uppercase text-center select-none pointer-events-none">
-                {{ request.user.get_full_name|default:request.user.username }} • ArchivEx
+            <!-- TAB SWITCH SECURITY BLUR MASK -->
+            <div id="tab-blur-mask" class="absolute inset-0 z-40 bg-[#071a49]/95 backdrop-blur-md hidden flex-col items-center justify-center text-center p-6 transition-all duration-150">
+                <div class="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-amber-300 flex items-center justify-center text-2xl mb-3 shadow-lg">
+                    <i class="fa-solid fa-user-shield" aria-hidden="true"></i>
+                </div>
+                <h3 class="text-white font-extrabold text-lg mb-1">Protection ArchivEx Active</h3>
+                <p class="text-blue-200 text-xs max-w-md">Le document est temporairement masqué pendant que vous consultez une autre application.</p>
             </div>
-        </div>
 
-        <!-- CANVAS RENDERER CONTAINER -->
-        <div id="canvas-wrapper" class="relative z-30 flex flex-col items-center justify-start w-full py-2">
-            <canvas id="pdf-canvas" class="shadow-2xl rounded-xl bg-white block"></canvas>
-        </div>
+            <!-- UNIQUE FILIGRANE CENTRAL DISCRET (LISIBILITÉ AMÉLIORÉE) -->
+            <div class="absolute inset-0 z-20 pointer-events-none flex items-center justify-center select-none overflow-hidden p-6" aria-hidden="true">
+                <div class="transform -rotate-25 text-slate-400/25 text-sm sm:text-base font-black tracking-widest uppercase text-center select-none pointer-events-none">
+                    {{ request.user.get_full_name|default:request.user.username }} • ArchivEx PWA
+                </div>
+            </div>
 
-        <!-- FALLBACK NATIVE VIEWER IFRAME (SE DÉCLENCHE SANS TÉLÉCHARGEMENT INITIAL DOUBLE) -->
-        <iframe id="pdf-fallback-frame" data-src="{{ stream_url }}" class="w-full h-full min-h-[680px] border-0 no-select relative z-30 hidden rounded-xl bg-white" title="Lecteur PDF haute vitesse"></iframe>
-    </div>
+            <!-- CONTENEUR DES PAGES CANVAS (DÉFILEMENT CONTINU OU SINGLE PAGE) -->
+            <div id="canvas-wrapper" class="relative z-30 flex flex-col items-center justify-start w-full py-2">
+                <!-- Les toiles canvas sont injectées ici dynamiquement -->
+            </div>
+
+        </div>
     </div> <!-- /#viewer-fullscreen-root -->
 
 </div>
 
 <script>
-    const url = "{{ stream_url }}";
+    const streamUrl = "{{ stream_url }}";
 
     let pdfDoc = null,
         pageNum = 1,
+        totalNumPages = 0,
         pageRendering = false,
         pageNumPending = null,
-        currentRenderTask = null,
         scale = 1.25,
-        isFirstPageRendered = false,
-        canvas = document.getElementById('pdf-canvas'),
-        ctx = canvas ? canvas.getContext('2d') : null;
+        isContinuousScroll = true, // Par défaut : défilement continu ultra-ergonomique sur mobile
+        renderedPages = new Set(),
+        wrapper = document.getElementById('canvas-wrapper'),
+        viewerContainer = document.getElementById('viewer-container');
 
-    // --- FONCTIONS DE BASCULEMENT DE MODE (CANVAS INTERACTIF VS LECTEUR NATIF HAUTE VITESSE) ---
-    function activateNativeViewer(reason) {
-        console.warn("ArchivEx Viewer : activation du lecteur haute vitesse natif (" + (reason || 'auto') + ")");
-        const spinner = document.getElementById('pdf-loader-spinner');
-        if (spinner) spinner.classList.add('hidden');
-        
-        const canvasWrapper = document.getElementById('canvas-wrapper');
-        if (canvasWrapper) canvasWrapper.classList.add('hidden');
+    // 1. GESTION DE LA SYNCHRONISATION PWA HORS-LIGNE (CACHE STORAGE)
+    function syncOfflinePwaCache() {
+        const badge = document.getElementById('pwa-status-badge');
+        if (!('caches' in window)) return;
 
-        const fallbackFrame = document.getElementById('pdf-fallback-frame');
-        if (fallbackFrame) {
-            const dataSrc = fallbackFrame.getAttribute('data-src') || url;
-            if (!fallbackFrame.src || fallbackFrame.src === 'about:blank' || !fallbackFrame.src.includes('stream')) {
-                fallbackFrame.src = dataSrc;
-            }
-            fallbackFrame.classList.remove('hidden');
-        }
-
-        const modeText = document.getElementById('viewer-mode-text');
-        if (modeText) modeText.textContent = 'Mode Canvas';
-        isFirstPageRendered = true;
-    }
-
-    function activateCanvasViewer() {
-        const fallbackFrame = document.getElementById('pdf-fallback-frame');
-        if (fallbackFrame) fallbackFrame.classList.add('hidden');
-
-        const canvasWrapper = document.getElementById('canvas-wrapper');
-        if (canvasWrapper) canvasWrapper.classList.remove('hidden');
-
-        const modeText = document.getElementById('viewer-mode-text');
-        if (modeText) modeText.textContent = 'Mode Rapide';
-
-        if (pdfDoc) {
-            renderPage(pageNum);
-        }
-    }
-
-    // Bouton de bascule manuelle rapide
-    const toggleViewerModeBtn = document.getElementById('toggle-viewer-mode');
-    if (toggleViewerModeBtn) {
-        toggleViewerModeBtn.addEventListener('click', () => {
-            const fallbackFrame = document.getElementById('pdf-fallback-frame');
-            if (fallbackFrame && !fallbackFrame.classList.contains('hidden')) {
-                activateCanvasViewer();
-            } else {
-                activateNativeViewer('Choix manuel utilisateur');
-            }
-        });
-    }
-
-    // SÉCURITÉ ANTI-BLOCAGE : Si le rendu canvas ne s'affiche pas dans les 4 secondes,
-    // basculer automatiquement et instantanément sur le lecteur natif sécurisé
-    const safetyTimeout = setTimeout(() => {
-        if (!isFirstPageRendered) {
-            activateNativeViewer('Délai d\'initialisation dépassé (>4s)');
-        }
-    }, 4000);
-
-    function renderPage(num) {
-        if (!pdfDoc || !ctx) return;
-        pageRendering = true;
-
-        if (currentRenderTask) {
-            try {
-                currentRenderTask.cancel();
-            } catch (e) {}
-        }
-
-        pdfDoc.getPage(num).then(function(page) {
-            let viewport = page.getViewport({scale: scale});
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-
-            let renderContext = {
-                canvasContext: ctx,
-                viewport: viewport
-            };
-            currentRenderTask = page.render(renderContext);
-
-            currentRenderTask.promise.then(function() {
-                pageRendering = false;
-                isFirstPageRendered = true;
-                clearTimeout(safetyTimeout);
-                const spinner = document.getElementById('pdf-loader-spinner');
-                if (spinner) spinner.classList.add('hidden');
-
-                if (pageNumPending !== null) {
-                    renderPage(pageNumPending);
-                    pageNumPending = null;
+        caches.open('archivex-docs-v1').then(cache => {
+            cache.match(streamUrl).then(cachedResp => {
+                if (cachedResp) {
+                    if (badge) {
+                        badge.className = 'px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black inline-flex items-center space-x-1';
+                        badge.innerHTML = '<i class="fa-solid fa-cloud-check text-emerald-600"></i><span>Disponible hors-ligne</span>';
+                    }
+                } else if (navigator.onLine) {
+                    fetch(streamUrl).then(resp => {
+                        if (resp.status === 200) {
+                            cache.put(streamUrl, resp.clone());
+                            if (badge) {
+                                badge.className = 'px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black inline-flex items-center space-x-1';
+                                badge.innerHTML = '<i class="fa-solid fa-cloud-check text-emerald-600"></i><span>Synchronisé hors-ligne</span>';
+                            }
+                        }
+                    }).catch(() => {});
                 }
-            }).catch(function(err) {
-                pageRendering = false;
-                if (err && err.name === 'RenderingCancelledException') {
-                    // Annulation normale lors du zoom ou redimensionnement rapide
-                    return;
-                }
-                console.warn('Erreur rendu page canvas :', err);
-                activateNativeViewer('Erreur de rendu canvas');
             });
-        }).catch(function(err) {
-            pageRendering = false;
-            console.warn('Erreur chargement page :', err);
-            activateNativeViewer('Erreur getPage');
         });
-
-        const pNumElem = document.getElementById('page-num');
-        if (pNumElem) pNumElem.textContent = num;
-        const zElem = document.getElementById('zoom-level');
-        if (zElem) zElem.textContent = Math.round(scale * 100) + '%';
-        const vc = document.getElementById('viewer-container');
-        if (vc) vc.scrollTop = 0;
     }
 
+    // Détection de l'état de connexion de l'étudiant
+    window.addEventListener('online', () => {
+        const badge = document.getElementById('pwa-status-badge');
+        if (badge) {
+            badge.className = 'px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black inline-flex items-center space-x-1';
+            badge.innerHTML = '<i class="fa-solid fa-wifi text-emerald-600"></i><span>Connecté (PWA)</span>';
+        }
+    });
+    window.addEventListener('offline', () => {
+        const badge = document.getElementById('pwa-status-badge');
+        if (badge) {
+            badge.className = 'px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-black inline-flex items-center space-x-1';
+            badge.innerHTML = '<i class="fa-solid fa-plane text-amber-600"></i><span>Mode Hors-ligne Actif</span>';
+        }
+    });
+    if (!navigator.onLine) {
+        const badge = document.getElementById('pwa-status-badge');
+        if (badge) {
+            badge.className = 'px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-black inline-flex items-center space-x-1';
+            badge.innerHTML = '<i class="fa-solid fa-plane text-amber-600"></i><span>Mode Hors-ligne Actif</span>';
+        }
+    }
+
+    // 2. CALCUL DE L'ÉCHELLE OPTIMALE (ADAPTATION SMARTPHONE/TABLETTE/PC)
     function calculateOptimalScale(page) {
-        const container = document.getElementById('viewer-container');
-        const containerWidth = (container ? container.clientWidth : window.innerWidth) - 16;
-        const unscaledViewport = page.getViewport({scale: 1.0});
-        
+        const containerWidth = (viewerContainer ? viewerContainer.clientWidth : window.innerWidth) - 28;
+        const unscaledViewport = page.getViewport({ scale: 1.0 });
         let calculated = containerWidth / unscaledViewport.width;
-        if (calculated < 0.75) calculated = 0.75;
+        if (calculated < 0.60) calculated = 0.60;
         if (calculated > 3.0) calculated = 3.0;
         return calculated;
     }
 
-    // Bascule Plein Écran totale (100% de l'écran)
-    const toggleFullscreenBtn = document.getElementById('toggle-fullscreen');
-    const viewerRoot = document.getElementById('viewer-fullscreen-root');
-    if (toggleFullscreenBtn && viewerRoot) {
-        toggleFullscreenBtn.addEventListener('click', () => {
-            const isFull = viewerRoot.classList.contains('fixed');
-            const fsIcon = document.getElementById('fullscreen-icon');
-            const fsText = document.getElementById('fullscreen-text');
-            const vc = document.getElementById('viewer-container');
+    // 3. RENDU D'UNE PAGE UNIQUE SUR SON CANVAS AVEC HAUTE DENSITÉ (RETINA / MOBILE)
+    function renderCanvasPage(num, canvasElement) {
+        if (!pdfDoc) return Promise.resolve();
 
-            if (!isFull) {
-                viewerRoot.className = 'fixed inset-0 z-[9999] bg-slate-950 flex flex-col p-1 sm:p-2';
-                if (vc) {
-                    vc.classList.remove('h-[88vh]', 'sm:h-[91vh]', 'min-h-[680px]', 'rounded-2xl');
-                    vc.classList.add('flex-grow', 'h-full', 'rounded-xl');
-                }
-                if (fsIcon) fsIcon.className = 'fa-solid fa-compress text-[10px]';
-                if (fsText) fsText.textContent = 'Réduire';
-                document.body.classList.add('overflow-hidden');
-            } else {
-                viewerRoot.className = 'flex flex-col';
-                if (vc) {
-                    vc.classList.add('h-[88vh]', 'sm:h-[91vh]', 'min-h-[680px]', 'rounded-2xl');
-                    vc.classList.remove('flex-grow', 'h-full', 'rounded-xl');
-                }
-                if (fsIcon) fsIcon.className = 'fa-solid fa-expand text-[10px]';
-                if (fsText) fsText.textContent = 'Plein écran';
-                document.body.classList.remove('overflow-hidden');
-            }
+        return pdfDoc.getPage(num).then(function(page) {
+            const viewport = page.getViewport({ scale: scale });
+            const dpr = Math.min(window.devicePixelRatio || 1, 2.0); // Capped à 2.0 pour préserver la RAM mobile
 
-            if (pdfDoc) {
-                setTimeout(() => {
-                    pdfDoc.getPage(pageNum).then(function(page) {
-                        scale = calculateOptimalScale(page);
-                        queueRenderPage(pageNum);
-                    });
-                }, 120);
-            }
+            canvasElement.width = Math.floor(viewport.width * dpr);
+            canvasElement.height = Math.floor(viewport.height * dpr);
+            canvasElement.style.width = Math.floor(viewport.width) + 'px';
+            canvasElement.style.height = Math.floor(viewport.height) + 'px';
+
+            const ctx = canvasElement.getContext('2d');
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            const renderContext = {
+                canvasContext: ctx,
+                viewport: viewport
+            };
+
+            return page.render(renderContext).promise;
         });
     }
 
-    function queueRenderPage(num) {
-        if (pageRendering) {
-            pageNumPending = num;
+    // 4. RENDU EN DÉFILEMENT CONTINU (TOUTES LES PAGES VERTICALES NATURELLES)
+    function renderContinuousAllPages() {
+        if (!pdfDoc || !wrapper) return;
+        wrapper.innerHTML = '';
+        renderedPages.clear();
+
+        const spinner = document.getElementById('pdf-loader-spinner');
+        if (spinner) spinner.classList.add('hidden');
+
+        for (let i = 1; i <= totalNumPages; i++) {
+            const pageBox = document.createElement('div');
+            pageBox.className = 'pdf-page-box relative flex flex-col items-center justify-center my-2';
+            pageBox.dataset.page = i;
+
+            const pageLabel = document.createElement('div');
+            pageLabel.className = 'text-[10px] font-black text-slate-400 mb-1 select-none';
+            pageLabel.textContent = `Page ${i} / ${totalNumPages}`;
+
+            const canvas = document.createElement('canvas');
+            canvas.className = 'pdf-page-canvas shadow-2xl block';
+            canvas.id = `pdf-canvas-p${i}`;
+
+            pageBox.appendChild(pageLabel);
+            pageBox.appendChild(canvas);
+            wrapper.appendChild(pageBox);
+
+            renderCanvasPage(i, canvas).then(() => {
+                renderedPages.add(i);
+            }).catch(e => console.warn(`Erreur page ${i}:`, e));
+        }
+
+        updateZoomLabel();
+    }
+
+    // 5. RENDU EN MODE PAGE PAR PAGE UNIQUE
+    function renderSinglePage(num) {
+        if (!pdfDoc || !wrapper) return;
+        pageRendering = true;
+        wrapper.innerHTML = '';
+
+        const spinner = document.getElementById('pdf-loader-spinner');
+        if (spinner) spinner.classList.add('hidden');
+
+        const pageBox = document.createElement('div');
+        pageBox.className = 'pdf-page-box relative flex flex-col items-center justify-center my-2';
+        
+        const canvas = document.createElement('canvas');
+        canvas.className = 'pdf-page-canvas shadow-2xl block';
+        canvas.id = 'pdf-canvas-single';
+
+        pageBox.appendChild(canvas);
+        wrapper.appendChild(pageBox);
+
+        renderCanvasPage(num, canvas).then(() => {
+            pageRendering = false;
+            if (pageNumPending !== null) {
+                renderSinglePage(pageNumPending);
+                pageNumPending = null;
+            }
+        }).catch(err => {
+            pageRendering = false;
+            console.warn('Erreur single page :', err);
+        });
+
+        const pNumElem = document.getElementById('page-num');
+        if (pNumElem) pNumElem.textContent = num;
+        updateZoomLabel();
+    }
+
+    function updateZoomLabel() {
+        const zElem = document.getElementById('zoom-level');
+        if (zElem) zElem.textContent = Math.round(scale * 100) + '%';
+    }
+
+    function queueRender() {
+        if (isContinuousScroll) {
+            renderContinuousAllPages();
         } else {
-            renderPage(num);
+            if (pageRendering) {
+                pageNumPending = pageNum;
+            } else {
+                renderSinglePage(pageNum);
+            }
         }
     }
 
-    const prevBtn = document.getElementById('prev-page');
-    if (prevBtn) {
-        prevBtn.addEventListener('click', () => {
-            if (pageNum <= 1) return;
-            pageNum--;
-            queueRenderPage(pageNum);
-        });
-    }
-
-    const nextBtn = document.getElementById('next-page');
-    if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
-            if (!pdfDoc || pageNum >= pdfDoc.numPages) return;
-            pageNum++;
-            queueRenderPage(pageNum);
-        });
-    }
-
-    const zoomInBtn = document.getElementById('zoom-in');
-    if (zoomInBtn) {
-        zoomInBtn.addEventListener('click', () => {
-            if (scale < 3.0) {
-                scale += 0.20;
-                queueRenderPage(pageNum);
+    // 6. INITIALISATION DE PDF.JS (AVEC SUPPORT LOCAL ET OFFLINE ROBUSTE)
+    function initPdfDocument() {
+        if (!window.pdfjsLib) {
+            const spinner = document.getElementById('pdf-loader-spinner');
+            if (spinner) {
+                spinner.innerHTML = `
+                    <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl mb-3">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <p class="text-sm font-bold text-white mb-2">Lecteur en cours d'initialisation...</p>
+                    <button onclick="window.location.reload()" class="btn-primary text-xs px-4 py-2 font-bold">Réessayer</button>
+                `;
             }
-        });
-    }
+            return;
+        }
 
-    const zoomOutBtn = document.getElementById('zoom-out');
-    if (zoomOutBtn) {
-        zoomOutBtn.addEventListener('click', () => {
-            if (scale > 0.6) {
-                scale -= 0.20;
-                queueRenderPage(pageNum);
-            }
-        });
-    }
-
-    const fitWidthBtn = document.getElementById('fit-width');
-    if (fitWidthBtn) {
-        fitWidthBtn.addEventListener('click', () => {
-            if (pdfDoc) {
-                pdfDoc.getPage(pageNum).then(function(page) {
-                    scale = calculateOptimalScale(page);
-                    queueRenderPage(pageNum);
-                });
-            }
-        });
-    }
-
-    // Auto-adaptation fluide en cas de rotation d'écran ou redimensionnement
-    let resizeTimer = null;
-    window.addEventListener('resize', () => {
-        if (!pdfDoc) return;
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-            pdfDoc.getPage(pageNum).then(function(page) {
-                scale = calculateOptimalScale(page);
-                queueRenderPage(pageNum);
-            });
-        }, 200);
-    });
-
-    // Initialisation intelligente et progressive de PDF.js
-    if (window.pdfjsLib) {
         const loadingTask = pdfjsLib.getDocument({
-            url: url,
+            url: streamUrl,
             withCredentials: true,
             cMapPacked: true,
-            disableAutoFetch: true, // Optimisation mobile : charge page par page sans saturer
+            disableAutoFetch: false,
             disableStream: false,
         });
 
@@ -451,92 +428,204 @@
 
         loadingTask.promise.then(function(pdfDoc_) {
             pdfDoc = pdfDoc_;
+            totalNumPages = pdfDoc.numPages;
+
             const countElem = document.getElementById('page-count');
-            if (countElem) countElem.textContent = pdfDoc.numPages;
-            
-            // Calcul automatique de l'ajustement optimal dès la 1ère page
-            pdfDoc.getPage(1).then(function(firstPage) {
-                scale = calculateOptimalScale(firstPage);
-                renderPage(1);
-            }).catch(function(err) {
-                console.warn('Erreur getPage 1 :', err);
-                activateNativeViewer('Erreur getPage 1');
+            if (countElem) countElem.textContent = totalNumPages;
+
+            // Déclencher la mise en cache de sécurité PWA
+            syncOfflinePwaCache();
+
+            // Calibrer l'échelle sur la 1ère page et afficher
+            pdfDoc.getPage(1).then(function(page1) {
+                scale = calculateOptimalScale(page1);
+                queueRender();
             });
         }).catch(function(error) {
-            console.warn('PDF.js loading error :', error);
-            activateNativeViewer('Échec chargement PDF.js');
+            console.error('Erreur chargement PDF :', error);
+            const spinner = document.getElementById('pdf-loader-spinner');
+            if (spinner) {
+                spinner.innerHTML = `
+                    <div class="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-xl mb-3">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                    </div>
+                    <p class="text-sm font-bold text-white mb-1">Document momentanément indisponible</p>
+                    <p class="text-xs text-slate-300 max-w-sm mb-4">Vérifiez votre connexion Internet pour ouvrir ce document une première fois.</p>
+                    <button onclick="window.location.reload()" class="btn-primary text-xs px-4 py-2 font-bold">Actualiser</button>
+                `;
+            }
         });
-    } else {
-        // Fallback immédiat si pdfjsLib non disponible (blocage CDN ou réseau lent)
-        activateNativeViewer('pdfjsLib non disponible');
     }
 
-    // 1. GESTES MOBILES TACTILES NATURELS (PINCH-TO-ZOOM & DOUBLE TAP)
-    const viewerContainer = document.getElementById('viewer-container');
-    let touchStartDist = 0;
-    let touchStartScale = scale;
-    let lastTapTime = 0;
+    // 7. COMMANDES UTILISATEUR DE LA BARRE D'OUTILS
+    // Bascule Défilement Continu vs Page par Page
+    const toggleScrollBtn = document.getElementById('toggle-scroll-mode');
+    const scrollLabel = document.getElementById('scroll-mode-label');
+    if (toggleScrollBtn) {
+        toggleScrollBtn.addEventListener('click', () => {
+            isContinuousScroll = !isContinuousScroll;
+            if (isContinuousScroll) {
+                if (scrollLabel) scrollLabel.textContent = 'Défilement continu';
+                toggleScrollBtn.className = 'px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center space-x-1 text-[11px] font-black transition-all';
+            } else {
+                if (scrollLabel) scrollLabel.textContent = 'Page par page';
+                toggleScrollBtn.className = 'px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center space-x-1 text-[11px] font-black transition-all';
+            }
+            queueRender();
+        });
+    }
 
+    // Page précédente / suivante (en mode page par page)
+    const prevBtn = document.getElementById('prev-page');
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (isContinuousScroll) {
+                // En mode défilement continu : scroller à la page précédente
+                if (pageNum > 1) {
+                    pageNum--;
+                    const targetBox = document.querySelector(`.pdf-page-box[data-page="${pageNum}"]`);
+                    if (targetBox) targetBox.scrollIntoView({ behavior: 'smooth' });
+                    const pNumElem = document.getElementById('page-num');
+                    if (pNumElem) pNumElem.textContent = pageNum;
+                }
+            } else {
+                if (pageNum <= 1) return;
+                pageNum--;
+                renderSinglePage(pageNum);
+            }
+        });
+    }
+
+    const nextBtn = document.getElementById('next-page');
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            if (isContinuousScroll) {
+                // En mode défilement continu : scroller à la page suivante
+                if (pdfDoc && pageNum < totalNumPages) {
+                    pageNum++;
+                    const targetBox = document.querySelector(`.pdf-page-box[data-page="${pageNum}"]`);
+                    if (targetBox) targetBox.scrollIntoView({ behavior: 'smooth' });
+                    const pNumElem = document.getElementById('page-num');
+                    if (pNumElem) pNumElem.textContent = pageNum;
+                }
+            } else {
+                if (!pdfDoc || pageNum >= totalNumPages) return;
+                pageNum++;
+                renderSinglePage(pageNum);
+            }
+        });
+    }
+
+    // Zoom +/-
+    const zoomInBtn = document.getElementById('zoom-in');
+    if (zoomInBtn) {
+        zoomInBtn.addEventListener('click', () => {
+            if (scale < 3.0) {
+                scale = Math.min(3.0, scale + 0.20);
+                queueRender();
+            }
+        });
+    }
+
+    const zoomOutBtn = document.getElementById('zoom-out');
+    if (zoomOutBtn) {
+        zoomOutBtn.addEventListener('click', () => {
+            if (scale > 0.60) {
+                scale = Math.max(0.60, scale - 0.20);
+                queueRender();
+            }
+        });
+    }
+
+    const fitWidthBtn = document.getElementById('fit-width');
+    if (fitWidthBtn) {
+        fitWidthBtn.addEventListener('click', () => {
+            if (pdfDoc) {
+                pdfDoc.getPage(1).then(function(page1) {
+                    scale = calculateOptimalScale(page1);
+                    queueRender();
+                });
+            }
+        });
+    }
+
+    // Bascule Plein Écran totale (100% écran smartphone & PC)
+    const toggleFullscreenBtn = document.getElementById('toggle-fullscreen');
+    const viewerRoot = document.getElementById('viewer-fullscreen-root');
+    if (toggleFullscreenBtn && viewerRoot) {
+        toggleFullscreenBtn.addEventListener('click', () => {
+            const isFull = viewerRoot.classList.contains('fixed');
+            const fsIcon = document.getElementById('fullscreen-icon');
+            const fsText = document.getElementById('fullscreen-text');
+
+            if (!isFull) {
+                viewerRoot.className = 'fixed inset-0 z-[9999] bg-slate-950 flex flex-col p-1 sm:p-2';
+                if (viewerContainer) {
+                    viewerContainer.classList.remove('h-[88vh]', 'sm:h-[91vh]', 'min-h-[680px]', 'rounded-2xl');
+                    viewerContainer.classList.add('flex-grow', 'h-full', 'rounded-xl');
+                }
+                if (fsIcon) fsIcon.className = 'fa-solid fa-compress text-[10px]';
+                if (fsText) fsText.textContent = 'Réduire';
+                document.body.classList.add('overflow-hidden');
+            } else {
+                viewerRoot.className = 'flex flex-col';
+                if (viewerContainer) {
+                    viewerContainer.classList.add('h-[88vh]', 'sm:h-[91vh]', 'min-h-[680px]', 'rounded-2xl');
+                    viewerContainer.classList.remove('flex-grow', 'h-full', 'rounded-xl');
+                }
+                if (fsIcon) fsIcon.className = 'fa-solid fa-expand text-[10px]';
+                if (fsText) fsText.textContent = 'Plein écran';
+                document.body.classList.remove('overflow-hidden');
+            }
+
+            if (pdfDoc) {
+                setTimeout(() => {
+                    pdfDoc.getPage(1).then(function(page1) {
+                        scale = calculateOptimalScale(page1);
+                        queueRender();
+                    });
+                }, 120);
+            }
+        });
+    }
+
+    // Adaptation automatique lors de la rotation de l'écran du smartphone
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+        if (!pdfDoc) return;
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            pdfDoc.getPage(1).then(function(page1) {
+                scale = calculateOptimalScale(page1);
+                queueRender();
+            });
+        }, 200);
+    });
+
+    // 8. SUIVI DU NUMÉRO DE PAGE LORS DU DÉFILEMENT CONTINU
     if (viewerContainer) {
-        viewerContainer.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 2) {
-                touchStartDist = Math.hypot(
-                    e.touches[0].pageX - e.touches[1].pageX,
-                    e.touches[0].pageY - e.touches[1].pageY
-                );
-                touchStartScale = scale;
-            } else if (e.touches.length === 1) {
-                const now = Date.now();
-                if (now - lastTapTime < 300) {
-                    if (pdfDoc) {
-                        pdfDoc.getPage(pageNum).then(function(page) {
-                            const optimal = calculateOptimalScale(page);
-                            scale = (Math.abs(scale - optimal) < 0.15) ? optimal * 1.5 : optimal;
-                            queueRenderPage(pageNum);
-                        });
+        viewerContainer.addEventListener('scroll', () => {
+            if (!isContinuousScroll) return;
+            const boxes = document.querySelectorAll('.pdf-page-box');
+            const containerTop = viewerContainer.scrollTop;
+            const containerHeight = viewerContainer.clientHeight;
+            
+            boxes.forEach(box => {
+                const boxTop = box.offsetTop;
+                const boxHeight = box.offsetHeight;
+                if (boxTop <= containerTop + containerHeight / 2 && boxTop + boxHeight >= containerTop) {
+                    const current = box.dataset.page;
+                    const pNumElem = document.getElementById('page-num');
+                    if (pNumElem && current) {
+                        pNumElem.textContent = current;
+                        pageNum = parseInt(current, 10);
                     }
                 }
-                lastTapTime = now;
-            }
-        }, { passive: true });
-
-        viewerContainer.addEventListener('touchmove', (e) => {
-            if (e.touches.length === 2 && touchStartDist > 0) {
-                const currentDist = Math.hypot(
-                    e.touches[0].pageX - e.touches[1].pageX,
-                    e.touches[0].pageY - e.touches[1].pageY
-                );
-                const factor = currentDist / touchStartDist;
-                const newScale = Math.max(0.65, Math.min(3.2, touchStartScale * factor));
-                
-                const canvasWrapper = document.getElementById('canvas-wrapper');
-                if (canvasWrapper) {
-                    const tempScale = newScale / scale;
-                    canvasWrapper.style.transform = `scale(${tempScale})`;
-                    canvasWrapper.style.transformOrigin = 'center top';
-                }
-            }
-        }, { passive: true });
-
-        viewerContainer.addEventListener('touchend', (e) => {
-            if (touchStartDist > 0 && e.touches.length < 2) {
-                const canvasWrapper = document.getElementById('canvas-wrapper');
-                if (canvasWrapper && canvasWrapper.style.transform) {
-                    const match = canvasWrapper.style.transform.match(/scale\(([^)]+)\)/);
-                    if (match) {
-                        const tempScale = parseFloat(match[1]);
-                        scale = Math.max(0.65, Math.min(3.2, scale * tempScale));
-                    }
-                    canvasWrapper.style.transform = '';
-                    canvasWrapper.style.transformOrigin = '';
-                    queueRenderPage(pageNum);
-                }
-                touchStartDist = 0;
-            }
+            });
         }, { passive: true });
     }
 
-    // 2. SMART TAB SWITCH PROTECTION (FLOUTAGE LORSQU'ON QUITTE L'ONGLET)
+    // 9. SMART TAB SWITCH PROTECTION (FLOUTAGE LORS DU CHANGEMENT D'APPLICATION)
     const tabBlurMask = document.getElementById('tab-blur-mask');
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
@@ -546,7 +635,7 @@
         }
     });
 
-    // 3. BLOCK SENSITIVE KEYBOARD SHORTCUTS (PRINT, SAVE, INSPECT)
+    // 10. BLOCAGE STRICT DES TOUCHES DE SAUVEGARDE, IMPRESSION ET INSPECTION
     document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S' || e.key === 'u' || e.key === 'U')) {
             e.preventDefault();
@@ -557,6 +646,11 @@
             return false;
         }
     });
+
+    // Lancement au chargement du DOM
+    document.addEventListener('DOMContentLoaded', initPdfDocument);
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        initPdfDocument();
+    }
 </script>
 {% endblock %}
-

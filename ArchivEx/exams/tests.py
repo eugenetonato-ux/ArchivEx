@@ -289,8 +289,15 @@ class ArchivExFlowTest(TestCase):
         res_stream = self.client.get(url_stream)
         self.assertEqual(res_stream.status_code, 200)
         self.assertEqual(res_stream["Content-Type"], "application/pdf")
+        self.assertIn("inline", res_stream["Content-Disposition"])
         stream_bytes = b"".join(res_stream.streaming_content)
         self.assertGreater(len(stream_bytes), 100)
+
+        # Verify downloading is strictly prohibited: Content-Disposition remains inline
+        url_download = reverse("exams:stream_watermarked_pdf", kwargs={"pk": self.exam_premium.id}) + "?type=exam&download=1"
+        res_download = self.client.get(url_download)
+        self.assertEqual(res_download.status_code, 200)
+        self.assertIn("inline", res_download["Content-Disposition"])
 
     def test_student_viewer_denied_without_pass(self):
         """Student without Pass is denied access to premium resources in viewer."""

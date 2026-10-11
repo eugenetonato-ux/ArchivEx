@@ -917,6 +917,7 @@ def stream_watermarked_pdf_view(request, pk):
 
     subj_name = exam.subject.name if exam.subject else "Document"
     safe_filename = _sanitize_header_filename(f"ArchivEx_{res_type}_{subj_name}_{exam.year}") + ".pdf"
+    disposition = "inline"
 
     # Utilisateur anonyme sur ressource gratuite : servir le PDF brut, sans watermark
     if not request.user.is_authenticated:
@@ -928,7 +929,7 @@ def stream_watermarked_pdf_view(request, pk):
             else:
                 return redirect(getattr(file_obj, "url", "/"))
             response = FileResponse(raw_io, content_type="application/pdf")
-            response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
+            response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
             return response
         except Exception:
             return _render_pdf_error_response("Le fichier PDF n'a pas pu être lu par le serveur.")
@@ -953,7 +954,7 @@ def stream_watermarked_pdf_view(request, pk):
         response = FileResponse(open(cache_disk_file, "rb"), content_type="application/pdf")
         response["Content-Length"] = os.path.getsize(cache_disk_file)
         response["Accept-Ranges"] = "bytes"
-        response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
+        response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
         return response
 
     cache_key = f"wm_pdf_{exam.id}_{res_type}_{request.user.id}_{file_mtime}"
@@ -967,7 +968,7 @@ def stream_watermarked_pdf_view(request, pk):
         response = FileResponse(BytesIO(cached_pdf), content_type="application/pdf")
         response["Content-Length"] = len(cached_pdf)
         response["Accept-Ranges"] = "bytes"
-        response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
+        response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
         return response
 
     try:
@@ -984,7 +985,7 @@ def stream_watermarked_pdf_view(request, pk):
         response = FileResponse(BytesIO(pdf_bytes), content_type="application/pdf")
         response["Content-Length"] = len(pdf_bytes)
         response["Accept-Ranges"] = "bytes"
-        response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
+        response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
         return response
     except Exception:
         try:
@@ -1000,7 +1001,7 @@ def stream_watermarked_pdf_view(request, pk):
                 content_type="application/pdf"
             )
             response["Accept-Ranges"] = "bytes"
-            response["Content-Disposition"] = f'inline; filename="{safe_filename}"'
+            response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
             return response
         except Exception:
             return _render_pdf_error_response("Le fichier PDF n'a pas pu être lu par le serveur.")
