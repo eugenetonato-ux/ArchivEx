@@ -568,23 +568,22 @@ def _get_safe_file_path(field_file):
             return path
     except Exception:
         pass
-    # 2. Vérification physique dans MEDIA_ROOT (évite latence réseau S3 si fichier présent localement)
+    # 2. Vérification physique dans MEDIA_ROOT (avec nom brut et nom assaini)
     try:
         from django.conf import settings
+        from .services import _sanitize_storage_key
         fname = getattr(field_file, "name", "")
         if fname:
-            local_path = os.path.join(settings.MEDIA_ROOT, str(fname))
+            local_path = os.path.join(settings.MEDIA_ROOT, str(fname).strip("/\\"))
             if os.path.exists(local_path):
                 return local_path
+            clean_path = os.path.join(settings.MEDIA_ROOT, _sanitize_storage_key(fname).strip("/\\"))
+            if os.path.exists(clean_path):
+                return clean_path
     except Exception:
         pass
-    # 3. Repli objet FieldFile distant
-    try:
-        if hasattr(field_file, "url") and field_file.url:
-            return field_file
-    except Exception:
-        pass
-    return None
+    # 3. Repli objet FieldFile distant (Supabase S3)
+    return field_file
 
 
 @login_required
@@ -1002,22 +1001,12 @@ def stream_watermarked_pdf_view(request, pk):
         response["Cache-Control"] = "private, no-transform, max-age=86400"
         response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
         return response
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Erreur application watermark PDF pour exam {exam.id}: {e}")
         try:
-            raw_bytes = None
-            if isinstance(file_obj, str) and os.path.exists(file_obj):
-                with open(file_obj, "rb") as f:
-                    raw_bytes = f.read()
-            elif hasattr(file_obj, "open"):
-                try:
-                    file_obj.open("rb")
-                except Exception:
-                    pass
-                raw_bytes = file_obj.read()
-            elif hasattr(file_obj, "read"):
-                raw_bytes = file_obj.read()
-
-            if raw_bytes and len(raw_bytes) > 20:
+            from .services import extract_raw_pdf_bytes
+            raw_bytes = extract_raw_pdf_bytes(file_obj)
+            if raw_bytes and len(raw_bytes) > 20 and raw_bytes.startswith(b"%PDF"):
                 response = FileResponse(
                     BytesIO(raw_bytes),
                     content_type="application/pdf"
@@ -1027,9 +1016,6 @@ def stream_watermarked_pdf_view(request, pk):
                 response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
                 return response
 
-            if hasattr(file_obj, "url"):
-                return redirect(file_obj.url)
-
-            return _render_pdf_error_response("Le fichier PDF n'a pas pu être lu par le serveur.")
+            return _render_pdf_error_response("Le fichier PDF n'a pas pu être lu par le serveur.", status=404)
         except Exception:
-            return _render_pdf_error_response("Le fichier PDF n'a pas pu être lu par le serveur.")
+            return _render_pdf_error_response("Le fichier PDF n'a pas pu être lu par le serveur.", status=404)

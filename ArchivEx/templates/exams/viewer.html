@@ -564,7 +564,19 @@
 
             if (!resp.ok) {
                 clearInterval(progressTicker);
-                throw new Error("Le serveur a renvoyé une erreur (Code " + resp.status + ").");
+                let errorMsg = "Le serveur a renvoyé une erreur (Code " + resp.status + ").";
+                try {
+                    const text = await resp.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(text, 'text/html');
+                    const p = doc.querySelector('.card p') || doc.querySelector('p');
+                    if (p && p.textContent.trim()) {
+                        errorMsg = p.textContent.trim();
+                    } else if (text && text.length < 200) {
+                        errorMsg = text.trim();
+                    }
+                } catch(e) {}
+                throw new Error(errorMsg);
             }
 
             const ctype = (resp.headers.get('content-type') || '').toLowerCase();
