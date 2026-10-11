@@ -952,8 +952,8 @@ def stream_watermarked_pdf_view(request, pk):
     cache_disk_file = os.path.join(cache_dir, f"wm_{exam.id}_{res_type}_{request.user.id}_{file_mtime}.pdf")
     if os.path.exists(cache_disk_file) and os.path.getsize(cache_disk_file) > 100:
         response = FileResponse(open(cache_disk_file, "rb"), content_type="application/pdf")
-        response["Content-Length"] = os.path.getsize(cache_disk_file)
-        response["Accept-Ranges"] = "bytes"
+        response["Content-Length"] = str(os.path.getsize(cache_disk_file))
+        response["Cache-Control"] = "private, no-transform, max-age=86400"
         response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
         return response
 
@@ -966,8 +966,8 @@ def stream_watermarked_pdf_view(request, pk):
         except Exception:
             pass
         response = FileResponse(BytesIO(cached_pdf), content_type="application/pdf")
-        response["Content-Length"] = len(cached_pdf)
-        response["Accept-Ranges"] = "bytes"
+        response["Content-Length"] = str(len(cached_pdf))
+        response["Cache-Control"] = "private, no-transform, max-age=86400"
         response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
         return response
 
@@ -983,25 +983,38 @@ def stream_watermarked_pdf_view(request, pk):
             pass
 
         response = FileResponse(BytesIO(pdf_bytes), content_type="application/pdf")
-        response["Content-Length"] = len(pdf_bytes)
-        response["Accept-Ranges"] = "bytes"
+        response["Content-Length"] = str(len(pdf_bytes))
+        response["Cache-Control"] = "private, no-transform, max-age=86400"
         response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
         return response
     except Exception:
         try:
+            raw_bytes = None
             if isinstance(file_obj, str) and os.path.exists(file_obj):
-                raw_io = open(file_obj, "rb")
+                with open(file_obj, "rb") as f:
+                    raw_bytes = f.read()
             elif hasattr(file_obj, "open"):
-                raw_io = file_obj.open("rb")
-            else:
-                return redirect(getattr(file_obj, "url", "/"))
-            
-            response = FileResponse(
-                raw_io,
-                content_type="application/pdf"
-            )
-            response["Accept-Ranges"] = "bytes"
-            response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
-            return response
+                try:
+                    file_obj.open("rb")
+                except Exception:
+                    pass
+                raw_bytes = file_obj.read()
+            elif hasattr(file_obj, "read"):
+                raw_bytes = file_obj.read()
+
+            if raw_bytes and len(raw_bytes) > 20:
+                response = FileResponse(
+                    BytesIO(raw_bytes),
+                    content_type="application/pdf"
+                )
+                response["Content-Length"] = str(len(raw_bytes))
+                response["Cache-Control"] = "private, no-transform, max-age=86400"
+                response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
+                return response
+
+            if hasattr(file_obj, "url"):
+                return redirect(file_obj.url)
+
+            return _render_pdf_error_response("Le fichier PDF n'a pas pu être lu par le serveur.")
         except Exception:
             return _render_pdf_error_response("Le fichier PDF n'a pas pu être lu par le serveur.")

@@ -56,16 +56,16 @@
     }
 </style>
 
-<!-- Chargement prioritaire de PDF.js en local (PWA hors-ligne) avec secours CDN -->
+<!-- Chargement résilient de PDF.js (Local PWA prioritaire avec fallback CDN) -->
 <script src="{% static 'vendor/pdfjs/pdf.min.js' %}"></script>
 <script>
-    if (!window.pdfjsLib) {
-        document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"><\/script>');
-    }
-</script>
-<script>
+    window.PDFJS_WORKER_URL = "{% static 'vendor/pdfjs/pdf.worker.min.js' %}";
+    window.PDFJS_CDN_URL = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    window.PDFJS_CDN_WORKER_URL = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
     if (window.pdfjsLib) {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = "{% static 'vendor/pdfjs/pdf.worker.min.js' %}";
+        try {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.PDFJS_WORKER_URL;
+        } catch(e) {}
     }
 </script>
 
@@ -223,31 +223,31 @@
         wrapper = document.getElementById('canvas-wrapper'),
         viewerContainer = document.getElementById('viewer-container');
 
-    // 1. GESTION DE LA SYNCHRONISATION PWA HORS-LIGNE (CACHE STORAGE)
-    function syncOfflinePwaCache() {
-        const badge = document.getElementById('pwa-status-badge');
-        if (!('caches' in window)) return;
+    // Helpers de notification d'état et d'erreur
+    function updateProgress(msg) {
+        const progressElem = document.getElementById('pdf-loading-progress');
+        if (progressElem) progressElem.textContent = msg;
+    }
 
-        caches.open('archivex-docs-v1').then(cache => {
-            cache.match(streamUrl).then(cachedResp => {
-                if (cachedResp) {
-                    if (badge) {
-                        badge.className = 'px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black inline-flex items-center space-x-1';
-                        badge.innerHTML = '<i class="fa-solid fa-cloud-check text-emerald-600"></i><span>Disponible hors-ligne</span>';
-                    }
-                } else if (navigator.onLine) {
-                    fetch(streamUrl).then(resp => {
-                        if (resp.status === 200) {
-                            cache.put(streamUrl, resp.clone());
-                            if (badge) {
-                                badge.className = 'px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black inline-flex items-center space-x-1';
-                                badge.innerHTML = '<i class="fa-solid fa-cloud-check text-emerald-600"></i><span>Synchronisé hors-ligne</span>';
-                            }
-                        }
-                    }).catch(() => {});
-                }
-            });
-        });
+    function showLoaderError(title, subtitle) {
+        const spinner = document.getElementById('pdf-loader-spinner');
+        if (spinner) {
+            spinner.innerHTML = `
+                <div class="w-14 h-14 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center text-2xl mb-3 shadow-lg">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                </div>
+                <h3 class="text-sm font-extrabold text-white mb-1">${title}</h3>
+                <p class="text-xs text-slate-300 max-w-sm mb-4 leading-relaxed">${subtitle}</p>
+                <div class="flex items-center space-x-2">
+                    <button onclick="window.location.reload()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition-all">
+                        <i class="fa-solid fa-rotate-right mr-1"></i> Actualiser
+                    </button>
+                    <a href="{% url 'exams:detail' pk=exam.id %}" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition-all">
+                        Retour à la fiche
+                    </a>
+                </div>
+            `;
+        }
     }
 
     // Détection de l'état de connexion de l'étudiant
@@ -394,67 +394,170 @@
         }
     }
 
-    // 6. INITIALISATION DE PDF.JS (AVEC SUPPORT LOCAL ET OFFLINE ROBUSTE)
-    function initPdfDocument() {
-        if (!window.pdfjsLib) {
-            const spinner = document.getElementById('pdf-loader-spinner');
-            if (spinner) {
-                spinner.innerHTML = `
-                    <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl mb-3">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                    </div>
-                    <p class="text-sm font-bold text-white mb-2">Lecteur en cours d'initialisation...</p>
-                    <button onclick="window.location.reload()" class="btn-primary text-xs px-4 py-2 font-bold">Réessayer</button>
-                `;
-            }
-            return;
+    // 6. INITIALISATION DE PDF.JS (RÉSILIENTE, CHARGEMENT EN MÉMOIRE ET CACHE PWA)
+    async function ensurePdfJsEngine() {
+        if (window.pdfjsLib) {
+            try {
+                window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.PDFJS_WORKER_URL;
+            } catch(e) {}
+            return window.pdfjsLib;
         }
 
-        const loadingTask = pdfjsLib.getDocument({
-            url: streamUrl,
-            withCredentials: true,
-            cMapPacked: true,
-            disableAutoFetch: false,
-            disableStream: false,
+        updateProgress("Chargement du moteur d'affichage...");
+        return new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = window.PDFJS_CDN_URL;
+            s.onload = () => {
+                if (window.pdfjsLib) {
+                    try {
+                        window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.PDFJS_CDN_WORKER_URL;
+                    } catch(e) {}
+                    resolve(window.pdfjsLib);
+                } else {
+                    reject(new Error("Moteur PDF indisponible"));
+                }
+            };
+            s.onerror = () => reject(new Error("Impossible de charger le moteur PDF"));
+            document.head.appendChild(s);
         });
+    }
 
-        loadingTask.onProgress = function(progressData) {
-            if (progressData && progressData.total > 0) {
-                const percent = Math.min(100, Math.round((progressData.loaded / progressData.total) * 100));
-                const progressElem = document.getElementById('pdf-loading-progress');
-                if (progressElem) progressElem.textContent = 'Chargement ' + percent + '%...';
+    async function fetchPdfArrayBuffer() {
+        // A. Vérification prioritaire du cache hors-ligne PWA (< 5ms)
+        if ('caches' in window) {
+            try {
+                const cache = await caches.open('archivex-docs-v1');
+                const cachedResp = await cache.match(streamUrl);
+                if (cachedResp && cachedResp.ok) {
+                    updateProgress("Lecture depuis la mémoire PWA...");
+                    const buf = await cachedResp.arrayBuffer();
+                    if (buf && buf.byteLength > 100) {
+                        const badge = document.getElementById('pwa-status-badge');
+                        if (badge) {
+                            badge.className = 'px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black inline-flex items-center space-x-1';
+                            badge.innerHTML = '<i class="fa-solid fa-cloud-check text-emerald-600"></i><span>Disponible hors-ligne</span>';
+                        }
+                        return buf;
+                    }
+                }
+            } catch (e) {
+                console.warn('Erreur lecture cache PWA:', e);
             }
-        };
+        }
 
-        loadingTask.promise.then(function(pdfDoc_) {
-            pdfDoc = pdfDoc_;
+        // B. Téléchargement direct avec timeout de sécurité de 20s
+        updateProgress("Connexion au document...");
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+        try {
+            const resp = await fetch(streamUrl, {
+                credentials: 'include',
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (!resp.ok) {
+                throw new Error("Le serveur a renvoyé une erreur (Code " + resp.status + ").");
+            }
+
+            const ctype = (resp.headers.get('content-type') || '').toLowerCase();
+            if (ctype.includes('text/html') || ctype.includes('application/json')) {
+                throw new Error("Document non prêt ou accès restreint.");
+            }
+
+            const contentLength = +resp.headers.get('content-length') || 0;
+            let arrayBuffer = null;
+
+            if (contentLength > 0 && resp.body) {
+                const reader = resp.body.getReader();
+                let received = 0;
+                const chunks = [];
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    chunks.push(value);
+                    received += value.length;
+                    const pct = Math.min(99, Math.round((received / contentLength) * 100));
+                    updateProgress("Chargement " + pct + "%...");
+                }
+                const fullArray = new Uint8Array(received);
+                let offset = 0;
+                for (const chunk of chunks) {
+                    fullArray.set(chunk, offset);
+                    offset += chunk.length;
+                }
+                arrayBuffer = fullArray.buffer;
+            } else {
+                updateProgress("Finalisation du document...");
+                arrayBuffer = await resp.arrayBuffer();
+            }
+
+            // C. Sauvegarde dans le cache PWA pour les futures ouvertures instantanées
+            if ('caches' in window && arrayBuffer && arrayBuffer.byteLength > 100) {
+                caches.open('archivex-docs-v1').then(cache => {
+                    const cacheResp = new Response(arrayBuffer, {
+                        headers: {
+                            'Content-Type': 'application/pdf',
+                            'Content-Length': String(arrayBuffer.byteLength)
+                        }
+                    });
+                    cache.put(streamUrl, cacheResp);
+                    const badge = document.getElementById('pwa-status-badge');
+                    if (badge) {
+                        badge.className = 'px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black inline-flex items-center space-x-1';
+                        badge.innerHTML = '<i class="fa-solid fa-cloud-check text-emerald-600"></i><span>Synchronisé hors-ligne</span>';
+                    }
+                }).catch(() => {});
+            }
+
+            return arrayBuffer;
+
+        } catch (err) {
+            clearTimeout(timeoutId);
+            if (err.name === 'AbortError') {
+                throw new Error("Délai de connexion dépassé (plus de 20 secondes).");
+            }
+            throw err;
+        }
+    }
+
+    async function initPdfDocument() {
+        try {
+            updateProgress("Initialisation...");
+
+            // 1. Assurer la présence du moteur PDF
+            await ensurePdfJsEngine();
+
+            // 2. Charger les données binaires (PWA Cache ou Réseau)
+            const pdfData = await fetchPdfArrayBuffer();
+
+            updateProgress("Rendu du document...");
+
+            // 3. Charger le document via ArrayBuffer en mémoire (zéro Range request, zéro blocage)
+            const loadingTask = window.pdfjsLib.getDocument({
+                data: pdfData,
+                cMapPacked: true,
+            });
+
+            pdfDoc = await loadingTask.promise;
             totalNumPages = pdfDoc.numPages;
 
             const countElem = document.getElementById('page-count');
             if (countElem) countElem.textContent = totalNumPages;
 
-            // Déclencher la mise en cache de sécurité PWA
-            syncOfflinePwaCache();
+            // 4. Calibrer l'échelle sur la 1ère page et afficher
+            const page1 = await pdfDoc.getPage(1);
+            scale = calculateOptimalScale(page1);
+            queueRender();
 
-            // Calibrer l'échelle sur la 1ère page et afficher
-            pdfDoc.getPage(1).then(function(page1) {
-                scale = calculateOptimalScale(page1);
-                queueRender();
-            });
-        }).catch(function(error) {
+        } catch (error) {
             console.error('Erreur chargement PDF :', error);
-            const spinner = document.getElementById('pdf-loader-spinner');
-            if (spinner) {
-                spinner.innerHTML = `
-                    <div class="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-xl mb-3">
-                        <i class="fa-solid fa-circle-exclamation"></i>
-                    </div>
-                    <p class="text-sm font-bold text-white mb-1">Document momentanément indisponible</p>
-                    <p class="text-xs text-slate-300 max-w-sm mb-4">Vérifiez votre connexion Internet pour ouvrir ce document une première fois.</p>
-                    <button onclick="window.location.reload()" class="btn-primary text-xs px-4 py-2 font-bold">Actualiser</button>
-                `;
-            }
-        });
+            showLoaderError(
+                "Document momentanément indisponible",
+                error.message || "Vérifiez votre connexion Internet pour ouvrir ce document une première fois."
+            );
+        }
     }
 
     // 7. COMMANDES UTILISATEUR DE LA BARRE D'OUTILS

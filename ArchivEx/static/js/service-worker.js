@@ -60,33 +60,23 @@ self.addEventListener('fetch', (event) => {
     }
 
     // 1. FLUX SÉCURISÉ DES ÉPREUVES PDF (Stream watermarked & documents pédagogiques)
-    // Réseau d'abord, puis mise en cache automatique dans DOCS_CACHE_NAME pour consultation hors-ligne
+    // Réseau direct, avec repli instantané sur le cache PWA (DOCS_CACHE_NAME) si hors-ligne
     if (url.pathname.includes('/stream-watermarked/') || url.pathname.includes('/pdf/')) {
         event.respondWith(
-            fetch(event.request)
-                .then((networkResponse) => {
-                    if (networkResponse && networkResponse.status === 200) {
-                        const responseClone = networkResponse.clone();
-                        caches.open(DOCS_CACHE_NAME).then((cache) => {
-                            cache.put(event.request, responseClone);
-                        });
-                    }
-                    return networkResponse;
-                })
-                .catch(() => {
-                    // Hors-ligne : servir immédiatement depuis le cache PWA des documents
-                    return caches.open(DOCS_CACHE_NAME).then((cache) => {
-                        return cache.match(event.request).then((cachedResponse) => {
-                            if (cachedResponse) {
-                                return cachedResponse;
-                            }
-                            return new Response(
-                                JSON.stringify({ error: "Ce document n'a pas encore été ouvert en ligne pour être disponible hors-ligne." }),
-                                { status: 503, headers: { 'Content-Type': 'application/json' } }
-                            );
-                        });
+            fetch(event.request).catch(() => {
+                // Hors-ligne : servir immédiatement depuis le cache PWA des documents
+                return caches.open(DOCS_CACHE_NAME).then((cache) => {
+                    return cache.match(event.request).then((cachedResponse) => {
+                        if (cachedResponse) {
+                            return cachedResponse;
+                        }
+                        return new Response(
+                            JSON.stringify({ error: "Ce document n'a pas encore été ouvert en ligne pour être disponible hors-ligne." }),
+                            { status: 503, headers: { 'Content-Type': 'application/json' } }
+                        );
                     });
-                })
+                });
+            })
         );
         return;
     }
