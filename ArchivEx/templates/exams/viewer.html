@@ -173,13 +173,24 @@
         <!-- ZONE DU LECTEUR PDF HAUTE PERFORMANCE -->
         <div id="viewer-container" class="w-full h-[88vh] sm:h-[91vh] min-h-[680px] rounded-2xl overflow-y-auto overflow-x-auto bg-slate-950 border border-slate-800 shadow-2xl relative transition-all duration-200 flex flex-col items-center justify-start p-2 sm:p-4">
             
-            <!-- SPINNER DE CHARGEMENT INTÉLIGENT -->
+            <!-- SPINNER DE CHARGEMENT AVEC BARRE DE PROGRESSION VISUELLE -->
             <div id="pdf-loader-spinner" class="absolute inset-0 z-10 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center space-y-3 p-6 text-center">
                 <div class="w-12 h-12 border-4 border-blue-400/30 border-t-blue-500 rounded-full animate-spin"></div>
-                <p class="text-xs font-bold text-white">Chargement du document pédagogique...</p>
-                <p id="pdf-loading-progress" class="text-[11px] font-bold text-blue-300">Initialisation du moteur PWA...</p>
+                <p class="text-sm font-black text-white">Chargement du document pédagogique</p>
+                
+                <!-- Barre de progression visuelle avec pourcentage interactif -->
+                <div class="w-72 max-w-[85vw] bg-slate-800 rounded-full h-3 overflow-hidden border border-slate-700/80 my-1 shadow-inner">
+                    <div id="pdf-progress-bar" class="bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-400 h-3 rounded-full transition-all duration-200" style="width: 10%"></div>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <span id="pdf-progress-percent" class="text-xs font-black text-amber-400">10%</span>
+                    <span class="text-slate-600">•</span>
+                    <span id="pdf-loading-progress" class="text-[11px] font-bold text-blue-300">Initialisation du lecteur...</span>
+                </div>
+
                 <p class="text-[10px] text-slate-400 max-w-sm pt-2">
-                    Une fois ouvert, ce document reste lisible sur votre téléphone même en cas de coupure de connexion Internet.
+                    Une fois ouvert, ce document reste disponible instantanément sur votre appareil même hors-ligne.
                 </p>
             </div>
 
@@ -223,10 +234,17 @@
         wrapper = document.getElementById('canvas-wrapper'),
         viewerContainer = document.getElementById('viewer-container');
 
-    // Helpers de notification d'état et d'erreur
-    function updateProgress(msg) {
+    // Helpers de notification d'état et d'erreur avec barre animée
+    function updateProgress(msg, percent = null) {
         const progressElem = document.getElementById('pdf-loading-progress');
-        if (progressElem) progressElem.textContent = msg;
+        const barElem = document.getElementById('pdf-progress-bar');
+        const pctElem = document.getElementById('pdf-progress-percent');
+        if (progressElem && msg) progressElem.textContent = msg;
+        if (percent !== null) {
+            const clamped = Math.max(5, Math.min(100, Math.round(percent)));
+            if (barElem) barElem.style.width = clamped + '%';
+            if (pctElem) pctElem.textContent = clamped + '%';
+        }
     }
 
     function showLoaderError(title, subtitle) {
@@ -422,6 +440,8 @@
         });
     }
 
+    let isViewerInitialized = false;
+
     async function fetchPdfArrayBuffer() {
         // A. Vérification prioritaire du cache hors-ligne PWA (< 5ms)
         if ('caches' in window) {
@@ -429,9 +449,10 @@
                 const cache = await caches.open('archivex-docs-v1');
                 const cachedResp = await cache.match(streamUrl);
                 if (cachedResp && cachedResp.ok) {
-                    updateProgress("Lecture depuis la mémoire PWA...");
+                    updateProgress("Lecture depuis la mémoire PWA...", 75);
                     const buf = await cachedResp.arrayBuffer();
                     if (buf && buf.byteLength > 100) {
+                        updateProgress("Document disponible !", 100);
                         const badge = document.getElementById('pwa-status-badge');
                         if (badge) {
                             badge.className = 'px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black inline-flex items-center space-x-1';
@@ -445,10 +466,19 @@
             }
         }
 
-        // B. Téléchargement direct avec timeout de sécurité de 20s
-        updateProgress("Connexion au document...");
+        // B. Téléchargement direct avec timeout de sécurité de 20s et animation de progression
+        updateProgress("Connexion au document...", 15);
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+        // Animation fluide de la barre de chargement
+        let currentProgress = 15;
+        const progressTicker = setInterval(() => {
+            if (currentProgress < 85) {
+                currentProgress += Math.floor(Math.random() * 8) + 4;
+                updateProgress("Téléchargement du document...", Math.min(85, currentProgress));
+            }
+        }, 180);
 
         try {
             const resp = await fetch(streamUrl, {
@@ -458,11 +488,13 @@
             clearTimeout(timeoutId);
 
             if (!resp.ok) {
+                clearInterval(progressTicker);
                 throw new Error("Le serveur a renvoyé une erreur (Code " + resp.status + ").");
             }
 
             const ctype = (resp.headers.get('content-type') || '').toLowerCase();
             if (ctype.includes('text/html') || ctype.includes('application/json')) {
+                clearInterval(progressTicker);
                 throw new Error("Document non prêt ou accès restreint.");
             }
 
@@ -478,9 +510,10 @@
                     if (done) break;
                     chunks.push(value);
                     received += value.length;
-                    const pct = Math.min(99, Math.round((received / contentLength) * 100));
-                    updateProgress("Chargement " + pct + "%...");
+                    const pct = Math.min(95, Math.round((received / contentLength) * 100));
+                    updateProgress("Téléchargement " + pct + "%...", pct);
                 }
+                clearInterval(progressTicker);
                 const fullArray = new Uint8Array(received);
                 let offset = 0;
                 for (const chunk of chunks) {
@@ -489,9 +522,11 @@
                 }
                 arrayBuffer = fullArray.buffer;
             } else {
-                updateProgress("Finalisation du document...");
                 arrayBuffer = await resp.arrayBuffer();
+                clearInterval(progressTicker);
             }
+
+            updateProgress("Finalisation du document...", 92);
 
             // C. Sauvegarde dans le cache PWA pour les futures ouvertures instantanées
             if ('caches' in window && arrayBuffer && arrayBuffer.byteLength > 100) {
@@ -514,6 +549,7 @@
             return arrayBuffer;
 
         } catch (err) {
+            clearInterval(progressTicker);
             clearTimeout(timeoutId);
             if (err.name === 'AbortError') {
                 throw new Error("Délai de connexion dépassé (plus de 20 secondes).");
@@ -523,16 +559,19 @@
     }
 
     async function initPdfDocument() {
+        if (isViewerInitialized || pdfDoc) return;
+        isViewerInitialized = true;
+
         try {
-            updateProgress("Initialisation...");
+            updateProgress("Initialisation...", 10);
 
             // 1. Assurer la présence du moteur PDF
             await ensurePdfJsEngine();
 
-            // 2. Charger les données binaires (PWA Cache ou Réseau)
+            // 2. Charger les données binaires (PWA Cache ou Réseau direct)
             const pdfData = await fetchPdfArrayBuffer();
 
-            updateProgress("Rendu du document...");
+            updateProgress("Rendu du document...", 98);
 
             // 3. Charger le document via ArrayBuffer en mémoire (zéro Range request, zéro blocage)
             const loadingTask = window.pdfjsLib.getDocument({
@@ -545,6 +584,8 @@
 
             const countElem = document.getElementById('page-count');
             if (countElem) countElem.textContent = totalNumPages;
+
+            updateProgress("Affichage...", 100);
 
             // 4. Calibrer l'échelle sur la 1ère page et afficher
             const page1 = await pdfDoc.getPage(1);
@@ -750,9 +791,17 @@
         }
     });
 
-    // Lancement au chargement du DOM
-    document.addEventListener('DOMContentLoaded', initPdfDocument);
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    // Forcer la mise à jour immédiate du Service Worker pour s'assurer que v5 purge les anciens caches
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistration().then(reg => {
+            if (reg) reg.update();
+        }).catch(() => {});
+    }
+
+    // Lancement unique et sécurisé au chargement du DOM
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => initPdfDocument(), { once: true });
+    } else {
         initPdfDocument();
     }
 </script>

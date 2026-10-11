@@ -1,4 +1,4 @@
-const CACHE_NAME = 'archivex-pwa-v3';
+const CACHE_NAME = 'archivex-pwa-v5';
 const DOCS_CACHE_NAME = 'archivex-docs-v1';
 
 const STATIC_ASSETS = [
@@ -15,12 +15,11 @@ const STATIC_ASSETS = [
     '/static/vendor/pdfjs/pdf.worker.min.js'
 ];
 
-// Installation : Mise en cache sécurisée des assets essentiels et du moteur PDF.js
+// Installation : Prise en charge immédiate
 self.addEventListener('install', (event) => {
-    console.log('[Service Worker] Installation PWA ArchivEx...');
+    console.log('[Service Worker v5] Installation PWA ArchivEx...');
     event.waitUntil(
         caches.open(CACHE_NAME).then(async (cache) => {
-            console.log('[Service Worker] Pré-mise en cache des assets essentiels');
             for (const asset of STATIC_ASSETS) {
                 try {
                     await cache.add(asset);
@@ -32,15 +31,15 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// Activation : Nettoyage des anciens caches d'application sans effacer les documents hors-ligne
+// Activation : Nettoyage immédiat de TOUS les anciens caches (y compris v3 et v4)
 self.addEventListener('activate', (event) => {
-    console.log('[Service Worker] Activation PWA...');
+    console.log('[Service Worker v5] Activation & purge anciens caches...');
     event.waitUntil(
         caches.keys().then((keyList) => {
             return Promise.all(
                 keyList.map((key) => {
                     if (key !== CACHE_NAME && key !== DOCS_CACHE_NAME) {
-                        console.log('[Service Worker] Nettoyage ancien cache:', key);
+                        console.log('[Service Worker] Suppression ancien cache obsolète:', key);
                         return caches.delete(key);
                     }
                 })
@@ -49,36 +48,20 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// Fetch : Stratégie hybride réseau/cache adaptée au mode PWA et à la lecture hors-ligne
+// Fetch : Stratégie propre avec exclusion totale du lecteur et des flux PDF
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
     const url = new URL(event.request.url);
 
-    // Ne pas intercepter l'administration Django ou les requêtes d'authentification sensibles
-    if (url.pathname.startsWith('/django-admin/') || url.pathname.startsWith('/administration/')) {
-        return;
-    }
-
-    // 1. FLUX SÉCURISÉ DES ÉPREUVES PDF (Stream watermarked & documents pédagogiques)
-    // Réseau direct, avec repli instantané sur le cache PWA (DOCS_CACHE_NAME) si hors-ligne
-    if (url.pathname.includes('/stream-watermarked/') || url.pathname.includes('/pdf/')) {
-        event.respondWith(
-            fetch(event.request).catch(() => {
-                // Hors-ligne : servir immédiatement depuis le cache PWA des documents
-                return caches.open(DOCS_CACHE_NAME).then((cache) => {
-                    return cache.match(event.request).then((cachedResponse) => {
-                        if (cachedResponse) {
-                            return cachedResponse;
-                        }
-                        return new Response(
-                            JSON.stringify({ error: "Ce document n'a pas encore été ouvert en ligne pour être disponible hors-ligne." }),
-                            { status: 503, headers: { 'Content-Type': 'application/json' } }
-                        );
-                    });
-                });
-            })
-        );
-        return;
+    // 1. NE JAMAIS INTERCEPTER : Lecteur PDF, flux sécurisés, admin (gérés en direct)
+    if (
+        url.pathname.includes('/viewer/') ||
+        url.pathname.includes('/stream-watermarked/') ||
+        url.pathname.includes('/pdf/') ||
+        url.pathname.startsWith('/django-admin/') ||
+        url.pathname.startsWith('/administration/')
+    ) {
+        return; // Le navigateur et viewer.html traitent la requête en direct
     }
 
     // 2. RESSOURCES STATIQUES ET LIBRAIRIE PDF.JS : Cache d'abord, secours réseau
