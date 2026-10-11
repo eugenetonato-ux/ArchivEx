@@ -421,11 +421,51 @@
             return window.pdfjsLib;
         }
 
-        updateProgress("Chargement du moteur d'affichage...");
+        // Attendre que le script local termine son évaluation (évite de basculer inutilement)
+        for (let i = 0; i < 30; i++) {
+            if (window.pdfjsLib) {
+                try {
+                    window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.PDFJS_WORKER_URL;
+                } catch(e) {}
+                return window.pdfjsLib;
+            }
+            await new Promise(r => setTimeout(r, 40));
+        }
+
+        // Injection directe du script local si non encore présent
+        updateProgress("Initialisation du moteur d'affichage...", 12);
+        try {
+            await new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = "{% static 'vendor/pdfjs/pdf.min.js' %}";
+                s.onload = () => resolve();
+                s.onerror = () => reject(new Error("Local script load error"));
+                document.head.appendChild(s);
+            });
+            if (window.pdfjsLib) {
+                try {
+                    window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.PDFJS_WORKER_URL;
+                } catch(e) {}
+                return window.pdfjsLib;
+            }
+        } catch(e) {
+            console.warn("Secours local échoué, repli CDN...", e);
+        }
+
+        // Secours CDN avec timeout strict de 5s pour ne jamais bloquer
         return new Promise((resolve, reject) => {
+            const timeoutTimer = setTimeout(() => {
+                if (window.pdfjsLib) {
+                    resolve(window.pdfjsLib);
+                } else {
+                    reject(new Error("Délai de chargement du moteur PDF dépassé."));
+                }
+            }, 5000);
+
             const s = document.createElement('script');
             s.src = window.PDFJS_CDN_URL;
             s.onload = () => {
+                clearTimeout(timeoutTimer);
                 if (window.pdfjsLib) {
                     try {
                         window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.PDFJS_CDN_WORKER_URL;
@@ -435,7 +475,10 @@
                     reject(new Error("Moteur PDF indisponible"));
                 }
             };
-            s.onerror = () => reject(new Error("Impossible de charger le moteur PDF"));
+            s.onerror = () => {
+                clearTimeout(timeoutTimer);
+                reject(new Error("Impossible de charger le moteur PDF"));
+            };
             document.head.appendChild(s);
         });
     }

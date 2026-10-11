@@ -90,6 +90,9 @@
             if (path.startsWith('/django-admin/')) return false;
             if (path.includes('/logout') || path.includes('/deconnexion') || path.includes('/admin-logout')) return false;
 
+            // Exclure le lecteur de documents (chargement natif garanti pour PDF.js et canvas)
+            if (path.includes('/viewer/') || path.includes('/lecteur/') || path.includes('/stream-watermarked/')) return false;
+
             // Exclure les fichiers statiques, médias et téléchargements directs
             if (path.startsWith('/static/') || path.startsWith('/media/')) return false;
             if (/\.(pdf|zip|rar|docx?|xlsx?|pptx?|jpe?g|png|gif|svg|webp|mp4|mp3)$/i.test(path)) return false;

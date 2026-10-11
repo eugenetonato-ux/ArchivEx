@@ -150,7 +150,7 @@
 
                 {% if has_access %}
                     <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
-                        <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=exam" class="btn-primary text-xs px-5 py-2.5 font-black inline-flex items-center space-x-2 rounded-xl shadow-sm">
+                        <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=exam" data-no-spa="true" class="btn-primary text-xs px-5 py-2.5 font-black inline-flex items-center space-x-2 rounded-xl shadow-sm">
                             <i class="fa-solid fa-book-open-reader text-xs" aria-hidden="true"></i>
                             <span>Lire l'épreuve</span>
                         </a>
@@ -170,7 +170,7 @@
                             Consultez l'épreuve dans le lecteur immersif ArchivEx. Grâce à la synchronisation PWA, ce document reste consultable et lisible sur votre téléphone même en cas de coupure de connexion Internet.
                         </p>
                     </div>
-                    <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=exam" class="btn-primary text-xs sm:text-sm px-8 py-3.5 font-black inline-flex items-center space-x-2 rounded-xl shadow-lg hover:scale-105 transition-all">
+                    <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=exam" data-no-spa="true" class="btn-primary text-xs sm:text-sm px-8 py-3.5 font-black inline-flex items-center space-x-2 rounded-xl shadow-lg hover:scale-105 transition-all">
                         <i class="fa-solid fa-expand text-xs"></i>
                         <span>Lire l'épreuve en plein écran (Mode PWA)</span>
                     </a>
@@ -227,7 +227,7 @@
 
                     {% if has_correction_access %}
                         <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
-                            <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=correction" class="btn-primary text-xs px-5 py-2.5 font-bold inline-flex items-center space-x-1.5 shadow-sm">
+                            <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=correction" data-no-spa="true" class="btn-primary text-xs px-5 py-2.5 font-bold inline-flex items-center space-x-1.5 shadow-sm">
                                 <i class="fa-solid fa-book-open-reader text-xs" aria-hidden="true"></i>
                                 <span>Consulter la correction</span>
                             </a>
@@ -261,7 +261,7 @@
 
                     {% if has_summary_access %}
                         <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
-                            <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=summary" class="btn-primary text-xs px-5 py-2.5 font-bold inline-flex items-center space-x-1.5 shadow-sm">
+                            <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=summary" data-no-spa="true" class="btn-primary text-xs px-5 py-2.5 font-bold inline-flex items-center space-x-1.5 shadow-sm">
                                 <i class="fa-solid fa-book-open-reader text-xs" aria-hidden="true"></i>
                                 <span>Consulter la fiche résumé</span>
                             </a>
