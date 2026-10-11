@@ -3,6 +3,18 @@ from django.utils.html import format_html
 from .models import School, Level, Filiere, AcademicYear, Semester, Subject
 
 
+# ─── Actions bulk Subject ─────────────────────────────────────────────────────
+
+@admin.action(description="✅ Passer la matière en GRATUIT (toutes ses épreuves)")
+def set_subject_free(modeladmin, request, queryset):
+    queryset.update(is_free=True)
+
+
+@admin.action(description="🔒 Passer la matière en PREMIUM (toutes ses épreuves)")
+def set_subject_premium(modeladmin, request, queryset):
+    queryset.update(is_free=False)
+
+
 @admin.register(School)
 class SchoolAdmin(admin.ModelAdmin):
     list_display = ("name", "slug", "is_active")
@@ -37,10 +49,12 @@ class SemesterAdmin(admin.ModelAdmin):
 class SubjectAdmin(admin.ModelAdmin):
     list_display = ("image_thumbnail", "name", "code", "semester", "is_free", "exams_count_display")
     list_display_links = ("image_thumbnail", "name")
+    list_editable = ("is_free",)
     list_filter = ("is_free", "semester__filiere__school", "semester__filiere", "semester")
     search_fields = ("name", "code")
     readonly_fields = ("image_preview_large",)
-    fields = ("semester", "name", "code", "image", "image_preview_large", "description", "is_free", "is_free_correction", "is_active")
+    actions = [set_subject_free, set_subject_premium]
+    fields = ("semester", "name", "code", "image", "image_preview_large", "description", "is_free", "is_active")
 
     def image_thumbnail(self, obj):
         if obj.image:
