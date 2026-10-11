@@ -737,7 +737,7 @@ def toggle_favorite(request, pk):
     return redirect("exams:detail", pk=exam.pk)
 
 
-def _render_pdf_error_response(message="Ce fichier PDF n'est pas encore disponible sur le serveur."):
+def _render_pdf_error_response(message="Ce fichier PDF n'est pas encore disponible sur le serveur.", status=403):
     """Retourne une réponse HTML propre à afficher à l'intérieur du lecteur PDF / Iframe sans erreur 500 ni boucle."""
     html_content = f"""
     <!DOCTYPE html>
@@ -792,7 +792,7 @@ def _render_pdf_error_response(message="Ce fichier PDF n'est pas encore disponib
     </body>
     </html>
     """
-    return HttpResponse(html_content, content_type="text/html", status=200)
+    return HttpResponse(html_content, content_type="text/html", status=status)
 
 
 def student_viewer_view(request, pk):
@@ -951,18 +951,31 @@ def stream_watermarked_pdf_view(request, pk):
 
     cache_disk_file = os.path.join(cache_dir, f"wm_{exam.id}_{res_type}_{request.user.id}_{file_mtime}.pdf")
     if os.path.exists(cache_disk_file) and os.path.getsize(cache_disk_file) > 100:
-        response = FileResponse(open(cache_disk_file, "rb"), content_type="application/pdf")
-        response["Content-Length"] = str(os.path.getsize(cache_disk_file))
-        response["Cache-Control"] = "private, no-transform, max-age=86400"
-        response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
-        return response
+        try:
+            with open(cache_disk_file, "rb") as test_f:
+                header = test_f.read(8)
+            if header.startswith(b"%PDF"):
+                response = FileResponse(open(cache_disk_file, "rb"), content_type="application/pdf")
+                response["Content-Length"] = str(os.path.getsize(cache_disk_file))
+                response["Cache-Control"] = "private, no-transform, max-age=86400"
+                response["Content-Disposition"] = f'{disposition}; filename="{safe_filename}"'
+                return response
+            else:
+                try:
+                    os.remove(cache_disk_file)
+                except Exception:
+                    pass
+        except Exception:
+            pass
 
     cache_key = f"wm_pdf_{exam.id}_{res_type}_{request.user.id}_{file_mtime}"
     cached_pdf = cache.get(cache_key)
-    if cached_pdf:
+    if cached_pdf and isinstance(cached_pdf, bytes) and cached_pdf.startswith(b"%PDF"):
         try:
-            with open(cache_disk_file, "wb") as f:
+            tmp_disk_file = f"{cache_disk_file}.tmp.{os.getpid()}"
+            with open(tmp_disk_file, "wb") as f:
                 f.write(cached_pdf)
+            os.replace(tmp_disk_file, cache_disk_file)
         except Exception:
             pass
         response = FileResponse(BytesIO(cached_pdf), content_type="application/pdf")
@@ -977,8 +990,10 @@ def stream_watermarked_pdf_view(request, pk):
         # Enregistrement en cache pour 3 heures
         cache.set(cache_key, pdf_bytes, timeout=10800)
         try:
-            with open(cache_disk_file, "wb") as f:
+            tmp_disk_file = f"{cache_disk_file}.tmp.{os.getpid()}"
+            with open(tmp_disk_file, "wb") as f:
                 f.write(pdf_bytes)
+            os.replace(tmp_disk_file, cache_disk_file)
         except Exception:
             pass
 

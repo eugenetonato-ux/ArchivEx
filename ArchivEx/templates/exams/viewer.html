@@ -247,6 +247,20 @@
         }
     }
 
+    async function forceReloadPdf() {
+        if ('caches' in window) {
+            try {
+                const c1 = await caches.open('archivex-docs-v1');
+                await c1.delete(streamUrl);
+            } catch(e) {}
+            try {
+                const c2 = await caches.open('archivex-docs-v2');
+                await c2.delete(streamUrl);
+            } catch(e) {}
+        }
+        window.location.reload();
+    }
+
     function showLoaderError(title, subtitle) {
         const spinner = document.getElementById('pdf-loader-spinner');
         if (spinner) {
@@ -257,7 +271,7 @@
                 <h3 class="text-sm font-extrabold text-white mb-1">${title}</h3>
                 <p class="text-xs text-slate-300 max-w-sm mb-4 leading-relaxed">${subtitle}</p>
                 <div class="flex items-center space-x-2">
-                    <button onclick="window.location.reload()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition-all">
+                    <button onclick="forceReloadPdf()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition-all">
                         <i class="fa-solid fa-rotate-right mr-1"></i> Actualiser
                     </button>
                     <a href="{% url 'exams:detail' pk=exam.id %}" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition-all">
@@ -485,16 +499,31 @@
 
     let isViewerInitialized = false;
 
+    function isValidPdfBuffer(buf) {
+        if (!buf || buf.byteLength < 50) return false;
+        const u8 = new Uint8Array(buf, 0, Math.min(10, buf.byteLength));
+        let str = '';
+        for (let i = 0; i < u8.length; i++) {
+            str += String.fromCharCode(u8[i]);
+        }
+        return str.includes('%PDF-');
+    }
+
     async function fetchPdfArrayBuffer() {
+        const DOCS_CACHE = 'archivex-docs-v2';
+
         // A. Vérification prioritaire du cache hors-ligne PWA (< 5ms)
         if ('caches' in window) {
             try {
-                const cache = await caches.open('archivex-docs-v1');
+                // Purge préventive de l'ancien cache v1 susceptible de contenir des résidus erronés
+                caches.delete('archivex-docs-v1').catch(() => {});
+
+                const cache = await caches.open(DOCS_CACHE);
                 const cachedResp = await cache.match(streamUrl);
                 if (cachedResp && cachedResp.ok) {
-                    updateProgress("Lecture depuis la mémoire PWA...", 75);
                     const buf = await cachedResp.arrayBuffer();
-                    if (buf && buf.byteLength > 100) {
+                    if (isValidPdfBuffer(buf)) {
+                        updateProgress("Lecture depuis la mémoire PWA...", 75);
                         updateProgress("Document disponible !", 100);
                         const badge = document.getElementById('pwa-status-badge');
                         if (badge) {
@@ -502,6 +531,9 @@
                             badge.innerHTML = '<i class="fa-solid fa-cloud-check text-emerald-600"></i><span>Disponible hors-ligne</span>';
                         }
                         return buf;
+                    } else {
+                        // Supprimer toute entrée invalide
+                        await cache.delete(streamUrl);
                     }
                 }
             } catch (e) {
@@ -569,11 +601,16 @@
                 clearInterval(progressTicker);
             }
 
+            // Validation stricte du format PDF
+            if (!isValidPdfBuffer(arrayBuffer)) {
+                throw new Error("Structure de document PDF invalide. Veuillez réactualiser.");
+            }
+
             updateProgress("Finalisation du document...", 92);
 
-            // C. Sauvegarde dans le cache PWA pour les futures ouvertures instantanées
-            if ('caches' in window && arrayBuffer && arrayBuffer.byteLength > 100) {
-                caches.open('archivex-docs-v1').then(cache => {
+            // C. Sauvegarde dans le cache PWA si et seulement si le PDF est valide
+            if ('caches' in window && arrayBuffer) {
+                caches.open(DOCS_CACHE).then(cache => {
                     const cacheResp = new Response(arrayBuffer, {
                         headers: {
                             'Content-Type': 'application/pdf',
@@ -637,9 +674,14 @@
 
         } catch (error) {
             console.error('Erreur chargement PDF :', error);
+            // Purger immédiatement les caches en cas d'erreur de structure
+            if ('caches' in window) {
+                caches.open('archivex-docs-v2').then(c => c.delete(streamUrl)).catch(() => {});
+                caches.open('archivex-docs-v1').then(c => c.delete(streamUrl)).catch(() => {});
+            }
             showLoaderError(
                 "Document momentanément indisponible",
-                error.message || "Vérifiez votre connexion Internet pour ouvrir ce document une première fois."
+                error.message || "Vérifiez votre connexion Internet pour ouvrir ce document."
             );
         }
     }

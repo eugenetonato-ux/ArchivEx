@@ -1,5 +1,5 @@
-const CACHE_NAME = 'archivex-pwa-v5';
-const DOCS_CACHE_NAME = 'archivex-docs-v1';
+const CACHE_NAME = 'archivex-pwa-v6';
+const DOCS_CACHE_NAME = 'archivex-docs-v2';
 
 const STATIC_ASSETS = [
     '/',
@@ -17,7 +17,7 @@ const STATIC_ASSETS = [
 
 // Installation : Prise en charge immédiate
 self.addEventListener('install', (event) => {
-    console.log('[Service Worker v5] Installation PWA ArchivEx...');
+    console.log('[Service Worker v6] Installation PWA ArchivEx...');
     event.waitUntil(
         caches.open(CACHE_NAME).then(async (cache) => {
             for (const asset of STATIC_ASSETS) {
@@ -31,9 +31,9 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// Activation : Nettoyage immédiat de TOUS les anciens caches (y compris v3 et v4)
+// Activation : Nettoyage immédiat de TOUS les anciens caches (y compris archivex-docs-v1)
 self.addEventListener('activate', (event) => {
-    console.log('[Service Worker v5] Activation & purge anciens caches...');
+    console.log('[Service Worker v6] Activation & purge anciens caches...');
     event.waitUntil(
         caches.keys().then((keyList) => {
             return Promise.all(
