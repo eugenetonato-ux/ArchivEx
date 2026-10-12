@@ -117,6 +117,56 @@
         </div>
     </div>
 
+    {% if res_type == 'exam' and exam.has_correction %}
+    <!-- BANNIÈRE CONTEXTUELLE HAUTE CONVERSION : CORRECTION DÉTAILLÉE DISPONIBLE -->
+    <div class="mb-3 p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-amber-400/10 to-blue-600/10 border border-amber-400/40 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-all">
+        <div class="flex items-center space-x-3 min-w-0">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 text-[#071A49] flex items-center justify-center font-black text-base shrink-0 shadow-md">
+                <i class="fa-solid fa-file-signature"></i>
+            </div>
+            <div class="min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <h2 class="text-xs sm:text-sm font-black text-[#071A49]">
+                        Correction officielle détaillée disponible pour cette épreuve
+                    </h2>
+                    <span class="px-2 py-0.5 rounded text-[9px] font-black bg-amber-200 text-amber-950 border border-amber-300 uppercase tracking-wide">
+                        Rédaction complète
+                    </span>
+                </div>
+                <p class="text-[11px] text-slate-600 font-medium leading-tight mt-0.5">
+                    Ne restez pas bloqué sur les questions : maîtrisez la démarche et le barème avec la solution pas-à-pas.
+                </p>
+            </div>
+        </div>
+
+        {% if has_correction_access %}
+            <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=correction" data-no-spa="true" class="btn-primary text-xs px-4 py-2 font-black rounded-xl shadow-sm inline-flex items-center space-x-1.5 shrink-0 hover:scale-105 transition-all">
+                <i class="fa-solid fa-book-open text-xs"></i>
+                <span>Consulter la correction</span>
+                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </a>
+        {% else %}
+            <a href="{% url 'payments:pass_semestre' semester_id=exam.semester.id %}#formulaire-paiement" class="btn-gold text-xs px-4 py-2.5 font-black rounded-xl shadow-md shadow-amber-500/25 inline-flex items-center space-x-1.5 shrink-0 hover:scale-105 transition-all">
+                <i class="fa-solid fa-bolt text-xs"></i>
+                <span>Débloquer le corrigé (Pass Semestre)</span>
+                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </a>
+        {% endif %}
+    </div>
+    {% elif res_type == 'correction' %}
+    <!-- BANNIÈRE QUAND L'ÉTUDIANT CONSULTE LA CORRECTION -->
+    <div class="mb-3 px-3.5 py-2.5 rounded-2xl bg-emerald-50/90 border border-emerald-200/90 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
+        <div class="flex items-center space-x-2 text-emerald-950 font-bold">
+            <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+            <span>Vous consultez actuellement la correction détaillée de cette épreuve.</span>
+        </div>
+        <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=exam" data-no-spa="true" class="text-[11px] font-black text-[#2563EB] hover:underline inline-flex items-center space-x-1 shrink-0">
+            <i class="fa-solid fa-arrow-left text-[9px]"></i>
+            <span>Revoir le sujet de l'épreuve</span>
+        </a>
+    </div>
+    {% endif %}
+
     <!-- WRAPPER POUR BASCULE PLEIN ÉCRAN TOTAL -->
     <div id="viewer-fullscreen-root" class="flex flex-col">
         <!-- TOOLBAR CONTROLS (OPTIMISÉE MOBILE & DESKTOP) -->
@@ -156,6 +206,26 @@
                     <i class="fa-solid fa-arrows-left-right text-[9px]"></i>
                     <span class="hidden xs:inline">Ajuster</span>
                 </button>
+
+                <!-- Raccourci Corrigé / Sujet dans la toolbar -->
+                {% if res_type == 'exam' and exam.has_correction %}
+                    {% if has_correction_access %}
+                        <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=correction" data-no-spa="true" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white flex items-center space-x-1 text-[11px] font-black transition-all shadow-sm" title="Basculer vers la correction">
+                            <i class="fa-solid fa-file-signature text-[10px]"></i>
+                            <span class="hidden sm:inline">Corrigé</span>
+                        </a>
+                    {% else %}
+                        <a href="{% url 'payments:pass_semestre' semester_id=exam.semester.id %}#formulaire-paiement" class="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#071A49] flex items-center space-x-1 text-[11px] font-black transition-all shadow-md hover:scale-105" title="Débloquer la correction détaillée">
+                            <i class="fa-solid fa-bolt text-[10px] text-[#071A49]"></i>
+                            <span class="hidden sm:inline">Débloquer corrigé</span>
+                        </a>
+                    {% endif %}
+                {% elif res_type == 'correction' %}
+                    <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=exam" data-no-spa="true" class="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center space-x-1 text-[11px] font-bold transition-all" title="Revenir au sujet de l'épreuve">
+                        <i class="fa-solid fa-file-lines text-[10px]"></i>
+                        <span class="hidden sm:inline">Sujet</span>
+                    </a>
+                {% endif %}
 
                 <!-- Plein Écran -->
                 <button id="toggle-fullscreen" type="button" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center space-x-1 text-[11px] text-amber-300 font-extrabold transition-all" title="Basculer en plein écran">
@@ -217,6 +287,31 @@
 
         </div>
     </div> <!-- /#viewer-fullscreen-root -->
+
+    {% if res_type == 'exam' and exam.has_correction %}
+    <!-- TOAST FLOTTANT CONTEXTUEL HAUTE CONVERSION -->
+    <div id="floating-correction-toast" class="fixed bottom-4 right-3 sm:right-6 z-50 max-w-sm bg-[#071A49]/95 backdrop-blur-md text-white border border-amber-400/50 rounded-2xl p-3 sm:p-3.5 shadow-2xl transition-all duration-300 flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 text-[#071A49] flex items-center justify-center font-black text-sm shrink-0 shadow-md">
+            <i class="fa-solid fa-lightbulb"></i>
+        </div>
+        <div class="min-w-0 flex-1">
+            <p class="text-xs font-black text-amber-300 leading-tight">Bloqué sur une question ?</p>
+            <p class="text-[11px] text-slate-300 leading-tight truncate">Le corrigé pas-à-pas est disponible.</p>
+        </div>
+        {% if has_correction_access %}
+            <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=correction" data-no-spa="true" class="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-[#071A49] font-black text-[11px] shrink-0 transition-all shadow-sm">
+                Voir
+            </a>
+        {% else %}
+            <a href="{% url 'payments:pass_semestre' semester_id=exam.semester.id %}#formulaire-paiement" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:brightness-110 text-[#071A49] font-black text-[11px] shrink-0 shadow-md">
+                Débloquer
+            </a>
+        {% endif %}
+        <button type="button" onclick="document.getElementById('floating-correction-toast').remove()" class="text-slate-400 hover:text-white text-xs px-1" title="Fermer ce rappel">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+    {% endif %}
 
 </div>
 

@@ -141,7 +141,17 @@
                         <i class="fa-solid {% if has_access %}fa-circle-check{% else %}fa-lock{% endif %}"></i>
                     </div>
                     <div>
-                        <h2 class="text-base font-bold text-[#071A49]">Épreuve d'examen</h2>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h2 class="text-base font-bold text-[#071A49]">Épreuve d'examen</h2>
+                            {% if exam.has_correction %}
+                                <a href="{% if has_correction_access %}{% url 'exams:student_viewer' pk=exam.id %}?type=correction{% else %}{% url 'payments:pass_semestre' semester_id=exam.semester.id %}#formulaire-paiement{% endif %}"
+                                   class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 flex items-center space-x-1 transition-all"
+                                   title="Un corrigé officiel détaillé est disponible pour cette épreuve">
+                                    <i class="fa-solid fa-sparkles text-[9px] text-amber-500"></i>
+                                    <span>Corrigé disponible</span>
+                                </a>
+                            {% endif %}
+                        </div>
                         <p class="text-xs {% if has_access %}text-emerald-600{% else %}text-amber-600{% endif %} font-semibold">
                             {% if has_access %}PDF disponible et accessible{% else %}Accès réservé aux abonnés du pass semestre{% endif %}
                         </p>
@@ -174,6 +184,25 @@
                         <i class="fa-solid fa-expand text-xs"></i>
                         <span>Lire l'épreuve en plein écran (Mode PWA)</span>
                     </a>
+                    {% if exam.has_correction %}
+                    <div class="w-full pt-3 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
+                        <div class="flex items-center space-x-2 text-amber-300 font-bold">
+                            <i class="fa-solid fa-file-signature text-amber-400"></i>
+                            <span>Le corrigé officiel de cette épreuve est également disponible !</span>
+                        </div>
+                        {% if has_correction_access %}
+                            <a href="{% url 'exams:student_viewer' pk=exam.id %}?type=correction" data-no-spa="true" class="text-xs font-black text-white hover:text-amber-300 underline inline-flex items-center space-x-1">
+                                <span>Accéder au corrigé</span>
+                                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                            </a>
+                        {% else %}
+                            <a href="{% url 'payments:pass_semestre' semester_id=exam.semester.id %}#formulaire-paiement" class="px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-[#071A49] font-black text-[11px] shadow-sm hover:scale-105 transition-all inline-flex items-center space-x-1">
+                                <i class="fa-solid fa-lock text-[10px]"></i>
+                                <span>Débloquer le corrigé (Pass)</span>
+                            </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
                     <div class="flex items-center space-x-3 text-[11px] text-slate-400 pt-2 border-t border-white/10 flex-wrap justify-center gap-y-1">
                         <span class="flex items-center space-x-1"><i class="fa-solid fa-shield-halved text-emerald-400 text-xs"></i> <span>Document certifié & filigrané</span></span>
                         <span>•</span>

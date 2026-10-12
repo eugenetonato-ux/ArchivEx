@@ -859,11 +859,18 @@ def student_viewer_view(request, pk):
         from academics.models import record_ue_consultation
         record_ue_consultation(request.user, exam.subject, exam=exam)
 
+    has_correction_access = can_user_access_correction(request.user, exam) if request.user.is_authenticated else False
+    has_summary_access = can_user_access_summary(request.user, exam) if request.user.is_authenticated else False
+    has_exam_access = can_user_access_exam_pdf(request.user, exam)
+
     context = {
         "exam": exam,
         "resource_label": resource_label,
         "res_type": res_type,
         "stream_url": stream_url,
+        "has_correction_access": has_correction_access,
+        "has_summary_access": has_summary_access,
+        "has_exam_access": has_exam_access,
     }
     return render(request, "exams/viewer.html", context)
 
