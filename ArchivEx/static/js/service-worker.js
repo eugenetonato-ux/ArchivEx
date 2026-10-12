@@ -1,4 +1,4 @@
-const CACHE_NAME = 'archivex-pwa-v6';
+const CACHE_NAME = 'archivex-pwa-v7';
 const DOCS_CACHE_NAME = 'archivex-docs-v2';
 
 const STATIC_ASSETS = [

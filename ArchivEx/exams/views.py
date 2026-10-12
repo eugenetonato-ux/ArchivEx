@@ -369,7 +369,7 @@ def resources_view(request, mode=None):
             elif mode == "premium":
                 is_locked = not (cs.is_free or has_user_valid_pass(request.user, cs))
 
-            viewer_url = reverse("content:summary_detail", kwargs={"pk": cs.id})
+            viewer_url = reverse("content:summary_viewer", kwargs={"pk": cs.id}) if not is_locked else reverse("content:summary_detail", kwargs={"pk": cs.id})
             subjects_map[subj.id]["years"].append({
                 "year_label": year_label,
                 "sort_year": sort_year,

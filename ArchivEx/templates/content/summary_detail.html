@@ -71,15 +71,21 @@
                                 <p class="text-[11px] text-purple-800 font-medium">Document officiel prêt pour la révision de l'UE {{ summary.subject.name }}</p>
                             </div>
                         </div>
-                        <button type="button" onclick="togglePdfFullscreen()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-sm inline-flex items-center space-x-1.5 shrink-0">
-                            <i class="fa-solid fa-expand text-xs"></i>
-                            <span>Plein écran</span>
-                        </button>
+                        <div class="flex items-center space-x-2 shrink-0">
+                            <a href="{% url 'content:summary_viewer' pk=summary.pk %}" data-no-spa="true" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-sm inline-flex items-center space-x-1.5 shrink-0">
+                                <i class="fa-solid fa-book-open-reader text-xs"></i>
+                                <span>Lecteur Académique PWA</span>
+                            </a>
+                            <button type="button" onclick="togglePdfFullscreen()" class="px-3.5 py-2 bg-white border border-purple-200 hover:bg-purple-50 text-purple-700 font-extrabold text-xs rounded-xl transition-all shadow-xs inline-flex items-center space-x-1.5 shrink-0" title="Agrandir en plein écran">
+                                <i class="fa-solid fa-expand text-xs"></i>
+                                <span class="hidden sm:inline">Plein écran</span>
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- LECTEUR PDF INTÉGRÉ SÉCURISÉ (PAS DE TÉLÉCHARGEMENT) -->
+                    <!-- LECTEUR PDF INTÉGRÉ SÉCURISÉ (FLUX DIRECT DJANGO SÉCURISÉ SANS 403 S3) -->
                     <div id="pdf-viewer-container" oncontextmenu="return false;" class="rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 shadow-inner w-full h-[680px] relative select-none">
-                        <iframe id="pdf-iframe" src="{{ summary.file.url }}#toolbar=0&navpanes=0" class="w-full h-full border-none" title="{{ summary.title }}"></iframe>
+                        <iframe id="pdf-iframe" src="{% url 'content:stream_summary_pdf' pk=summary.pk %}#toolbar=0&navpanes=0" class="w-full h-full border-none" title="{{ summary.title }}"></iframe>
                     </div>
 
                     <div class="flex items-center justify-center space-x-2 text-center text-[11px] text-slate-500 py-1">

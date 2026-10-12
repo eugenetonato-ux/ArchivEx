@@ -1,0 +1,835 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Lecteur Académique PWA — {{ summary.title }} | ArchivEx{% endblock %}
+
+{% block content %}
+<style>
+    /* Masquer le bouton support flottant pour une vue sans compromis */
+    #floating-support-btn {
+        display: none !important;
+    }
+
+    /* Protection anti-impression et anti-copie absolue */
+    @media print {
+        body { display: none !important; }
+    }
+    .no-select {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    /* Barre de défilement verticale visible et ergonomique */
+    #viewer-container {
+        scrollbar-width: thin;
+        scrollbar-color: #475569 #0f172a;
+    }
+    #viewer-container::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    #viewer-container::-webkit-scrollbar-track {
+        background: #0f172a;
+        border-radius: 9999px;
+    }
+    #viewer-container::-webkit-scrollbar-thumb {
+        background: #475569;
+        border-radius: 9999px;
+        border: 2px solid #0f172a;
+    }
+    #viewer-container::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+    }
+
+    /* Rendu net des pages PDF */
+    .pdf-page-canvas {
+        box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6), 0 5px 15px rgba(0, 0, 0, 0.4);
+        border-radius: 10px;
+        background-color: #ffffff;
+        margin-bottom: 24px;
+        max-width: 100%;
+        height: auto !important;
+    }
+</style>
+
+<!-- Chargement résilient de PDF.js (Local PWA prioritaire avec fallback CDN) -->
+<script src="{% static 'vendor/pdfjs/pdf.min.js' %}"></script>
+<script>
+    window.PDFJS_WORKER_URL = "{% static 'vendor/pdfjs/pdf.worker.min.js' %}";
+    window.PDFJS_CDN_URL = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    window.PDFJS_CDN_WORKER_URL = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    if (window.pdfjsLib) {
+        try {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.PDFJS_WORKER_URL;
+        } catch(e) {}
+    }
+</script>
+
+<div class="w-full max-w-[99vw] sm:max-w-[98vw] lg:max-w-[97vw] mx-auto px-1 sm:px-2.5 py-2 sm:py-3 no-select" oncontextmenu="return false;">
+
+    <!-- BREADCRUMB ACADEMIC HIERARCHY -->
+    <nav class="flex items-center text-[11px] font-semibold text-slate-500 space-x-1.5 mb-2.5 flex-wrap gap-y-1" aria-label="Fil d'ariane">
+        <a href="{% url 'academics:home' %}" class="hover:text-[#2563EB]">Accueil</a>
+        <span>/</span>
+        <a href="{% url 'content:summary_list' %}" class="hover:text-[#2563EB]">Résumés de cours</a>
+        {% if summary.subject.semester and summary.subject.semester.filiere %}
+        <span>/</span>
+        <span class="text-slate-600">{{ summary.subject.semester.filiere.name }}</span>
+        {% endif %}
+        <span>/</span>
+        <a href="{% url 'content:summary_list' %}?subject={{ summary.subject.id }}" class="hover:text-[#2563EB] font-bold">{{ summary.subject.name }}</a>
+        <span>/</span>
+        <span class="text-[#071A49] font-black">Lecteur Académique</span>
+    </nav>
+
+    <!-- VIEWER CONTROL HEADER CARD -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 mb-3 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+        <div class="min-w-0">
+            <div class="flex items-center space-x-2 mb-1 flex-wrap gap-1">
+                <span class="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[9px] font-extrabold uppercase">
+                    {{ resource_label|default:"Fiche Résumé" }}
+                </span>
+                <span class="text-[11px] font-bold text-slate-500">{{ summary.subject.name }}</span>
+                {% if summary.subject.semester %}
+                <span class="text-[11px] text-slate-300 hidden sm:inline">•</span>
+                <span class="text-[11px] font-bold text-[#2563EB] hidden sm:inline">{{ summary.subject.semester.label }}</span>
+                {% endif %}
+                <span id="pwa-status-badge" class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black inline-flex items-center space-x-1">
+                    <i class="fa-solid fa-cloud-check text-emerald-600"></i>
+                    <span>Mode PWA Hors-ligne</span>
+                </span>
+            </div>
+
+            <h1 class="text-base sm:text-lg font-black text-[#071A49] truncate">
+                {{ summary.title }}
+            </h1>
+        </div>
+
+        <div class="flex items-center space-x-2 w-full md:w-auto shrink-0 justify-end flex-wrap gap-1">
+            <a href="{% url 'content:summary_detail' pk=summary.id %}" class="btn-secondary text-[11px] px-3.5 py-1.5 font-bold inline-flex items-center space-x-1">
+                <i class="fa-solid fa-arrow-left text-[10px]" aria-hidden="true"></i>
+                <span>Fiche</span>
+            </a>
+            <a href="{% url 'content:summary_detail' pk=summary.id %}" class="px-3.5 py-1.5 rounded-xl bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-600 hover:text-white flex items-center space-x-1 transition-all shadow-xs font-bold text-[11px]" title="Fermer le lecteur">
+                <i class="fa-solid fa-xmark text-xs"></i>
+                <span>Fermer</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- WRAPPER POUR BASCULE PLEIN ÉCRAN TOTAL -->
+    <div id="viewer-fullscreen-root" class="flex flex-col">
+        <!-- TOOLBAR CONTROLS (OPTIMISÉE MOBILE & DESKTOP) -->
+        <div id="pdf-toolbar" class="bg-slate-900 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl mb-2 shadow-lg flex flex-wrap items-center justify-between gap-2 text-xs font-bold shrink-0">
+            <!-- Navigation de page -->
+            <div class="flex items-center space-x-1.5">
+                <button id="prev-page" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 transition-all flex items-center space-x-1 text-[11px]">
+                    <i class="fa-solid fa-chevron-left text-[9px]"></i>
+                    <span class="hidden sm:inline">Précédent</span>
+                </button>
+                <span class="px-2.5 py-1 bg-slate-800/80 rounded-lg text-[11px] whitespace-nowrap">
+                    Page <span id="page-num" class="text-amber-400 font-black">1</span> / <span id="page-count">?</span>
+                </span>
+                <button id="next-page" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 transition-all flex items-center space-x-1 text-[11px]">
+                    <span class="hidden sm:inline">Suivant</span>
+                    <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                </button>
+            </div>
+
+            <!-- Mode de lecture et zoom -->
+            <div class="flex items-center space-x-1.5 flex-wrap">
+                <!-- Bascule Défilement Continu (Idéal Mobile) / Page par Page -->
+                <button id="toggle-scroll-mode" type="button" class="px-2.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white flex items-center space-x-1 text-[11px] font-black transition-all" title="Basculer entre défilement continu et page par page">
+                    <i class="fa-solid fa-scroll text-[10px]"></i>
+                    <span id="scroll-mode-label" class="hidden xs:inline">Défilement continu</span>
+                </button>
+
+                <!-- Zoom -->
+                <button id="zoom-out" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center transition-all" title="Zoom arrière">
+                    <i class="fa-solid fa-magnifying-glass-minus text-[11px]"></i>
+                </button>
+                <span id="zoom-level" class="px-2 py-0.5 bg-slate-800/80 rounded-lg text-[10px] sm:text-[11px]">100%</span>
+                <button id="zoom-in" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center transition-all" title="Zoom avant">
+                    <i class="fa-solid fa-magnifying-glass-plus text-[11px]"></i>
+                </button>
+                <button id="fit-width" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-[11px] flex items-center space-x-1" title="Ajuster à la largeur de l'écran">
+                    <i class="fa-solid fa-arrows-left-right text-[9px]"></i>
+                    <span class="hidden xs:inline">Ajuster</span>
+                </button>
+
+                <!-- Plein Écran -->
+                <button id="toggle-fullscreen" type="button" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center space-x-1 text-[11px] text-amber-300 font-extrabold transition-all" title="Basculer en plein écran">
+                    <i id="fullscreen-icon" class="fa-solid fa-expand text-[10px]"></i>
+                    <span id="fullscreen-text" class="hidden sm:inline">Plein écran</span>
+                </button>
+
+                <a href="{% url 'content:summary_detail' pk=summary.id %}" class="px-2.5 py-1.5 rounded-lg bg-rose-600/80 hover:bg-rose-600 flex items-center justify-center space-x-1 transition-all text-white ml-1 text-[11px]" title="Fermer l'aperçu">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                    <span class="hidden sm:inline">Fermer</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- ZONE DU LECTEUR PDF HAUTE PERFORMANCE -->
+        <div id="viewer-container" class="w-full h-[88vh] sm:h-[91vh] min-h-[680px] rounded-2xl overflow-y-auto overflow-x-auto bg-slate-950 border border-slate-800 shadow-2xl relative transition-all duration-200 flex flex-col items-center justify-start p-2 sm:p-4">
+            
+            <!-- SPINNER DE CHARGEMENT AVEC BARRE DE PROGRESSION VISUELLE -->
+            <div id="pdf-loader-spinner" class="absolute inset-0 z-10 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center space-y-3 p-6 text-center">
+                <div class="w-12 h-12 border-4 border-purple-400/30 border-t-purple-500 rounded-full animate-spin"></div>
+                <p class="text-sm font-black text-white">Chargement de la fiche résumé</p>
+                
+                <!-- Barre de progression visuelle avec pourcentage interactif -->
+                <div class="w-72 max-w-[85vw] bg-slate-800 rounded-full h-3 overflow-hidden border border-slate-700/80 my-1 shadow-inner">
+                    <div id="pdf-progress-bar" class="bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-400 h-3 rounded-full transition-all duration-200" style="width: 10%"></div>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <span id="pdf-progress-percent" class="text-xs font-black text-amber-400">10%</span>
+                    <span class="text-slate-600">•</span>
+                    <span id="pdf-loading-progress" class="text-[11px] font-bold text-purple-300">Initialisation du lecteur...</span>
+                </div>
+
+                <p class="text-[10px] text-slate-400 max-w-sm pt-2">
+                    Une fois ouvert, ce document reste disponible instantanément sur votre appareil même hors-ligne.
+                </p>
+            </div>
+
+            <!-- TAB SWITCH SECURITY BLUR MASK -->
+            <div id="tab-blur-mask" class="absolute inset-0 z-40 bg-[#071a49]/95 backdrop-blur-md hidden flex-col items-center justify-center text-center p-6 transition-all duration-150">
+                <div class="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-amber-300 flex items-center justify-center text-2xl mb-3 shadow-lg">
+                    <i class="fa-solid fa-user-shield" aria-hidden="true"></i>
+                </div>
+                <h3 class="text-white font-extrabold text-lg mb-1">Protection ArchivEx Active</h3>
+                <p class="text-blue-200 text-xs max-w-md">Le document est temporairement masqué pendant que vous consultez une autre application.</p>
+            </div>
+
+            <!-- UNIQUE FILIGRANE CENTRAL DISCRET (LISIBILITÉ AMÉLIORÉE) -->
+            <div class="absolute inset-0 z-20 pointer-events-none flex items-center justify-center select-none overflow-hidden p-6" aria-hidden="true">
+                <div class="transform -rotate-25 text-slate-400/25 text-sm sm:text-base font-black tracking-widest uppercase text-center select-none pointer-events-none">
+                    {{ request.user.get_full_name|default:request.user.username }} • ArchivEx PWA
+                </div>
+            </div>
+
+            <!-- CONTENEUR DES PAGES CANVAS (DÉFILEMENT CONTINU OU SINGLE PAGE) -->
+            <div id="canvas-wrapper" class="relative z-30 flex flex-col items-center justify-start w-full py-2">
+                <!-- Les toiles canvas sont injectées ici dynamiquement -->
+            </div>
+
+        </div>
+    </div> <!-- /#viewer-fullscreen-root -->
+
+</div>
+
+<script>
+    const streamUrl = "{{ stream_url }}";
+
+    let pdfDoc = null,
+        pageNum = 1,
+        totalNumPages = 0,
+        pageRendering = false,
+        pageNumPending = null,
+        scale = 1.25,
+        isContinuousScroll = true,
+        renderedPages = new Set(),
+        wrapper = document.getElementById('canvas-wrapper'),
+        viewerContainer = document.getElementById('viewer-container');
+
+    function updateProgress(msg, percent = null) {
+        const progressElem = document.getElementById('pdf-loading-progress');
+        const barElem = document.getElementById('pdf-progress-bar');
+        const pctElem = document.getElementById('pdf-progress-percent');
+        if (progressElem && msg) progressElem.textContent = msg;
+        if (percent !== null) {
+            const clamped = Math.max(5, Math.min(100, Math.round(percent)));
+            if (barElem) barElem.style.width = clamped + '%';
+            if (pctElem) pctElem.textContent = clamped + '%';
+        }
+    }
+
+    async function forceReloadPdf() {
+        if ('caches' in window) {
+            try {
+                const c = await caches.open('archivex-docs-v2');
+                await c.delete(streamUrl);
+            } catch(e) {}
+        }
+        window.location.reload();
+    }
+
+    function showLoaderError(title, subtitle) {
+        const spinner = document.getElementById('pdf-loader-spinner');
+        if (spinner) {
+            spinner.innerHTML = `
+                <div class="w-14 h-14 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center text-2xl mb-3 shadow-lg">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                </div>
+                <h3 class="text-sm font-extrabold text-white mb-1">${title}</h3>
+                <p class="text-xs text-slate-300 max-w-sm mb-4 leading-relaxed">${subtitle}</p>
+                <div class="flex items-center space-x-2">
+                    <button onclick="forceReloadPdf()" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md transition-all">
+                        <i class="fa-solid fa-rotate-right mr-1"></i> Actualiser
+                    </button>
+                    <a href="{% url 'content:summary_detail' pk=summary.id %}" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition-all">
+                        Retour à la fiche
+                    </a>
+                </div>
+            `;
+        }
+    }
+
+    window.addEventListener('online', () => {
+        const badge = document.getElementById('pwa-status-badge');
+        if (badge) {
+            badge.className = 'px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black inline-flex items-center space-x-1';
+            badge.innerHTML = '<i class="fa-solid fa-wifi text-emerald-600"></i><span>Connecté (PWA)</span>';
+        }
+    });
+    window.addEventListener('offline', () => {
+        const badge = document.getElementById('pwa-status-badge');
+        if (badge) {
+            badge.className = 'px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-black inline-flex items-center space-x-1';
+            badge.innerHTML = '<i class="fa-solid fa-plane text-amber-600"></i><span>Mode Hors-ligne Actif</span>';
+        }
+    });
+    if (!navigator.onLine) {
+        const badge = document.getElementById('pwa-status-badge');
+        if (badge) {
+            badge.className = 'px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-black inline-flex items-center space-x-1';
+            badge.innerHTML = '<i class="fa-solid fa-plane text-amber-600"></i><span>Mode Hors-ligne Actif</span>';
+        }
+    }
+
+    function calculateOptimalScale(page) {
+        const containerWidth = (viewerContainer ? viewerContainer.clientWidth : window.innerWidth) - 28;
+        const unscaledViewport = page.getViewport({ scale: 1.0 });
+        let calculated = containerWidth / unscaledViewport.width;
+        if (calculated < 0.60) calculated = 0.60;
+        if (calculated > 3.0) calculated = 3.0;
+        return calculated;
+    }
+
+    function renderCanvasPage(num, canvasElement) {
+        if (!pdfDoc) return Promise.resolve();
+
+        return pdfDoc.getPage(num).then(function(page) {
+            const viewport = page.getViewport({ scale: scale });
+            const dpr = Math.min(window.devicePixelRatio || 1, 2.0);
+
+            canvasElement.width = Math.floor(viewport.width * dpr);
+            canvasElement.height = Math.floor(viewport.height * dpr);
+            canvasElement.style.width = Math.floor(viewport.width) + 'px';
+            canvasElement.style.height = Math.floor(viewport.height) + 'px';
+
+            const ctx = canvasElement.getContext('2d');
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            const renderContext = {
+                canvasContext: ctx,
+                viewport: viewport
+            };
+
+            return page.render(renderContext).promise;
+        });
+    }
+
+    function renderContinuousAllPages() {
+        if (!pdfDoc || !wrapper) return;
+        wrapper.innerHTML = '';
+        renderedPages.clear();
+
+        const spinner = document.getElementById('pdf-loader-spinner');
+        if (spinner) spinner.classList.add('hidden');
+
+        for (let i = 1; i <= totalNumPages; i++) {
+            const pageBox = document.createElement('div');
+            pageBox.className = 'pdf-page-box relative flex flex-col items-center justify-center my-2';
+            pageBox.dataset.page = i;
+
+            const pageLabel = document.createElement('div');
+            pageLabel.className = 'text-[10px] font-black text-slate-400 mb-1 select-none';
+            pageLabel.textContent = `Page ${i} / ${totalNumPages}`;
+
+            const canvas = document.createElement('canvas');
+            canvas.className = 'pdf-page-canvas shadow-2xl block';
+            canvas.id = `pdf-canvas-p${i}`;
+
+            pageBox.appendChild(pageLabel);
+            pageBox.appendChild(canvas);
+            wrapper.appendChild(pageBox);
+
+            renderCanvasPage(i, canvas).then(() => {
+                renderedPages.add(i);
+            }).catch(e => console.warn(`Erreur page ${i}:`, e));
+        }
+
+        updateZoomLabel();
+    }
+
+    function renderSinglePage(num) {
+        if (!pdfDoc || !wrapper) return;
+        pageRendering = true;
+        wrapper.innerHTML = '';
+
+        const spinner = document.getElementById('pdf-loader-spinner');
+        if (spinner) spinner.classList.add('hidden');
+
+        const pageBox = document.createElement('div');
+        pageBox.className = 'pdf-page-box relative flex flex-col items-center justify-center my-2';
+        
+        const canvas = document.createElement('canvas');
+        canvas.className = 'pdf-page-canvas shadow-2xl block';
+        canvas.id = 'pdf-canvas-single';
+
+        pageBox.appendChild(canvas);
+        wrapper.appendChild(pageBox);
+
+        renderCanvasPage(num, canvas).then(() => {
+            pageRendering = false;
+            if (pageNumPending !== null) {
+                renderSinglePage(pageNumPending);
+                pageNumPending = null;
+            }
+        }).catch(err => {
+            pageRendering = false;
+            console.warn('Erreur single page :', err);
+        });
+
+        const pNumElem = document.getElementById('page-num');
+        if (pNumElem) pNumElem.textContent = num;
+        updateZoomLabel();
+    }
+
+    function updateZoomLabel() {
+        const zElem = document.getElementById('zoom-level');
+        if (zElem) zElem.textContent = Math.round(scale * 100) + '%';
+    }
+
+    function queueRender() {
+        if (isContinuousScroll) {
+            renderContinuousAllPages();
+        } else {
+            if (pageRendering) {
+                pageNumPending = pageNum;
+            } else {
+                renderSinglePage(pageNum);
+            }
+        }
+    }
+
+    async function ensurePdfJsEngine() {
+        if (window.pdfjsLib) {
+            try {
+                window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.PDFJS_WORKER_URL;
+            } catch(e) {}
+            return window.pdfjsLib;
+        }
+
+        for (let i = 0; i < 30; i++) {
+            if (window.pdfjsLib) {
+                try {
+                    window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.PDFJS_WORKER_URL;
+                } catch(e) {}
+                return window.pdfjsLib;
+            }
+            await new Promise(r => setTimeout(r, 40));
+        }
+
+        updateProgress("Initialisation du moteur d'affichage...", 12);
+        try {
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = window.PDFJS_CDN_URL;
+                script.onload = () => {
+                    if (window.pdfjsLib) {
+                        window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.PDFJS_CDN_WORKER_URL;
+                        resolve();
+                    } else reject(new Error("Échec initialisation moteur CDN"));
+                };
+                script.onerror = () => reject(new Error("Moteur PDF inaccessible"));
+                document.head.appendChild(script);
+            });
+            return window.pdfjsLib;
+        } catch (e) {
+            throw new Error("Moteur d'affichage PDF temporairement indisponible.");
+        }
+    }
+
+    let isViewerInitialized = false;
+
+    function isValidPdfBuffer(buf) {
+        if (!buf || buf.byteLength < 50) return false;
+        const u8 = new Uint8Array(buf, 0, Math.min(10, buf.byteLength));
+        let str = '';
+        for (let i = 0; i < u8.length; i++) {
+            str += String.fromCharCode(u8[i]);
+        }
+        return str.includes('%PDF-');
+    }
+
+    async function fetchPdfArrayBuffer() {
+        const DOCS_CACHE = 'archivex-docs-v2';
+
+        if ('caches' in window) {
+            try {
+                const cache = await caches.open(DOCS_CACHE);
+                const cachedResp = await cache.match(streamUrl);
+                if (cachedResp && cachedResp.ok) {
+                    const buf = await cachedResp.arrayBuffer();
+                    if (isValidPdfBuffer(buf)) {
+                        updateProgress("Lecture depuis la mémoire PWA...", 75);
+                        updateProgress("Document disponible !", 100);
+                        const badge = document.getElementById('pwa-status-badge');
+                        if (badge) {
+                            badge.className = 'px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black inline-flex items-center space-x-1';
+                            badge.innerHTML = '<i class="fa-solid fa-cloud-check text-emerald-600"></i><span>Disponible hors-ligne</span>';
+                        }
+                        return buf;
+                    } else {
+                        await cache.delete(streamUrl);
+                    }
+                }
+            } catch (e) {
+                console.warn('Erreur lecture cache PWA:', e);
+            }
+        }
+
+        updateProgress("Connexion au résumé...", 15);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+        let currentProgress = 15;
+        const progressTicker = setInterval(() => {
+            if (currentProgress < 85) {
+                currentProgress += Math.floor(Math.random() * 8) + 4;
+                updateProgress("Téléchargement du document...", Math.min(85, currentProgress));
+            }
+        }, 180);
+
+        try {
+            const resp = await fetch(streamUrl, {
+                credentials: 'include',
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (!resp.ok) {
+                clearInterval(progressTicker);
+                let errorMsg = "Le serveur a renvoyé une erreur (Code " + resp.status + ").";
+                try {
+                    const text = await resp.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(text, 'text/html');
+                    const p = doc.querySelector('.card p') || doc.querySelector('p');
+                    if (p && p.textContent.trim()) {
+                        errorMsg = p.textContent.trim();
+                    } else if (text && text.length < 200) {
+                        errorMsg = text.trim();
+                    }
+                } catch(e) {}
+                throw new Error(errorMsg);
+            }
+
+            const ctype = (resp.headers.get('content-type') || '').toLowerCase();
+            if (ctype.includes('text/html') || ctype.includes('application/json')) {
+                clearInterval(progressTicker);
+                throw new Error("Document non prêt ou accès restreint.");
+            }
+
+            const contentLength = +resp.headers.get('content-length') || 0;
+            let arrayBuffer = null;
+
+            if (contentLength > 0 && resp.body) {
+                const reader = resp.body.getReader();
+                let received = 0;
+                const chunks = [];
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    chunks.push(value);
+                    received += value.length;
+                    const pct = Math.min(95, Math.round((received / contentLength) * 100));
+                    updateProgress("Téléchargement " + pct + "%...", pct);
+                }
+                clearInterval(progressTicker);
+                const fullArray = new Uint8Array(received);
+                let offset = 0;
+                for (const chunk of chunks) {
+                    fullArray.set(chunk, offset);
+                    offset += chunk.length;
+                }
+                arrayBuffer = fullArray.buffer;
+            } else {
+                arrayBuffer = await resp.arrayBuffer();
+                clearInterval(progressTicker);
+            }
+
+            if (!isValidPdfBuffer(arrayBuffer)) {
+                throw new Error("Structure de document PDF invalide. Veuillez réactualiser.");
+            }
+
+            updateProgress("Finalisation du document...", 92);
+
+            if ('caches' in window && arrayBuffer) {
+                caches.open(DOCS_CACHE).then(cache => {
+                    const cacheResp = new Response(arrayBuffer, {
+                        headers: {
+                            'Content-Type': 'application/pdf',
+                            'Content-Length': String(arrayBuffer.byteLength)
+                        }
+                    });
+                    cache.put(streamUrl, cacheResp);
+                    const badge = document.getElementById('pwa-status-badge');
+                    if (badge) {
+                        badge.className = 'px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black inline-flex items-center space-x-1';
+                        badge.innerHTML = '<i class="fa-solid fa-cloud-check text-emerald-600"></i><span>Synchronisé hors-ligne</span>';
+                    }
+                }).catch(() => {});
+            }
+
+            return arrayBuffer;
+
+        } catch (err) {
+            clearInterval(progressTicker);
+            clearTimeout(timeoutId);
+            if (err.name === 'AbortError') {
+                throw new Error("Délai de connexion dépassé (plus de 20 secondes).");
+            }
+            throw err;
+        }
+    }
+
+    async function initPdfDocument() {
+        if (isViewerInitialized || pdfDoc) return;
+        isViewerInitialized = true;
+
+        try {
+            updateProgress("Initialisation...", 10);
+            await ensurePdfJsEngine();
+            const pdfData = await fetchPdfArrayBuffer();
+            updateProgress("Rendu du document...", 98);
+
+            const loadingTask = window.pdfjsLib.getDocument({
+                data: pdfData,
+                cMapPacked: true,
+            });
+
+            pdfDoc = await loadingTask.promise;
+            totalNumPages = pdfDoc.numPages;
+
+            const countElem = document.getElementById('page-count');
+            if (countElem) countElem.textContent = totalNumPages;
+
+            updateProgress("Affichage...", 100);
+
+            const page1 = await pdfDoc.getPage(1);
+            scale = calculateOptimalScale(page1);
+            queueRender();
+
+        } catch (error) {
+            console.error('Erreur chargement PDF :', error);
+            if ('caches' in window) {
+                caches.open('archivex-docs-v2').then(c => c.delete(streamUrl)).catch(() => {});
+            }
+            showLoaderError(
+                "Document momentanément indisponible",
+                error.message || "Vérifiez votre connexion Internet pour ouvrir cette fiche résumé."
+            );
+        }
+    }
+
+    const toggleScrollBtn = document.getElementById('toggle-scroll-mode');
+    const scrollLabel = document.getElementById('scroll-mode-label');
+    if (toggleScrollBtn) {
+        toggleScrollBtn.addEventListener('click', () => {
+            isContinuousScroll = !isContinuousScroll;
+            if (isContinuousScroll) {
+                if (scrollLabel) scrollLabel.textContent = 'Défilement continu';
+                toggleScrollBtn.className = 'px-2.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white flex items-center space-x-1 text-[11px] font-black transition-all';
+            } else {
+                if (scrollLabel) scrollLabel.textContent = 'Page par page';
+                toggleScrollBtn.className = 'px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center space-x-1 text-[11px] font-black transition-all';
+            }
+            queueRender();
+        });
+    }
+
+    const prevBtn = document.getElementById('prev-page');
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (isContinuousScroll) {
+                if (pageNum > 1) {
+                    pageNum--;
+                    const targetBox = document.querySelector(`.pdf-page-box[data-page="${pageNum}"]`);
+                    if (targetBox) targetBox.scrollIntoView({ behavior: 'smooth' });
+                    const pNumElem = document.getElementById('page-num');
+                    if (pNumElem) pNumElem.textContent = pageNum;
+                }
+            } else {
+                if (pageNum <= 1) return;
+                pageNum--;
+                renderSinglePage(pageNum);
+            }
+        });
+    }
+
+    const nextBtn = document.getElementById('next-page');
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            if (isContinuousScroll) {
+                if (pdfDoc && pageNum < totalNumPages) {
+                    pageNum++;
+                    const targetBox = document.querySelector(`.pdf-page-box[data-page="${pageNum}"]`);
+                    if (targetBox) targetBox.scrollIntoView({ behavior: 'smooth' });
+                    const pNumElem = document.getElementById('page-num');
+                    if (pNumElem) pNumElem.textContent = pageNum;
+                }
+            } else {
+                if (!pdfDoc || pageNum >= totalNumPages) return;
+                pageNum++;
+                renderSinglePage(pageNum);
+            }
+        });
+    }
+
+    const zoomInBtn = document.getElementById('zoom-in');
+    if (zoomInBtn) {
+        zoomInBtn.addEventListener('click', () => {
+            if (scale < 3.0) {
+                scale = Math.min(3.0, scale + 0.20);
+                queueRender();
+            }
+        });
+    }
+
+    const zoomOutBtn = document.getElementById('zoom-out');
+    if (zoomOutBtn) {
+        zoomOutBtn.addEventListener('click', () => {
+            if (scale > 0.60) {
+                scale = Math.max(0.60, scale - 0.20);
+                queueRender();
+            }
+        });
+    }
+
+    const fitWidthBtn = document.getElementById('fit-width');
+    if (fitWidthBtn) {
+        fitWidthBtn.addEventListener('click', () => {
+            if (pdfDoc) {
+                pdfDoc.getPage(1).then(function(page1) {
+                    scale = calculateOptimalScale(page1);
+                    queueRender();
+                });
+            }
+        });
+    }
+
+    const toggleFullscreenBtn = document.getElementById('toggle-fullscreen');
+    const viewerRoot = document.getElementById('viewer-fullscreen-root');
+    if (toggleFullscreenBtn && viewerRoot) {
+        toggleFullscreenBtn.addEventListener('click', () => {
+            const isFull = viewerRoot.classList.contains('fixed');
+            const fsIcon = document.getElementById('fullscreen-icon');
+            const fsText = document.getElementById('fullscreen-text');
+
+            if (!isFull) {
+                viewerRoot.className = 'fixed inset-0 z-[9999] bg-slate-950 flex flex-col p-1 sm:p-2';
+                if (viewerContainer) {
+                    viewerContainer.classList.remove('h-[88vh]', 'sm:h-[91vh]', 'min-h-[680px]', 'rounded-2xl');
+                    viewerContainer.classList.add('flex-grow', 'h-full', 'rounded-xl');
+                }
+                if (fsIcon) fsIcon.className = 'fa-solid fa-compress text-[10px]';
+                if (fsText) fsText.textContent = 'Réduire';
+                document.body.classList.add('overflow-hidden');
+            } else {
+                viewerRoot.className = 'flex flex-col';
+                if (viewerContainer) {
+                    viewerContainer.classList.add('h-[88vh]', 'sm:h-[91vh]', 'min-h-[680px]', 'rounded-2xl');
+                    viewerContainer.classList.remove('flex-grow', 'h-full', 'rounded-xl');
+                }
+                if (fsIcon) fsIcon.className = 'fa-solid fa-expand text-[10px]';
+                if (fsText) fsText.textContent = 'Plein écran';
+                document.body.classList.remove('overflow-hidden');
+            }
+
+            if (pdfDoc) {
+                setTimeout(() => {
+                    pdfDoc.getPage(1).then(function(page1) {
+                        scale = calculateOptimalScale(page1);
+                        queueRender();
+                    });
+                }, 120);
+            }
+        });
+    }
+
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+        if (!pdfDoc) return;
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            pdfDoc.getPage(1).then(function(page1) {
+                scale = calculateOptimalScale(page1);
+                queueRender();
+            });
+        }, 200);
+    });
+
+    if (viewerContainer) {
+        viewerContainer.addEventListener('scroll', () => {
+            if (!isContinuousScroll) return;
+            const boxes = document.querySelectorAll('.pdf-page-box');
+            const containerTop = viewerContainer.scrollTop;
+            const containerHeight = viewerContainer.clientHeight;
+            
+            boxes.forEach(box => {
+                const boxTop = box.offsetTop;
+                const boxHeight = box.offsetHeight;
+                if (boxTop <= containerTop + containerHeight / 2 && boxTop + boxHeight >= containerTop) {
+                    const current = box.dataset.page;
+                    const pNumElem = document.getElementById('page-num');
+                    if (pNumElem && current) {
+                        pNumElem.textContent = current;
+                        pageNum = parseInt(current, 10);
+                    }
+                }
+            });
+        }, { passive: true });
+    }
+
+    const tabBlurMask = document.getElementById('tab-blur-mask');
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            if (tabBlurMask) tabBlurMask.classList.remove('hidden');
+        } else {
+            if (tabBlurMask) tabBlurMask.classList.add('hidden');
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S' || e.key === 'u' || e.key === 'U')) {
+            e.preventDefault();
+            return false;
+        }
+        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c'))) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistration().then(reg => {
+            if (reg) reg.update();
+        }).catch(() => {});
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => initPdfDocument(), { once: true });
+    } else {
+        initPdfDocument();
+    }
+</script>
+{% endblock %}
