@@ -109,10 +109,6 @@ def has_user_valid_pass(user, resource=None):
         ).filter(Q(end_date__isnull=True) | Q(end_date__gte=now)).exists():
             return True
 
-        # Règle d'or : Si la ressource appartient à un semestre (ex: S2), un Pass acheté
-        # pour un autre semestre (ex: S1) ne donne AUCUN accès. L'achat de chaque semestre est obligatoire.
-        return False
-
     if res_filiere:
         if SemesterAccess.objects.filter(legacy_query & Q(filiere=res_filiere)).exists():
             return True
@@ -139,17 +135,14 @@ def can_user_access(user, resource):
     Service centralisé de contrôle d'accès ArchivEx V2.
 
     Règles évaluées :
-    1. L'utilisateur DOIT être authentifié (connecté). Sans connexion -> Aucun accès aux ressources.
-    2. Si la ressource est gratuite (is_free=True ou access_type='FREE') -> Accès accordé pour l'étudiant connecté.
-    3. Autrement -> nécessite un Pass valide ou statut Staff.
+    1. Si la ressource est gratuite (is_free=True, access_type='FREE' ou rattachée à une matière gratuite)
+       -> Accès accordé immédiatement à tous sans nécessiter de Pass.
+    2. Autrement -> Nécessite une authentification et un Pass actif valide (ou statut Staff).
     """
     if not resource:
         return False
 
-    if not user or not user.is_authenticated:
-        return False
-
-    # 1. Ressource gratuite (réservée aux membres connectés)
+    # 1. Vérification de gratuité (directe ou héritée de la matière)
     is_free_attr = getattr(resource, "is_free", False)
     if callable(is_free_attr):
         is_free = is_free_attr()
@@ -159,23 +152,34 @@ def can_user_access(user, resource):
     if not is_free and getattr(resource, "access_type", None) == "FREE":
         is_free = True
 
+    if not is_free:
+        subj = getattr(resource, "subject", None)
+        if subj and getattr(subj, "is_free", False):
+            is_free = True
+
     if is_free:
         return True
+
+    # 2. Pour les ressources payantes / premium, connexion obligatoire
+    if not user or not user.is_authenticated:
+        return False
 
     return has_user_valid_pass(user, resource)
 
 
 def can_user_access_exam_pdf(user, exam):
     """Accès au PDF de l'épreuve principale.
-    - Épreuve gratuite (is_free=True) : accessible même sans connexion.
+    - Épreuve gratuite (is_free=True ou matière gratuite) : accessible à tous, sans connexion ni Pass.
     - Épreuve premium : nécessite un Pass actif (connexion obligatoire).
     """
     if not exam:
         return False
-    # Les épreuves gratuites sont accessibles à tous, connecté ou non
+    # Les épreuves gratuites (directes ou matière gratuite) sont accessibles sans paiement
     if getattr(exam, "is_free", False):
         return True
-    # Pour le reste, il faut être connecté
+    if exam.subject and getattr(exam.subject, "is_free", False):
+        return True
+    # Pour le reste, il faut être connecté avec un Pass actif
     if not user or not user.is_authenticated:
         return False
     return can_user_access(user, exam)
@@ -183,12 +187,12 @@ def can_user_access_exam_pdf(user, exam):
 
 def can_user_access_correction(user, exam):
     """Accès à la correction PDF.
-    - Correction gratuite (is_free_correction=True) : accessible sans connexion.
+    - Correction gratuite (is_free_correction=True, exam.is_free=True ou matière gratuite) : accessible sans connexion.
     - Correction premium : nécessite un Pass actif.
     """
     if not exam:
         return False
-    # Correction explicitement gratuite -> accessible à tous
+    # Correction explicitement gratuite
     if getattr(exam, "is_free_correction", False):
         return True
     if exam.subject and getattr(exam.subject, "is_free_correction", False):
@@ -201,16 +205,22 @@ def can_user_access_correction(user, exam):
 
 def can_user_access_summary(user, resource):
     """Accès au résumé / fiche PDF.
-    - Résumé gratuit (is_free_correction=True) : accessible sans connexion.
+    - Résumé gratuit : accessible sans connexion.
     - Résumé premium : nécessite un Pass actif.
     """
     if not resource:
         return False
-    # Résumé explicitement gratuit -> accessible à tous
     if getattr(resource, "is_free_correction", False):
+        return True
+    if getattr(resource, "access_type", None) == "FREE":
         return True
     res_subj = getattr(resource, "subject", None)
     if res_subj and getattr(res_subj, "is_free_correction", False):
+        return True
+    # Pour un objet Summary dédié (non-Exam) :
+    if not hasattr(resource, "exam_type") and getattr(resource, "is_free", False):
+        return True
+    if not hasattr(resource, "exam_type") and res_subj and getattr(res_subj, "is_free", False):
         return True
     # Pour le reste, connexion et Pass requis
     if not user or not user.is_authenticated:

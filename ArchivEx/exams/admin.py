@@ -14,6 +14,16 @@ def set_exam_premium(modeladmin, request, queryset):
     queryset.update(is_free=False)
 
 
+@admin.action(description="✅ Passer en GRATUIT (corrigé / solution)")
+def set_correction_free(modeladmin, request, queryset):
+    queryset.update(is_free_correction=True)
+
+
+@admin.action(description="🔒 Passer en PREMIUM (corrigé / solution)")
+def set_correction_premium(modeladmin, request, queryset):
+    queryset.update(is_free_correction=False)
+
+
 @admin.action(description="🌐 Publier les épreuves sélectionnées")
 def publish_exams(modeladmin, request, queryset):
     queryset.update(is_published=True)
@@ -36,12 +46,14 @@ class ExamAdmin(admin.ModelAdmin):
         "exam_type",
         "year",
         "is_free",
+        "is_free_correction",
         "is_published",
         "created_at",
     )
     list_filter = (
         "is_published",
         "is_free",
+        "is_free_correction",
         "exam_type",
         "year",
         "filiere__school",
@@ -49,11 +61,13 @@ class ExamAdmin(admin.ModelAdmin):
         "level",
     )
     search_fields = ("title", "subject__name", "description")
-    list_editable = ("is_published", "is_free")
+    list_editable = ("is_published", "is_free", "is_free_correction")
     ordering = ("-created_at",)
     actions = [
         set_exam_free,
         set_exam_premium,
+        set_correction_free,
+        set_correction_premium,
         publish_exams,
         unpublish_exams,
     ]
@@ -67,8 +81,8 @@ class ExamAdmin(admin.ModelAdmin):
             "fields": ("file", "correction_file", "summary_file", "summary", "cloud_file", "cloud_correction_file", "cloud_summary_file"),
         }),
         ("Contrôle d'accès", {
-            "fields": ("is_free", "is_published"),
-            "description": "⚠️ Corrections et résumés sont toujours Premium. Seule l'épreuve peut être gratuite.",
+            "fields": ("is_free", "is_free_correction", "is_published"),
+            "description": "Cochez 'is_free' pour rendre le sujet d'épreuve gratuit sans paiement. Cochez 'is_free_correction' pour rendre également son corrigé gratuit.",
         }),
         ("Dates", {
             "fields": ("created_at", "updated_at"),

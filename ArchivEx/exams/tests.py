@@ -237,6 +237,36 @@ class ArchivExFlowTest(TestCase):
         self.assertIn(self.exam_free, exams)
         self.assertNotIn(self.exam_premium, exams)
 
+    def test_free_exam_accessible_without_login_or_pass(self):
+        """Free exam is accessible in viewer and stream without requiring login or Pass Semestre."""
+        self.client.logout()
+        # Viewer access
+        viewer_url = reverse("exams:student_viewer", kwargs={"pk": self.exam_free.id}) + "?type=exam"
+        res_viewer = self.client.get(viewer_url)
+        self.assertEqual(res_viewer.status_code, 200)
+
+        # Stream PDF access without login
+        stream_url = reverse("exams:stream_pdf", kwargs={"pk": self.exam_free.id})
+        res_stream = self.client.get(stream_url)
+        self.assertEqual(res_stream.status_code, 200)
+
+    def test_free_subject_makes_exams_accessible_without_pass(self):
+        """When a subject is marked is_free=True, its exams become free and do not ask for Pass."""
+        self.client.login(username="student@univ.edu", password="Password123!")
+        # Before: exam_premium requires Pass
+        self.assertFalse(can_user_access(self.student, self.exam_premium))
+
+        # Mark subject as free
+        self.subject.is_free = True
+        self.subject.save()
+
+        # After: exam is accessible without pass
+        self.assertTrue(can_user_access(self.student, self.exam_premium))
+
+        viewer_url = reverse("exams:student_viewer", kwargs={"pk": self.exam_premium.id}) + "?type=exam"
+        res = self.client.get(viewer_url)
+        self.assertEqual(res.status_code, 200)
+
     def test_draft_exam_exclusion_and_idor_protection(self):
         """Unpublished draft exams are excluded from public catalog and return 404 for non-staff."""
         draft_exam = Exam.objects.create(

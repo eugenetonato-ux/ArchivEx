@@ -15,6 +15,16 @@ def set_subject_premium(modeladmin, request, queryset):
     queryset.update(is_free=False)
 
 
+@admin.action(description="✅ Passer les corrigés de la matière en GRATUIT")
+def set_subject_correction_free(modeladmin, request, queryset):
+    queryset.update(is_free_correction=True)
+
+
+@admin.action(description="🔒 Passer les corrigés de la matière en PREMIUM")
+def set_subject_correction_premium(modeladmin, request, queryset):
+    queryset.update(is_free_correction=False)
+
+
 @admin.register(School)
 class SchoolAdmin(admin.ModelAdmin):
     list_display = ("name", "slug", "is_active")
@@ -47,14 +57,14 @@ class SemesterAdmin(admin.ModelAdmin):
 
 @admin.register(Subject)
 class SubjectAdmin(admin.ModelAdmin):
-    list_display = ("image_thumbnail", "name", "code", "semester", "is_free", "exams_count_display")
+    list_display = ("image_thumbnail", "name", "code", "semester", "is_free", "is_free_correction", "exams_count_display")
     list_display_links = ("image_thumbnail", "name")
-    list_editable = ("is_free",)
-    list_filter = ("is_free", "semester__filiere__school", "semester__filiere", "semester")
+    list_editable = ("is_free", "is_free_correction")
+    list_filter = ("is_free", "is_free_correction", "semester__filiere__school", "semester__filiere", "semester")
     search_fields = ("name", "code")
     readonly_fields = ("image_preview_large",)
-    actions = [set_subject_free, set_subject_premium]
-    fields = ("semester", "name", "code", "image", "image_preview_large", "description", "is_free", "is_active")
+    actions = [set_subject_free, set_subject_premium, set_subject_correction_free, set_subject_correction_premium]
+    fields = ("semester", "name", "code", "image", "image_preview_large", "description", "is_free", "is_free_correction", "is_active")
 
     def image_thumbnail(self, obj):
         if obj.image:

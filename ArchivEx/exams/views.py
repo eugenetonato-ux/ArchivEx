@@ -151,11 +151,7 @@ def resources_view(request, mode=None):
                 continue
             subjects_map[subj.id]["seen_keys"].add(unique_key)
 
-            is_locked = False
-            if not request.user.is_authenticated:
-                is_locked = True
-            elif mode == "premium":
-                is_locked = not can_user_access_exam_pdf(request.user, exam)
+            is_locked = not can_user_access_exam_pdf(request.user, exam)
 
             viewer_url = reverse("exams:student_viewer", kwargs={"pk": exam.id}) + "?type=exam"
             subjects_map[subj.id]["years"].append({
@@ -183,7 +179,10 @@ def resources_view(request, mode=None):
             exams = exams.filter(subject__semester__filiere_id=selected_filiere_id)
 
         if mode == "free":
-            exams = exams.filter(Q(is_free_correction=True) | Q(subject__is_free_correction=True))
+            exams = exams.filter(
+                Q(is_free_correction=True) | Q(subject__is_free_correction=True) |
+                Q(is_free=True) | Q(subject__is_free=True)
+            )
 
         if q:
             exams = exams.filter(
@@ -223,11 +222,7 @@ def resources_view(request, mode=None):
                 continue
             subjects_map[subj.id]["seen_keys"].add(unique_key)
 
-            is_locked = False
-            if not request.user.is_authenticated:
-                is_locked = True
-            elif mode == "premium":
-                is_locked = not can_user_access_correction(request.user, exam)
+            is_locked = not can_user_access_correction(request.user, exam)
 
             viewer_url = reverse("exams:student_viewer", kwargs={"pk": exam.id}) + "?type=correction"
             subjects_map[subj.id]["years"].append({
@@ -258,7 +253,10 @@ def resources_view(request, mode=None):
             exam_summaries = exam_summaries.filter(subject__semester__filiere_id=selected_filiere_id)
 
         if mode == "free":
-            exam_summaries = exam_summaries.filter(Q(is_free_correction=True) | Q(subject__is_free_correction=True))
+            exam_summaries = exam_summaries.filter(
+                Q(is_free_correction=True) | Q(subject__is_free_correction=True) |
+                Q(is_free=True) | Q(subject__is_free=True)
+            )
 
         if q:
             exam_summaries = exam_summaries.filter(
@@ -295,11 +293,7 @@ def resources_view(request, mode=None):
                 continue
             subjects_map[subj.id]["seen_keys"].add(unique_key)
 
-            is_locked = False
-            if not request.user.is_authenticated:
-                is_locked = True
-            elif mode == "premium":
-                is_locked = not can_user_access_summary(request.user, exam)
+            is_locked = not can_user_access_summary(request.user, exam)
 
             viewer_url = reverse("exams:student_viewer", kwargs={"pk": exam.id}) + "?type=summary"
             subjects_map[subj.id]["years"].append({
@@ -325,7 +319,9 @@ def resources_view(request, mode=None):
             course_summaries = course_summaries.filter(subject__semester__filiere_id=selected_filiere_id)
 
         if mode == "free":
-            course_summaries = course_summaries.filter(Q(access_type="FREE") | Q(subject__is_free_correction=True))
+            course_summaries = course_summaries.filter(
+                Q(access_type="FREE") | Q(subject__is_free_correction=True) | Q(subject__is_free=True)
+            )
 
         if q:
             course_summaries = course_summaries.filter(
@@ -363,11 +359,10 @@ def resources_view(request, mode=None):
                 continue
             subjects_map[subj.id]["seen_keys"].add(unique_key)
 
-            is_locked = False
-            if not request.user.is_authenticated:
-                is_locked = True
-            elif mode == "premium":
-                is_locked = not (cs.is_free or has_user_valid_pass(request.user, cs))
+            is_locked = not (
+                cs.is_free or (cs.subject and cs.subject.is_free) or
+                (request.user.is_authenticated and has_user_valid_pass(request.user, cs))
+            )
 
             viewer_url = reverse("content:summary_viewer", kwargs={"pk": cs.id}) if not is_locked else reverse("content:summary_detail", kwargs={"pk": cs.id})
             subjects_map[subj.id]["years"].append({
@@ -389,6 +384,7 @@ def resources_view(request, mode=None):
         data["years_count"] = len(data["years"])
         data["has_locked"] = any(y["is_locked"] for y in data["years"])
         data["all_locked"] = all(y["is_locked"] for y in data["years"]) if data["years"] else False
+        data["is_free"] = data["subject"].is_free or (all(not y["is_locked"] for y in data["years"]) if data["years"] else False)
 
         # Regroupement propre par année académique pour affichage ergonomique
         grouped_dict = {}
@@ -586,18 +582,19 @@ def _get_safe_file_path(field_file):
     return field_file
 
 
-@login_required
 def stream_exam_pdf(request, pk):
     """Vue de sécurité : Sert le fichier PDF de l'épreuve principale."""
     exam = get_object_or_404(Exam, pk=pk, is_published=True)
 
-    if not request.user.is_superuser and hasattr(request.user, "profile") and request.user.profile.filiere:
+    if request.user.is_authenticated and not request.user.is_superuser and hasattr(request.user, "profile") and request.user.profile.filiere:
         if exam.filiere_id and exam.filiere_id != request.user.profile.filiere_id:
             return HttpResponseForbidden("Accès refusé : ressource appartenant à une autre filière.")
 
     has_access = can_user_access_exam_pdf(request.user, exam)
 
     if not has_access:
+        if not request.user.is_authenticated:
+            return redirect(f"{reverse('accounts:login')}?next={request.get_full_path()}")
         messages.warning(
             request,
             "Cette épreuve est réservée aux étudiants disposant du Pass actif pour ce semestre."

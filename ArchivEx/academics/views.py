@@ -211,7 +211,7 @@ def filiere_list_view(request):
         has_semester_access = can_user_access(request.user, semester)
 
         total_exams_count = Exam.objects.filter(semester=semester, is_published=True).count()
-        premium_exams_count = Exam.objects.filter(semester=semester, is_published=True, is_free=False).count()
+        premium_exams_count = Exam.objects.filter(semester=semester, is_published=True, is_free=False, subject__is_free=False).count()
 
     context = {
         "profile": profile,
@@ -336,7 +336,7 @@ def subject_list_view(request, semester_id):
     has_semester_access = can_user_access(request.user, semester)
 
     total_exams_count = Exam.objects.filter(semester=semester, is_published=True).count()
-    premium_exams_count = Exam.objects.filter(semester=semester, is_published=True, is_free=False).count()
+    premium_exams_count = Exam.objects.filter(semester=semester, is_published=True, is_free=False, subject__is_free=False).count()
 
     context = {
         "semester": semester,

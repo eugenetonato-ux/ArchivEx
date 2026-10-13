@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
 from .models import Summary, Guide, Article
-from subscriptions.services import can_user_access
+from subscriptions.services import can_user_access, can_user_access_summary
 
 
 def summary_list(request):
@@ -51,7 +51,7 @@ def summary_detail(request, pk):
         publication_status="PUBLISHED"
     )
 
-    has_access = can_user_access(request.user, summary) if request.user.is_authenticated else bool(summary.is_free)
+    has_access = can_user_access_summary(request.user, summary)
     if summary.subject and request.user.is_authenticated:
         from academics.models import record_ue_consultation
         record_ue_consultation(request.user, summary.subject)
@@ -96,7 +96,7 @@ def summary_viewer_view(request, pk):
                 )
                 return redirect("content:summary_list")
 
-    has_access = can_user_access(request.user, summary) if request.user.is_authenticated else bool(summary.is_free)
+    has_access = can_user_access_summary(request.user, summary)
 
     if not summary.file:
         messages.error(request, "Aucun fichier PDF n'est disponible pour ce résumé.")
@@ -151,7 +151,7 @@ def stream_summary_pdf_view(request, pk):
             if summary.subject.semester.filiere_id != request.user.profile.filiere_id:
                 return _render_pdf_error_response("Accès non autorisé. Cette ressource appartient à une autre filière.")
 
-    has_access = can_user_access(request.user, summary) if request.user.is_authenticated else bool(summary.is_free)
+    has_access = can_user_access_summary(request.user, summary)
     if not has_access:
         return _render_pdf_error_response("Accès refusé. Le Pass Semestre est requis pour consulter ce résumé.")
 
