@@ -44,7 +44,7 @@ def home_view(request):
                     is_published=True,
                     semester__is_active=True,
                     filiere__school=current_school
-                ).select_related("subject", "semester", "filiere", "level", "filiere__school")[:6]
+                ).select_related("subject", "semester", "filiere", "level", "filiere__school").order_by("-created_at", "-id")[:6]
             )
 
             latest_summaries = list(
@@ -52,7 +52,7 @@ def home_view(request):
                     publication_status="PUBLISHED",
                     subject__semester__is_active=True,
                     subject__semester__filiere__school=current_school
-                ).select_related("subject", "subject__semester", "subject__semester__filiere")[:6]
+                ).select_related("subject", "subject__semester", "subject__semester__filiere").order_by("-created_at", "-id")[:6]
             )
         else:
             filieres_count = Filiere.objects.count()
@@ -71,14 +71,14 @@ def home_view(request):
                 Exam.objects.filter(
                     is_published=True,
                     semester__is_active=True
-                ).select_related("subject", "semester", "filiere", "level", "filiere__school")[:6]
+                ).select_related("subject", "semester", "filiere", "level", "filiere__school").order_by("-created_at", "-id")[:6]
             )
 
             latest_summaries = list(
                 Summary.objects.filter(
                     publication_status="PUBLISHED",
                     subject__semester__is_active=True
-                ).select_related("subject", "subject__semester", "subject__semester__filiere")[:6]
+                ).select_related("subject", "subject__semester", "subject__semester__filiere").order_by("-created_at", "-id")[:6]
             )
 
         students_count = User.objects.filter(is_staff=False).count()

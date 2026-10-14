@@ -87,6 +87,9 @@ class Exam(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        ordering = ["-created_at", "-id"]
+
     def save(self, *args, **kwargs):
         if self.cloud_file and self.cloud_file.file and not self.file:
             self.file = self.cloud_file.file
