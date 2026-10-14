@@ -36,7 +36,7 @@ venv.bak/
 # Database & Exports
 *.sqlite3
 db.sqlite3
-data_prod.json
+# data_prod.json
 *.json.gz
 *.sql
 *.sql.gz
