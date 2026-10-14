@@ -78,6 +78,10 @@ def resources_view(request, mode=None):
     if category not in ("epreuves", "corrections", "resumes"):
         category = "epreuves"
 
+    # RÈGLE ARCHIVEX : En mode gratuit, les corrigés et résumés ne s'affichent JAMAIS
+    if mode == "free" and category in ("corrections", "resumes"):
+        category = "epreuves"
+
     # Paramètres de recherche et filtrage multi-critères
     from academics.context import get_current_school
     current_school = get_current_school(request)
@@ -111,7 +115,13 @@ def resources_view(request, mode=None):
             exams = exams.filter(subject__semester__filiere_id=selected_filiere_id)
 
         if mode == "free":
+            # 1. Épreuves marquées gratuites ou matière gratuite
             exams = exams.filter(Q(is_free=True) | Q(subject__is_free=True))
+            # 2. RÈGLE ARCHIVEX : Enlever toute épreuve ayant un corrigé (les épreuves corrigées sont réservées au mode Premium)
+            exams = exams.filter(
+                (Q(correction_file__isnull=True) | Q(correction_file="")) &
+                Q(cloud_correction_file__isnull=True)
+            )
 
         if q:
             exams = exams.filter(
@@ -166,23 +176,21 @@ def resources_view(request, mode=None):
             })
 
     elif category == "corrections":
-        exams = Exam.objects.filter(is_published=True, semester__is_active=True).select_related(
-            "subject", "subject__semester", "subject__semester__filiere", "subject__semester__filiere__school", "academic_year"
-        ).filter(
-            (Q(correction_file__isnull=False) & ~Q(correction_file="")) | Q(cloud_correction_file__isnull=False)
-        )
-        if current_school and not user_filiere:
-            exams = exams.filter(filiere__school=current_school)
-        if user_filiere:
-            exams = exams.filter(filiere=user_filiere)
-        elif selected_filiere_id:
-            exams = exams.filter(subject__semester__filiere_id=selected_filiere_id)
-
         if mode == "free":
-            exams = exams.filter(
-                Q(is_free_correction=True) | Q(subject__is_free_correction=True) |
-                Q(is_free=True) | Q(subject__is_free=True)
+            # RÈGLE ARCHIVEX : Aucun corrigé ne s'affiche jamais dans les ressources gratuites.
+            exams = Exam.objects.none()
+        else:
+            exams = Exam.objects.filter(is_published=True, semester__is_active=True).select_related(
+                "subject", "subject__semester", "subject__semester__filiere", "subject__semester__filiere__school", "academic_year"
+            ).filter(
+                (Q(correction_file__isnull=False) & ~Q(correction_file="")) | Q(cloud_correction_file__isnull=False)
             )
+            if current_school and not user_filiere:
+                exams = exams.filter(filiere__school=current_school)
+            if user_filiere:
+                exams = exams.filter(filiere=user_filiere)
+            elif selected_filiere_id:
+                exams = exams.filter(subject__semester__filiere_id=selected_filiere_id)
 
         if q:
             exams = exams.filter(
@@ -239,40 +247,39 @@ def resources_view(request, mode=None):
     elif category == "resumes":
         from content.models import Summary as CourseSummary
 
-        # A. Fiches résumés issues des épreuves
-        exam_summaries = Exam.objects.filter(is_published=True, semester__is_active=True).select_related(
-            "subject", "subject__semester", "subject__semester__filiere", "academic_year"
-        ).filter(
-            (Q(summary_file__isnull=False) & ~Q(summary_file="")) | Q(cloud_summary_file__isnull=False)
-        )
-        if current_school and not user_filiere:
-            exam_summaries = exam_summaries.filter(filiere__school=current_school)
-        if user_filiere:
-            exam_summaries = exam_summaries.filter(filiere=user_filiere)
-        elif selected_filiere_id:
-            exam_summaries = exam_summaries.filter(subject__semester__filiere_id=selected_filiere_id)
-
         if mode == "free":
-            exam_summaries = exam_summaries.filter(
-                Q(is_free_correction=True) | Q(subject__is_free_correction=True) |
-                Q(is_free=True) | Q(subject__is_free=True)
+            # RÈGLE ARCHIVEX : Aucun résumé ne s'affiche jamais dans les ressources gratuites.
+            exam_summaries = Exam.objects.none()
+            course_summaries = CourseSummary.objects.none()
+        else:
+            # A. Fiches résumés issues des épreuves
+            exam_summaries = Exam.objects.filter(is_published=True, semester__is_active=True).select_related(
+                "subject", "subject__semester", "subject__semester__filiere", "academic_year"
+            ).filter(
+                (Q(summary_file__isnull=False) & ~Q(summary_file="")) | Q(cloud_summary_file__isnull=False)
             )
+            if current_school and not user_filiere:
+                exam_summaries = exam_summaries.filter(filiere__school=current_school)
+            if user_filiere:
+                exam_summaries = exam_summaries.filter(filiere=user_filiere)
+            elif selected_filiere_id:
+                exam_summaries = exam_summaries.filter(subject__semester__filiere_id=selected_filiere_id)
 
-        if q:
-            exam_summaries = exam_summaries.filter(
-                Q(subject__name__icontains=q) |
-                Q(subject__code__icontains=q) |
-                Q(title__icontains=q) |
-                Q(subject__semester__filiere__name__icontains=q) |
-                Q(subject__semester__label__icontains=q) |
-                Q(academic_year__label__icontains=q)
-            )
-        if selected_subject_id:
-            exam_summaries = exam_summaries.filter(subject_id=selected_subject_id)
-        if selected_semester_id:
-            exam_summaries = exam_summaries.filter(subject__semester_id=selected_semester_id)
-        if selected_year:
-            exam_summaries = exam_summaries.filter(Q(academic_year__label__icontains=selected_year) | Q(academic_year_id=selected_year) | Q(year__icontains=selected_year))
+            if q:
+                exam_summaries = exam_summaries.filter(
+                    Q(subject__name__icontains=q) |
+                    Q(subject__code__icontains=q) |
+                    Q(title__icontains=q) |
+                    Q(subject__semester__filiere__name__icontains=q) |
+                    Q(subject__semester__label__icontains=q) |
+                    Q(academic_year__label__icontains=q)
+                )
+            if selected_subject_id:
+                exam_summaries = exam_summaries.filter(subject_id=selected_subject_id)
+            if selected_semester_id:
+                exam_summaries = exam_summaries.filter(subject__semester_id=selected_semester_id)
+            if selected_year:
+                exam_summaries = exam_summaries.filter(Q(academic_year__label__icontains=selected_year) | Q(academic_year_id=selected_year) | Q(year__icontains=selected_year))
 
         for exam in exam_summaries:
             subj = exam.subject
@@ -308,20 +315,18 @@ def resources_view(request, mode=None):
             })
 
         # B. Résumés rédigés de cours
-        course_summaries = CourseSummary.objects.filter(publication_status="PUBLISHED", subject__semester__is_active=True).select_related(
-            "subject", "subject__semester", "subject__semester__filiere"
-        )
-        if current_school and not user_filiere:
-            course_summaries = course_summaries.filter(subject__semester__filiere__school=current_school)
-        if user_filiere:
-            course_summaries = course_summaries.filter(subject__semester__filiere=user_filiere)
-        elif selected_filiere_id:
-            course_summaries = course_summaries.filter(subject__semester__filiere_id=selected_filiere_id)
-
         if mode == "free":
-            course_summaries = course_summaries.filter(
-                Q(access_type="FREE") | Q(subject__is_free_correction=True) | Q(subject__is_free=True)
+            course_summaries = CourseSummary.objects.none()
+        else:
+            course_summaries = CourseSummary.objects.filter(publication_status="PUBLISHED", subject__semester__is_active=True).select_related(
+                "subject", "subject__semester", "subject__semester__filiere"
             )
+            if current_school and not user_filiere:
+                course_summaries = course_summaries.filter(subject__semester__filiere__school=current_school)
+            if user_filiere:
+                course_summaries = course_summaries.filter(subject__semester__filiere=user_filiere)
+            elif selected_filiere_id:
+                course_summaries = course_summaries.filter(subject__semester__filiere_id=selected_filiere_id)
 
         if q:
             course_summaries = course_summaries.filter(

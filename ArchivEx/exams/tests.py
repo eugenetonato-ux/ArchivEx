@@ -66,8 +66,6 @@ class ArchivExFlowTest(TestCase):
             is_free=True,
             is_published=True,
             file=ContentFile(pdf_data, name="algo_free.pdf"),
-            correction_file=ContentFile(pdf_data, name="algo_free_corr.pdf"),
-            summary_file=ContentFile(pdf_data, name="algo_free_sum.pdf"),
         )
 
         self.exam_premium = Exam.objects.create(
@@ -180,16 +178,16 @@ class ArchivExFlowTest(TestCase):
         contrib_prof.assigned_schools.add(self.school)
 
         # 4. Phase 14 Access Control & Security Tests
-        self.exam_free.correction_file = ContentFile(b"%PDF-1.4 ... correction free exam ...", name="corr_free_exam.pdf")
-        self.exam_free.summary_file = ContentFile(b"%PDF-1.4 ... summary free exam ...", name="sum_free_exam.pdf")
-        self.exam_free.save()
-
         self.exam_premium.correction_file = ContentFile(b"%PDF-1.4 ... correction premium exam ...", name="corr_premium_exam.pdf")
         self.exam_premium.summary_file = ContentFile(b"%PDF-1.4 ... summary premium exam ...", name="sum_premium_exam.pdf")
         self.exam_premium.save()
 
     def test_free_exam_correction_and_summary_remain_premium(self):
         """Even for a FREE exam, correction and summary PDFs are ALWAYS PREMIUM (blocked without Pass)."""
+        self.exam_free.correction_file = ContentFile(b"%PDF-1.4 ... correction free exam ...", name="corr_free_exam.pdf")
+        self.exam_free.summary_file = ContentFile(b"%PDF-1.4 ... summary free exam ...", name="sum_free_exam.pdf")
+        self.exam_free.save()
+
         self.client.login(username="student@univ.edu", password="Password123!")
 
         # Free exam PDF is accessible
@@ -220,11 +218,11 @@ class ArchivExFlowTest(TestCase):
         )
         self.client.login(username="student@univ.edu", password="Password123!")
 
-        url_corr = reverse("exams:stream_correction_pdf", kwargs={"pk": self.exam_free.id})
+        url_corr = reverse("exams:stream_correction_pdf", kwargs={"pk": self.exam_premium.id})
         res_corr = self.client.get(url_corr)
         self.assertEqual(res_corr.status_code, 200)
 
-        url_sum = reverse("exams:stream_summary_pdf", kwargs={"pk": self.exam_free.id})
+        url_sum = reverse("exams:stream_summary_pdf", kwargs={"pk": self.exam_premium.id})
         res_sum = self.client.get(url_sum)
         self.assertEqual(res_sum.status_code, 200)
 
@@ -411,33 +409,19 @@ class ArchivExFlowTest(TestCase):
         self.assertEqual(res_view.status_code, 200)
 
     def test_parcours_2_gratuit_corrections_ue_annee_ressource(self):
-        """Gratuit -> Épreuves corrigées -> UE -> année -> ressource."""
-        # Marquer la correction comme gratuite
-        self.exam_free.is_free_correction = True
-        self.exam_free.save()
+        """RÈGLE ARCHIVEX : Tous les corrigés sont exclusivement Premium et ne s'affichent jamais en gratuit."""
         self.client.logout()
         res = self.client.get(reverse("exams:free_liste") + "?category=corrections")
         self.assertEqual(res.status_code, 200)
-        ue_item = next((ue for ue in res.context["ue_list"] if ue["subject"].id == self.subject.id), None)
-        self.assertIsNotNone(ue_item)
-        self.assertTrue(len(ue_item["years"]) > 0)
-        v_url = ue_item["years"][0]["viewer_url"]
-        res_view = self.client.get(v_url)
-        self.assertEqual(res_view.status_code, 200)
+        self.assertEqual(res.context["category"], "epreuves")
+        self.assertFalse(any(y["exam"].has_correction for ue in res.context["ue_list"] for y in ue["years"]))
 
     def test_parcours_3_gratuit_resumes_ue_annee_ressource(self):
-        """Gratuit -> Résumés -> UE -> année -> ressource."""
-        self.exam_free.is_free_correction = True
-        self.exam_free.save()
+        """RÈGLE ARCHIVEX : Tous les résumés sont exclusivement Premium et ne s'affichent jamais en gratuit."""
         self.client.logout()
         res = self.client.get(reverse("exams:free_liste") + "?category=resumes")
         self.assertEqual(res.status_code, 200)
-        ue_item = next((ue for ue in res.context["ue_list"] if ue["subject"].id == self.subject.id), None)
-        self.assertIsNotNone(ue_item)
-        self.assertTrue(len(ue_item["years"]) > 0)
-        v_url = ue_item["years"][0]["viewer_url"]
-        res_view = self.client.get(v_url)
-        self.assertEqual(res_view.status_code, 200)
+        self.assertEqual(res.context["category"], "epreuves")
 
     def test_parcours_4_premium_sans_pass_epreuves_verrouillees(self):
         """Premium sans Pass -> Épreuves -> UE -> année -> ressource verrouillée."""

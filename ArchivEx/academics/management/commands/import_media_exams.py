@@ -8,14 +8,65 @@ from exams.models import Exam
 from content.models import CloudFile, Summary
 
 
+SUBJECT_NORMALIZATION = {
+    "statistiques descriptives": "Statistique descriptive",
+    "statistique descriptive": "Statistique descriptive",
+    "statistiques descriptive": "Statistique descriptive",
+    "introduction au droit": "Introduction au droit",
+    "introduction au droit cive": "Introduction au droit",
+    "cadre juridique des affaires cive": "CIVE",
+    "cive": "CIVE",
+    "sociologie des organisations": "Sociologie des organisations",
+    "sociologie organisations": "Sociologie des organisations",
+    "gestion de la qualite": "Gestion de la qualité",
+    "gestion qualite": "Gestion de la qualité",
+    "introduction a la gestion de la qualite": "Gestion de la qualité",
+    "analyse mathematique": "Analyse mathématique",
+    "analyse mathématique": "Analyse mathématique",
+    "microeconomie": "Microéconomie",
+    "microéconomie": "Microéconomie",
+    "comptabilite financiere": "Comptabilité financière",
+    "introduction a la comptabilite financiere": "Comptabilité financière",
+    "entrepreneuriat et innovation": "Entrepreneuriat et innovation",
+    "entrepreneuriat innovation": "Entrepreneuriat et innovation",
+    "histoire de la pensee economique": "Histoire de la pensée économique",
+    "hpe": "Histoire de la pensée économique",
+    "introduction droit": "Introduction au droit",
+    "introduction planification": "Introduction à la planification",
+    "algebre lineaire": "Algèbre linéaire",
+    "comptabilite nationale": "Comptabilité nationale",
+    "developpement personnel": "Développement personnel",
+    "informatique": "Informatique",
+    "introduction a la planification": "Introduction à la planification",
+    "macroeconomie": "Macroéconomie",
+    "theorie des probabilites": "Probabilités",
+    "probabilites": "Probabilités",
+}
+
+
 def clean_subject_name(raw_name):
     """Nettoie et normalise le nom de matière extrait du nom de fichier."""
     name = raw_name.replace(".pdf", "").strip()
-    # Supprimer les préfixes numériques ex: 01_, 02_
     name = re.sub(r"^\d+_", "", name)
-    # Remplacer underscores par espaces
+    name = re.sub(r"^corrige_type_", "", name, flags=re.IGNORECASE)
+    name = re.sub(r"^corrige_", "", name, flags=re.IGNORECASE)
+    name = re.sub(r"\s*\d{4}-\d{4}$", "", name)
     name = name.replace("_", " ").strip()
     return name
+
+
+def normalize_subject_name(raw_name):
+    clean = clean_subject_name(raw_name)
+    key = clean.lower().replace("é", "e").replace("è", "e").replace("ê", "e").replace("à", "a")
+    for k, norm in SUBJECT_NORMALIZATION.items():
+        k_clean = k.replace("é", "e").replace("è", "e").replace("ê", "e").replace("à", "a")
+        if k_clean == key:
+            return norm
+    for k, norm in SUBJECT_NORMALIZATION.items():
+        k_clean = k.replace("é", "e").replace("è", "e").replace("ê", "e").replace("à", "a")
+        if k_clean in key:
+            return norm
+    return clean
 
 
 class Command(BaseCommand):
@@ -66,6 +117,18 @@ class Command(BaseCommand):
         if default_filiere not in all_filieres:
             all_filieres.append(default_filiere)
 
+        # Normaliser préventivement les matières existantes en base
+        for s in Subject.objects.all():
+            norm_name = normalize_subject_name(s.name)
+            if norm_name != s.name:
+                existing = Subject.objects.filter(semester=s.semester, name=norm_name).first()
+                if existing and existing.id != s.id:
+                    Exam.objects.filter(subject=s).update(subject=existing)
+                    s.delete()
+                else:
+                    s.name = norm_name
+                    s.save()
+
         # Années académiques
         ay_2024, _ = AcademicYear.objects.get_or_create(label="2024-2025")
         ay_2025, _ = AcademicYear.objects.get_or_create(label="2025-2026")
@@ -106,8 +169,8 @@ class Command(BaseCommand):
 
             return default_filiere
 
-        # 1. Scanner les corrections pour pouvoir les mapper par (filiere_id, année, semestre, mot-clé UE)
-        corrections_map = {}
+        # 1. Scanner les corrections pour pouvoir les mapper
+        corrections_list = []
         if corrections_dir.exists():
             for root, _, files in os.walk(corrections_dir):
                 for f in files:
@@ -121,44 +184,20 @@ class Command(BaseCommand):
                         yr_key = yr_match.group(1) if yr_match else ""
                         sem_key = sem_match.group(1).upper() if sem_match else ""
                         
-                        clean_corr_name = f.lower().replace("corrige_type_", "").replace("corrige_", "").replace(".pdf", "")
-                        clean_corr_name = re.sub(r"^\d+_", "", clean_corr_name).replace("_", " ").strip()
+                        norm_c_name = normalize_subject_name(f)
+                        is_rattrapage = "rattrapage" in f.lower()
                         
-                        corrections_map[(filiere_corr.id if filiere_corr else None, yr_key, sem_key, clean_corr_name)] = rel_p
+                        corrections_list.append({
+                            "filiere_id": filiere_corr.id if filiere_corr else None,
+                            "year": yr_key,
+                            "semester": sem_key,
+                            "norm_name": norm_c_name,
+                            "is_rattrapage": is_rattrapage,
+                            "path": rel_p,
+                        })
 
         created_count = 0
         updated_count = 0
-
-        # Mapping des matières pour normaliser les variations d'écriture
-        SUBJECT_NORMALIZATION = {
-            "statistiques descriptives": "Statistique descriptive",
-            "statistique descriptive": "Statistique descriptive",
-            "statistiques descriptive": "Statistique descriptive",
-            "introduction au droit": "Introduction au droit",
-            "introduction au droit cive": "Introduction au droit",
-            "cadre juridique des affaires cive": "CIVE",
-            "cive": "CIVE",
-            "sociologie des organisations": "Sociologie des organisations",
-            "gestion de la qualite": "Gestion de la qualité",
-            "introduction a la gestion de la qualite": "Gestion de la qualité",
-            "analyse mathematique": "Analyse mathématique",
-            "analyse mathématique": "Analyse mathématique",
-            "microeconomie": "Microéconomie",
-            "microéconomie": "Microéconomie",
-            "comptabilite financiere": "Comptabilité financière",
-            "introduction a la comptabilite financiere": "Comptabilité financière",
-            "entrepreneuriat et innovation": "Entrepreneuriat et innovation",
-            "entrepreneuriat innovation": "Entrepreneuriat et innovation",
-            "histoire de la pensee economique": "Histoire de la pensée économique",
-            "algebre lineaire": "Algèbre linéaire",
-            "comptabilite nationale": "Comptabilité nationale",
-            "developpement personnel": "Développement personnel",
-            "informatique": "Informatique",
-            "introduction a la planification": "Introduction à la planification",
-            "macroeconomie": "Macroéconomie",
-            "theorie des probabilites": "Probabilités",
-            "probabilites": "Probabilités",
-        }
 
         # 2. Scanner les épreuves
         if exams_dir.exists():
@@ -192,17 +231,13 @@ class Command(BaseCommand):
                         defaults={"label": f"S{sem_num}"}
                     )
 
-                    # Nettoyer le nom de la matière
-                    raw_subj = clean_subject_name(f)
-                    lookup_key = raw_subj.lower().replace("é", "e").replace("è", "e").replace("ê", "e").replace("à", "a")
-                    
-                    # Trouver le nom normalisé
-                    subj_name = raw_subj
-                    for k, norm in SUBJECT_NORMALIZATION.items():
-                        k_clean = k.replace("é", "e").replace("è", "e").replace("ê", "e").replace("à", "a")
-                        if k_clean in lookup_key or lookup_key in k_clean:
-                            subj_name = norm
-                            break
+                    # Ignorer d'éventuels fichiers de test
+                    DUMMY_PATTERNS = ["algo_free", "sql_prem", "test_", "draft", "orig", "physique", "resume_algo", "ep.", "ep_", "co.", "co_", "su.", "su_"]
+                    if any(dp in f.lower() for dp in DUMMY_PATTERNS):
+                        continue
+
+                    # Nom normalisé de la matière
+                    subj_name = normalize_subject_name(f)
 
                     # Détecter le type d'examen
                     exam_type = "examen"
@@ -216,7 +251,7 @@ class Command(BaseCommand):
                         defaults={
                             "code": subj_name[:6].upper().replace(" ", ""),
                             "is_active": True,
-                            "is_free": True if (subj_name in ["CIVE", "Statistique descriptive"]) else False,
+                            "is_free": False,
                         }
                     )
 
@@ -229,23 +264,36 @@ class Command(BaseCommand):
                     corr_file_rel = None
                     yr_key = ay_obj.label
                     sem_key = f"S{sem_num}"
-                    
-                    # 1. Chercher d'abord avec la même filière
-                    for (c_fil_id, c_yr, c_sem, c_name), c_path in corrections_map.items():
-                        if c_fil_id == target_filiere.id and (c_yr == yr_key or not c_yr) and (c_sem == sem_key or not c_sem):
-                            c_name_clean = c_name.replace("é", "e").replace("è", "e").replace("à", "a")
-                            s_name_clean = subj_name.lower().replace("é", "e").replace("è", "e").replace("à", "a")
-                            if (c_name_clean in s_name_clean) or (s_name_clean in c_name_clean) or (lookup_key in c_name_clean):
-                                corr_file_rel = c_path
+                    is_exam_rattrapage = (exam_type == "rattrapage")
+
+                    # 1. Même filière + année + semestre + nom normalisé + même session (rattrapage/normale)
+                    for c in corrections_list:
+                        if c["filiere_id"] == target_filiere.id and (c["year"] == yr_key or not c["year"]) and (c["semester"] == sem_key or not c["semester"]):
+                            if c["norm_name"] == subj_name and c["is_rattrapage"] == is_exam_rattrapage:
+                                corr_file_rel = c["path"]
                                 break
-                    # 2. Si non trouvée, fallback sur corrections sans filière stricte
+
+                    # 2. Même filière + année + semestre + nom normalisé (session indifférente)
                     if not corr_file_rel:
-                        for (c_fil_id, c_yr, c_sem, c_name), c_path in corrections_map.items():
-                            if (c_fil_id is None or c_fil_id == target_filiere.id) and (c_yr == yr_key or not c_yr) and (c_sem == sem_key or not c_sem):
-                                c_name_clean = c_name.replace("é", "e").replace("è", "e").replace("à", "a")
-                                s_name_clean = subj_name.lower().replace("é", "e").replace("è", "e").replace("à", "a")
-                                if (c_name_clean in s_name_clean) or (s_name_clean in c_name_clean) or (lookup_key in c_name_clean):
-                                    corr_file_rel = c_path
+                        for c in corrections_list:
+                            if c["filiere_id"] == target_filiere.id and (c["year"] == yr_key or not c["year"]) and (c["semester"] == sem_key or not c["semester"]):
+                                if c["norm_name"] == subj_name:
+                                    corr_file_rel = c["path"]
+                                    break
+
+                    # 3. Fallback partagé (ex: filière STAT utilisant une correction PLAN ou globale)
+                    if not corr_file_rel:
+                        for c in corrections_list:
+                            if (c["year"] == yr_key or not c["year"]) and (c["semester"] == sem_key or not c["semester"]):
+                                if c["norm_name"] == subj_name and c["is_rattrapage"] == is_exam_rattrapage:
+                                    corr_file_rel = c["path"]
+                                    break
+
+                    if not corr_file_rel:
+                        for c in corrections_list:
+                            if (c["year"] == yr_key or not c["year"]) and (c["semester"] == sem_key or not c["semester"]):
+                                if c["norm_name"] == subj_name:
+                                    corr_file_rel = c["path"]
                                     break
 
                     # Créer le CloudFile correspondant
@@ -274,15 +322,17 @@ class Command(BaseCommand):
                             "file": rel_path,
                             "correction_file": corr_file_rel,
                             "cloud_file": cf,
-                            "is_free": subject.is_free,
+                            "is_free": False if corr_file_rel else subject.is_free,
                             "is_published": True,
                         }
                     )
 
                     if not is_created:
+                        exam.title = title
                         exam.file = rel_path
                         if corr_file_rel:
                             exam.correction_file = corr_file_rel
+                            exam.is_free = False
                         exam.cloud_file = cf
                         exam.is_published = True
                         exam.save()
@@ -292,7 +342,7 @@ class Command(BaseCommand):
 
                     self.stdout.write(f"  [+] {title} (Correction: {'OUI' if corr_file_rel else 'NON'})")
 
-        # 3. Traiter les résumés/fiches de cours
+        # 3. Traiter les résumés/fiches de cours (toujours PREMIUM)
         if summaries_dir.exists():
             for f in os.listdir(summaries_dir):
                 if f.lower().endswith(".pdf"):
@@ -315,7 +365,7 @@ class Command(BaseCommand):
                             defaults={
                                 "file": rel_sum_path,
                                 "introduction": f"Fiche de cours et synthèse essentielle pour {matched_subj.name}.",
-                                "access_type": "FREE" if matched_subj.is_free else "PREMIUM",
+                                "access_type": "PREMIUM",
                                 "publication_status": "PUBLISHED",
                             }
                         )

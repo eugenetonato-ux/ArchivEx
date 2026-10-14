@@ -187,17 +187,11 @@ def can_user_access_exam_pdf(user, exam):
 
 def can_user_access_correction(user, exam):
     """Accès à la correction PDF.
-    - Correction gratuite (is_free_correction=True, exam.is_free=True ou matière gratuite) : accessible sans connexion.
-    - Correction premium : nécessite un Pass actif.
+    RÈGLE ARCHIVEX : Tous les corrigés sont exclusivement Premium.
+    Aucun corrigé n'est jamais gratuit. Nécessite obligatoirement un Pass actif (ou statut Staff).
     """
     if not exam:
         return False
-    # Correction explicitement gratuite
-    if getattr(exam, "is_free_correction", False):
-        return True
-    if exam.subject and getattr(exam.subject, "is_free_correction", False):
-        return True
-    # Pour le reste, connexion et Pass requis
     if not user or not user.is_authenticated:
         return False
     return has_user_valid_pass(user, exam)
@@ -205,24 +199,11 @@ def can_user_access_correction(user, exam):
 
 def can_user_access_summary(user, resource):
     """Accès au résumé / fiche PDF.
-    - Résumé gratuit : accessible sans connexion.
-    - Résumé premium : nécessite un Pass actif.
+    RÈGLE ARCHIVEX : Tous les résumés sont exclusivement Premium.
+    Aucun résumé n'est jamais gratuit. Nécessite obligatoirement un Pass actif (ou statut Staff).
     """
     if not resource:
         return False
-    if getattr(resource, "is_free_correction", False):
-        return True
-    if getattr(resource, "access_type", None) == "FREE":
-        return True
-    res_subj = getattr(resource, "subject", None)
-    if res_subj and getattr(res_subj, "is_free_correction", False):
-        return True
-    # Pour un objet Summary dédié (non-Exam) :
-    if not hasattr(resource, "exam_type") and getattr(resource, "is_free", False):
-        return True
-    if not hasattr(resource, "exam_type") and res_subj and getattr(res_subj, "is_free", False):
-        return True
-    # Pour le reste, connexion et Pass requis
     if not user or not user.is_authenticated:
         return False
     return has_user_valid_pass(user, resource)

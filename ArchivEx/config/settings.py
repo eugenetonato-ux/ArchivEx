@@ -281,6 +281,24 @@ else:
 
 MEDIA_ROOT = BASE_DIR / "media"
 
+# ============================================================
+# ISOLATION MEDIA LORS DES TESTS
+# Évite que l'exécution des tests (ex: algo_free, sql_premium) ne pollue media/
+# ============================================================
+import sys
+if "test" in sys.argv:
+    import tempfile
+    import atexit
+    import shutil
+    _TEST_MEDIA_ROOT = tempfile.mkdtemp(prefix="archivex_test_media_")
+    MEDIA_ROOT = Path(_TEST_MEDIA_ROOT)
+    USE_SUPABASE_STORAGE = False
+    STORAGES["default"] = {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    }
+    atexit.register(lambda: shutil.rmtree(_TEST_MEDIA_ROOT, ignore_errors=True))
+
+
 
 # Email Configuration
 
