@@ -578,12 +578,12 @@ def dashboard_view(request):
         else:
             filiere = None
 
-    available_semesters = Semester.objects.filter(filiere=filiere) if filiere else Semester.objects.none()
+    available_semesters = Semester.objects.filter(filiere=filiere, is_active=True) if filiere else Semester.objects.none()
     selected_semester_id = request.GET.get("semester")
     if selected_semester_id and available_semesters.exists():
-        active_semester = available_semesters.filter(id=selected_semester_id).first()
+        active_semester = available_semesters.filter(id=selected_semester_id, is_active=True).first()
     if not active_semester and available_semesters.exists():
-        active_access = active_accesses.first()
+        active_access = active_accesses.filter(semester__is_active=True).first()
         if active_access and active_access.semester and active_access.semester in available_semesters:
             active_semester = active_access.semester
         else:
@@ -815,6 +815,12 @@ def profile_view(request):
         Q(user=request.user) & (Q(activated_at__isnull=False) | Q(payments__status__in=["APPROVED", "reussi", "approved", "success"]))
     ).select_related("semester", "filiere", "level", "school").distinct()
 
+    active_platform_semester = None
+    if profile and profile.filiere:
+        active_platform_semester = Semester.objects.filter(filiere=profile.filiere, is_active=True).first()
+    if not active_platform_semester:
+        active_platform_semester = Semester.objects.filter(is_active=True).first()
+
     devices = request.user.devices.all()
     current_device_id = request.COOKIES.get("ax_device_id", "")
     can_revoke, remaining_revocations, cooldown_until = check_revocation_limit_status(request.user)
@@ -823,6 +829,7 @@ def profile_view(request):
         "profile": profile,
         "form": form,
         "active_accesses": active_accesses,
+        "active_platform_semester": active_platform_semester,
         "devices": devices,
         "max_devices": MAX_ALLOWED_DEVICES,
         "current_device_id": current_device_id,

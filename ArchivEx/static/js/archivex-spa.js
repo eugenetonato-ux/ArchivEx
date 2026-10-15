@@ -231,7 +231,26 @@
                 activeMain.style.opacity = '0.94';
                 activeMain.innerHTML = newPublicMain.innerHTML;
 
-            } else {
+                // Synchronisation dynamique des notifications (cloche header & dock mobile)
+                const currentBell = document.getElementById('notification-bell-btn');
+                const newBell = newDoc.getElementById('notification-bell-btn');
+                if (currentBell && newBell) {
+                    currentBell.innerHTML = newBell.innerHTML;
+                }
+                const currentDropdown = document.getElementById('notification-dropdown');
+                const newDropdown = newDoc.getElementById('notification-dropdown');
+                if (currentDropdown && newDropdown) {
+                    currentDropdown.innerHTML = newDropdown.innerHTML;
+                }
+                const currentDockNotifs = document.getElementById('dock-tab-notifs');
+                const newDockNotifs = newDoc.getElementById('dock-tab-notifs');
+                if (currentDockNotifs && newDockNotifs) {
+                    currentDockNotifs.innerHTML = newDockNotifs.innerHTML;
+                }
+
+                if (targetUrl.pathname.includes('/notifications/')) {
+                    pageCache.clear();
+                }
                 // Bascule de structure (ex: passage du site public vers l'administration)
                 stopProgress();
                 window.location.href = targetUrl.href;

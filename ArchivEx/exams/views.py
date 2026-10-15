@@ -509,6 +509,16 @@ def exam_detail(request, pk):
         is_published=True
     )
 
+    is_staff_user = request.user.is_authenticated and (
+        request.user.is_staff or request.user.is_superuser or getattr(request.user, "contributor_profile", None)
+    )
+    if exam.semester and not exam.semester.is_active and not is_staff_user:
+        messages.warning(
+            request,
+            f"Cette épreuve appartient au {exam.semester.label}, qui n'est pas ouvert actuellement sur la plateforme."
+        )
+        return redirect("exams:liste")
+
     if request.user.is_authenticated and not request.user.is_superuser and hasattr(request.user, "profile") and request.user.profile.filiere:
         if exam.filiere_id and exam.filiere_id != request.user.profile.filiere_id:
             messages.warning(

@@ -276,6 +276,9 @@ def admin_dashboard_view(request):
         "totals": chart_totals,
     })
 
+    from academics.services import get_semesters_summary
+    semesters_summary = get_semesters_summary()
+
     context = {
         "active_school": active_school,
         "active_filiere": active_filiere,
@@ -293,6 +296,7 @@ def admin_dashboard_view(request):
         "recent_exams": recent_exams,
         "recent_summaries": recent_summaries,
         "filiere_chart_json": filiere_chart_json,
+        "semesters_summary": semesters_summary,
     }
     return render(request, "contributors/dashboard.html", context)
 
@@ -3336,6 +3340,72 @@ def admin_settings_view(request):
     return render(request, "contributors/settings.html", context)
 
 
+@contributor_required
+def semester_control_view(request):
+    """
+    Page d'administration pour la gestion et le basculement du cycle des semestres (S1 / S2).
+    Permet à l'administrateur d'activer en 1 clic le semestre officiel pour tous les étudiants.
+    """
+    from academics.services import get_semesters_summary
+    school_ctx, filiere_ctx, semester_ctx = get_active_academic_context(request)
+    semesters_summary = get_semesters_summary()
+
+    context = {
+        "active_school": school_ctx,
+        "active_filiere": filiere_ctx,
+        "active_semester": semester_ctx,
+        "semesters_summary": semesters_summary,
+    }
+    return render(request, "contributors/semesters/control.html", context)
+
+
+@contributor_required
+def semester_switch_view(request):
+    """
+    Action pour basculer le semestre officiel pour tous les étudiants.
+    Accepte POST avec number (1 ou 2).
+    """
+    if request.method == "POST":
+        target_number = request.POST.get("number")
+        try:
+            num = int(target_number)
+            from academics.services import set_exclusive_active_semester
+            set_exclusive_active_semester(num)
+            log_admin_action(request, f"Activation exclusive du Semestre {num} pour toute la plateforme.")
+            messages.success(
+                request,
+                f"Le Semestre {num} est désormais le SEUL semestre actif sur l'ensemble de la plateforme ! "
+                f"Toutes ses matières sont actives et ses épreuves publiées. Les autres semestres sont masqués."
+            )
+        except (ValueError, TypeError):
+            messages.error(request, "Numéro de semestre invalide.")
+    else:
+        messages.warning(request, "Le changement de semestre requiert une requête POST sécurisée.")
+
+    next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or reverse("contributors:semester_control")
+    return redirect(next_url)
+
+
+@contributor_required
+def semester_toggle_single_view(request, pk):
+    """
+    Bascule l'état actif/masqué d'un semestre spécifique.
+    """
+    if request.method == "POST":
+        from academics.services import toggle_semester_active
+        from academics.models import Semester
+        sem = get_object_or_404(Semester, pk=pk)
+        new_status = toggle_semester_active(pk)
+        status_label = "activé et visible" if new_status else "masqué et invisible"
+        log_admin_action(request, f"Bascule statut semestre {sem.label} ({sem.filiere.name}) -> {status_label}")
+        messages.success(request, f"Le semestre « {sem.label} » de la filière {sem.filiere.name} est désormais {status_label}.")
+    else:
+        messages.warning(request, "Action requiert une méthode POST.")
+
+    next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or reverse("contributors:semester_control")
+    return redirect(next_url)
+
+
 __all__ = [
     "admin_support_list_view",
     "admin_support_detail_view",
@@ -3346,4 +3416,7 @@ __all__ = [
     "extract_pdf_ocr_view",
     "extract_uploaded_pdf_ocr_view",
     "admin_settings_view",
+    "semester_control_view",
+    "semester_switch_view",
+    "semester_toggle_single_view",
 ]

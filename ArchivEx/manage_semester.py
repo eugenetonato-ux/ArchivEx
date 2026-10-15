@@ -36,35 +36,37 @@ def show_status():
 
 
 def activate_semester(number):
-    sem = Semester.objects.filter(number=number).first()
-    if not sem:
+    semesters = Semester.objects.filter(number=number)
+    if not semesters.exists():
         print(f"[-] Aucun semestre trouve avec le numero {number}.")
         return
 
-    Semester.objects.filter(number=number).update(is_active=True)
-    Subject.objects.filter(semester=sem).update(is_active=True)
-    Exam.objects.filter(semester=sem).update(is_published=True)
+    semesters.update(is_active=True)
+    sub_count = Subject.objects.filter(semester__number=number).update(is_active=True)
+    exam_count = Exam.objects.filter(semester__number=number).update(is_published=True)
 
-    print(f"\n[+] LE SEMESTRE {sem.label} EST MAINTENANT LANCE ET ACTIF !")
-    print(f"   * Matieres activees : {Subject.objects.filter(semester=sem).count()}")
-    print(f"   * Epreuves publiees : {Exam.objects.filter(semester=sem).count()}")
-    print("   [i] Rappel : Les Pass S1 ne donnent pas acces a S2. Les etudiants doivent payer le Pass S2.")
+    print(f"\n[+] LE SEMESTRE NUMÉRO {number} EST MAINTENANT LANCE ET ACTIF !")
+    print(f"   * Semestres activés : {semesters.count()}")
+    print(f"   * Matières activées : {sub_count}")
+    print(f"   * Épreuves publiées : {exam_count}")
+    print("   [i] Rappel : Les Pass S1 ne donnent pas accès à S2. Les étudiants doivent payer le Pass S2.")
     show_status()
 
 
 def deactivate_semester(number):
-    sem = Semester.objects.filter(number=number).first()
-    if not sem:
+    semesters = Semester.objects.filter(number=number)
+    if not semesters.exists():
         print(f"[-] Aucun semestre trouve avec le numero {number}.")
         return
 
-    Semester.objects.filter(number=number).update(is_active=False)
-    Subject.objects.filter(semester=sem).update(is_active=False)
-    Exam.objects.filter(semester=sem).update(is_published=False)
+    semesters.update(is_active=False)
+    sub_count = Subject.objects.filter(semester__number=number).update(is_active=False)
+    exam_count = Exam.objects.filter(semester__number=number).update(is_published=False)
 
-    print(f"\n[*] LE SEMESTRE {sem.label} EST DESORMAIS MASQUE DU SITE PUBLIC !")
-    print(f"   * Matieres masquées : {Subject.objects.filter(semester=sem).count()}")
-    print(f"   * Epreuves depubliees : {Exam.objects.filter(semester=sem).count()}")
+    print(f"\n[*] LE SEMESTRE NUMÉRO {number} EST DÉSORMAIS MASQUÉ DU SITE PUBLIC !")
+    print(f"   * Semestres masqués : {semesters.count()}")
+    print(f"   * Matières masquées : {sub_count}")
+    print(f"   * Épreuves dépubliées : {exam_count}")
     show_status()
 
 

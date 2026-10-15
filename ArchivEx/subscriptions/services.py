@@ -39,9 +39,14 @@ def user_has_any_active_pass(user):
 
 def has_user_valid_pass(user, resource=None):
     """
-    Vérifie si l'utilisateur possède un Pass Semestre / Filière / École actif.
+    Vérifie si l'utilisateur possède un Pass Semestre actif pour la ressource demandée.
     Prend en charge tous types d'objets (Semester, Filiere, Subject, Exam, Summary, Guide) ou None.
-    Seuls les superutilisateurs/staff et les étudiants avec un Pass valide retournent True.
+    RÈGLE ARCHIVEX STRICTE :
+    - Un Pass acheté pour un semestre d'une filière donnée (ex: S1 PGP) donne UNIQUEMENT
+      accès aux ressources de ce semestre de cette filière.
+    - Il n'accorde JAMAIS d'accès aux autres filières, même dans la même école.
+    - Il n'accorde JAMAIS d'accès aux autres semestres (ex: S1 ne donne pas accès à S2).
+    - Si le semestre est désactivé administrativement, l'accès est immédiatement refusé.
     """
     if not user or not user.is_authenticated:
         return False
@@ -81,7 +86,7 @@ def has_user_valid_pass(user, resource=None):
     elif not res_school and res_filiere:
         res_school = getattr(res_filiere, "school", None)
 
-    # Si la ressource est liée à un semestre désactivé (ex: S2 fermé administrativement)
+    # 1. Si la ressource est liée à un semestre désactivé (ex: S2 fermé administrativement)
     if res_semester and not getattr(res_semester, "is_active", True):
         return False
 
@@ -90,27 +95,45 @@ def has_user_valid_pass(user, resource=None):
         Q(payments__status__in=["APPROVED", "reussi", "approved", "success"])
     )
 
+    # 2. Si la ressource est rattachée à un semestre spécifique (épreuves, corrigés, matières, résumés)
     if res_semester:
-        # 1. Vérification SemesterAccess pour ce semestre
+        # A. Vérification SemesterAccess pour CE semestre exact
         if SemesterAccess.objects.filter(legacy_query & Q(semester=res_semester)).exists():
             return True
 
-        # 2. Vérification directe dans Payment pour ce semestre
+        # B. Vérification paiement direct validé pour CE semestre exact
         if Payment.objects.filter(
             user=user, semester=res_semester,
             status__in=["APPROVED", "reussi", "approved", "success"]
         ).exists():
             return True
 
-        # 3. Vérification UserSubscription pour ce semestre
+        # C. Vérification UserSubscription pour CE semestre exact
         if UserSubscription.objects.filter(
             user=user, semester=res_semester, is_active=True,
             start_date__lte=now,
         ).filter(Q(end_date__isnull=True) | Q(end_date__gte=now)).exists():
             return True
 
+        # D. Vérification abonnement de portée supérieure explicite (Pass Filière annuel ou Pass École)
+        if res_filiere and UserSubscription.objects.filter(
+            user=user, filiere=res_filiere, is_active=True,
+            start_date__lte=now,
+        ).filter(Q(plan__scope__in=["program", "annual"]) | Q(semester__isnull=True, plan__isnull=True)).filter(Q(end_date__isnull=True) | Q(end_date__gte=now)).exists():
+            return True
+
+        if res_school and UserSubscription.objects.filter(
+            user=user, school=res_school, is_active=True,
+            start_date__lte=now,
+        ).filter(Q(plan__scope="school") | Q(semester__isnull=True, filiere__isnull=True)).filter(Q(end_date__isnull=True) | Q(end_date__gte=now)).exists():
+            return True
+
+        # Si un semestre est spécifié et que l'utilisateur n'a pas de pass pour ce semestre : REFUS STRICT
+        return False
+
+    # 3. Ressource générale de filière sans semestre spécifié
     if res_filiere:
-        if SemesterAccess.objects.filter(legacy_query & Q(filiere=res_filiere)).exists():
+        if SemesterAccess.objects.filter(legacy_query & Q(filiere=res_filiere, semester__is_active=True)).exists():
             return True
         if UserSubscription.objects.filter(
             user=user, filiere=res_filiere, is_active=True,
@@ -118,11 +141,11 @@ def has_user_valid_pass(user, resource=None):
         ).filter(Q(end_date__isnull=True) | Q(end_date__gte=now)).exists():
             return True
 
+    # 4. Ressource générale d'école (Pass École explicite uniquement)
     if res_school:
-        if SemesterAccess.objects.filter(legacy_query & Q(school=res_school)).exists():
-            return True
         if UserSubscription.objects.filter(
             user=user, school=res_school, is_active=True,
+            plan__scope="school",
             start_date__lte=now,
         ).filter(Q(end_date__isnull=True) | Q(end_date__gte=now)).exists():
             return True

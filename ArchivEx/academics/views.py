@@ -291,6 +291,20 @@ def subject_list_view(request, semester_id):
         pk=semester_id
     )
 
+    # Contrôle semestre actif : Seul le semestre actif est accessible aux étudiants
+    is_staff_user = request.user.is_authenticated and (
+        request.user.is_staff or request.user.is_superuser or getattr(request.user, "contributor_profile", None)
+    )
+    if not semester.is_active and not is_staff_user:
+        messages.warning(
+            request,
+            f"Le {semester.label} n'est pas encore ouvert sur la plateforme. Seul le semestre actuellement actif est consultable."
+        )
+        active_sem = Semester.objects.filter(filiere=semester.filiere, is_active=True).first()
+        if active_sem:
+            return redirect("academics:matieres", semester_id=active_sem.id)
+        return redirect("academics:filieres")
+
     # Sécurité filière : Un étudiant ordinaire connecté ne peut naviguer que dans les UE de sa filière
     if request.user.is_authenticated and not request.user.is_superuser and hasattr(request.user, "profile") and request.user.profile.filiere:
         if semester.filiere_id != request.user.profile.filiere_id:

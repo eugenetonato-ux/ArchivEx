@@ -173,19 +173,9 @@ class StudentProfileForm(forms.ModelForm):
         'class': 'w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] focus:outline-none focus:ring-2 focus:ring-[#2563EB]'
     }))
 
-    school = forms.ModelChoiceField(queryset=School.objects.filter(is_active=True), label="École / Université", widget=forms.Select(attrs={
-        'class': 'w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] focus:outline-none focus:ring-2 focus:ring-[#2563EB]'
-    }))
-    level = forms.ModelChoiceField(queryset=Level.objects.all(), label="Niveau", widget=forms.Select(attrs={
-        'class': 'w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] focus:outline-none focus:ring-2 focus:ring-[#2563EB]'
-    }))
-    filiere = forms.ModelChoiceField(queryset=Filiere.objects.all(), label="Filière", widget=forms.Select(attrs={
-        'class': 'w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-[#071A49] focus:outline-none focus:ring-2 focus:ring-[#2563EB]'
-    }))
-
     class Meta:
         model = StudentProfile
-        fields = ['school', 'level', 'filiere', 'avatar']
+        fields = ['avatar']
         widgets = {
             'avatar': forms.FileInput(attrs={'class': 'w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-[#2563EB] hover:file:bg-blue-100'})
         }

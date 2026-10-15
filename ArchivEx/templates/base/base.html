@@ -664,7 +664,7 @@
  <a href="{% url 'notifications:list' %}" id="dock-tab-notifs" class="dock-item {% if request.resolver_match.url_name == 'list' and 'notifications' in request.path %}dock-item-active{% endif %} relative">
  <i class="fa-solid fa-bell text-base mb-0.5" aria-hidden="true"></i>
  {% if unread_notifications_count > 0 %}
- <span class="absolute top-0.5 right-2 min-w-[17px] h-[17px] px-1 rounded-full bg-[#EF4444] text-white text-[9px] font-black flex items-center justify-center ring-2 ring-white shadow-xs">
+ <span id="mobile-notification-badge" class="absolute top-0.5 right-2 min-w-[17px] h-[17px] px-1 rounded-full bg-[#EF4444] text-white text-[9px] font-black flex items-center justify-center ring-2 ring-white shadow-xs">
      {{ unread_notifications_count }}
  </span>
  {% endif %}
@@ -764,6 +764,17 @@
  updateAria(dropdownId, !isHidden);
  }
  }
+
+ function clearNotificationBadges() {
+     const badge = document.getElementById('notification-badge');
+     if (badge) badge.remove();
+     const count = document.getElementById('notification-unread-count');
+     if (count) count.remove();
+     const mobileBadge = document.getElementById('mobile-notification-badge');
+     if (mobileBadge) mobileBadge.remove();
+     document.querySelectorAll('.notification-unread-badge').forEach(el => el.remove());
+ }
+ window.clearNotificationBadges = clearNotificationBadges;
 
  function toggleNotifications() {
  toggleDropdown('notification-dropdown');

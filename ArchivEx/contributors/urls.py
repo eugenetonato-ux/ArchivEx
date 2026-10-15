@@ -62,8 +62,11 @@ urlpatterns = [
     path("matieres/ajouter/", views.subject_create_view, name="subject_create"),
     path("matieres/<int:pk>/modifier/", views.subject_edit_view, name="subject_edit"),
 
-    # Structure Académique
+    # Structure Académique & Contrôle des Semestres
     path("structure/", views.structure_overview_view, name="structure_overview"),
+    path("semestres/", views.semester_control_view, name="semester_control"),
+    path("semestres/basculer/", views.semester_switch_view, name="semester_switch"),
+    path("semestres/<int:pk>/toggle/", views.semester_toggle_single_view, name="semester_toggle_single"),
 
     # Étudiants & Paiements
     path("etudiants/", views.student_list_view, name="student_list"),
