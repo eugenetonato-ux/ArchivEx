@@ -813,8 +813,49 @@ class SupportAndNotificationSeparationTest(TestCase):
         self.assertTrue(stat_exam.is_published)
 
 
+class SemesterControlViewsTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.school = School.objects.create(name="ENEAM", code="ENEAM", slug="eneam", is_active=True)
+        self.level = Level.objects.create(name="L1")
+        self.filiere = Filiere.objects.create(name="Informatique", school=self.school, level=self.level)
+        self.year = AcademicYear.objects.create(label="2025-2026")
+        self.sem1 = Semester.objects.create(filiere=self.filiere, academic_year=self.year, label="Semestre 1", number=1, is_active=True)
+        self.sem2 = Semester.objects.create(filiere=self.filiere, academic_year=self.year, label="Semestre 2", number=2, is_active=False)
 
+        self.subj1 = Subject.objects.create(semester=self.sem1, name="Algorithmique", is_active=True)
+        self.subj2 = Subject.objects.create(semester=self.sem2, name="Base de donnees", is_active=False)
 
+        self.superadmin = User.objects.create_superuser(username="admin_sem", email="admin_sem@test.com", password="Password123!")
+        self.client.force_login(self.superadmin)
 
+    def test_semester_control_view_get(self):
+        """GET /administration/semestres/ retourne 200 et affiche le résumé."""
+        res = self.client.get(reverse("contributors:semester_control"))
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "Contrôle & Activation du Cycle des Semestres")
+        self.assertContains(res, "Semestre 1")
+        self.assertContains(res, "Semestre 2")
 
+    def test_semester_switch_view_post(self):
+        """POST /administration/semestres/basculer/ bascule vers S2 sans erreur 500."""
+        res = self.client.post(reverse("contributors:semester_switch"), data={"number": "2"})
+        self.assertEqual(res.status_code, 302)
+        self.assertEqual(res.url, reverse("contributors:semester_control"))
 
+        self.sem1.refresh_from_db()
+        self.sem2.refresh_from_db()
+        self.subj1.refresh_from_db()
+        self.subj2.refresh_from_db()
+
+        self.assertFalse(self.sem1.is_active)
+        self.assertTrue(self.sem2.is_active)
+        self.assertFalse(self.subj1.is_active)
+        self.assertTrue(self.subj2.is_active)
+
+    def test_semester_toggle_single_view_post(self):
+        """POST /administration/semestres/<pk>/toggle/ inverse l'état d'un semestre individuel."""
+        res = self.client.post(reverse("contributors:semester_toggle_single", kwargs={"pk": self.sem1.pk}))
+        self.assertEqual(res.status_code, 302)
+        self.sem1.refresh_from_db()
+        self.assertFalse(self.sem1.is_active)

@@ -51,8 +51,10 @@ class AcademicYearAdmin(admin.ModelAdmin):
 
 @admin.register(Semester)
 class SemesterAdmin(admin.ModelAdmin):
-    list_display = ("label", "filiere", "academic_year")
-    list_filter = ("filiere__school", "filiere", "academic_year")
+    list_display = ("label", "number", "filiere", "academic_year", "is_active")
+    list_editable = ("is_active",)
+    list_filter = ("is_active", "number", "filiere__school", "filiere", "academic_year")
+    search_fields = ("label", "filiere__name")
 
 
 @admin.register(Subject)

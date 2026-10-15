@@ -1,11 +1,25 @@
 import os
 import json
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q, Count
 from django.contrib.auth import get_user_model, authenticate, login, logout
 from django.http import JsonResponse, HttpResponseForbidden, FileResponse, Http404
+
+logger = logging.getLogger(__name__)
+
+
+def log_admin_action(request, description):
+    """Enregistre une action administrative dans les journaux d'audit du site."""
+    try:
+        from accounts.utils import log_user_action
+        log_user_action(request, "MODIFICATION", description)
+    except Exception as e:
+        logger.warning(f"Impossible de journaliser l'action admin: {e}")
+
 
 from academics.models import School, Level, Filiere, AcademicYear, Semester, Subject
 from academics.parser import parse_exam_filename

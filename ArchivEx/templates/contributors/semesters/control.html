@@ -102,6 +102,7 @@
                                 <form method="post" action="{% url 'contributors:semester_switch' %}" onsubmit="return confirm('Confirmez-vous l\'activation du {{ item.label }} pour toute la plateforme ? Les autres semestres seront automatiquement masqués.');">
                                     {% csrf_token %}
                                     <input type="hidden" name="number" value="{{ item.number }}">
+                                    <input type="hidden" name="next" value="{% url 'contributors:semester_control' %}">
                                     <button type="submit" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-extrabold text-xs shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center space-x-2">
                                         <i class="fa-solid fa-play text-xs"></i>
                                         <span>Activer le {{ item.label }} pour tous les étudiants</span>
@@ -181,6 +182,7 @@
                                 <td class="py-3 px-4 text-right">
                                     <form method="post" action="{% url 'contributors:semester_toggle_single' sem.id %}" class="inline">
                                         {% csrf_token %}
+                                        <input type="hidden" name="next" value="{% url 'contributors:semester_control' %}">
                                         {% if sem.is_active %}
                                             <button type="submit" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] border border-rose-200 transition-colors">
                                                 Masquer
