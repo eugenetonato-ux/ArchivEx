@@ -81,7 +81,7 @@ class Exam(models.Model):
     cloud_correction_file = models.ForeignKey("content.CloudFile", on_delete=models.SET_NULL, blank=True, null=True, related_name="exams_as_correction", help_text="Fichier Cloud de la correction")
     cloud_summary_file = models.ForeignKey("content.CloudFile", on_delete=models.SET_NULL, blank=True, null=True, related_name="exams_as_summary", help_text="Fichier Cloud du résumé")
 
-    is_free = models.BooleanField(default=False, db_index=True)
+    is_free = models.BooleanField(default=True, db_index=True, help_text="Toutes les épreuves sont gratuites par défaut")
     is_free_correction = models.BooleanField(default=False, db_index=True)
     is_published = models.BooleanField(default=False, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)

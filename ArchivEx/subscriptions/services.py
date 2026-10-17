@@ -173,17 +173,23 @@ def has_user_valid_pass(user, resource=None):
 
 def can_user_access(user, resource):
     """
-    Service centralisé de contrôle d'accès ArchivEx V2.
+    Service centralisé de contrôle d'accès ArchivEx.
 
-    Règles évaluées :
-    1. Si la ressource est gratuite (is_free=True, access_type='FREE' ou rattachée à une matière gratuite)
-       -> Accès accordé immédiatement à tous sans nécessiter de Pass.
-    2. Autrement -> Nécessite une authentification et un Pass actif valide (ou statut Staff).
+    RÈGLE ARCHIVEX :
+    1. Toutes les épreuves (Exam) et ressources d'accès libre sont 100% GRATUITES.
+       -> Accès accordé immédiatement à tous les étudiants sans nécessiter de Pass.
+    2. Seuls les CORRIGÉS et les RÉSUMÉS de cours sont PAYANTS.
+       -> Nécessitent un Pass actif (ou statut Staff).
     """
     if not resource:
         return False
 
-    # 1. Vérification de gratuité (directe ou héritée de la matière)
+    # Les épreuves d'examen (Exam) sont 100% gratuites en accès libre
+    from exams.models import Exam
+    if isinstance(resource, Exam):
+        return True
+
+    # 1. Vérification de gratuité générale (directe ou héritée de la matière)
     is_free_attr = getattr(resource, "is_free", False)
     if callable(is_free_attr):
         is_free = is_free_attr()
@@ -210,20 +216,12 @@ def can_user_access(user, resource):
 
 def can_user_access_exam_pdf(user, exam):
     """Accès au PDF de l'épreuve principale.
-    - Épreuve gratuite (is_free=True ou matière gratuite) : accessible à tous, sans connexion ni Pass.
-    - Épreuve premium : nécessite un Pass actif (connexion obligatoire).
+    RÈGLE ARCHIVEX : Toutes les épreuves (sujets d'examen) sont 100% GRATUITES pour tous les étudiants.
+    Aucun Pass ni paiement n'est exigé pour consulter le sujet d'une épreuve.
     """
     if not exam:
         return False
-    # Les épreuves gratuites (directes ou matière gratuite) sont accessibles sans paiement
-    if getattr(exam, "is_free", False):
-        return True
-    if exam.subject and getattr(exam.subject, "is_free", False):
-        return True
-    # Pour le reste, il faut être connecté avec un Pass actif
-    if not user or not user.is_authenticated:
-        return False
-    return can_user_access(user, exam)
+    return True
 
 
 def can_user_access_correction(user, exam):

@@ -482,16 +482,16 @@ class PaymentEndToEndUnlockTests(TestCase):
         """Vérifie le déverrouillage automatique complet des épreuves, corrections et résumés post-paiement."""
         # --- ÉTAPE 1 : AVANT PAIEMENT (RESSOURCES TOTALEMENT VERROUILLÉES) ---
         self.assertFalse(has_user_valid_pass(self.student, self.semester))
-        self.assertFalse(can_user_access_exam_pdf(self.student, self.exam))
+        self.assertTrue(can_user_access_exam_pdf(self.student, self.exam))
         self.assertFalse(can_user_access_correction(self.student, self.exam))
         self.assertFalse(can_user_access_summary(self.student, self.exam))
 
         # Connexion de l'étudiant
         self.client.force_login(self.student)
 
-        # L'accès au lecteur sécurisé avant paiement redirige vers la page d'achat du Pass
+        # L'accès à la correction sécurisée avant paiement redirige vers la page d'achat du Pass
         res_viewer_before = self.client.get(
-            reverse("exams:student_viewer", kwargs={"pk": self.exam.pk}) + "?type=exam"
+            reverse("exams:student_viewer", kwargs={"pk": self.exam.pk}) + "?type=correction"
         )
         self.assertEqual(res_viewer_before.status_code, 302)
         self.assertIn(f"/pass/{self.semester.id}/", res_viewer_before.url)
@@ -601,7 +601,7 @@ class PaymentEndToEndUnlockTests(TestCase):
             status=Payment.STATUS_PENDING,
         )
 
-        self.assertFalse(can_user_access_exam_pdf(self.student, self.exam))
+        self.assertFalse(can_user_access_correction(self.student, self.exam))
 
         mock_res = MagicMock(status_code=200)
         mock_res.json.return_value = {

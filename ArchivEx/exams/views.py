@@ -115,13 +115,8 @@ def resources_view(request, mode=None):
             exams = exams.filter(subject__semester__filiere_id=selected_filiere_id)
 
         if mode == "free":
-            # 1. Épreuves marquées gratuites ou matière gratuite
+            # RÈGLE ARCHIVEX : Toutes les épreuves sont 100% gratuites et en libre accès
             exams = exams.filter(Q(is_free=True) | Q(subject__is_free=True))
-            # 2. RÈGLE ARCHIVEX : Enlever toute épreuve ayant un corrigé (les épreuves corrigées sont réservées au mode Premium)
-            exams = exams.filter(
-                (Q(correction_file__isnull=True) | Q(correction_file="")) &
-                Q(cloud_correction_file__isnull=True)
-            )
 
         if q:
             exams = exams.filter(

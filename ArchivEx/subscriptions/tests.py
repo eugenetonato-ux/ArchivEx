@@ -7,7 +7,12 @@ from academics.models import School, Level, Filiere, AcademicYear, Semester, Sub
 from exams.models import Exam
 from payments.models import SemesterAccess, Payment
 from subscriptions.models import SubscriptionPlan, UserSubscription
-from subscriptions.services import can_user_access
+from subscriptions.services import (
+    can_user_access,
+    can_user_access_exam_pdf,
+    can_user_access_correction,
+    has_user_valid_pass,
+)
 
 User = get_user_model()
 
@@ -71,15 +76,18 @@ class SubscriptionsAndAccessControlTest(TestCase):
         self.student = User.objects.create_user(username="student@test.com", password="Password123!")
 
     def test_free_resource_access(self):
-        """Free resources are accessible by any authenticated student."""
+        """Toutes les épreuves sont accessibles sans condition à tous les étudiants."""
+        self.assertTrue(can_user_access_exam_pdf(self.student, self.exam_free))
         self.assertTrue(can_user_access(self.student, self.exam_free))
+        self.assertTrue(can_user_access_exam_pdf(None, self.exam_free))
 
     def test_unsubscribed_premium_access_denied(self):
-        """Premium resources are denied for unsubscribed students."""
-        self.assertFalse(can_user_access(self.student, self.exam_premium_a))
+        """Les corrigés sont strictement réservés aux abonnés avec Pass."""
+        self.assertFalse(can_user_access_correction(self.student, self.exam_premium_a))
+        self.assertFalse(has_user_valid_pass(self.student, self.exam_premium_a))
 
     def test_legacy_semester_access_compatibility(self):
-        """Legacy SemesterAccess grants access for matching semester."""
+        """Legacy SemesterAccess débloque les corrigés du semestre correspondant."""
         SemesterAccess.objects.create(
             user=self.student,
             school=self.school_a,
@@ -89,12 +97,11 @@ class SubscriptionsAndAccessControlTest(TestCase):
             semester=self.semester_a,
             activated_at=timezone.now()
         )
-        # Should allow School A exam, but deny School B exam
-        self.assertTrue(can_user_access(self.student, self.exam_premium_a))
-        self.assertFalse(can_user_access(self.student, self.exam_premium_b))
+        self.assertTrue(can_user_access_correction(self.student, self.exam_premium_a))
+        self.assertFalse(can_user_access_correction(self.student, self.exam_premium_b))
 
     def test_v2_semester_subscription_scope(self):
-        """UserSubscription with semester scope grants access only to that semester."""
+        """UserSubscription avec portée semestre débloque uniquement les corrigés de ce semestre."""
         UserSubscription.objects.create(
             user=self.student,
             semester=self.semester_a,
@@ -104,11 +111,11 @@ class SubscriptionsAndAccessControlTest(TestCase):
             end_date=timezone.now() + timedelta(days=30),
             is_active=True
         )
-        self.assertTrue(can_user_access(self.student, self.exam_premium_a))
-        self.assertFalse(can_user_access(self.student, self.exam_premium_b))
+        self.assertTrue(can_user_access_correction(self.student, self.exam_premium_a))
+        self.assertFalse(can_user_access_correction(self.student, self.exam_premium_b))
 
     def test_v2_school_wide_subscription_scope(self):
-        """UserSubscription with school scope grants access to all content in that school."""
+        """UserSubscription avec portée école débloque les corrigés de toute l'école."""
         UserSubscription.objects.create(
             user=self.student,
             school=self.school_a,
@@ -116,16 +123,16 @@ class SubscriptionsAndAccessControlTest(TestCase):
             end_date=timezone.now() + timedelta(days=365),
             is_active=True
         )
-        self.assertTrue(can_user_access(self.student, self.exam_premium_a))
-        self.assertFalse(can_user_access(self.student, self.exam_premium_b))
+        self.assertTrue(can_user_access_correction(self.student, self.exam_premium_a))
+        self.assertFalse(can_user_access_correction(self.student, self.exam_premium_b))
 
     def test_expired_subscription_denies_access(self):
-        """Expired UserSubscription denies access."""
+        """Un abonnement expiré refuse l'accès aux corrigés."""
         UserSubscription.objects.create(
             user=self.student,
             school=self.school_a,
             start_date=timezone.now() - timedelta(days=60),
-            end_date=timezone.now() - timedelta(days=1),  # Expired yesterday
+            end_date=timezone.now() - timedelta(days=1),  # Expiré hier
             is_active=True
         )
-        self.assertFalse(can_user_access(self.student, self.exam_premium_a))
+        self.assertFalse(can_user_access_correction(self.student, self.exam_premium_a))

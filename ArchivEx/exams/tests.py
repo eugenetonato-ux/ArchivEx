@@ -110,7 +110,7 @@ class ArchivExFlowTest(TestCase):
 
     def test_premium_exam_access_denied_without_pass(self):
         self.client.login(username="student@univ.edu", password="Password123!")
-        url = reverse("exams:stream_pdf", kwargs={"pk": self.exam_premium.id})
+        url = reverse("exams:stream_correction_pdf", kwargs={"pk": self.exam_premium.id})
         response = self.client.get(url)
         # Should redirect to pass_semestre page
         self.assertRedirects(response, reverse("payments:pass_semestre", kwargs={"semester_id": self.semester.id}))
@@ -249,16 +249,9 @@ class ArchivExFlowTest(TestCase):
         self.assertEqual(res_stream.status_code, 200)
 
     def test_free_subject_makes_exams_accessible_without_pass(self):
-        """When a subject is marked is_free=True, its exams become free and do not ask for Pass."""
+        """Toutes les épreuves sont accessibles sans Pass pour tous les étudiants."""
         self.client.login(username="student@univ.edu", password="Password123!")
-        # Before: exam_premium requires Pass
-        self.assertFalse(can_user_access(self.student, self.exam_premium))
-
-        # Mark subject as free
-        self.subject.is_free = True
-        self.subject.save()
-
-        # After: exam is accessible without pass
+        # L'épreuve est directement accessible sans Pass
         self.assertTrue(can_user_access(self.student, self.exam_premium))
 
         viewer_url = reverse("exams:student_viewer", kwargs={"pk": self.exam_premium.id}) + "?type=exam"
@@ -328,9 +321,9 @@ class ArchivExFlowTest(TestCase):
         self.assertIn("inline", res_download["Content-Disposition"])
 
     def test_student_viewer_denied_without_pass(self):
-        """Student without Pass is denied access to premium resources in viewer."""
+        """Student without Pass is denied access to correction in viewer."""
         self.client.login(username="student@univ.edu", password="Password123!")
-        url_viewer = reverse("exams:student_viewer", kwargs={"pk": self.exam_premium.id}) + "?type=exam"
+        url_viewer = reverse("exams:student_viewer", kwargs={"pk": self.exam_premium.id}) + "?type=correction"
         res = self.client.get(url_viewer)
         self.assertRedirects(res, reverse("payments:pass_semestre", kwargs={"semester_id": self.semester.id}))
 
@@ -354,18 +347,18 @@ class ArchivExFlowTest(TestCase):
         self.assertEqual(res_view.status_code, 200)
 
     def test_parcours_3_authenticated_without_pass_locked_premium(self):
-        """3. Étudiant connecté sans Pass -> Ressources premium -> ressource verrouillée -> invitation à activer le Pass."""
+        """3. Étudiant connecté sans Pass -> Corrigés premium -> ressource verrouillée -> invitation à activer le Pass."""
         self.client.login(username="student@univ.edu", password="Password123!")
-        res_list = self.client.get(reverse("exams:premium_liste") + "?category=epreuves")
+        res_list = self.client.get(reverse("exams:premium_liste") + "?category=corrections")
         self.assertEqual(res_list.status_code, 200)
         
-        # Vérification que la ressource premium est marquée verrouillée
+        # Vérification que la correction premium est marquée verrouillée
         premium_years = [y for ue in res_list.context["ue_list"] for y in ue["years"] if y.get("exam_id") == self.exam_premium.id]
         self.assertTrue(len(premium_years) > 0)
         self.assertTrue(premium_years[0]["is_locked"])
 
         # Tentative de consultation -> redirection vers activation du Pass
-        viewer_url = reverse("exams:student_viewer", kwargs={"pk": self.exam_premium.id}) + "?type=exam"
+        viewer_url = reverse("exams:student_viewer", kwargs={"pk": self.exam_premium.id}) + "?type=correction"
         res_view = self.client.get(viewer_url)
         self.assertRedirects(res_view, reverse("payments:pass_semestre", kwargs={"semester_id": self.semester.id}))
 
@@ -414,7 +407,6 @@ class ArchivExFlowTest(TestCase):
         res = self.client.get(reverse("exams:free_liste") + "?category=corrections")
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.context["category"], "epreuves")
-        self.assertFalse(any(y["exam"].has_correction for ue in res.context["ue_list"] for y in ue["years"]))
 
     def test_parcours_3_gratuit_resumes_ue_annee_ressource(self):
         """RÈGLE ARCHIVEX : Tous les résumés sont exclusivement Premium et ne s'affichent jamais en gratuit."""
@@ -424,7 +416,7 @@ class ArchivExFlowTest(TestCase):
         self.assertEqual(res.context["category"], "epreuves")
 
     def test_parcours_4_premium_sans_pass_epreuves_verrouillees(self):
-        """Premium sans Pass -> Épreuves -> UE -> année -> ressource verrouillée."""
+        """Toutes les épreuves restent 100% gratuites sans Pass."""
         self.client.login(username="student@univ.edu", password="Password123!")
         res = self.client.get(reverse("exams:premium_liste") + "?category=epreuves")
         self.assertEqual(res.status_code, 200)
@@ -432,10 +424,10 @@ class ArchivExFlowTest(TestCase):
         self.assertIsNotNone(ue_item)
         prem_year = next((y for y in ue_item["years"] if y.get("exam_id") == self.exam_premium.id), None)
         self.assertIsNotNone(prem_year)
-        self.assertTrue(prem_year["is_locked"])
-        # Tentative d'accès -> redirection vers le Pass
+        self.assertFalse(prem_year["is_locked"])
+        # Consultation directe autorisée
         res_view = self.client.get(prem_year["viewer_url"])
-        self.assertRedirects(res_view, reverse("payments:pass_semestre", kwargs={"semester_id": self.semester.id}))
+        self.assertEqual(res_view.status_code, 200)
 
     def test_parcours_5_premium_sans_pass_corrections_verrouillees(self):
         """Premium sans Pass -> Épreuves corrigées -> UE -> année -> ressource verrouillée."""
