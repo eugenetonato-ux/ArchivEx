@@ -441,7 +441,7 @@ def manifest_view(request):
         content = f.read()
 
     response = HttpResponse(content, content_type="application/manifest+json; charset=utf-8")
-    response["Cache-Control"] = "public, max-age=3600"
+    response["Cache-Control"] = "no-cache, must-revalidate"
     return response
 
 
@@ -458,7 +458,7 @@ def icon_192_view(request):
         raise Http404("Icon non trouvée")
 
     response = FileResponse(open(path, "rb"), content_type="image/png")
-    response["Cache-Control"] = "public, max-age=86400"
+    response["Cache-Control"] = "no-cache, must-revalidate"
     return response
 
 
@@ -475,7 +475,7 @@ def icon_512_view(request):
         raise Http404("Icon non trouvée")
 
     response = FileResponse(open(path, "rb"), content_type="image/png")
-    response["Cache-Control"] = "public, max-age=86400"
+    response["Cache-Control"] = "no-cache, must-revalidate"
     return response
 
 
@@ -492,7 +492,7 @@ def favicon_view(request):
         raise Http404("Favicon non trouvée")
 
     response = FileResponse(open(path, "rb"), content_type="image/png")
-    response["Cache-Control"] = "public, max-age=86400"
+    response["Cache-Control"] = "no-cache, must-revalidate"
     return response
 
 

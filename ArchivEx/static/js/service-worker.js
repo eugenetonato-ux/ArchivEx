@@ -1,4 +1,4 @@
-const CACHE_NAME = 'archivex-pwa-v8';
+const CACHE_NAME = 'archivex-pwa-v9';
 const DOCS_CACHE_NAME = 'archivex-docs-v2';
 
 const STATIC_ASSETS = [
@@ -10,6 +10,10 @@ const STATIC_ASSETS = [
     '/static/icons/icon-512.png',
     '/icons/icon-192.png',
     '/icons/icon-512.png',
+    '/static/icons/icon-192.png?v=3',
+    '/static/icons/icon-512.png?v=3',
+    '/icons/icon-192.png?v=3',
+    '/icons/icon-512.png?v=3',
     '/static/js/install-pwa.js',
     '/static/js/archivex-spa.js',
     '/static/vendor/pdfjs/pdf.min.js',
@@ -18,7 +22,7 @@ const STATIC_ASSETS = [
 
 // Installation : Prise en charge immédiate
 self.addEventListener('install', (event) => {
-    console.log('[Service Worker v8] Installation PWA ArchivEx...');
+    console.log('[Service Worker v9] Installation PWA ArchivEx...');
     event.waitUntil(
         caches.open(CACHE_NAME).then(async (cache) => {
             for (const asset of STATIC_ASSETS) {
