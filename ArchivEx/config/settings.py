@@ -350,7 +350,7 @@ LOGGING = {
     },
 }
 
-PASS_SEMESTRE_PRIX_DEFAUT = config("PASS_SEMESTRE_PRIX_DEFAUT", default=3800, cast=int)
+PASS_SEMESTRE_PRIX_DEFAUT = config("PASS_SEMESTRE_PRIX_DEFAUT", default=4500, cast=int)
 
 # FedaPay Payment Gateway Configuration (https://fedapay.com)
 FEDAPAY_SECRET_KEY = config("FEDAPAY_SECRET_KEY", default="")

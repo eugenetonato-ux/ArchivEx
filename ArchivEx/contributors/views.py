@@ -1753,7 +1753,6 @@ def payment_list_view(request):
             Q(user__last_name__icontains=q) |
             Q(external_reference__icontains=q) |
             Q(fedapay_transaction_id__icontains=q) |
-            Q(chariow_sale_id__icontains=q) |
             Q(sebpay_transaction_id__icontains=q) |
             Q(phone_number__icontains=q)
         )

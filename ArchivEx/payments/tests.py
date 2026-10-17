@@ -39,7 +39,7 @@ User = get_user_model()
     FEDAPAY_ENVIRONMENT="sandbox",
     FEDAPAY_WEBHOOK_SECRET="wh_sandbox_fedapay_secret_789",
     FEDAPAY_CURRENCY="XOF",
-    PASS_SEMESTRE_PRIX_DEFAUT=3800,
+    PASS_SEMESTRE_PRIX_DEFAUT=4500,
 )
 class PaymentCoreAndUtilityTests(TestCase):
     def setUp(self):
@@ -85,18 +85,18 @@ class PaymentCoreAndUtilityTests(TestCase):
         self.assertNotEqual(ref1, ref2)
 
     def test_user_can_access_pass_semestre_page(self):
-        """Un utilisateur connecté accède à la page Pass Semestre avec le prix de 3800 FCFA."""
+        """Un utilisateur connecté accède à la page Pass Semestre avec le prix de 4500 FCFA."""
         self.client.login(username="etudiant_test", password="Password123!")
         res = self.client.get(reverse("payments:pass_semestre", kwargs={"semester_id": self.semester.id}))
         self.assertEqual(res.status_code, 200)
-        self.assertContains(res, "3800")
+        self.assertContains(res, "4500")
 
     def test_pending_payment_does_not_grant_pass(self):
         """Un paiement PENDING n'active pas le Pass."""
         Payment.objects.create(
             user=self.student,
             semester=self.semester,
-            amount=3800,
+            amount=4500,
             currency="XOF",
             external_reference="ARCHIVEX-TEST-PENDING",
             status=Payment.STATUS_PENDING,
@@ -108,7 +108,7 @@ class PaymentCoreAndUtilityTests(TestCase):
         Payment.objects.create(
             user=self.student,
             semester=self.semester,
-            amount=3800,
+            amount=4500,
             currency="XOF",
             external_reference="ARCHIVEX-TEST-REJECTED",
             status=Payment.STATUS_REJECTED,
@@ -120,7 +120,7 @@ class PaymentCoreAndUtilityTests(TestCase):
         payment = Payment.objects.create(
             user=self.student,
             semester=self.semester,
-            amount=3800,
+            amount=4500,
             currency="XOF",
             external_reference="ARCHIVEX-TEST-APPROVED",
             status=Payment.STATUS_APPROVED,
@@ -136,7 +136,7 @@ class PaymentCoreAndUtilityTests(TestCase):
         payment = Payment.objects.create(
             user=self.student,
             semester=self.semester,
-            amount=3800,
+            amount=4500,
             currency="XOF",
             external_reference="ARCHIVEX-TEST-IDEMP",
             status=Payment.STATUS_APPROVED,
@@ -161,7 +161,7 @@ class PaymentCoreAndUtilityTests(TestCase):
     FEDAPAY_ENVIRONMENT="sandbox",
     FEDAPAY_WEBHOOK_SECRET="wh_sandbox_fedapay_secret_789",
     FEDAPAY_CURRENCY="XOF",
-    PASS_SEMESTRE_PRIX_DEFAUT=3800,
+    PASS_SEMESTRE_PRIX_DEFAUT=4500,
 )
 class FedaPayIntegrationTests(TestCase):
     def setUp(self):
@@ -187,7 +187,7 @@ class FedaPayIntegrationTests(TestCase):
         self.assertTrue(hasattr(settings, "FEDAPAY_ENVIRONMENT"))
         self.assertTrue(hasattr(settings, "FEDAPAY_WEBHOOK_SECRET"))
         self.assertEqual(settings.FEDAPAY_CURRENCY, "XOF")
-        self.assertEqual(settings.PASS_SEMESTRE_PRIX_DEFAUT, 3800)
+        self.assertEqual(settings.PASS_SEMESTRE_PRIX_DEFAUT, 4500)
 
     def test_get_fedapay_base_url(self):
         """L'URL de l'API change dynamiquement entre sandbox et live."""
@@ -213,7 +213,7 @@ class FedaPayIntegrationTests(TestCase):
             "v1/transaction": {
                 "id": 42,
                 "status": "pending",
-                "amount": 3800,
+                "amount": 4500,
             }
         }
 
@@ -286,7 +286,7 @@ class FedaPayIntegrationTests(TestCase):
         payment = Payment.objects.create(
             user=self.student,
             semester=self.semester,
-            amount=3800,
+            amount=4500,
             currency="XOF",
             external_reference="ARCHIVEX-PASS-FEDAPAY-001",
             fedapay_transaction_id="101",
@@ -335,7 +335,7 @@ class FedaPayIntegrationTests(TestCase):
         payment = Payment.objects.create(
             user=self.student,
             semester=self.semester,
-            amount=3800,
+            amount=4500,
             currency="XOF",
             external_reference="ARCHIVEX-PASS-FEDAPAY-002",
             fedapay_transaction_id="102",
@@ -374,7 +374,7 @@ class FedaPayIntegrationTests(TestCase):
         payment = Payment.objects.create(
             user=self.student,
             semester=self.semester,
-            amount=3800,
+            amount=4500,
             currency="XOF",
             external_reference="ARCHIVEX-PASS-SYNC-FEDA-1",
             fedapay_transaction_id="202",
@@ -387,7 +387,7 @@ class FedaPayIntegrationTests(TestCase):
             "v1/transaction": {
                 "id": 202,
                 "status": "approved",
-                "amount": 3800,
+                "amount": 4500,
             }
         }
         mock_get.return_value = mock_res
@@ -417,7 +417,7 @@ class FedaPayIntegrationTests(TestCase):
     FEDAPAY_ENVIRONMENT="sandbox",
     FEDAPAY_WEBHOOK_SECRET="wh_sandbox_fedapay_secret_789",
     FEDAPAY_CURRENCY="XOF",
-    PASS_SEMESTRE_PRIX_DEFAUT=3800,
+    PASS_SEMESTRE_PRIX_DEFAUT=4500,
 )
 class PaymentEndToEndUnlockTests(TestCase):
     """
@@ -500,7 +500,7 @@ class PaymentEndToEndUnlockTests(TestCase):
         with patch("payments.services.requests.post") as mock_post:
             mock_tx = MagicMock(status_code=201)
             mock_tx.json.return_value = {
-                "v1/transaction": {"id": 999, "status": "pending", "amount": 3800}
+                "v1/transaction": {"id": 999, "status": "pending", "amount": 4500}
             }
             mock_tok = MagicMock(status_code=200)
             mock_tok.json.return_value = {
@@ -531,7 +531,7 @@ class PaymentEndToEndUnlockTests(TestCase):
                 "id": 999,
                 "reference": payment.external_reference,
                 "status": "approved",
-                "amount": 3800,
+                "amount": 4500,
                 "custom_metadata": {
                     "external_reference": payment.external_reference,
                 }
@@ -594,7 +594,7 @@ class PaymentEndToEndUnlockTests(TestCase):
         payment = Payment.objects.create(
             user=self.student,
             semester=self.semester,
-            amount=3800,
+            amount=4500,
             currency="XOF",
             external_reference="ARCHIVEX-PASS-E2E-RETURN",
             fedapay_transaction_id="888",
@@ -608,7 +608,7 @@ class PaymentEndToEndUnlockTests(TestCase):
             "v1/transaction": {
                 "id": 888,
                 "status": "approved",
-                "amount": 3800,
+                "amount": 4500,
             }
         }
         mock_get.return_value = mock_res

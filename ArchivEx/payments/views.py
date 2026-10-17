@@ -21,7 +21,6 @@ from .services import (
     handle_fedapay_webhook_event,
     verify_and_sync_fedapay_transaction,
     activate_pass_for_payment,
-    verify_and_sync_chariow_sale,
 )
 
 logger = logging.getLogger(__name__)
@@ -29,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def pass_semestre(request, semester_id):
-    """Page de présentation et formulaire de souscription du Pass Semestre (3 800 FCFA)."""
+    """Page de présentation et formulaire de souscription du Pass Semestre (4 500 FCFA)."""
     from exams.models import Exam
     from content.models import Summary, Guide, Article
     from academics.models import Subject
@@ -39,6 +38,19 @@ def pass_semestre(request, semester_id):
         Semester.objects.select_related("filiere", "filiere__school", "filiere__level", "academic_year"),
         pk=semester_id
     )
+
+    # Cycle des semestres : Seul le Semestre 1 est actif actuellement.
+    # Si le semestre demandé est désactivé ou est un Semestre 2, réorientation automatique vers le Semestre 1.
+    if not semester.is_active or semester.number != 1:
+        sem1 = Semester.objects.filter(filiere=semester.filiere, number=1, is_active=True).first()
+        if not sem1:
+            sem1 = Semester.objects.filter(filiere=semester.filiere, number=1).first()
+        if sem1 and sem1.id != semester.id:
+            messages.info(
+                request,
+                f"Le Semestre 2 n'est pas encore ouvert sur la plateforme. Vous avez été orienté vers le Pass du Semestre 1 ({semester.filiere.name})."
+            )
+            return redirect("payments:pass_semestre", semester_id=sem1.id)
 
     # Sécurité filière : Un étudiant ordinaire ne peut accéder qu'aux pass de sa propre filière
     if not request.user.is_superuser and hasattr(request.user, "profile") and request.user.profile.filiere:
@@ -55,7 +67,7 @@ def pass_semestre(request, semester_id):
                 messages.warning(request, "Aucun semestre actif n'est configuré pour votre filière.")
                 return redirect("accounts:dashboard")
 
-    price = getattr(settings, "PASS_SEMESTRE_PRIX_DEFAUT", 3800)
+    price = getattr(settings, "PASS_SEMESTRE_PRIX_DEFAUT", 4500)
 
     from subscriptions.services import has_user_valid_pass
     already_active = has_user_valid_pass(request.user, semester)
@@ -93,7 +105,7 @@ def pass_semestre(request, semester_id):
 def initier_paiement(request, semester_id):
     """
     Initialise le paiement sécurisé côté serveur via FedaPay :
-    - Détermine le tarif serveur (3 800 FCFA)
+    - Détermine le tarif serveur (4 500 FCFA)
     - Valide et normalise le numéro béninois (+229)
     - Génère une référence externe unique (ARCHIVEX-PASS-YYYY-XXXXXX)
     - Crée l'enregistrement Payment local PENDING
@@ -119,7 +131,15 @@ def initier_paiement(request, semester_id):
             if student_sem:
                 return redirect("payments:pass_semestre", semester_id=student_sem.id)
             return redirect("accounts:dashboard")
-    price = getattr(settings, "PASS_SEMESTRE_PRIX_DEFAUT", 3800)
+
+    # Si la souscription ciblait le Semestre 2 ou un semestre inactif, basculer vers le Semestre 1 de la filière
+    if not semester.is_active or semester.number != 1:
+        sem1 = Semester.objects.filter(filiere=semester.filiere, number=1, is_active=True).first()
+        if not sem1:
+            sem1 = Semester.objects.filter(filiere=semester.filiere, number=1).first()
+        if sem1:
+            semester = sem1
+    price = getattr(settings, "PASS_SEMESTRE_PRIX_DEFAUT", 4500)
 
     already_active = has_user_valid_pass(request.user, semester)
 
@@ -183,12 +203,10 @@ def payment_pending_view(request, reference):
         user=request.user
     )
 
-    # Synchronisation immédiate avec l'API de paiement si pas encore approuvé
+    # Synchronisation immédiate avec l'API FedaPay si pas encore approuvé
     if not payment.is_approved:
         if payment.fedapay_transaction_id:
             verify_and_sync_fedapay_transaction(payment)
-        elif payment.chariow_sale_id:
-            verify_and_sync_chariow_sale(payment)
         payment.refresh_from_db()
 
     if payment.is_approved:
@@ -205,13 +223,12 @@ def payment_pending_view(request, reference):
 @login_required
 def payment_return_view(request, reference=None):
     """
-    Page de retour post-paiement FedaPay (ou Chariow legacy).
+    Page de retour post-paiement FedaPay.
     Effectue une vérification active auprès de l'API FedaPay
     pour valider immédiatement le paiement et activer le Pass Semestre sans attendre le Webhook.
     """
     ref = reference or request.GET.get("external_reference") or request.GET.get("reference")
     tx_id = request.GET.get("id") or request.GET.get("transaction_id")
-    sale_id = request.GET.get("sale_id") or request.GET.get("sale")
     payment = None
 
     if ref:
@@ -222,11 +239,6 @@ def payment_return_view(request, reference=None):
     if not payment and tx_id:
         payment = Payment.objects.filter(
             fedapay_transaction_id=str(tx_id), user=request.user
-        ).select_related("semester", "semester__filiere").first()
-
-    if not payment and sale_id:
-        payment = Payment.objects.filter(
-            chariow_sale_id=sale_id, user=request.user
         ).select_related("semester", "semester__filiere").first()
 
     if not payment:
@@ -244,12 +256,10 @@ def payment_return_view(request, reference=None):
             "is_rejected": True,
         })
 
-    # Synchronisation active directe avec l'API
+    # Synchronisation active directe avec l'API FedaPay
     if not payment.is_approved:
         if payment.fedapay_transaction_id or tx_id:
             verify_and_sync_fedapay_transaction(payment, transaction_id=tx_id)
-        elif payment.chariow_sale_id or sale_id:
-            verify_and_sync_chariow_sale(payment, sale_id=sale_id)
         payment.refresh_from_db()
 
     # Si le paiement est validé, s'assurer que le Pass est activé de façon garantie
@@ -278,12 +288,9 @@ def payment_status_api_view(request, reference):
 
     if not payment.is_approved:
         tx_id = request.GET.get("id") or request.GET.get("transaction_id") or payment.fedapay_transaction_id
-        sale_id = request.GET.get("sale_id") or payment.chariow_sale_id
 
         if tx_id:
             verify_and_sync_fedapay_transaction(payment, transaction_id=tx_id)
-        elif sale_id:
-            verify_and_sync_chariow_sale(payment, sale_id=sale_id)
         payment.refresh_from_db()
 
     if payment.is_approved and not payment.semester_access:
@@ -297,7 +304,6 @@ def payment_status_api_view(request, reference):
         "is_rejected": payment.is_rejected,
         "is_pending": payment.is_pending,
         "fedapay_transaction_id": payment.fedapay_transaction_id,
-        "chariow_sale_id": payment.chariow_sale_id,
     })
 
 

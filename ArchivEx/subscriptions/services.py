@@ -115,6 +115,24 @@ def has_user_valid_pass(user, resource=None):
         ).filter(Q(end_date__isnull=True) | Q(end_date__gte=now)).exists():
             return True
 
+        # D. Basculement de bienveillance S2 -> S1 :
+        # Si la ressource est pour le Semestre 1 et que l'utilisateur avait souscrit pour le Semestre 2 de la même filière,
+        # l'accès au Semestre 1 lui est directement accordé.
+        if getattr(res_semester, "number", 1) == 1 and res_filiere:
+            s2_query = Q(semester__number=2, semester__filiere=res_filiere)
+            if SemesterAccess.objects.filter(legacy_query & s2_query).exists():
+                return True
+            if Payment.objects.filter(
+                user=user, semester__number=2, semester__filiere=res_filiere,
+                status__in=["APPROVED", "reussi", "approved", "success"]
+            ).exists():
+                return True
+            if UserSubscription.objects.filter(
+                user=user, semester__number=2, semester__filiere=res_filiere, is_active=True,
+                start_date__lte=now,
+            ).filter(Q(end_date__isnull=True) | Q(end_date__gte=now)).exists():
+                return True
+
         # D. Vérification abonnement de portée supérieure explicite (Pass Filière annuel ou Pass École)
         if res_filiere and UserSubscription.objects.filter(
             user=user, filiere=res_filiere, is_active=True,

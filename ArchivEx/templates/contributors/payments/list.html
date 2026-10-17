@@ -135,8 +135,6 @@
                                 {{ p.external_reference }}
                                 {% if p.fedapay_transaction_id %}
                                     <div class="text-[10px] text-emerald-600 font-semibold">FedaPay: #{{ p.fedapay_transaction_id }}</div>
-                                {% elif p.chariow_sale_id %}
-                                    <div class="text-[10px] text-slate-400 font-normal">Chariow: {{ p.chariow_sale_id }}</div>
                                 {% elif p.sebpay_transaction_id %}
                                     <div class="text-[10px] text-slate-400 font-normal">Legacy: {{ p.sebpay_transaction_id }}</div>
                                 {% endif %}

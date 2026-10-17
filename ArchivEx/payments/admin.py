@@ -19,7 +19,7 @@ class PaymentAdmin(admin.ModelAdmin):
         "amount",
         "currency",
         "status",
-        "chariow_sale_id",
+        "fedapay_transaction_id",
         "paid_at",
         "created_at",
     )
@@ -28,13 +28,13 @@ class PaymentAdmin(admin.ModelAdmin):
         "user__username",
         "user__email",
         "external_reference",
-        "chariow_sale_id",
+        "fedapay_transaction_id",
         "phone_number",
     )
     readonly_fields = (
         "external_reference",
-        "chariow_sale_id",
-        "chariow_checkout_url",
+        "fedapay_transaction_id",
+        "fedapay_checkout_url",
         "created_at",
         "updated_at",
     )
