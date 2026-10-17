@@ -1,37 +1,36 @@
 from django.db import models
 import os
+import re
+import unicodedata
+
+
+def sanitize_upload_filename(filename):
+    """
+    Nettoie et sécurise le nom de fichier pour une compatibilité totale avec
+    Supabase Storage S3, Linux, Windows et WhiteNoise.
+    Supprime les accents, espaces et caractères spéciaux non-ASCII.
+    Exemple: 'Corrigé Analyse mathématique (2025).pdf' -> 'Corrige_Analyse_mathematique_2025.pdf'
+    """
+    name, ext = os.path.splitext(filename)
+    clean_name = unicodedata.normalize('NFKD', name).encode('ascii', 'ignore').decode('ascii')
+    clean_name = re.sub(r'[^a-zA-Z0-9_\-]', '_', clean_name)
+    clean_name = re.sub(r'_+', '_', clean_name).strip('_')
+    if not clean_name:
+        clean_name = "document"
+    clean_ext = ext.lower().strip()
+    return f"{clean_name}{clean_ext}"
 
 
 def exam_upload_to(instance, filename):
     """Organise les épreuves par année et semestre : exams/2024-2025/S1/fichier.pdf"""
+    clean_filename = sanitize_upload_filename(filename)
     if instance.academic_year_id and hasattr(instance, 'academic_year') and instance.academic_year:
-        year_label = instance.academic_year.label
+        year_label = str(instance.academic_year.label).replace('/', '-')
     elif instance.year:
         year_label = f"{instance.year - 1}-{instance.year}"
     else:
         year_label = "non-classe"
-
-    # Récupérer le numéro de semestre (S1, S2...)
-    sem_label = "S1"  # fallback
-    if instance.semester_id and hasattr(instance, 'semester') and instance.semester:
-        num = getattr(instance.semester, 'number', None)
-        if num:
-            sem_label = f"S{num}"
-        else:
-            lbl = getattr(instance.semester, 'label', '') or ""
-            sem_label = lbl[:10] if lbl else "S1"
-
-    return os.path.join("exams", year_label, sem_label, filename)
-
-
-def correction_upload_to(instance, filename):
-    """Organise les corrections par année et semestre : corrections/2024-2025/S1/fichier.pdf"""
-    if instance.academic_year_id and hasattr(instance, 'academic_year') and instance.academic_year:
-        year_label = instance.academic_year.label
-    elif instance.year:
-        year_label = f"{instance.year - 1}-{instance.year}"
-    else:
-        year_label = "non-classe"
+    year_label = re.sub(r'[^a-zA-Z0-9_\-]', '_', year_label)
 
     sem_label = "S1"
     if instance.semester_id and hasattr(instance, 'semester') and instance.semester:
@@ -41,14 +40,40 @@ def correction_upload_to(instance, filename):
         else:
             lbl = getattr(instance.semester, 'label', '') or ""
             sem_label = lbl[:10] if lbl else "S1"
+    sem_label = re.sub(r'[^a-zA-Z0-9_\-]', '_', sem_label)
 
-    return os.path.join("corrections", year_label, sem_label, filename)
+    return f"exams/{year_label}/{sem_label}/{clean_filename}"
+
+
+def correction_upload_to(instance, filename):
+    """Organise les corrections par année et semestre : corrections/2024-2025/S1/fichier.pdf"""
+    clean_filename = sanitize_upload_filename(filename)
+    if instance.academic_year_id and hasattr(instance, 'academic_year') and instance.academic_year:
+        year_label = str(instance.academic_year.label).replace('/', '-')
+    elif instance.year:
+        year_label = f"{instance.year - 1}-{instance.year}"
+    else:
+        year_label = "non-classe"
+    year_label = re.sub(r'[^a-zA-Z0-9_\-]', '_', year_label)
+
+    sem_label = "S1"
+    if instance.semester_id and hasattr(instance, 'semester') and instance.semester:
+        num = getattr(instance.semester, 'number', None)
+        if num:
+            sem_label = f"S{num}"
+        else:
+            lbl = getattr(instance.semester, 'label', '') or ""
+            sem_label = lbl[:10] if lbl else "S1"
+    sem_label = re.sub(r'[^a-zA-Z0-9_\-]', '_', sem_label)
+
+    return f"corrections/{year_label}/{sem_label}/{clean_filename}"
 
 
 def summary_upload_to(instance, filename):
     """Les résumés sont liés à l'UE, pas à une année académique.
     Chemin : summaries_pdf/fichier.pdf"""
-    return os.path.join("summaries_pdf", filename)
+    clean_filename = sanitize_upload_filename(filename)
+    return f"summaries_pdf/{clean_filename}"
 
 
 class Exam(models.Model):
