@@ -564,6 +564,37 @@ class ArchivExFlowTest(TestCase):
         self.assertEqual(len(res_q.context["ue_list"]), 1)
         self.assertEqual(res_q.context["ue_list"][0]["subject"].name, "Algorithmique")
 
+    def test_strict_filiere_isolation(self):
+        """Vérifie l'étanchéité stricte entre deux filières : aucun sujet d'une autre filière ne doit fuiter."""
+        other_filiere = Filiere.objects.create(name="Statistique", school=self.school, level=self.level)
+        other_semester = Semester.objects.create(label="Semestre 1", number=1, filiere=other_filiere, academic_year=self.year, is_active=True)
+        other_subj = Subject.objects.create(name="Statistique Mathématique", code="STAT101", semester=other_semester, is_free=True)
+        Exam.objects.create(
+            title="Examen STAT",
+            subject=other_subj,
+            semester=other_semester,
+            filiere=other_filiere,
+            level=self.level,
+            academic_year=self.year,
+            year="2024",
+            is_published=True,
+            is_free=True,
+            file="exams/dummy_stat.pdf",
+        )
+
+        # 1. Requête pour la filière d'origine (self.filiere)
+        res_f1 = self.client.get(reverse("exams:liste") + f"?filiere={self.filiere.id}")
+        f1_subjects = [item["subject"].id for item in res_f1.context["ue_list"]]
+        self.assertIn(self.subject.id, f1_subjects)
+        self.assertNotIn(other_subj.id, f1_subjects)
+
+        # 2. Requête pour other_filiere
+        res_f2 = self.client.get(reverse("exams:liste") + f"?filiere={other_filiere.id}")
+        f2_subjects = [item["subject"].id for item in res_f2.context["ue_list"]]
+        self.assertIn(other_subj.id, f2_subjects)
+        self.assertNotIn(self.subject.id, f2_subjects)
+
+
 
 
 

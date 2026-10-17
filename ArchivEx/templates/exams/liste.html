@@ -83,12 +83,12 @@
 
             <!-- SÉLECTEUR ACCÈS (GRATUIT VS PREMIUM) -->
             <div class="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200 shrink-0 self-start lg:self-center">
-                <a href="{% url 'exams:free_liste' %}?category=epreuves{% if q %}&q={{ q }}{% endif %}"
+                <a href="{% url 'exams:free_liste' %}?category=epreuves{% if active_filiere %}&filiere={{ active_filiere.id }}{% endif %}{% if q %}&q={{ q }}{% endif %}"
                    class="px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 {% if is_free_mode %}bg-emerald-600 text-white shadow-xs{% else %}text-slate-600 hover:text-[#071A49]{% endif %}">
                     <i class="fa-solid fa-unlock text-[11px]" aria-hidden="true"></i>
                     <span>Ressources gratuites</span>
                 </a>
-                <a href="{% url 'exams:premium_liste' %}?category={{ category }}{% if q %}&q={{ q }}{% endif %}"
+                <a href="{% url 'exams:premium_liste' %}?category={{ category }}{% if active_filiere %}&filiere={{ active_filiere.id }}{% endif %}{% if q %}&q={{ q }}{% endif %}"
                    class="px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 {% if not is_free_mode %}bg-[#071A49] text-white shadow-xs{% else %}text-slate-600 hover:text-[#071A49]{% endif %}">
                     <i class="fa-solid fa-crown text-[11px] {% if not is_free_mode %}text-amber-400{% else %}text-slate-400{% endif %}" aria-hidden="true"></i>
                     <span>Ressources premium</span>
@@ -97,22 +97,49 @@
         </div>
     </div>
 
+    <!-- SÉLECTEUR DE FILIÈRE ÉTANCHE (ISOLATION STRICTE) -->
+    {% if available_filieres and available_filieres|length > 1 %}
+    <div class="bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 mb-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center space-x-2 text-xs font-bold text-slate-700">
+            <span class="w-7 h-7 rounded-lg bg-blue-50 text-[#2563EB] flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-graduation-cap text-xs" aria-hidden="true"></i>
+            </span>
+            <div>
+                <span class="text-slate-400 block text-[10px] uppercase tracking-wider font-extrabold">Filière d'études</span>
+                <span class="font-black text-[#071A49]">{{ active_filiere.name|default:"Toutes les filières" }}</span>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-1.5">
+            {% for fil in available_filieres %}
+                <a href="?mode={{ mode }}&category={{ category }}&filiere={{ fil.id }}{% if q %}&q={{ q }}{% endif %}"
+                   class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all border flex items-center space-x-1.5 {% if active_filiere and active_filiere.id == fil.id %}bg-[#2563EB] text-white border-[#2563EB] shadow-xs{% else %}bg-slate-50 text-slate-600 border-slate-200 hover:border-blue-300 hover:text-[#2563EB] hover:bg-white{% endif %}">
+                    <span>{{ fil.name }}</span>
+                    {% if active_filiere and active_filiere.id == fil.id %}
+                        <i class="fa-solid fa-check text-[10px]" aria-hidden="true"></i>
+                    {% endif %}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- ONGLETS DE CATÉGORIES (ÉPREUVES, ÉPREUVES CORRIGÉES, RÉSUMÉS) -->
     <div class="flex flex-wrap items-center gap-2 mb-5">
-        <a href="?mode={{ mode }}&category=epreuves{% if q %}&q={{ q }}{% endif %}"
+        <a href="?mode={{ mode }}&category=epreuves{% if active_filiere %}&filiere={{ active_filiere.id }}{% endif %}{% if q %}&q={{ q }}{% endif %}"
            class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center space-x-1.5 border {% if category == 'epreuves' %}bg-[#071A49] text-white border-[#071A49] shadow-xs{% else %}bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50{% endif %}">
             <i class="fa-solid fa-file-lines {% if category == 'epreuves' %}text-blue-300{% else %}text-slate-400{% endif %}" aria-hidden="true"></i>
             <span>Épreuves</span>
         </a>
 
         {% if not is_free_mode %}
-        <a href="?mode={{ mode }}&category=corrections{% if q %}&q={{ q }}{% endif %}"
+        <a href="?mode={{ mode }}&category=corrections{% if active_filiere %}&filiere={{ active_filiere.id }}{% endif %}{% if q %}&q={{ q }}{% endif %}"
            class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center space-x-1.5 border {% if category == 'corrections' %}bg-[#071A49] text-white border-[#071A49] shadow-xs{% else %}bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50{% endif %}">
             <i class="fa-solid fa-square-check {% if category == 'corrections' %}text-emerald-300{% else %}text-emerald-500{% endif %}" aria-hidden="true"></i>
             <span>Épreuves corrigées</span>
         </a>
 
-        <a href="?mode={{ mode }}&category=resumes{% if q %}&q={{ q }}{% endif %}"
+        <a href="?mode={{ mode }}&category=resumes{% if active_filiere %}&filiere={{ active_filiere.id }}{% endif %}{% if q %}&q={{ q }}{% endif %}"
            class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center space-x-1.5 border {% if category == 'resumes' %}bg-[#071A49] text-white border-[#071A49] shadow-xs{% else %}bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50{% endif %}">
             <i class="fa-solid fa-book-open {% if category == 'resumes' %}text-amber-300{% else %}text-amber-500{% endif %}" aria-hidden="true"></i>
             <span>Résumés</span>
@@ -125,6 +152,9 @@
         <form method="get" action="" class="flex items-center gap-2">
             <input type="hidden" name="mode" value="{{ mode }}">
             <input type="hidden" name="category" value="{{ category }}">
+            {% if active_filiere %}
+            <input type="hidden" name="filiere" value="{{ active_filiere.id }}">
+            {% endif %}
 
             <div class="relative w-full flex-grow">
                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs" aria-hidden="true"></i>
@@ -140,7 +170,7 @@
             </button>
 
             {% if q %}
-                <a href="?mode={{ mode }}&category={{ category }}" class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs px-3 py-2 font-bold rounded-xl shrink-0 transition-colors" title="Effacer la recherche">
+                <a href="?mode={{ mode }}&category={{ category }}{% if active_filiere %}&filiere={{ active_filiere.id }}{% endif %}" class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs px-3 py-2 font-bold rounded-xl shrink-0 transition-colors" title="Effacer la recherche">
                     <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                 </a>
             {% endif %}
@@ -305,7 +335,7 @@
         {% if page_obj.has_other_pages %}
             <div class="flex justify-center items-center space-x-2 mb-8">
                 {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}&mode={{ mode }}&category={{ category }}{% if q %}&q={{ q }}{% endif %}"
+                    <a href="?page={{ page_obj.previous_page_number }}&mode={{ mode }}&category={{ category }}{% if active_filiere %}&filiere={{ active_filiere.id }}{% endif %}{% if q %}&q={{ q }}{% endif %}"
                        class="px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-colors">
                         Précédent
                     </a>
@@ -316,7 +346,7 @@
                 </span>
 
                 {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}&mode={{ mode }}&category={{ category }}{% if q %}&q={{ q }}{% endif %}"
+                    <a href="?page={{ page_obj.next_page_number }}&mode={{ mode }}&category={{ category }}{% if active_filiere %}&filiere={{ active_filiere.id }}{% endif %}{% if q %}&q={{ q }}{% endif %}"
                        class="px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-colors">
                         Suivant
                     </a>
@@ -336,7 +366,7 @@
                 <p class="text-xs text-slate-500 font-medium leading-relaxed mb-4">
                     Aucune matière ne correspond à votre recherche « {{ q }} ».
                 </p>
-                <a href="?mode={{ mode }}&category={{ category }}" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold inline-block transition-colors">
+                <a href="?mode={{ mode }}&category={{ category }}{% if active_filiere %}&filiere={{ active_filiere.id }}{% endif %}" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold inline-block transition-colors">
                     Réinitialiser la recherche
                 </a>
             {% elif is_free_mode %}

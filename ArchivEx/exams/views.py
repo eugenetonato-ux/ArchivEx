@@ -86,15 +86,37 @@ def resources_view(request, mode=None):
     from academics.context import get_current_school
     current_school = get_current_school(request)
 
-    user_filiere = None
-    if request.user.is_authenticated and not request.user.is_superuser:
+    # Détermination rigoureuse de la filière active (Isolation 100% étanche entre filières)
+    # Règle d'or : Aucune ressource d'une filière ne doit jamais être mélangée avec une autre filière
+    active_filiere = None
+    filiere_param = request.GET.get("filiere", "").strip()
+    if filiere_param:
+        try:
+            active_filiere = Filiere.objects.filter(pk=int(filiere_param), is_active=True).select_related("school").first()
+        except (ValueError, TypeError):
+            active_filiere = None
+
+    if not active_filiere and request.user.is_authenticated:
         profile = getattr(request.user, "profile", None)
         if profile and profile.filiere:
-            user_filiere = profile.filiere
+            active_filiere = profile.filiere
+
+    # Sécurité académique : Un étudiant connecté (non-staff / non-superuser) reste confiné à sa filière
+    if request.user.is_authenticated and not request.user.is_staff and not request.user.is_superuser:
+        profile = getattr(request.user, "profile", None)
+        if profile and profile.filiere:
+            active_filiere = profile.filiere
+
+    # Fallback pour visiteur ou compte sans filière : Première filière active de l'école
+    if not active_filiere:
+        if current_school:
+            active_filiere = Filiere.objects.filter(school=current_school, is_active=True).order_by("name").first()
+        if not active_filiere:
+            active_filiere = Filiere.objects.filter(is_active=True).first()
 
     q = request.GET.get("q", "").strip()
     selected_subject_id = request.GET.get("subject", "").strip()
-    selected_filiere_id = str(user_filiere.id) if user_filiere else request.GET.get("filiere", "").strip()
+    selected_filiere_id = str(active_filiere.id) if active_filiere else ""
     selected_semester_id = request.GET.get("semester", "").strip()
     selected_year = request.GET.get("year", "").strip()
     selected_type = request.GET.get("exam_type", "").strip()
@@ -107,12 +129,10 @@ def resources_view(request, mode=None):
         ).filter(
             (Q(file__isnull=False) & ~Q(file="")) | Q(cloud_file__isnull=False)
         )
-        if current_school and not user_filiere:
+        if active_filiere:
+            exams = exams.filter(filiere=active_filiere)
+        elif current_school:
             exams = exams.filter(filiere__school=current_school)
-        if user_filiere:
-            exams = exams.filter(filiere=user_filiere)
-        elif selected_filiere_id:
-            exams = exams.filter(subject__semester__filiere_id=selected_filiere_id)
 
         if mode == "free":
             # RÈGLE ARCHIVEX : Toutes les épreuves sont 100% gratuites et en libre accès
@@ -180,12 +200,10 @@ def resources_view(request, mode=None):
             ).filter(
                 (Q(correction_file__isnull=False) & ~Q(correction_file="")) | Q(cloud_correction_file__isnull=False)
             )
-            if current_school and not user_filiere:
+            if active_filiere:
+                exams = exams.filter(filiere=active_filiere)
+            elif current_school:
                 exams = exams.filter(filiere__school=current_school)
-            if user_filiere:
-                exams = exams.filter(filiere=user_filiere)
-            elif selected_filiere_id:
-                exams = exams.filter(subject__semester__filiere_id=selected_filiere_id)
 
         if q:
             exams = exams.filter(
@@ -253,12 +271,10 @@ def resources_view(request, mode=None):
             ).filter(
                 (Q(summary_file__isnull=False) & ~Q(summary_file="")) | Q(cloud_summary_file__isnull=False)
             )
-            if current_school and not user_filiere:
+            if active_filiere:
+                exam_summaries = exam_summaries.filter(filiere=active_filiere)
+            elif current_school:
                 exam_summaries = exam_summaries.filter(filiere__school=current_school)
-            if user_filiere:
-                exam_summaries = exam_summaries.filter(filiere=user_filiere)
-            elif selected_filiere_id:
-                exam_summaries = exam_summaries.filter(subject__semester__filiere_id=selected_filiere_id)
 
             if q:
                 exam_summaries = exam_summaries.filter(
@@ -316,12 +332,10 @@ def resources_view(request, mode=None):
             course_summaries = CourseSummary.objects.filter(publication_status="PUBLISHED", subject__semester__is_active=True).select_related(
                 "subject", "subject__semester", "subject__semester__filiere"
             )
-            if current_school and not user_filiere:
+            if active_filiere:
+                course_summaries = course_summaries.filter(subject__semester__filiere=active_filiere)
+            elif current_school:
                 course_summaries = course_summaries.filter(subject__semester__filiere__school=current_school)
-            if user_filiere:
-                course_summaries = course_summaries.filter(subject__semester__filiere=user_filiere)
-            elif selected_filiere_id:
-                course_summaries = course_summaries.filter(subject__semester__filiere_id=selected_filiere_id)
 
         if q:
             course_summaries = course_summaries.filter(
@@ -466,18 +480,15 @@ def resources_view(request, mode=None):
         "selected_type": selected_type,
         "user_has_any_pass": user_has_any_pass,
         "current_school": current_school,
+        "active_filiere": active_filiere,
         "available_filieres": (
-            Filiere.objects.filter(pk=user_filiere.pk)
-            if user_filiere
-            else (
-                Filiere.objects.filter(is_active=True, school=current_school).order_by("name")
-                if current_school
-                else Filiere.objects.filter(is_active=True).select_related("school").order_by("school__name", "name")
-            )
+            Filiere.objects.filter(is_active=True, school=current_school).order_by("name")
+            if current_school
+            else Filiere.objects.filter(is_active=True).select_related("school").order_by("school__name", "name")
         ),
         "available_semesters": (
-            Semester.objects.filter(is_active=True, filiere=user_filiere).order_by("number", "label")
-            if user_filiere
+            Semester.objects.filter(is_active=True, filiere=active_filiere).order_by("number", "label")
+            if active_filiere
             else (
                 Semester.objects.filter(is_active=True, filiere__school=current_school).select_related("filiere").order_by("number", "label")
                 if current_school
