@@ -1,0 +1,305 @@
+{% extends "contributors/admin_base.html" %}
+{% load static %}
+
+{% block admin_title %}Ambassadeurs & Parrainage | Administration ArchivEx{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+
+    <!-- PAGE HEADER -->
+    <div class="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2 text-xs font-bold text-amber-600 uppercase tracking-wider mb-1">
+                <i class="fa-solid fa-crown text-sm" aria-hidden="true"></i>
+                <span>Programme Partenaires & Affiliation Étudiante</span>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">
+                Ambassadeurs & Codes Promo
+            </h1>
+            <p class="text-xs text-slate-500 font-medium mt-1">
+                Gérez vos étudiants ambassadeurs, générez leurs liens dédiés et suivez les reversements de commissions (500 FCFA / vente).
+            </p>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="document.getElementById('modal-add-ambassador').classList.remove('hidden')" class="px-4 py-2.5 bg-[#071A49] hover:bg-blue-900 text-white rounded-xl text-xs font-black transition-colors cursor-pointer flex items-center space-x-1.5 shadow-sm">
+                <i class="fa-solid fa-plus text-xs"></i>
+                <span>Ajouter un Ambassadeur</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- METRICS CARDS -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <!-- AMBASSADEURS ACTIFS -->
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs">
+            <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Ambassadeurs</div>
+            <div class="text-2xl font-black text-[#071A49] mt-1">{{ total_ambassadors }}</div>
+            <div class="text-[11px] font-semibold text-emerald-600 mt-2">{{ active_ambassadors }} actifs</div>
+        </div>
+
+        <!-- TOTAL VENTES PARRAINÉES -->
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs">
+            <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Pass Vendus via Code</div>
+            <div class="text-2xl font-black text-blue-600 mt-1">{{ total_sales_count }}</div>
+            <div class="text-[11px] font-semibold text-slate-400 mt-2">Paiements validés</div>
+        </div>
+
+        <!-- COMMISSIONS EN ATTENTE -->
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs">
+            <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">À Reverser (MoMo)</div>
+            <div class="text-2xl font-black text-amber-600 mt-1">{{ total_commissions_pending }} <span class="text-xs">FCFA</span></div>
+            <div class="text-[11px] font-semibold text-amber-700 mt-2">Commissions en attente</div>
+        </div>
+
+        <!-- COMMISSIONS DÉJÀ REVERSÉES -->
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs">
+            <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Reversé</div>
+            <div class="text-2xl font-black text-emerald-600 mt-1">{{ total_commissions_paid }} <span class="text-xs">FCFA</span></div>
+            <div class="text-[11px] font-semibold text-slate-400 mt-2">Versé aux ambassadeurs</div>
+        </div>
+    </div>
+
+    <!-- TABLEAU DES AMBASSADEURS -->
+    <div class="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="text-sm font-black text-[#071A49]">
+                Liste des Ambassadeurs Partenaires ({{ ambassadors|length }})
+            </h2>
+        </div>
+
+        {% if ambassadors %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="bg-slate-50/75 border-b border-slate-200 text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
+                        <th class="py-3.5 px-4">Ambassadeur</th>
+                        <th class="py-3.5 px-4">Code Promo</th>
+                        <th class="py-3.5 px-4 text-center">Ventes</th>
+                        <th class="py-3.5 px-4 text-right">Gains Totaux</th>
+                        <th class="py-3.5 px-4 text-right">À Reverser</th>
+                        <th class="py-3.5 px-4">Lien d'accès privé</th>
+                        <th class="py-3.5 px-4 text-center">Statut</th>
+                        <th class="py-3.5 px-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <divide class="divide-y divide-slate-100 font-medium">
+                    {% for amb in ambassadors %}
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <!-- Identité -->
+                        <td class="py-3.5 px-4">
+                            <div class="font-black text-[#071A49] text-sm">{{ amb.full_name }}</div>
+                            <div class="text-[11px] text-slate-400 flex items-center space-x-1.5 mt-0.5">
+                                {% if amb.phone_number %}
+                                <i class="fa-brands fa-whatsapp text-emerald-600"></i>
+                                <span>{{ amb.phone_number }}</span>
+                                {% endif %}
+                                {% if amb.notes %}
+                                <span class="text-slate-300">·</span>
+                                <span class="truncate max-w-[150px]" title="{{ amb.notes }}">{{ amb.notes }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <!-- Code Promo -->
+                        <td class="py-3.5 px-4">
+                            {% if amb.code %}
+                            <span class="px-2.5 py-1 bg-blue-50 border border-blue-200 text-blue-900 rounded-xl font-mono font-black text-xs">
+                                {{ amb.code }}
+                            </span>
+                            {% else %}
+                            <span class="text-slate-400 italic text-[11px]">En attente de choix</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Ventes -->
+                        <td class="py-3.5 px-4 text-center">
+                            <span class="font-black text-[#071A49] text-sm">{{ amb.sales_count }}</span>
+                        </td>
+
+                        <!-- Gains totaux -->
+                        <td class="py-3.5 px-4 text-right font-black text-slate-700">
+                            {{ amb.total_earnings }} FCFA
+                        </td>
+
+                        <!-- À reverser -->
+                        <td class="py-3.5 px-4 text-right">
+                            {% if amb.pending_payout > 0 %}
+                            <span class="font-black text-rose-600 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-xl">
+                                {{ amb.pending_payout }} FCFA
+                            </span>
+                            {% else %}
+                            <span class="text-slate-400 font-semibold">0 FCFA</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Lien d'accès privé à copier -->
+                        <td class="py-3.5 px-4">
+                            <button 
+                                type="button" 
+                                onclick="copyPrivateLink('{{ amb.full_dashboard_url }}', this)" 
+                                class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-[11px] transition-colors cursor-pointer flex items-center space-x-1"
+                                title="Copier le lien pour l'envoyer à l'ambassadeur sur WhatsApp"
+                            >
+                                <i class="fa-regular fa-copy"></i>
+                                <span>Copier le lien privé</span>
+                            </button>
+                        </td>
+
+                        <!-- Statut -->
+                        <td class="py-3.5 px-4 text-center">
+                            <form method="post" action="" class="inline-block">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="toggle_active">
+                                <input type="hidden" name="ambassador_id" value="{{ amb.id }}">
+                                <button type="submit" class="px-2 py-0.5 rounded-full text-[10px] font-black cursor-pointer {% if amb.is_active %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-slate-100 text-slate-500 border border-slate-200{% endif %}">
+                                    {% if amb.is_active %}Actif{% else %}Inactif{% endif %}
+                                </button>
+                            </form>
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="py-3.5 px-4 text-right">
+                            <div class="flex items-center justify-end space-x-2">
+                                {% if amb.pending_payout > 0 %}
+                                <button 
+                                    type="button" 
+                                    onclick="openPayoutModal('{{ amb.id }}', '{{ amb.full_name }}', '{{ amb.pending_payout }}', '{{ amb.payout_phone }}', '{{ amb.payout_operator }}')" 
+                                    class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-[11px] transition-colors cursor-pointer flex items-center space-x-1 shadow-xs"
+                                    title="Enregistrer le versement Mobile Money"
+                                >
+                                    <i class="fa-solid fa-money-bill-transfer"></i>
+                                    <span>Reverser</span>
+                                </button>
+                                {% endif %}
+                                <a href="{% url 'ambassadors:dashboard' token=amb.access_token %}" target="_blank" class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors" title="Voir son dashboard">
+                                    <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </divide>
+            </table>
+        </div>
+        {% else %}
+        <div class="py-12 text-center text-slate-400">
+            <i class="fa-solid fa-crown text-3xl mb-2 text-slate-300"></i>
+            <p class="text-xs font-bold text-slate-600">Aucun ambassadeur créé pour le moment.</p>
+            <p class="text-[11px] text-slate-400 mt-1">Cliquez sur « Ajouter un Ambassadeur » pour créer votre premier partenaire.</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- MODAL : AJOUTER UN AMBASSADEUR -->
+<div id="modal-add-ambassador" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-black text-[#071A49] flex items-center space-x-2">
+                <i class="fa-solid fa-user-plus text-blue-600 text-sm"></i>
+                <span>Ajouter un Ambassadeur</span>
+            </h3>
+            <button type="button" onclick="document.getElementById('modal-add-ambassador').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form method="post" action="" class="space-y-3 text-xs">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create_ambassador">
+
+            <div>
+                <label class="font-extrabold text-[#071A49] block mb-1">Prénom (Obligatoire) :</label>
+                <input type="text" name="first_name" required placeholder="Ex: Marc" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-blue-500">
+                <p class="text-[10px] text-slate-400 mt-1">Le prénom sera obligatoirement présent dans le code promo qu'il choisira.</p>
+            </div>
+
+            <div>
+                <label class="font-extrabold text-[#071A49] block mb-1">Nom de famille (Optionnel) :</label>
+                <input type="text" name="last_name" placeholder="Ex: Dossou" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-blue-500">
+            </div>
+
+            <div>
+                <label class="font-extrabold text-[#071A49] block mb-1">Numéro WhatsApp :</label>
+                <input type="text" name="phone_number" placeholder="Ex: 0197000000" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-blue-500">
+            </div>
+
+            <div>
+                <label class="font-extrabold text-[#071A49] block mb-1">Notes administratives (École, Filière, Promo) :</label>
+                <textarea name="notes" rows="2" placeholder="Ex: Délégué L1 IG ENEAM 2025" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:border-blue-500"></textarea>
+            </div>
+
+            <div class="pt-2 flex justify-end space-x-2">
+                <button type="button" onclick="document.getElementById('modal-add-ambassador').classList.add('hidden')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors">
+                    Annuler
+                </button>
+                <button type="submit" class="px-5 py-2 bg-[#071A49] hover:bg-blue-900 text-white font-black rounded-xl transition-colors shadow-xs">
+                    Créer l'Ambassadeur
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL : REVERSEMENT MOBILE MONEY -->
+<div id="modal-payout" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-black text-[#071A49] flex items-center space-x-2">
+                <i class="fa-solid fa-money-bill-transfer text-emerald-600 text-sm"></i>
+                <span>Enregistrer le Versement</span>
+            </h3>
+            <button type="button" onclick="document.getElementById('modal-payout').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form method="post" action="" class="space-y-3 text-xs">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="mark_payout">
+            <input type="hidden" id="payout_amb_id" name="ambassador_id" value="">
+
+            <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-900">
+                <div class="font-extrabold text-sm" id="payout_amb_name">Ambassadeur</div>
+                <div class="text-xs font-black mt-1">Montant à verser : <span id="payout_amb_amount" class="text-base">0 FCFA</span></div>
+                <div class="text-[11px] font-semibold text-emerald-700 mt-1" id="payout_amb_phone">Numéro MoMo : -</div>
+            </div>
+
+            <div>
+                <label class="font-extrabold text-[#071A49] block mb-1">Réf. transaction MoMo (Optionnel) :</label>
+                <input type="text" name="payout_reference" placeholder="Ex: TX-98472918 ou ID Transfert MTN" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-blue-500">
+            </div>
+
+            <div class="pt-2 flex justify-end space-x-2">
+                <button type="button" onclick="document.getElementById('modal-payout').classList.add('hidden')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors">
+                    Annuler
+                </button>
+                <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl transition-colors shadow-xs">
+                    Confirmer le versement
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function copyPrivateLink(url, btn) {
+        navigator.clipboard.writeText(url).then(() => {
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-check text-emerald-600"></i> <span class="text-emerald-600 font-bold">Lien copié !</span>';
+            setTimeout(() => { btn.innerHTML = orig; }, 2000);
+        }).catch(() => {
+            prompt("Copiez le lien privé :", url);
+        });
+    }
+
+    function openPayoutModal(id, name, amount, phone, op) {
+        document.getElementById('payout_amb_id').value = id;
+        document.getElementById('payout_amb_name').textContent = name;
+        document.getElementById('payout_amb_amount').textContent = amount + ' FCFA';
+        document.getElementById('payout_amb_phone').textContent = 'Numéro MoMo (' + (op || 'MTN').toUpperCase() + ') : ' + (phone || 'Non renseigné');
+        document.getElementById('modal-payout').classList.remove('hidden');
+    }
+</script>
+{% endblock %}

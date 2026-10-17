@@ -56,6 +56,12 @@ class Payment(models.Model):
     operator = models.CharField(max_length=50, blank=True, default="", choices=OPERATOR_CHOICES)
     phone_number = models.CharField(max_length=20, blank=True)
     
+    # Parrainage / Ambassadeur
+    ambassador = models.ForeignKey("ambassadors.Ambassador", on_delete=models.SET_NULL, null=True, blank=True, related_name="payments", verbose_name="Ambassadeur parrain")
+    referral_code = models.CharField(max_length=50, blank=True, default="", verbose_name="Code parrainage utilisé")
+    discount_amount = models.PositiveIntegerField(default=0, verbose_name="Réduction parrainage accordée (FCFA)")
+
+    
     external_reference = models.CharField(max_length=64, unique=True, null=True, blank=True)
     fedapay_transaction_id = models.CharField(max_length=100, blank=True, db_index=True, help_text="Identifiant de la transaction sur FedaPay (ex: 12345)")
     fedapay_checkout_url = models.URLField(max_length=500, blank=True, help_text="URL de paiement sécurisée générée par FedaPay")

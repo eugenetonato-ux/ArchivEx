@@ -652,6 +652,31 @@ def activate_pass_for_payment(payment):
     except Exception as e:
         logger.error("[Pass Semestre] Erreur lors de l'envoi de l'email : %s", e)
 
+    # 5. Validation automatique de la commission ambassadeur si parrainé
+    try:
+        if hasattr(payment, "ambassador_sale"):
+            sale = payment.ambassador_sale
+            if sale.status == "PENDING":
+                sale.status = "APPROVED"
+                sale.save(update_fields=["status"])
+                logger.info("[Ambassadeur] Commission de %s FCFA validée pour %s (Vente #%s)", sale.commission_amount, sale.ambassador.code, sale.id)
+        elif payment.ambassador:
+            from ambassadors.models import AmbassadorSale
+            sale, created = AmbassadorSale.objects.get_or_create(
+                payment=payment,
+                defaults={
+                    "ambassador": payment.ambassador,
+                    "discount_given": payment.discount_amount or 200,
+                    "commission_amount": payment.ambassador.commission_per_sale or 500,
+                    "status": "APPROVED",
+                }
+            )
+            if not created and sale.status == "PENDING":
+                sale.status = "APPROVED"
+                sale.save(update_fields=["status"])
+    except Exception as e:
+        logger.error("[Pass Semestre] Erreur lors de la validation commission ambassadeur : %s", e)
+
     return True
 
 

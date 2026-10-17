@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     "contributors",
     "notifications",
     "support",
+    "ambassadors",
 
     # Third party
     "storages",

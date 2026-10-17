@@ -68,6 +68,20 @@ def pass_semestre(request, semester_id):
                 return redirect("accounts:dashboard")
 
     price = getattr(settings, "PASS_SEMESTRE_PRIX_DEFAUT", 4500)
+    ref_code = request.GET.get("ref", "").strip().upper()
+    ambassador = None
+    discount_amount = 0
+    final_price = price
+
+    if ref_code:
+        try:
+            from ambassadors.models import Ambassador
+            ambassador = Ambassador.objects.filter(code__iexact=ref_code, is_active=True).first()
+            if ambassador:
+                discount_amount = ambassador.discount_amount or 200
+                final_price = max(100, price - discount_amount)
+        except Exception:
+            pass
 
     from subscriptions.services import has_user_valid_pass
     already_active = has_user_valid_pass(request.user, semester)
@@ -87,6 +101,10 @@ def pass_semestre(request, semester_id):
     context = {
         "semester": semester,
         "price": price,
+        "final_price": final_price,
+        "discount_amount": discount_amount,
+        "ambassador": ambassador,
+        "referral_code": ambassador.code if ambassador else (ref_code if ref_code else ""),
         "already_active": already_active,
         "subjects": subjects,
         "subjects_count": subjects_count,
@@ -105,10 +123,10 @@ def pass_semestre(request, semester_id):
 def initier_paiement(request, semester_id):
     """
     Initialise le paiement sécurisé côté serveur via FedaPay :
-    - Détermine le tarif serveur (4 500 FCFA)
+    - Détermine le tarif serveur (4 500 FCFA de base, ou 4 300 FCFA si code ambassadeur valide)
     - Valide et normalise le numéro béninois (+229)
     - Génère une référence externe unique (ARCHIVEX-PASS-YYYY-XXXXXX)
-    - Crée l'enregistrement Payment local PENDING
+    - Crée l'enregistrement Payment local PENDING et AmbassadorSale
     - Appelle l'API FedaPay (/v1/transactions + /token)
     - Redirige l'étudiant vers l'URL de paiement sécurisée FedaPay
     """
@@ -160,18 +178,50 @@ def initier_paiement(request, semester_id):
         detected_op = detect_operator(normalized_phone)
         operator = detected_op or "fedapay"
 
+    # Vérification du code parrainage
+    ref_code = request.POST.get("referral_code", "").strip().upper()
+    ambassador = None
+    discount_amount = 0
+    effective_price = price
+
+    if ref_code:
+        try:
+            from ambassadors.models import Ambassador, AmbassadorSale
+            ambassador = Ambassador.objects.filter(code__iexact=ref_code, is_active=True).first()
+            if ambassador:
+                discount_amount = ambassador.discount_amount or 200
+                effective_price = max(100, price - discount_amount)
+        except Exception:
+            pass
+
     ext_ref = generate_external_reference()
 
     payment = Payment.objects.create(
         user=request.user,
         semester=semester,
-        amount=price,
+        amount=effective_price,
         currency=getattr(settings, "FEDAPAY_CURRENCY", "XOF"),
         operator=operator,
         phone_number=normalized_phone,
         external_reference=ext_ref,
+        ambassador=ambassador,
+        referral_code=ambassador.code if ambassador else ref_code,
+        discount_amount=discount_amount,
         status=Payment.STATUS_PENDING,
     )
+
+    if ambassador:
+        try:
+            from ambassadors.models import AmbassadorSale
+            AmbassadorSale.objects.create(
+                ambassador=ambassador,
+                payment=payment,
+                discount_given=discount_amount,
+                commission_amount=ambassador.commission_per_sale or 500,
+                status="PENDING",
+            )
+        except Exception as e:
+            logger.error("[Ambassadeur] Erreur création AmbassadorSale : %s", e)
 
     # URL de retour sécurisée après la validation FedaPay
     return_url = reverse("payments:payment_return", kwargs={"reference": payment.external_reference})

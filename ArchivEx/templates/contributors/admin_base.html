@@ -335,6 +335,11 @@
                     <span>Pass & paiements</span>
                 </a>
 
+                <a href="{% url 'ambassadors:admin_list' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'ambassadeurs' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
+                    <i class="fa-solid fa-crown w-4 text-center text-amber-400" aria-hidden="true"></i>
+                    <span>Ambassadeurs</span>
+                </a>
+
                 <a href="{% url 'contributors:notification_create' %}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all {% if 'notifications' in request.path %}bg-gradient-to-r from-purple-600/30 to-pink-600/20 text-white border-l-4 border-purple-500 shadow-md{% else %}text-slate-400 hover:text-white hover:bg-white/[0.06]{% endif %}">
                     <i class="fa-solid fa-paper-plane w-4 text-center text-slate-400" aria-hidden="true"></i>
                     <span>Notifications</span>

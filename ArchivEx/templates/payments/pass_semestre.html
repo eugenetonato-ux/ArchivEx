@@ -192,11 +192,28 @@
                 <div class="mb-6">
                     <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block mb-1">Tarif unique du
                         semestre</span>
-                    <div class="flex items-baseline space-x-2">
-                        <span class="text-4xl sm:text-5xl font-black text-[#071A49] tracking-tight">{{ price }}</span>
-                        <span class="text-lg font-black text-[#2563EB]">FCFA</span>
+                    
+                    <div class="flex items-baseline space-x-3">
+                        <span id="original_price_strike" class="text-2xl font-bold text-slate-400 line-through {% if not discount_amount %}hidden{% endif %}">
+                            {{ price }} FCFA
+                        </span>
+                        <div class="flex items-baseline space-x-2">
+                            <span id="display_price" class="text-4xl sm:text-5xl font-black {% if discount_amount %}text-emerald-600{% else %}text-[#071A49]{% endif %} tracking-tight">{{ final_price }}</span>
+                            <span id="display_currency" class="text-lg font-black {% if discount_amount %}text-emerald-600{% else %}text-[#2563EB]{% endif %}">FCFA</span>
+                        </div>
                     </div>
-                    <p class="text-[11px] text-slate-400 font-medium mt-1">Paiement unique sans abonnement ni
+
+                    <!-- Badge Réduction Parrainage -->
+                    <div id="discount_badge_container" class="mt-2 {% if not discount_amount %}hidden{% endif %}">
+                        <span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-black">
+                            <i class="fa-solid fa-gift text-emerald-500"></i>
+                            <span id="discount_badge_text">
+                                {% if ambassador %}Réduction de {{ discount_amount }} FCFA offerte par {{ ambassador.first_name }} !{% else %}Réduction de 200 FCFA appliquée !{% endif %}
+                            </span>
+                        </span>
+                    </div>
+
+                    <p class="text-[11px] text-slate-400 font-medium mt-2">Paiement unique sans abonnement ni
                         renouvellement automatique.</p>
                 </div>
 
@@ -278,10 +295,48 @@
                     </div>
 
 
-                    <button type="submit"
+                    <!-- CODE PROMO / AMBASSADEUR -->
+                    <div class="pt-1">
+                        <label for="referral_code_input" class="text-xs font-extrabold text-[#071A49] flex items-center justify-between mb-1.5">
+                            <span>Code promo / ambassadeur :</span>
+                            <span id="promo_status_tag" class="text-[11px] font-black text-emerald-600 {% if not discount_amount %}hidden{% endif %}">
+                                <i class="fa-solid fa-circle-check"></i> -200 FCFA déduits
+                            </span>
+                        </label>
+                        <div class="flex rounded-2xl border-2 border-slate-200 bg-white overflow-hidden focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-sm">
+                            <input 
+                                type="text" 
+                                id="referral_code_input" 
+                                name="referral_code" 
+                                value="{{ referral_code }}" 
+                                maxlength="30" 
+                                placeholder="Ex: MARC25 (Optionnel)" 
+                                autocomplete="off"
+                                class="w-full px-3.5 py-3 bg-transparent text-xs font-black uppercase tracking-wider text-[#071A49] placeholder-slate-400 outline-none"
+                                oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '')"
+                            >
+                            <button 
+                                type="button" 
+                                id="btn_apply_code"
+                                onclick="checkReferralCode()" 
+                                class="px-4 py-3 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-700 text-xs font-black shrink-0 transition-colors cursor-pointer border-l border-slate-200 flex items-center space-x-1"
+                            >
+                                <span id="btn_apply_text">Appliquer</span>
+                            </button>
+                        </div>
+                        <p id="promo_feedback_msg" class="text-[11px] font-bold mt-1.5 {% if discount_amount %}text-emerald-600{% else %}text-slate-400{% endif %}">
+                            {% if ambassador %}
+                            ✅ Réduction de {{ discount_amount }} FCFA offerte par votre parrain {{ ambassador.first_name }} !
+                            {% else %}
+                            Bénéficiez de 200 FCFA de réduction avec le code d'un camarade ambassadeur.
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <button type="submit" id="btn_submit_payment"
                         class="btn-gold w-full text-xs sm:text-sm py-4 font-black shadow-lg shadow-amber-500/30 hover:scale-[1.02] transition-all rounded-2xl block text-center cursor-pointer flex items-center justify-center space-x-2">
                         <i class="fa-solid fa-lock text-xs" aria-hidden="true"></i>
-                        <span>Payer maintenant ({{ price }} FCFA)</span>
+                        <span id="btn_pay_label">Payer maintenant ({{ final_price }} FCFA)</span>
                     </button>
                 </form>
                 {% endif %}
@@ -423,6 +478,87 @@
 
         if (input.value !== raw) {
             input.value = raw;
+        }
+    }
+
+    async function checkReferralCode() {
+        const input = document.getElementById('referral_code_input');
+        const feedbackMsg = document.getElementById('promo_feedback_msg');
+        const statusTag = document.getElementById('promo_status_tag');
+        const strikePrice = document.getElementById('original_price_strike');
+        const displayPrice = document.getElementById('display_price');
+        const displayCurrency = document.getElementById('display_currency');
+        const badgeContainer = document.getElementById('discount_badge_container');
+        const badgeText = document.getElementById('discount_badge_text');
+        const payLabel = document.getElementById('btn_pay_label');
+        const btnApply = document.getElementById('btn_apply_code');
+
+        if (!input) return;
+        const code = input.value.trim().toUpperCase();
+
+        if (!code) {
+            feedbackMsg.className = "text-[11px] font-bold mt-1.5 text-slate-400";
+            feedbackMsg.textContent = "Bénéficiez de 200 FCFA de réduction avec le code d'un camarade ambassadeur.";
+            if (statusTag) statusTag.classList.add('hidden');
+            if (strikePrice) strikePrice.classList.add('hidden');
+            if (badgeContainer) badgeContainer.classList.add('hidden');
+            if (displayPrice) {
+                displayPrice.className = "text-4xl sm:text-5xl font-black text-[#071A49] tracking-tight";
+                displayPrice.textContent = "4500";
+            }
+            if (displayCurrency) displayCurrency.className = "text-lg font-black text-[#2563EB]";
+            if (payLabel) payLabel.textContent = "Payer maintenant (4 500 FCFA)";
+            return;
+        }
+
+        if (btnApply) {
+            btnApply.disabled = true;
+            btnApply.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i>';
+        }
+
+        try {
+            const resp = await fetch(`/ambassadeurs/api/verifier-code/?code=${encodeURIComponent(code)}`);
+            const data = await resp.json();
+
+            if (data.valid) {
+                feedbackMsg.className = "text-[11px] font-bold mt-1.5 text-emerald-600";
+                feedbackMsg.textContent = `✅ Code appliqué ! Réduction de ${data.discount} FCFA offerte par ${data.ambassador_name} !`;
+                if (statusTag) {
+                    statusTag.classList.remove('hidden');
+                    statusTag.innerHTML = `<i class="fa-solid fa-circle-check"></i> -${data.discount} FCFA déduits`;
+                }
+
+                if (strikePrice) strikePrice.classList.remove('hidden');
+                if (badgeContainer) badgeContainer.classList.remove('hidden');
+                if (badgeText) badgeText.textContent = `Réduction de ${data.discount} FCFA offerte par ${data.ambassador_name} !`;
+
+                if (displayPrice) {
+                    displayPrice.className = "text-4xl sm:text-5xl font-black text-emerald-600 tracking-tight";
+                    displayPrice.textContent = data.final_price;
+                }
+                if (displayCurrency) displayCurrency.className = "text-lg font-black text-emerald-600";
+                if (payLabel) payLabel.textContent = `Payer maintenant (${data.final_price} FCFA)`;
+            } else {
+                feedbackMsg.className = "text-[11px] font-bold mt-1.5 text-rose-500";
+                feedbackMsg.textContent = `❌ ${data.message || 'Code promo invalide ou expiré.'}`;
+                if (statusTag) statusTag.classList.add('hidden');
+                if (strikePrice) strikePrice.classList.add('hidden');
+                if (badgeContainer) badgeContainer.classList.add('hidden');
+                if (displayPrice) {
+                    displayPrice.className = "text-4xl sm:text-5xl font-black text-[#071A49] tracking-tight";
+                    displayPrice.textContent = "4500";
+                }
+                if (displayCurrency) displayCurrency.className = "text-lg font-black text-[#2563EB]";
+                if (payLabel) payLabel.textContent = "Payer maintenant (4 500 FCFA)";
+            }
+        } catch (err) {
+            feedbackMsg.className = "text-[11px] font-bold mt-1.5 text-rose-500";
+            feedbackMsg.textContent = "Impossible de vérifier le code pour l'instant.";
+        } finally {
+            if (btnApply) {
+                btnApply.disabled = false;
+                btnApply.innerHTML = '<span>Appliquer</span>';
+            }
         }
     }
 

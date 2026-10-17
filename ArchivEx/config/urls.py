@@ -54,6 +54,7 @@ urlpatterns = [
     path("ressources/", include("content.urls")),
     path("notifications/", include("notifications.urls")),
     path("support/", include("support.urls")),
+    path("ambassadeurs/", include("ambassadors.urls")),
     path("robots.txt", academic_views.robots_txt_view, name="robots_txt"),
     path("sitemap.xml", clean_sitemap_view, {"sitemaps": sitemaps}, name="django.contrib.sitemaps.views.sitemap"),
     path("google4fc7f01109e31c86.html", lambda request: HttpResponse("google-site-verification: google4fc7f01109e31c86.html", content_type="text/html")),
