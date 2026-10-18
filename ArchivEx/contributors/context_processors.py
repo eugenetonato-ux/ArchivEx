@@ -26,11 +26,11 @@ def admin_academic_context(request):
         else:
             available_schools = School.objects.filter(is_active=True)
 
-    # Récupérer les filières associées à l'école active
+    # Récupérer les filières associées à l'école active (ou toutes les filières actives)
     if active_school:
         available_filieres = Filiere.objects.filter(school=active_school)
     else:
-        available_filieres = Filiere.objects.none()
+        available_filieres = Filiere.objects.filter(is_active=True)
 
     # Récupérer les semestres associés à la filière active
     if active_filiere:

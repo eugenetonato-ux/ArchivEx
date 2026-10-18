@@ -412,6 +412,26 @@ def exam_list_view(request):
     from content.models import Summary, CloudFile
 
     active_school, active_filiere, active_semester = get_active_academic_context(request)
+    
+    # Prise en charge directe de la sélection de filière depuis l'interface
+    filiere_req = request.GET.get("filiere")
+    if filiere_req:
+        if filiere_req == "all":
+            active_filiere = None
+            request.session["admin_active_filiere_id"] = "all"
+        else:
+            try:
+                fil_candidate = Filiere.objects.filter(pk=int(filiere_req)).first()
+                if fil_candidate:
+                    active_filiere = fil_candidate
+                    request.session["admin_active_filiere_id"] = fil_candidate.id
+                    if fil_candidate.school:
+                        active_school = fil_candidate.school
+                        request.session["admin_active_school_id"] = fil_candidate.school.id
+            except (ValueError, TypeError):
+                pass
+
+    filter_status = request.GET.get("filter_status", "all")  # 'all', 'missing', 'complete'
     q = request.GET.get("q", "").strip()
 
     # Traitement du formulaire d'ajout rapide (depuis la modale de la page)
@@ -599,13 +619,58 @@ def exam_list_view(request):
                 subjects_map[subj.pk]["draft_count"] += 1
                 total_draft_count += 1
 
-    subjects_with_data = list(subjects_map.values())
+    # Statistiques par filière pour navigation par onglets et détection des lacunes
+    base_fils = Filiere.objects.filter(is_active=True)
+    if active_school:
+        base_fils = base_fils.filter(school=active_school)
+
+    filieres_stats = []
+    total_all_exams = Exam.objects.filter(filiere__school=active_school).count() if active_school else Exam.objects.count()
+    total_all_subjs = Subject.objects.filter(semester__filiere__school=active_school, is_active=True).count() if active_school else Subject.objects.filter(is_active=True).count()
+
+    for f in base_fils.select_related("school").order_by("school__name", "name"):
+        f_subjs = Subject.objects.filter(semester__filiere=f, is_active=True)
+        f_subjs_cnt = f_subjs.count()
+        f_exams_cnt = Exam.objects.filter(filiere=f).count()
+        f_missing_cnt = f_subjs.annotate(ex_cnt=Count("exams")).filter(ex_cnt=0).count()
+        filieres_stats.append({
+            "filiere": f,
+            "subjects_count": f_subjs_cnt,
+            "exams_count": f_exams_cnt,
+            "missing_count": f_missing_cnt,
+            "is_selected": bool(active_filiere and active_filiere.id == f.id),
+        })
+
+    # Filtrage par état de complétion ("all", "missing", "complete")
+    all_subjects_items = list(subjects_map.values())
+    missing_subjects_count = 0
+    complete_subjects_count = 0
+
+    filtered_subjects_data = []
+    for item in all_subjects_items:
+        has_exams = len(item["exams"]) > 0
+        if has_exams:
+            complete_subjects_count += 1
+        else:
+            missing_subjects_count += 1
+
+        if filter_status == "missing" and has_exams:
+            continue
+        if filter_status == "complete" and not has_exams:
+            continue
+        filtered_subjects_data.append(item)
 
     context = {
         "active_school": active_school,
         "active_filiere": active_filiere,
         "active_semester": active_semester,
-        "subjects_with_data": subjects_with_data,
+        "filieres_stats": filieres_stats,
+        "total_all_exams": total_all_exams,
+        "total_all_subjs": total_all_subjs,
+        "subjects_with_data": filtered_subjects_data,
+        "missing_subjects_count": missing_subjects_count,
+        "complete_subjects_count": complete_subjects_count,
+        "filter_status": filter_status,
         "exams": exams,
         "total_exams_count": len(exams),
         "total_published_count": total_published_count,
