@@ -232,7 +232,10 @@ def semester_list_view(request, filiere_id):
     filiere = get_object_or_404(Filiere.objects.select_related("school", "level"), pk=filiere_id)
 
     # Sécurité filière : Un étudiant ordinaire connecté ne peut naviguer que dans les semestres de sa filière
-    if request.user.is_authenticated and not request.user.is_superuser and hasattr(request.user, "profile") and request.user.profile.filiere:
+    is_staff_user = request.user.is_authenticated and (
+        request.user.is_staff or request.user.is_superuser or getattr(request.user, "contributor_profile", None)
+    )
+    if request.user.is_authenticated and not is_staff_user and hasattr(request.user, "profile") and request.user.profile.filiere:
         if filiere.id != request.user.profile.filiere_id:
             messages.warning(
                 request,
@@ -306,7 +309,7 @@ def subject_list_view(request, semester_id):
         return redirect("academics:filieres")
 
     # Sécurité filière : Un étudiant ordinaire connecté ne peut naviguer que dans les UE de sa filière
-    if request.user.is_authenticated and not request.user.is_superuser and hasattr(request.user, "profile") and request.user.profile.filiere:
+    if request.user.is_authenticated and not is_staff_user and hasattr(request.user, "profile") and request.user.profile.filiere:
         if semester.filiere_id != request.user.profile.filiere_id:
             messages.warning(
                 request,

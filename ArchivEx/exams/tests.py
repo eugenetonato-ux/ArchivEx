@@ -588,11 +588,35 @@ class ArchivExFlowTest(TestCase):
         self.assertIn(self.subject.id, f1_subjects)
         self.assertNotIn(other_subj.id, f1_subjects)
 
-        # 2. Requête pour other_filiere
+        # 2. Requête pour other_filiere (visiteur)
         res_f2 = self.client.get(reverse("exams:liste") + f"?filiere={other_filiere.id}")
         f2_subjects = [item["subject"].id for item in res_f2.context["ue_list"]]
         self.assertIn(other_subj.id, f2_subjects)
         self.assertNotIn(self.subject.id, f2_subjects)
+
+        # 3. Étudiant connecté : strictement confiné à sa filière, tout ?filiere= autre est ignoré
+        from accounts.models import StudentProfile
+        student_user = User.objects.create_user(username="student_iso@test.com", email="student_iso@test.com", password="password123")
+        StudentProfile.objects.create(user=student_user, school=self.school, level=self.level, filiere=self.filiere)
+        self.client.force_login(student_user)
+        res_student_hack = self.client.get(reverse("exams:liste") + f"?filiere={other_filiere.id}")
+        student_subjects = [item["subject"].id for item in res_student_hack.context["ue_list"]]
+        self.assertIn(self.subject.id, student_subjects)
+        self.assertNotIn(other_subj.id, student_subjects)
+        # Aucun sélecteur de filière exposé à l'étudiant
+        self.assertEqual(len(res_student_hack.context["available_filieres"]), 0)
+        self.assertNotContains(res_student_hack, "Aperçu Admin · Filière")
+
+        # 4. Staff / Admin connecté : accès à la prévisualisation des différentes filières
+        admin_user = get_user_model().objects.create_superuser(
+            username="super_filiere_admin", email="admin_fil@test.com", password="adminpassword123"
+        )
+        self.client.force_login(admin_user)
+        res_admin = self.client.get(reverse("exams:liste") + f"?filiere={other_filiere.id}")
+        self.assertTrue(res_admin.context["is_staff_user"])
+        self.assertGreaterEqual(len(res_admin.context["available_filieres"]), 2)
+        self.assertContains(res_admin, "Aperçu Admin · Filière")
+
 
 
 

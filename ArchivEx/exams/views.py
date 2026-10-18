@@ -87,32 +87,38 @@ def resources_view(request, mode=None):
     current_school = get_current_school(request)
 
     # Détermination rigoureuse de la filière active (Isolation 100% étanche entre filières)
-    # Règle d'or : Aucune ressource d'une filière ne doit jamais être mélangée avec une autre filière
+    # Règle d'or ArchivEx : Un étudiant connecté est confiné EXCLUSIVEMENT à sa propre filière.
+    # Le switch multi-filières (PLAN / STAT, etc.) est réservé EXCLUSIVEMENT à l'administration.
+    is_staff_or_admin = request.user.is_authenticated and (
+        request.user.is_staff or request.user.is_superuser or getattr(request.user, "contributor_profile", None)
+    )
+
     active_filiere = None
-    filiere_param = request.GET.get("filiere", "").strip()
-    if filiere_param:
-        try:
-            active_filiere = Filiere.objects.filter(pk=int(filiere_param), is_active=True).select_related("school").first()
-        except (ValueError, TypeError):
-            active_filiere = None
 
-    if not active_filiere and request.user.is_authenticated:
+    if request.user.is_authenticated and not is_staff_or_admin:
+        # Étudiant connecté : sa filière d'inscription fait autorité absolue, tout paramètre ?filiere= est strictement ignoré
         profile = getattr(request.user, "profile", None)
         if profile and profile.filiere:
             active_filiere = profile.filiere
+    else:
+        # Visiteur non connecté ou Administrateur / Staff :
+        filiere_param = request.GET.get("filiere", "").strip()
+        if filiere_param:
+            try:
+                active_filiere = Filiere.objects.filter(pk=int(filiere_param), is_active=True).select_related("school").first()
+            except (ValueError, TypeError):
+                active_filiere = None
+        if not active_filiere and is_staff_or_admin:
+            admin_fil_id = request.session.get("admin_active_filiere_id")
+            if admin_fil_id and admin_fil_id != "all":
+                active_filiere = Filiere.objects.filter(pk=admin_fil_id, is_active=True).first()
 
-    # Sécurité académique : Un étudiant connecté (non-staff / non-superuser) reste confiné à sa filière
-    if request.user.is_authenticated and not request.user.is_staff and not request.user.is_superuser:
-        profile = getattr(request.user, "profile", None)
-        if profile and profile.filiere:
-            active_filiere = profile.filiere
-
-    # Fallback pour visiteur ou compte sans filière : Première filière active de l'école
+    # Fallback pour visiteur non connecté sans filtre ou compte sans filière
     if not active_filiere:
         if current_school:
-            active_filiere = Filiere.objects.filter(school=current_school, is_active=True).order_by("name").first()
+            active_filiere = Filiere.objects.filter(school=current_school, is_active=True).order_by("id").first()
         if not active_filiere:
-            active_filiere = Filiere.objects.filter(is_active=True).first()
+            active_filiere = Filiere.objects.filter(is_active=True).order_by("id").first()
 
     q = request.GET.get("q", "").strip()
     selected_subject_id = request.GET.get("subject", "").strip()
@@ -481,10 +487,15 @@ def resources_view(request, mode=None):
         "user_has_any_pass": user_has_any_pass,
         "current_school": current_school,
         "active_filiere": active_filiere,
+        "is_staff_user": is_staff_or_admin,
         "available_filieres": (
-            Filiere.objects.filter(is_active=True, school=current_school).order_by("name")
-            if current_school
-            else Filiere.objects.filter(is_active=True).select_related("school").order_by("school__name", "name")
+            (
+                Filiere.objects.filter(is_active=True, school=current_school).order_by("name")
+                if current_school
+                else Filiere.objects.filter(is_active=True).select_related("school").order_by("school__name", "name")
+            )
+            if is_staff_or_admin
+            else Filiere.objects.none()
         ),
         "available_semesters": (
             Semester.objects.filter(is_active=True, filiere=active_filiere).order_by("number", "label")
