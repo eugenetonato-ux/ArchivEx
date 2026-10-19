@@ -1,5 +1,775 @@
 [
 {
+  "model": "accounts.user",
+  "pk": 14,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$3LWGb8WryPHgDzYMTNeu6P$ZKbYgQxisRRB6IcYXLFSUqVlUUkO2SZRLEvkuIRx3os=",
+    "last_login": "2026-10-17T16:14:07.656Z",
+    "is_superuser": true,
+    "username": "Sandro",
+    "first_name": "",
+    "last_name": "",
+    "email": "eugenetonato@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-09-07T11:32:54.272Z",
+    "must_change_password": false,
+    "active_session_key": "k5d5tvrjid95pk3u6hfy4etzs31llu4j",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "pk": 15,
+  "fields": {
+    "password": "pbkdf2_sha256$870000$FiKoJ6AE4ag8iZFs1qUxff$/WTnXJMt3mSOTL4hjRo5dZt+HcZoGV/8XE9xCIE+uJ0=",
+    "last_login": "2026-10-09T23:28:17.637Z",
+    "is_superuser": false,
+    "username": "luc@gmail.com",
+    "first_name": "LUC",
+    "last_name": "SIS",
+    "email": "luc@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-09-07T12:33:44.091Z",
+    "must_change_password": false,
+    "active_session_key": "67ynj9hqtw8qau9l15a6bqvmnaedn4yx",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "pk": 16,
+  "fields": {
+    "password": "pbkdf2_sha256$870000$2sw4oCw4fXuO6N3CZJRzY9$leAUUf2Ceu0heG9wE0jRRsYeqMjzQ+KEWxDBOhJsem0=",
+    "last_login": null,
+    "is_superuser": true,
+    "username": "ArchivEx",
+    "first_name": "",
+    "last_name": "",
+    "email": "eugenetonato@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-09-17T20:25:58.568Z",
+    "must_change_password": false,
+    "active_session_key": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.studentprofile",
+  "pk": 4,
+  "fields": {
+    "user": 14,
+    "school": 1,
+    "level": 1,
+    "filiere": 2,
+    "avatar": "",
+    "created_at": "2026-10-05T08:58:30.205Z"
+  }
+},
+{
+  "model": "accounts.favorite",
+  "pk": 1,
+  "fields": {
+    "user": 14,
+    "exam": 33,
+    "created_at": "2026-10-08T16:43:30.054Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 450,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /administration/",
+    "path": "/administration/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:42:37.774Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 451,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /administration/epreuves/ajouter/",
+    "path": "/administration/epreuves/ajouter/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:42:53.701Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 452,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page d'accueil publique",
+    "path": "/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:42:54.936Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 453,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page d'accueil publique",
+    "path": "/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:42:55.726Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 454,
+  "fields": {
+    "user": 14,
+    "action_type": "CLICK",
+    "description": "Clic public : 'Site public' (ID: p-2 lg:px-3 lg:py-1.5 rounded-xl bg-gradient-to-r from-blue-500/20 to-indigo-500/20 hover:from-blue-500/30 hover:to-indigo-500/30 border border-blue-500/30 text-blue-300 hover:text-white font-extrabold text-[11px] flex items-center space-x-1.5 transition-all shadow-sm shrink-0) sur la page [Tableau de bord administration — ArchivEx]",
+    "path": "/accounts/api/log-click/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:42:55.726Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 455,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /ressources/resumes/",
+    "path": "/ressources/resumes/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:42:58.634Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 456,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/",
+    "path": "/epreuves/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:43:01.166Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 457,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/",
+    "path": "/epreuves/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:43:01.616Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 458,
+  "fields": {
+    "user": 14,
+    "action_type": "CLICK",
+    "description": "Clic public : 'Épreuves\n                        Annales\n                    \n                    Sujets d'examens c' (ID: group flex items-center justify-between p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:shadow-lg hover:border-blue-300 hover:-translate-y-0.5 transition-all) sur la page [Banque d'Épreuves & Examens Universitaires — Tous les sujets | ArchivEx]",
+    "path": "/accounts/api/log-click/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:43:02.083Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 459,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/",
+    "path": "/epreuves/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:43:02.649Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 460,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/33/viewer/",
+    "path": "/epreuves/33/viewer/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:43:14.720Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 461,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/33/stream-watermarked/",
+    "path": "/epreuves/33/stream-watermarked/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:43:15.956Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 462,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/33/",
+    "path": "/epreuves/33/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:43:25.079Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 463,
+  "fields": {
+    "user": 14,
+    "action_type": "CLICK",
+    "description": "Clic public : 'Fermer' (ID: px-3.5 py-1.5 rounded-xl bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-600 hover:text-white flex items-center space-x-1 transition-all shadow-xs font-bold text-[11px]) sur la page [Examen Algèbre linéaire — 2025-2026 — Algèbre linéaire (2025) | ArchivEx]",
+    "path": "/accounts/api/log-click/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:43:29.081Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 464,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/33/favori/",
+    "path": "/epreuves/33/favori/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:43:30.043Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 465,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/33/",
+    "path": "/epreuves/33/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:43:30.066Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 466,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/33/stream-watermarked/",
+    "path": "/epreuves/33/stream-watermarked/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:43:39.421Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 467,
+  "fields": {
+    "user": 14,
+    "action_type": "CLICK",
+    "description": "Clic public : 'Ouvrir l'épreuve en plein écran' (ID: btn-primary text-xs sm:text-sm px-8 py-3.5 font-black inline-flex items-center space-x-2 rounded-xl shadow-lg hover:scale-105 transition-all) sur la page [Lecteur Académique — Examen Algèbre linéaire — 2025-2026 | ArchivEx]",
+    "path": "/accounts/api/log-click/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:43:39.424Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 468,
+  "fields": {
+    "user": 14,
+    "action_type": "CLICK",
+    "description": "Clic public : 'Fermer' (ID: px-2.5 py-1.5 rounded-lg bg-rose-600/80 hover:bg-rose-600 flex items-center justify-center space-x-1 transition-all text-white ml-1 text-[11px]) sur la page [Examen Algèbre linéaire — 2025-2026 — Algèbre linéaire (2025) | ArchivEx]",
+    "path": "/accounts/api/log-click/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:43:52.943Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 469,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /dashboard/",
+    "path": "/dashboard/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:43:52.991Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 470,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /dashboard/",
+    "path": "/dashboard/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:43:53.037Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 471,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/33/viewer/",
+    "path": "/epreuves/33/viewer/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "created_at": "2026-10-08T16:55:04.461Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 472,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /connexion/",
+    "path": "/connexion/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-09T23:27:35.571Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 473,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /sitemap.xml",
+    "path": "/sitemap.xml",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-10T08:55:13.497Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 474,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /ressources/resumes/15/",
+    "path": "/ressources/resumes/15/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-12T12:34:10.695Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 475,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /ressources/resumes/15/pdf/",
+    "path": "/ressources/resumes/15/pdf/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-12T12:34:10.992Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 476,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /ressources/resumes/15/viewer/",
+    "path": "/ressources/resumes/15/viewer/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-12T12:34:11.004Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 477,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /ressources/resumes/15/",
+    "path": "/ressources/resumes/15/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-12T12:35:14.643Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 478,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /ressources/resumes/15/pdf/",
+    "path": "/ressources/resumes/15/pdf/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-12T12:35:14.783Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 479,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /ressources/resumes/15/viewer/",
+    "path": "/ressources/resumes/15/viewer/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-12T12:35:15.225Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 480,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /ressources/resumes/15/pdf/",
+    "path": "/ressources/resumes/15/pdf/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-12T12:36:33.514Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 481,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/1/viewer/",
+    "path": "/epreuves/1/viewer/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-12T12:51:17.969Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 482,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/2/viewer/",
+    "path": "/epreuves/2/viewer/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-12T12:51:29.104Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 483,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /ressources/gratuites/",
+    "path": "/ressources/gratuites/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-14T01:54:33.362Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 484,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /ressources/gratuites/",
+    "path": "/ressources/gratuites/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-14T01:54:33.543Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 485,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /ressources/gratuites/",
+    "path": "/ressources/gratuites/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-14T01:54:33.555Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 486,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/gratuites/",
+    "path": "/epreuves/gratuites/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-14T01:55:05.098Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 487,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/gratuites/",
+    "path": "/epreuves/gratuites/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-14T01:55:05.291Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 488,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/gratuites/",
+    "path": "/epreuves/gratuites/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-14T01:55:05.303Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 489,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/gratuites/",
+    "path": "/epreuves/gratuites/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-14T01:55:42.326Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 490,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/gratuites/",
+    "path": "/epreuves/gratuites/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-14T01:55:51.833Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 491,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/gratuites/",
+    "path": "/epreuves/gratuites/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-14T01:56:56.148Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 492,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/gratuites/",
+    "path": "/epreuves/gratuites/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-14T01:56:56.356Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 493,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/premium/",
+    "path": "/epreuves/premium/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-14T01:56:56.369Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 494,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/premium/",
+    "path": "/epreuves/premium/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-14T01:56:56.396Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 495,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/premium/",
+    "path": "/epreuves/premium/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-14T01:56:56.414Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 496,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/gratuites/",
+    "path": "/epreuves/gratuites/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-14T01:57:25.359Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 497,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/gratuites/",
+    "path": "/epreuves/gratuites/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-14T01:58:49.914Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 498,
+  "fields": {
+    "user": 14,
+    "action_type": "MODIFICATION",
+    "description": "Activation exclusive du Semestre 2 pour toute la plateforme.",
+    "path": "/administration/semestres/basculer/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-15T11:40:35.394Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 499,
+  "fields": {
+    "user": 14,
+    "action_type": "MODIFICATION",
+    "description": "Bascule statut semestre S1 (PLAN) -> activé et visible",
+    "path": "/administration/semestres/2/toggle/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-15T11:40:48.165Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 500,
+  "fields": {
+    "user": null,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /connexion/",
+    "path": "/connexion/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-17T12:19:07.367Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 501,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/",
+    "path": "/epreuves/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-17T12:20:22.451Z"
+  }
+},
+{
+  "model": "accounts.sitelog",
+  "pk": 502,
+  "fields": {
+    "user": 14,
+    "action_type": "PAGE_VIEW",
+    "description": "Consultation de la page : /epreuves/",
+    "path": "/epreuves/",
+    "ip_address": "127.0.0.1",
+    "user_agent": "",
+    "created_at": "2026-10-17T12:20:34.619Z"
+  }
+},
+{
   "model": "academics.school",
   "pk": 1,
   "fields": {
@@ -102,17 +872,6 @@
     "academic_year": 3,
     "label": "Semestre 1",
     "number": 1,
-    "is_active": true
-  }
-},
-{
-  "model": "academics.semester",
-  "pk": 5,
-  "fields": {
-    "filiere": 3,
-    "academic_year": null,
-    "label": "Semestre 2",
-    "number": 2,
     "is_active": true
   }
 },
@@ -426,97 +1185,13 @@
 },
 {
   "model": "academics.subject",
-  "pk": 39,
-  "fields": {
-    "semester": 5,
-    "name": "Algèbre linéaire",
-    "code": "ALGÈBR",
-    "description": "",
-    "image": "subjects/algebre_lineaire.png",
-    "is_free": false,
-    "is_free_correction": false,
-    "is_active": false
-  }
-},
-{
-  "model": "academics.subject",
-  "pk": 40,
-  "fields": {
-    "semester": 5,
-    "name": "Comptabilité nationale",
-    "code": "COMPTA",
-    "description": "",
-    "image": "subjects/compta_nationale.png",
-    "is_free": false,
-    "is_free_correction": false,
-    "is_active": false
-  }
-},
-{
-  "model": "academics.subject",
-  "pk": 41,
-  "fields": {
-    "semester": 5,
-    "name": "Développement personnel",
-    "code": "DÉVELO",
-    "description": "",
-    "image": "subjects/dev_personnel.png",
-    "is_free": false,
-    "is_free_correction": false,
-    "is_active": false
-  }
-},
-{
-  "model": "academics.subject",
-  "pk": 42,
-  "fields": {
-    "semester": 5,
-    "name": "Informatique",
-    "code": "INFORM",
-    "description": "",
-    "image": "subjects/informatique.png",
-    "is_free": false,
-    "is_free_correction": false,
-    "is_active": false
-  }
-},
-{
-  "model": "academics.subject",
-  "pk": 44,
-  "fields": {
-    "semester": 5,
-    "name": "Macroéconomie",
-    "code": "MACROÉ",
-    "description": "",
-    "image": "subjects/macroeconomie.png",
-    "is_free": false,
-    "is_free_correction": false,
-    "is_active": false
-  }
-},
-{
-  "model": "academics.subject",
-  "pk": 45,
-  "fields": {
-    "semester": 5,
-    "name": "Probabilités",
-    "code": "PROBAB",
-    "description": "",
-    "image": "subjects/probabilites.png",
-    "is_free": false,
-    "is_free_correction": false,
-    "is_active": false
-  }
-},
-{
-  "model": "academics.subject",
   "pk": 802,
   "fields": {
     "semester": 4,
     "name": "Gestion de la qualité",
-    "code": "GESTIO",
+    "code": "Gestion de la qualité",
     "description": "",
-    "image": "",
+    "image": "subjects/management_qualite.png",
     "is_free": false,
     "is_free_correction": false,
     "is_active": true
@@ -528,9 +1203,9 @@
   "fields": {
     "semester": 4,
     "name": "Histoire de la pensée économique",
-    "code": "HPE20",
+    "code": "HISTOI",
     "description": "",
-    "image": "",
+    "image": "subjects/histoire_pensee_eco.png",
     "is_free": false,
     "is_free_correction": false,
     "is_active": true
@@ -542,9 +1217,9 @@
   "fields": {
     "semester": 4,
     "name": "Introduction au droit",
-    "code": "INTROD",
+    "code": "Introduction au droit",
     "description": "",
-    "image": "",
+    "image": "subjects/droit.png",
     "is_free": false,
     "is_free_correction": false,
     "is_active": true
@@ -556,9 +1231,9 @@
   "fields": {
     "semester": 4,
     "name": "Sociologie des organisations",
-    "code": "SOCIOL",
+    "code": "Sociologie des organisations",
     "description": "",
-    "image": "",
+    "image": "subjects/sociologie_organisations.png",
     "is_free": false,
     "is_free_correction": false,
     "is_active": true
@@ -566,13 +1241,13 @@
 },
 {
   "model": "academics.subject",
-  "pk": 806,
+  "pk": 807,
   "fields": {
-    "semester": 5,
-    "name": "Introduction à la planification",
-    "code": "INTROD",
+    "semester": 4,
+    "name": "CIVE",
+    "code": "CIVE",
     "description": "",
-    "image": "",
+    "image": "subjects/cive.png",
     "is_free": false,
     "is_free_correction": false,
     "is_active": true
@@ -593,9 +1268,7 @@
   "model": "academics.subjectconsultation",
   "pk": 11,
   "fields": {
-    "user": [
-      "Sandro"
-    ],
+    "user": 14,
     "subject": 22,
     "exam": 33,
     "created_at": "2026-10-08T16:43:14.732Z"
@@ -605,9 +1278,7 @@
   "model": "academics.subjectconsultation",
   "pk": 12,
   "fields": {
-    "user": [
-      "Sandro"
-    ],
+    "user": 14,
     "subject": 22,
     "exam": 33,
     "created_at": "2026-10-08T16:43:30.074Z"
@@ -617,9 +1288,7 @@
   "model": "academics.subjectconsultation",
   "pk": 13,
   "fields": {
-    "user": [
-      "Sandro"
-    ],
+    "user": 14,
     "subject": 22,
     "exam": 33,
     "created_at": "2026-10-08T16:55:04.731Z"
@@ -629,9 +1298,7 @@
   "model": "academics.subjectconsultation",
   "pk": 14,
   "fields": {
-    "user": [
-      "Sandro"
-    ],
+    "user": 14,
     "subject": 17,
     "exam": null,
     "created_at": "2026-10-12T12:35:14.655Z"
@@ -641,9 +1308,7 @@
   "model": "academics.subjectconsultation",
   "pk": 15,
   "fields": {
-    "user": [
-      "Sandro"
-    ],
+    "user": 14,
     "subject": 12,
     "exam": 1,
     "created_at": "2026-10-12T12:51:18.227Z"
@@ -653,9 +1318,7 @@
   "model": "academics.subjectconsultation",
   "pk": 16,
   "fields": {
-    "user": [
-      "Sandro"
-    ],
+    "user": 14,
     "subject": 15,
     "exam": 2,
     "created_at": "2026-10-12T12:51:29.366Z"
@@ -681,7 +1344,7 @@
     "cloud_file": 1,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-08T16:09:56.741Z",
@@ -708,7 +1371,7 @@
     "cloud_file": 7,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-08T16:09:56.813Z",
@@ -735,7 +1398,7 @@
     "cloud_file": 3,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-08T16:09:56.843Z",
@@ -762,7 +1425,7 @@
     "cloud_file": 4,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-08T16:09:56.871Z",
@@ -789,7 +1452,7 @@
     "cloud_file": 5,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-08T16:09:56.900Z",
@@ -816,7 +1479,7 @@
     "cloud_file": 6,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-08T16:09:56.940Z",
@@ -843,7 +1506,7 @@
     "cloud_file": 8,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-08T16:09:56.996Z",
@@ -870,7 +1533,7 @@
     "cloud_file": 9,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-08T16:09:57.023Z",
@@ -897,7 +1560,7 @@
     "cloud_file": 10,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-08T16:09:57.057Z",
@@ -924,9 +1587,9 @@
     "cloud_file": 11,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
-    "is_published": true,
+    "is_published": false,
     "created_at": "2026-10-08T16:09:57.128Z",
     "updated_at": "2026-10-14T05:03:26.538Z"
   }
@@ -951,9 +1614,9 @@
     "cloud_file": 12,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
-    "is_published": true,
+    "is_published": false,
     "created_at": "2026-10-08T16:09:57.164Z",
     "updated_at": "2026-10-14T05:03:26.549Z"
   }
@@ -978,9 +1641,9 @@
     "cloud_file": 13,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
-    "is_published": true,
+    "is_published": false,
     "created_at": "2026-10-08T16:09:57.205Z",
     "updated_at": "2026-10-14T05:03:26.560Z"
   }
@@ -1005,9 +1668,9 @@
     "cloud_file": 14,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
-    "is_published": true,
+    "is_published": false,
     "created_at": "2026-10-08T16:09:57.244Z",
     "updated_at": "2026-10-14T05:03:26.571Z"
   }
@@ -1032,9 +1695,9 @@
     "cloud_file": 15,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
-    "is_published": true,
+    "is_published": false,
     "created_at": "2026-10-08T16:09:57.281Z",
     "updated_at": "2026-10-14T05:03:26.582Z"
   }
@@ -1059,9 +1722,9 @@
     "cloud_file": 16,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
-    "is_published": true,
+    "is_published": false,
     "created_at": "2026-10-08T16:09:57.325Z",
     "updated_at": "2026-10-14T05:03:26.593Z"
   }
@@ -1086,9 +1749,9 @@
     "cloud_file": 17,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
-    "is_published": true,
+    "is_published": false,
     "created_at": "2026-10-08T16:09:57.368Z",
     "updated_at": "2026-10-14T05:03:26.604Z"
   }
@@ -1113,7 +1776,7 @@
     "cloud_file": 18,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-08T16:09:57.399Z",
@@ -1140,7 +1803,7 @@
     "cloud_file": 19,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-08T16:09:57.434Z",
@@ -1167,7 +1830,7 @@
     "cloud_file": 21,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-08T16:09:57.497Z",
@@ -1194,7 +1857,7 @@
     "cloud_file": 22,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-08T16:09:57.526Z",
@@ -1221,11 +1884,11 @@
     "cloud_file": 24,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-08T16:09:57.584Z",
-    "updated_at": "2026-10-14T05:03:26.685Z"
+    "updated_at": "2026-10-17T16:19:08.004Z"
   }
 },
 {
@@ -1248,7 +1911,7 @@
     "cloud_file": 27,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-08T16:09:57.671Z",
@@ -1275,9 +1938,9 @@
     "cloud_file": 28,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
-    "is_published": true,
+    "is_published": false,
     "created_at": "2026-10-08T16:09:57.700Z",
     "updated_at": "2026-10-14T05:03:26.730Z"
   }
@@ -1302,9 +1965,9 @@
     "cloud_file": 29,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
-    "is_published": true,
+    "is_published": false,
     "created_at": "2026-10-08T16:09:57.727Z",
     "updated_at": "2026-10-14T05:03:26.742Z"
   }
@@ -1329,9 +1992,9 @@
     "cloud_file": 30,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
-    "is_published": true,
+    "is_published": false,
     "created_at": "2026-10-08T16:09:57.752Z",
     "updated_at": "2026-10-14T05:03:26.752Z"
   }
@@ -1356,9 +2019,9 @@
     "cloud_file": 31,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
-    "is_published": true,
+    "is_published": false,
     "created_at": "2026-10-08T16:09:57.781Z",
     "updated_at": "2026-10-14T05:03:26.764Z"
   }
@@ -1383,9 +2046,9 @@
     "cloud_file": 32,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
-    "is_published": true,
+    "is_published": false,
     "created_at": "2026-10-08T16:09:57.810Z",
     "updated_at": "2026-10-14T05:03:26.775Z"
   }
@@ -1410,9 +2073,9 @@
     "cloud_file": 33,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
-    "is_published": true,
+    "is_published": false,
     "created_at": "2026-10-08T16:09:57.840Z",
     "updated_at": "2026-10-14T05:03:26.786Z"
   }
@@ -1437,9 +2100,9 @@
     "cloud_file": 34,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
-    "is_published": true,
+    "is_published": false,
     "created_at": "2026-10-08T16:09:57.869Z",
     "updated_at": "2026-10-14T05:03:26.798Z"
   }
@@ -1464,7 +2127,7 @@
     "cloud_file": 2,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-08T16:41:39.994Z",
@@ -1491,7 +2154,7 @@
     "cloud_file": 794,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-14T01:25:31.450Z",
@@ -1518,7 +2181,7 @@
     "cloud_file": 795,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-14T01:25:31.469Z",
@@ -1545,7 +2208,7 @@
     "cloud_file": 796,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-14T01:25:31.486Z",
@@ -1572,7 +2235,7 @@
     "cloud_file": 811,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-14T01:25:31.510Z",
@@ -1599,7 +2262,7 @@
     "cloud_file": 812,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-14T01:25:31.537Z",
@@ -1626,7 +2289,7 @@
     "cloud_file": 813,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-14T01:25:31.560Z",
@@ -1653,7 +2316,7 @@
     "cloud_file": 800,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-14T01:25:31.580Z",
@@ -1680,7 +2343,7 @@
     "cloud_file": 814,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-14T01:25:31.604Z",
@@ -1707,200 +2370,11 @@
     "cloud_file": 802,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-14T01:25:31.622Z",
     "updated_at": "2026-10-14T05:03:26.932Z"
-  }
-},
-{
-  "model": "exams.exam",
-  "pk": 800,
-  "fields": {
-    "title": "Examen Algèbre linéaire — 2025-2026",
-    "subject": 39,
-    "semester": 5,
-    "filiere": 3,
-    "level": 1,
-    "academic_year": 4,
-    "exam_type": "examen",
-    "year": 2025,
-    "description": "",
-    "file": "exams/STAT/2025-2026/S2/Algebre_lineaire_2025-2026.pdf",
-    "correction_file": "",
-    "summary_file": "",
-    "summary": null,
-    "cloud_file": 803,
-    "cloud_correction_file": null,
-    "cloud_summary_file": null,
-    "is_free": false,
-    "is_free_correction": false,
-    "is_published": true,
-    "created_at": "2026-10-14T01:25:31.641Z",
-    "updated_at": "2026-10-14T05:03:26.949Z"
-  }
-},
-{
-  "model": "exams.exam",
-  "pk": 801,
-  "fields": {
-    "title": "Examen Comptabilité nationale — 2025-2026",
-    "subject": 40,
-    "semester": 5,
-    "filiere": 3,
-    "level": 1,
-    "academic_year": 4,
-    "exam_type": "examen",
-    "year": 2025,
-    "description": "",
-    "file": "exams/STAT/2025-2026/S2/Comptabilite_nationale_2025-2026.pdf",
-    "correction_file": "",
-    "summary_file": "",
-    "summary": null,
-    "cloud_file": 804,
-    "cloud_correction_file": null,
-    "cloud_summary_file": null,
-    "is_free": false,
-    "is_free_correction": false,
-    "is_published": true,
-    "created_at": "2026-10-14T01:25:31.660Z",
-    "updated_at": "2026-10-14T05:03:26.962Z"
-  }
-},
-{
-  "model": "exams.exam",
-  "pk": 802,
-  "fields": {
-    "title": "Examen Développement personnel — 2025-2026",
-    "subject": 41,
-    "semester": 5,
-    "filiere": 3,
-    "level": 1,
-    "academic_year": 4,
-    "exam_type": "examen",
-    "year": 2025,
-    "description": "",
-    "file": "exams/STAT/2025-2026/S2/Developpement_personnel_2025-2026.pdf",
-    "correction_file": "corrections/STAT/2025-2026/S2/Developpement_personnel_2025-2026.pdf",
-    "summary_file": "",
-    "summary": null,
-    "cloud_file": 805,
-    "cloud_correction_file": null,
-    "cloud_summary_file": null,
-    "is_free": false,
-    "is_free_correction": false,
-    "is_published": true,
-    "created_at": "2026-10-14T01:25:31.681Z",
-    "updated_at": "2026-10-14T05:03:26.975Z"
-  }
-},
-{
-  "model": "exams.exam",
-  "pk": 803,
-  "fields": {
-    "title": "Examen Informatique — 2025-2026",
-    "subject": 42,
-    "semester": 5,
-    "filiere": 3,
-    "level": 1,
-    "academic_year": 4,
-    "exam_type": "examen",
-    "year": 2025,
-    "description": "",
-    "file": "exams/STAT/2025-2026/S2/Informatique_2025-2026.pdf",
-    "correction_file": "",
-    "summary_file": "",
-    "summary": null,
-    "cloud_file": 806,
-    "cloud_correction_file": null,
-    "cloud_summary_file": null,
-    "is_free": false,
-    "is_free_correction": false,
-    "is_published": true,
-    "created_at": "2026-10-14T01:25:31.701Z",
-    "updated_at": "2026-10-14T05:03:26.988Z"
-  }
-},
-{
-  "model": "exams.exam",
-  "pk": 804,
-  "fields": {
-    "title": "Examen Introduction à la planification — 2025-2026",
-    "subject": 806,
-    "semester": 5,
-    "filiere": 3,
-    "level": 1,
-    "academic_year": 4,
-    "exam_type": "examen",
-    "year": 2025,
-    "description": "",
-    "file": "exams/STAT/2025-2026/S2/Introduction_planification_2025-2026.pdf",
-    "correction_file": "corrections/STAT/2025-2026/S2/Introduction_planification_2025-2026.pdf",
-    "summary_file": "",
-    "summary": null,
-    "cloud_file": 815,
-    "cloud_correction_file": null,
-    "cloud_summary_file": null,
-    "is_free": false,
-    "is_free_correction": false,
-    "is_published": true,
-    "created_at": "2026-10-14T01:25:31.724Z",
-    "updated_at": "2026-10-14T05:03:27.000Z"
-  }
-},
-{
-  "model": "exams.exam",
-  "pk": 805,
-  "fields": {
-    "title": "Examen Macroéconomie — 2025-2026",
-    "subject": 44,
-    "semester": 5,
-    "filiere": 3,
-    "level": 1,
-    "academic_year": 4,
-    "exam_type": "examen",
-    "year": 2025,
-    "description": "",
-    "file": "exams/STAT/2025-2026/S2/Macroeconomie_2025-2026.pdf",
-    "correction_file": "",
-    "summary_file": "",
-    "summary": null,
-    "cloud_file": 808,
-    "cloud_correction_file": null,
-    "cloud_summary_file": null,
-    "is_free": false,
-    "is_free_correction": false,
-    "is_published": true,
-    "created_at": "2026-10-14T01:25:31.750Z",
-    "updated_at": "2026-10-14T05:03:27.013Z"
-  }
-},
-{
-  "model": "exams.exam",
-  "pk": 806,
-  "fields": {
-    "title": "Examen Probabilités — 2025-2026",
-    "subject": 45,
-    "semester": 5,
-    "filiere": 3,
-    "level": 1,
-    "academic_year": 4,
-    "exam_type": "examen",
-    "year": 2025,
-    "description": "",
-    "file": "exams/STAT/2025-2026/S2/Probabilites_2025-2026.pdf",
-    "correction_file": "",
-    "summary_file": "",
-    "summary": null,
-    "cloud_file": 809,
-    "cloud_correction_file": null,
-    "cloud_summary_file": null,
-    "is_free": false,
-    "is_free_correction": false,
-    "is_published": true,
-    "created_at": "2026-10-14T01:25:31.770Z",
-    "updated_at": "2026-10-14T05:03:27.026Z"
   }
 },
 {
@@ -1923,7 +2397,7 @@
     "cloud_file": 20,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-14T01:36:08.814Z",
@@ -1950,7 +2424,7 @@
     "cloud_file": 23,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-14T01:36:08.862Z",
@@ -1977,7 +2451,7 @@
     "cloud_file": 25,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-14T01:36:08.882Z",
@@ -2004,7 +2478,7 @@
     "cloud_file": 26,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-14T01:36:08.894Z",
@@ -2031,11 +2505,103 @@
     "cloud_file": 810,
     "cloud_correction_file": null,
     "cloud_summary_file": null,
-    "is_free": false,
+    "is_free": true,
     "is_free_correction": false,
     "is_published": true,
     "created_at": "2026-10-14T01:36:51.768Z",
     "updated_at": "2026-10-14T05:03:26.438Z"
+  }
+},
+{
+  "model": "payments.semesteraccess",
+  "pk": 1,
+  "fields": {
+    "user": 14,
+    "school": 1,
+    "level": 1,
+    "filiere": 2,
+    "academic_year": 3,
+    "semester": 2,
+    "activated_at": "2026-10-08T22:51:06.269Z"
+  }
+},
+{
+  "model": "payments.payment",
+  "pk": 1,
+  "fields": {
+    "user": 14,
+    "semester": 2,
+    "semester_access": null,
+    "amount": 3800,
+    "currency": "XOF",
+    "operator": "mtn",
+    "phone_number": "2290150196407",
+    "ambassador": null,
+    "referral_code": "",
+    "discount_amount": 0,
+    "external_reference": "ARCHIVEX-PASS-2026-D59A02",
+    "fedapay_transaction_id": "",
+    "fedapay_checkout_url": "",
+    "sebpay_transaction_id": "",
+    "status": "REJECTED",
+    "paid_at": null,
+    "created_at": "2026-10-08T15:24:12.541Z",
+    "updated_at": "2026-10-08T15:24:12.541Z"
+  }
+},
+{
+  "model": "payments.payment",
+  "pk": 2,
+  "fields": {
+    "user": 14,
+    "semester": 2,
+    "semester_access": 1,
+    "amount": 3800,
+    "currency": "XOF",
+    "operator": "mtn",
+    "phone_number": "2290150196407",
+    "ambassador": null,
+    "referral_code": "",
+    "discount_amount": 0,
+    "external_reference": "ARCHIVEX-PASS-2026-B4EA60",
+    "fedapay_transaction_id": "113573583",
+    "fedapay_checkout_url": "https://process.fedapay.com/eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOjExMzU3MzU4MywiZXhwIjoxNzkxNTU5NzYwfQ.gpDTTS-KFaNLgNNz40Fod8Y0VhocrMOVcb9q__enmfY",
+    "sebpay_transaction_id": "",
+    "status": "APPROVED",
+    "paid_at": "2026-10-08T22:51:06.269Z",
+    "created_at": "2026-10-08T15:29:51.387Z",
+    "updated_at": "2026-10-08T22:51:06.285Z"
+  }
+},
+{
+  "model": "subscriptions.subscriptionplan",
+  "pk": 1,
+  "fields": {
+    "name": "Pass Semestriel",
+    "code": "pass_semestriel",
+    "scope": "semester",
+    "price": 4500,
+    "duration_days": 180,
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-09-02T21:16:09.422Z"
+  }
+},
+{
+  "model": "subscriptions.usersubscription",
+  "pk": 5,
+  "fields": {
+    "user": 14,
+    "plan": null,
+    "school": 1,
+    "level": 1,
+    "filiere": 2,
+    "semester": 2,
+    "start_date": "2026-10-08T22:51:06.269Z",
+    "end_date": "2027-04-06T22:51:06.269Z",
+    "is_active": true,
+    "payment": 2,
+    "created_at": "2026-10-08T22:51:06.287Z"
   }
 },
 {
@@ -2631,51 +3197,6 @@
 },
 {
   "model": "content.cloudfile",
-  "pk": 797,
-  "fields": {
-    "title": "Épreuve — Examen Gestion qualite 2025-2026 — 2025-2026",
-    "file": "exams/STAT/2025-2026/S1/Gestion_qualite 2025-2026.pdf",
-    "file_type": "EXAM",
-    "school": 1,
-    "filiere": 3,
-    "semester": 4,
-    "uploaded_by": null,
-    "created_at": "2026-10-14T01:25:31.503Z",
-    "updated_at": "2026-10-14T01:25:31.503Z"
-  }
-},
-{
-  "model": "content.cloudfile",
-  "pk": 798,
-  "fields": {
-    "title": "Épreuve — Examen HPE 2025-2026 — 2025-2026",
-    "file": "exams/STAT/2025-2026/S1/HPE 2025-2026.pdf",
-    "file_type": "EXAM",
-    "school": 1,
-    "filiere": 3,
-    "semester": 4,
-    "uploaded_by": null,
-    "created_at": "2026-10-14T01:25:31.527Z",
-    "updated_at": "2026-10-14T01:25:31.527Z"
-  }
-},
-{
-  "model": "content.cloudfile",
-  "pk": 799,
-  "fields": {
-    "title": "Épreuve — Examen Introduction droit 2025-2026 — 2025-2026",
-    "file": "exams/STAT/2025-2026/S1/Introduction_droit 2025-2026.pdf",
-    "file_type": "EXAM",
-    "school": 1,
-    "filiere": 3,
-    "semester": 4,
-    "uploaded_by": null,
-    "created_at": "2026-10-14T01:25:31.553Z",
-    "updated_at": "2026-10-14T01:25:31.553Z"
-  }
-},
-{
-  "model": "content.cloudfile",
   "pk": 800,
   "fields": {
     "title": "Épreuve — Examen Microéconomie — 2025-2026",
@@ -2691,21 +3212,6 @@
 },
 {
   "model": "content.cloudfile",
-  "pk": 801,
-  "fields": {
-    "title": "Épreuve — Examen Sociologie organisations 2025-2026 — 2025-2026",
-    "file": "exams/STAT/2025-2026/S1/Sociologie_organisations 2025-2026.pdf",
-    "file_type": "EXAM",
-    "school": 1,
-    "filiere": 3,
-    "semester": 4,
-    "uploaded_by": null,
-    "created_at": "2026-10-14T01:25:31.596Z",
-    "updated_at": "2026-10-14T01:25:31.596Z"
-  }
-},
-{
-  "model": "content.cloudfile",
   "pk": 802,
   "fields": {
     "title": "Épreuve — Examen Statistique descriptive — 2025-2026",
@@ -2717,111 +3223,6 @@
     "uploaded_by": null,
     "created_at": "2026-10-14T01:25:31.616Z",
     "updated_at": "2026-10-14T01:25:31.616Z"
-  }
-},
-{
-  "model": "content.cloudfile",
-  "pk": 803,
-  "fields": {
-    "title": "Épreuve — Examen Algèbre linéaire — 2025-2026",
-    "file": "exams/STAT/2025-2026/S2/Algebre_lineaire 2025-2026.pdf",
-    "file_type": "EXAM",
-    "school": 1,
-    "filiere": 3,
-    "semester": 5,
-    "uploaded_by": null,
-    "created_at": "2026-10-14T01:25:31.635Z",
-    "updated_at": "2026-10-14T01:25:31.635Z"
-  }
-},
-{
-  "model": "content.cloudfile",
-  "pk": 804,
-  "fields": {
-    "title": "Épreuve — Examen Comptabilité nationale — 2025-2026",
-    "file": "exams/STAT/2025-2026/S2/Comptabilite_nationale 2025-2026.pdf",
-    "file_type": "EXAM",
-    "school": 1,
-    "filiere": 3,
-    "semester": 5,
-    "uploaded_by": null,
-    "created_at": "2026-10-14T01:25:31.654Z",
-    "updated_at": "2026-10-14T01:25:31.654Z"
-  }
-},
-{
-  "model": "content.cloudfile",
-  "pk": 805,
-  "fields": {
-    "title": "Épreuve — Examen Développement personnel — 2025-2026",
-    "file": "exams/STAT/2025-2026/S2/Developpement_personnel 2025-2026.pdf",
-    "file_type": "EXAM",
-    "school": 1,
-    "filiere": 3,
-    "semester": 5,
-    "uploaded_by": null,
-    "created_at": "2026-10-14T01:25:31.674Z",
-    "updated_at": "2026-10-14T01:25:31.674Z"
-  }
-},
-{
-  "model": "content.cloudfile",
-  "pk": 806,
-  "fields": {
-    "title": "Épreuve — Examen Informatique — 2025-2026",
-    "file": "exams/STAT/2025-2026/S2/Informatique 2025-2026.pdf",
-    "file_type": "EXAM",
-    "school": 1,
-    "filiere": 3,
-    "semester": 5,
-    "uploaded_by": null,
-    "created_at": "2026-10-14T01:25:31.693Z",
-    "updated_at": "2026-10-14T01:25:31.693Z"
-  }
-},
-{
-  "model": "content.cloudfile",
-  "pk": 807,
-  "fields": {
-    "title": "Épreuve — Examen Introduction planification 2025-2026 — 2025-2026",
-    "file": "exams/STAT/2025-2026/S2/Introduction_planification 2025-2026.pdf",
-    "file_type": "EXAM",
-    "school": 1,
-    "filiere": 3,
-    "semester": 5,
-    "uploaded_by": null,
-    "created_at": "2026-10-14T01:25:31.718Z",
-    "updated_at": "2026-10-14T01:25:31.718Z"
-  }
-},
-{
-  "model": "content.cloudfile",
-  "pk": 808,
-  "fields": {
-    "title": "Épreuve — Examen Macroéconomie — 2025-2026",
-    "file": "exams/STAT/2025-2026/S2/Macroeconomie 2025-2026.pdf",
-    "file_type": "EXAM",
-    "school": 1,
-    "filiere": 3,
-    "semester": 5,
-    "uploaded_by": null,
-    "created_at": "2026-10-14T01:25:31.740Z",
-    "updated_at": "2026-10-14T01:25:31.740Z"
-  }
-},
-{
-  "model": "content.cloudfile",
-  "pk": 809,
-  "fields": {
-    "title": "Épreuve — Examen Probabilités — 2025-2026",
-    "file": "exams/STAT/2025-2026/S2/Probabilites 2025-2026.pdf",
-    "file_type": "EXAM",
-    "school": 1,
-    "filiere": 3,
-    "semester": 5,
-    "uploaded_by": null,
-    "created_at": "2026-10-14T01:25:31.764Z",
-    "updated_at": "2026-10-14T01:25:31.764Z"
   }
 },
 {
@@ -2900,51 +3301,16 @@
   }
 },
 {
-  "model": "content.cloudfile",
-  "pk": 815,
+  "model": "notifications.notification",
+  "pk": 30,
   "fields": {
-    "title": "Épreuve — Examen Introduction à la planification — 2025-2026",
-    "file": "exams/STAT/2025-2026/S2/Introduction_planification 2025-2026.pdf",
-    "file_type": "EXAM",
-    "school": 1,
-    "filiere": 3,
-    "semester": 5,
-    "uploaded_by": null,
-    "created_at": "2026-10-14T02:27:09.430Z",
-    "updated_at": "2026-10-14T02:27:09.430Z"
-  }
-},
-{
-  "model": "subscriptions.subscriptionplan",
-  "pk": 1,
-  "fields": {
-    "name": "Pass Semestriel",
-    "code": "pass_semestriel",
-    "scope": "semester",
-    "price": 3800,
-    "duration_days": 180,
-    "description": "",
-    "is_active": true,
-    "created_at": "2026-09-02T21:16:09.422Z"
-  }
-},
-{
-  "model": "subscriptions.usersubscription",
-  "pk": 5,
-  "fields": {
-    "user": [
-      "Sandro"
-    ],
-    "plan": null,
-    "school": 1,
-    "level": 1,
-    "filiere": 2,
-    "semester": 2,
-    "start_date": "2026-10-08T22:51:06.269Z",
-    "end_date": "2027-04-06T22:51:06.269Z",
-    "is_active": true,
-    "payment": 2,
-    "created_at": "2026-10-08T22:51:06.287Z"
+    "recipient": 14,
+    "notification_type": "PAYMENT",
+    "title": "Pass S1 activé avec succès ! 🎉",
+    "message": "Votre règlement de 3800 XOF a été validé. L'intégralité des épreuves, corrigés détaillés et résumés de S1 (PLAN) est désormais débloquée.",
+    "link": "/semestres/2/matieres/",
+    "is_read": false,
+    "created_at": "2026-10-08T22:51:06.380Z"
   }
 }
 ]
