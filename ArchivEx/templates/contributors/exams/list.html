@@ -527,84 +527,94 @@
   {% endif %}
 
   <!-- MODALE FORMULAIRE RAPIDE (3 CHAMPS ESSENTIELS) -->
-  <div id="quick-exam-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative animate-in fade-in zoom-in duration-200">
-      <button type="button" onclick="closeQuickModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-100 transition-colors">
-        <i class="fa-solid fa-xmark text-lg"></i>
-      </button>
-
-      <div class="flex items-center gap-3 mb-5">
-        <div class="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg shrink-0 shadow-xs">
-          <i class="fa-solid fa-file-circle-plus"></i>
+  <div id="quick-exam-modal"
+       onclick="if(event.target === this) closeQuickModal()"
+       class="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-[100] hidden overflow-y-auto p-3 sm:p-4 flex items-center justify-center">
+    
+    <div class="bg-white rounded-3xl max-w-lg w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-100 relative animate-in fade-in zoom-in duration-200 overflow-hidden my-auto">
+      
+      <!-- EN-TÊTE PINNÉ / FIXE (TOUJOURS VISIBLE) -->
+      <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-blue-50 text-[#2563EB] flex items-center justify-center text-lg shrink-0 shadow-xs">
+            <i class="fa-solid fa-file-circle-plus"></i>
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-black text-[#071A49] tracking-tight">Ajout Rapide d'Épreuve</h3>
+            <p class="text-[11px] text-slate-500 font-medium">3 champs essentiels — contexte hérité automatiquement.</p>
+          </div>
         </div>
-        <div>
-          <h3 class="text-lg font-black text-[#071A49] tracking-tight">Ajout Rapide d'Épreuve</h3>
-          <p class="text-xs text-slate-500 font-medium">3 champs essentiels — contexte hérité automatiquement.</p>
-        </div>
+        <button type="button" onclick="closeQuickModal()" class="text-slate-400 hover:text-slate-700 p-2 rounded-xl hover:bg-slate-100 transition-colors" title="Fermer la fenêtre">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
       </div>
 
-      <form method="post" action="{% url 'contributors:exam_list' %}" enctype="multipart/form-data" class="space-y-4">
+      <!-- FORMULAIRE AVEC CORPS SCROLLABLE ET BOUTONS ANCRÉS -->
+      <form method="post" action="{% url 'contributors:exam_list' %}" enctype="multipart/form-data" class="flex flex-col flex-1 min-h-0 overflow-hidden">
         {% csrf_token %}
         <input type="hidden" name="quick_exam_submit" value="1">
 
-        <!-- 1. MATIÈRE -->
-        <div>
-          <label class="block text-xs font-bold text-[#071A49] mb-1.5">
-            1. Matière / UE existante <span class="text-rose-500">*</span>
-          </label>
-          {{ quick_form.subject }}
-          <div class="mt-2">
-            <input type="text" name="new_subject_name" id="id_quick_new_subject"
-                   placeholder="Ou saisir le nom d'une nouvelle matière..."
-                   class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#071A49] focus:ring-2 focus:ring-blue-500 outline-none">
-          </div>
-        </div>
-
-        <!-- 2. ANNÉE & TYPE -->
-        <div class="grid grid-cols-2 gap-3">
+        <!-- CORPS DÉFILANT -->
+        <div class="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4">
+          <!-- 1. MATIÈRE -->
           <div>
             <label class="block text-xs font-bold text-[#071A49] mb-1.5">
-              2. Année académique <span class="text-rose-500">*</span>
+              1. Matière / UE existante <span class="text-rose-500">*</span>
             </label>
-            {{ quick_form.year }}
+            {{ quick_form.subject }}
+            <div class="mt-2">
+              <input type="text" name="new_subject_name" id="id_quick_new_subject"
+                     placeholder="Ou saisir le nom d'une nouvelle matière..."
+                     class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#071A49] focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
           </div>
-          <div>
-            <label class="block text-xs font-bold text-[#071A49] mb-1.5">Type d'épreuve</label>
-            {{ quick_form.exam_type }}
+
+          <!-- 2. ANNÉE & TYPE -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-[#071A49] mb-1.5">
+                2. Année académique <span class="text-rose-500">*</span>
+              </label>
+              {{ quick_form.year }}
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-[#071A49] mb-1.5">Type d'épreuve</label>
+              {{ quick_form.exam_type }}
+            </div>
+          </div>
+
+          <!-- 3. FICHIERS PDF -->
+          <div class="space-y-3 pt-2 border-t border-slate-100">
+            <div>
+              <label class="block text-xs font-bold text-[#071A49] mb-1">
+                3. Fichier PDF de l'épreuve <span class="text-rose-500">*</span>
+              </label>
+              {{ quick_form.file }}
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">
+                Fichier PDF du corrigé (Optionnel)
+              </label>
+              {{ quick_form.correction_file }}
+            </div>
+          </div>
+
+          <!-- ACCÈS -->
+          <div class="flex items-center gap-2 pt-1">
+            {{ quick_form.is_free }}
+            <label for="id_quick_is_free" class="text-xs font-bold text-slate-700 cursor-pointer">
+              Rendre gratuit (accessible sans Pass Semestre)
+            </label>
           </div>
         </div>
 
-        <!-- 3. FICHIERS PDF -->
-        <div class="space-y-3 pt-2 border-t border-slate-100">
-          <div>
-            <label class="block text-xs font-bold text-[#071A49] mb-1">
-              3. Fichier PDF de l'épreuve <span class="text-rose-500">*</span>
-            </label>
-            {{ quick_form.file }}
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-600 mb-1">
-              Fichier PDF du corrigé (Optionnel)
-            </label>
-            {{ quick_form.correction_file }}
-          </div>
-        </div>
-
-        <!-- ACCÈS -->
-        <div class="flex items-center gap-2 pt-1">
-          {{ quick_form.is_free }}
-          <label for="id_quick_is_free" class="text-xs font-bold text-slate-700 cursor-pointer">
-            Rendre gratuit (accessible sans Pass Semestre)
-          </label>
-        </div>
-
-        <!-- BOUTONS -->
-        <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
-          <button type="button" onclick="closeQuickModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors">
+        <!-- PIED DE PAGE FIXE : BOUTON DE VALIDATION TOUJOURS VISIBLE ET ACCESSIBLE -->
+        <div class="p-4 sm:px-6 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 shrink-0">
+          <button type="button" onclick="closeQuickModal()" class="px-4 py-2.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors shadow-2xs">
             Annuler
           </button>
-          <button type="submit" class="btn-primary px-6 py-2.5 font-black text-xs rounded-xl inline-flex items-center gap-2 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all">
+          <button type="submit" id="btn-quick-submit" class="btn-primary px-6 py-2.5 font-black text-xs rounded-xl inline-flex items-center gap-2 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all bg-[#2563EB] text-white">
             <i class="fa-solid fa-check"></i>
             <span>Publier directement</span>
           </button>
@@ -847,12 +857,18 @@
   // --- MODALE FORMULAIRE RAPIDE ---
   function openQuickModal() {
     const modal = document.getElementById('quick-exam-modal');
-    if (modal) modal.classList.remove('hidden');
+    if (modal) {
+      modal.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    }
   }
 
   function closeQuickModal() {
     const modal = document.getElementById('quick-exam-modal');
-    if (modal) modal.classList.add('hidden');
+    if (modal) {
+      modal.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
   }
 
   function openQuickModalWithSubject(subjId, subjName) {
@@ -862,5 +878,27 @@
     }
     openQuickModal();
   }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeQuickModal();
+    }
+  });
+
+  // Feedback visuel au clic sur "Publier directement"
+  document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('quick-exam-modal');
+    if (modal) {
+      const form = modal.querySelector('form');
+      const submitBtn = document.getElementById('btn-quick-submit');
+      if (form && submitBtn) {
+        form.addEventListener('submit', function() {
+          submitBtn.disabled = true;
+          submitBtn.classList.add('opacity-75', 'cursor-wait');
+          submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Publication en cours...';
+        });
+      }
+    }
+  });
 </script>
 {% endblock %}
