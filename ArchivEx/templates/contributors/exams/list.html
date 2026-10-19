@@ -287,7 +287,11 @@
                    id="ue-card-{{ subj.pk }}">
 
           <!-- CARTE HEADER CLICQUABLE -->
-          <button type="button" onclick="toggleUeCard({{ subj.pk }})" class="w-full text-left focus:outline-none cursor-pointer">
+          <div onclick="toggleUeCard({{ subj.pk }})"
+               role="button"
+               tabindex="0"
+               onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUeCard({{ subj.pk }});}"
+               class="w-full text-left focus:outline-none cursor-pointer select-none">
             <div class="flex items-stretch">
 
               <!-- IMAGE / VIGNETTE DE L'UE -->
@@ -365,7 +369,7 @@
                 </div>
               </div>
             </div>
-          </button>
+          </div>
 
           <!-- ACCORDÉON BODY -->
           <div class="ue-accordion-body border-t border-slate-100" id="ue-body-{{ subj.pk }}">
