@@ -1,7 +1,7 @@
 {% extends "contributors/admin_base.html" %}
 {% load static %}
 
-{% block admin_title %}Complétude des Ressources | Espace Staff{% endblock %}
+{% block admin_title %}Complétude & Pilotage Académique | Administration ArchivEx{% endblock %}
 
 {% block admin_content %}
 <div class="space-y-6">
@@ -9,168 +9,317 @@
     <!-- PAGE HEADER -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-sm">
         <div>
-            <div class="flex items-center space-x-2 text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">
-                <i class="fa-solid fa-[#071A49] fa-chart-pie" aria-hidden="true"></i>
-                <span>Supervision Contenu</span>
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-wider mb-2">
+                <i class="fa-solid fa-chart-pie text-blue-600"></i>
+                <span>Supervision & Complétude du Contenu</span>
             </div>
             <h1 class="text-xl sm:text-2xl font-black text-[#071A49] tracking-tight">
-                Complétude des Ressources
+                Pilotage de la Complétude par Filière & Semestre
             </h1>
-            <p class="text-xs text-slate-500 font-medium mt-1">
-                Identifiez et complétez facilement les corrections et fiches résumés manquantes.
+            <p class="text-xs text-slate-500 font-medium mt-0.5">
+                Suivez avec précision la complétude matière par matière (épreuves, corrigés détaillés et résumés de cours).
             </p>
         </div>
-        <div>
-            <a href="{% url 'contributors:exam_create' %}" class="inline-flex items-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-colors shadow-md shadow-blue-500/20">
+        <div class="flex items-center gap-2">
+            <a href="{% url 'contributors:exam_create' %}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#2563EB] hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-sm">
                 <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i>
                 <span>Ajouter une épreuve</span>
             </a>
+            <a href="{% url 'contributors:summary_create' %}" class="inline-flex items-center gap-2 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors shadow-xs">
+                <i class="fa-solid fa-book-open text-xs text-slate-500" aria-hidden="true"></i>
+                <span>Ajouter un résumé</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- SÉLECTION DE FILIÈRE & SEMESTRE (HIÉRARCHIE STRICTE) -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2.5">
+                <span class="w-8 h-8 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-layer-group"></i>
+                </span>
+                <div>
+                    <h2 class="text-xs sm:text-sm font-black text-[#071A49]">Filière & Cadre d'Analyse</h2>
+                    <p class="text-[11px] text-slate-500 font-medium">Sélectionnez la filière puis le semestre pour isoler les matières à compléter.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ONGLETS FILIÈRES -->
+        <div class="flex flex-wrap items-center gap-2 pt-1">
+            <a href="?filiere=all{% if semester_req != 'all' %}&semester={{ semester_req }}{% endif %}{% if selected_filter != 'all' %}&filter={{ selected_filter }}{% endif %}"
+               class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all border flex items-center gap-2 {% if not active_filiere %}bg-[#071A49] text-white border-[#071A49] shadow-sm{% else %}bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-white{% endif %}">
+                <i class="fa-solid fa-border-all text-xs"></i>
+                <span>Toutes les filières</span>
+            </a>
+
+            {% for item in filieres_stats %}
+                <a href="?filiere={{ item.filiere.id }}{% if semester_req != 'all' %}&semester={{ semester_req }}{% endif %}{% if selected_filter != 'all' %}&filter={{ selected_filter }}{% endif %}"
+                   class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all border flex items-center gap-2 {% if item.is_selected %}bg-[#2563EB] text-white border-[#2563EB] shadow-md{% else %}bg-slate-50 text-slate-700 border-slate-200 hover:border-blue-300 hover:bg-white{% endif %}">
+                    <i class="fa-solid fa-graduation-cap text-xs {% if item.is_selected %}text-white{% else %}text-[#2563EB]{% endif %}"></i>
+                    <span>{{ item.filiere.name }}</span>
+                    <span class="px-1.5 py-0.5 rounded-md text-[10px] font-black {% if item.is_selected %}bg-white/20 text-white{% else %}bg-blue-50 text-[#2563EB] border border-blue-100{% endif %}">
+                        {{ item.subjects_count }} UE · {{ item.exams_count }} épr.
+                    </span>
+                    {% if item.missing_count > 0 %}
+                        <span class="px-1.5 py-0.5 rounded-md text-[10px] font-black {% if item.is_selected %}bg-amber-400 text-amber-950{% else %}bg-amber-100 text-amber-800 border border-amber-200{% endif %}" title="{{ item.missing_count }} matière(s) sans épreuve">
+                            {{ item.missing_count }} vide{{ item.missing_count|pluralize }}
+                        </span>
+                    {% endif %}
+                </a>
+            {% endfor %}
+        </div>
+
+        <!-- ONGLETS SEMESTRES -->
+        <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
+            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1">
+                <i class="fa-solid fa-calendar-days text-[#2563EB]"></i> Semestre :
+            </span>
+            <a href="?{% if active_filiere %}filiere={{ active_filiere.id }}&{% endif %}semester=all{% if selected_filter != 'all' %}&filter={{ selected_filter }}{% endif %}"
+               class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 {% if semester_req == 'all' %}bg-[#071A49] text-white border-[#071A49] shadow-xs{% else %}bg-white text-slate-600 border-slate-200 hover:border-slate-300{% endif %}">
+                <span>Tous les semestres</span>
+            </a>
+            {% for s_tab in semesters_tabs %}
+                <a href="?{% if active_filiere %}filiere={{ active_filiere.id }}&{% endif %}semester={{ s_tab.number }}{% if selected_filter != 'all' %}&filter={{ selected_filter }}{% endif %}"
+                   class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 {% if s_tab.is_selected %}bg-[#2563EB] text-white border-[#2563EB] shadow-xs{% else %}bg-white text-slate-700 border-slate-200 hover:border-blue-300{% endif %}">
+                    <i class="fa-solid fa-calendar-check text-[10px] {% if s_tab.is_selected %}text-white{% else %}text-emerald-500{% endif %}"></i>
+                    <span>{{ s_tab.label }}</span>
+                    <span class="px-1.5 py-0.2 rounded-md text-[10px] font-black {% if s_tab.is_selected %}bg-white/20 text-white{% else %}bg-slate-100 text-slate-600{% endif %}">
+                        {{ s_tab.subjects_count }} UE
+                    </span>
+                    {% if s_tab.is_active %}
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400" title="Semestre actif"></span>
+                    {% endif %}
+                </a>
+            {% endfor %}
         </div>
     </div>
 
     <!-- STATS CARDS GRID -->
     <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-        
-        <!-- TOTAL -->
-        <a href="?filter=all" class="p-4 rounded-2xl border transition-all {% if selected_filter == 'all' %}bg-blue-900 text-white border-blue-900 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-blue-300{% endif %}">
-            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Total Épreuves</div>
-            <div class="text-2xl font-black mt-1">{{ total_exams }}</div>
-            <div class="text-[11px] font-semibold mt-2 opacity-90">Toutes les annales</div>
+        <!-- TOTAL MATIÈRES -->
+        <a href="?{% if active_filiere %}filiere={{ active_filiere.id }}&{% endif %}{% if semester_req != 'all' %}semester={{ semester_req }}&{% endif %}filter=all"
+           class="p-4 rounded-2xl border transition-all {% if selected_filter == 'all' %}bg-[#071A49] text-white border-[#071A49] shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-blue-300 shadow-xs{% endif %}">
+            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Matières (UE)</div>
+            <div class="text-2xl font-black mt-1">{{ global_total_subjects }}</div>
+            <div class="text-[11px] font-semibold mt-2 opacity-90">{{ global_total_exams }} épreuve{{ global_total_exams|pluralize }} au total</div>
         </a>
 
-        <!-- WITH CORRECTION -->
-        <a href="?filter=missing_correction" class="p-4 rounded-2xl border transition-all {% if selected_filter == 'missing_correction' %}bg-amber-500 text-white border-amber-500 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-amber-300{% endif %}">
-            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Sans Correction</div>
-            <div class="text-2xl font-black mt-1 text-amber-600 {% if selected_filter == 'missing_correction' %}text-white{% endif %}">{{ without_correction_count }}</div>
-            <div class="text-[11px] font-semibold mt-2 opacity-90">À compléter</div>
+        <!-- MATIÈRES SANS ÉPREUVE (CRITIQUE) -->
+        <a href="?{% if active_filiere %}filiere={{ active_filiere.id }}&{% endif %}{% if semester_req != 'all' %}semester={{ semester_req }}&{% endif %}filter=missing_exam"
+           class="p-4 rounded-2xl border transition-all {% if selected_filter == 'missing_exam' %}bg-rose-600 text-white border-rose-600 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-rose-300 shadow-xs{% endif %}">
+            <div class="text-[10px] font-extrabold uppercase tracking-wider {% if selected_filter == 'missing_exam' %}text-white{% else %}text-rose-600{% endif %}">
+                Sans Aucune Épreuve
+            </div>
+            <div class="text-2xl font-black mt-1 {% if selected_filter == 'missing_exam' %}text-white{% else %}text-rose-600{% endif %}">
+                {{ global_missing_exam_count }}
+            </div>
+            <div class="text-[11px] font-semibold mt-2 opacity-90">UE totalement vides</div>
         </a>
 
-        <!-- WITHOUT SUMMARY -->
-        <a href="?filter=missing_summary" class="p-4 rounded-2xl border transition-all {% if selected_filter == 'missing_summary' %}bg-purple-600 text-white border-purple-600 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-purple-300{% endif %}">
-            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Sans Résumé</div>
-            <div class="text-2xl font-black mt-1 text-purple-600 {% if selected_filter == 'missing_summary' %}text-white{% endif %}">{{ without_summary_count }}</div>
-            <div class="text-[11px] font-semibold mt-2 opacity-90">Fiches à ajouter</div>
+        <!-- SANS CORRECTION -->
+        <a href="?{% if active_filiere %}filiere={{ active_filiere.id }}&{% endif %}{% if semester_req != 'all' %}semester={{ semester_req }}&{% endif %}filter=missing_correction"
+           class="p-4 rounded-2xl border transition-all {% if selected_filter == 'missing_correction' %}bg-amber-500 text-white border-amber-500 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-amber-300 shadow-xs{% endif %}">
+            <div class="text-[10px] font-extrabold uppercase tracking-wider {% if selected_filter == 'missing_correction' %}text-white{% else %}text-amber-600{% endif %}">
+                Sans Corrigé
+            </div>
+            <div class="text-2xl font-black mt-1 {% if selected_filter == 'missing_correction' %}text-white{% else %}text-amber-600{% endif %}">
+                {{ global_missing_correction_count }}
+            </div>
+            <div class="text-[11px] font-semibold mt-2 opacity-90">Corrigés à ajouter</div>
         </a>
 
-        <!-- MISSING BOTH -->
-        <a href="?filter=missing_both" class="p-4 rounded-2xl border transition-all {% if selected_filter == 'missing_both' %}bg-rose-600 text-white border-rose-600 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-rose-300{% endif %}">
-            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Sans Ni l'un ni l'autre</div>
-            <div class="text-2xl font-black mt-1 text-rose-600 {% if selected_filter == 'missing_both' %}text-white{% endif %}">Incomplets</div>
-            <div class="text-[11px] font-semibold mt-2 opacity-90">Épreuve seule</div>
+        <!-- SANS RÉSUMÉ -->
+        <a href="?{% if active_filiere %}filiere={{ active_filiere.id }}&{% endif %}{% if semester_req != 'all' %}semester={{ semester_req }}&{% endif %}filter=missing_summary"
+           class="p-4 rounded-2xl border transition-all {% if selected_filter == 'missing_summary' %}bg-purple-600 text-white border-purple-600 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-purple-300 shadow-xs{% endif %}">
+            <div class="text-[10px] font-extrabold uppercase tracking-wider {% if selected_filter == 'missing_summary' %}text-white{% else %}text-purple-600{% endif %}">
+                Sans Fiche Résumé
+            </div>
+            <div class="text-2xl font-black mt-1 {% if selected_filter == 'missing_summary' %}text-white{% else %}text-purple-600{% endif %}">
+                {{ global_missing_summary_count }}
+            </div>
+            <div class="text-[11px] font-semibold mt-2 opacity-90">Fiches de cours à créer</div>
         </a>
 
-        <!-- COMPLETE -->
-        <a href="?filter=complete" class="p-4 rounded-2xl border transition-all {% if selected_filter == 'complete' %}bg-emerald-600 text-white border-emerald-600 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-emerald-300{% endif %}">
-            <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Complètes (100%)</div>
-            <div class="text-2xl font-black mt-1 text-emerald-600 {% if selected_filter == 'complete' %}text-white{% endif %}">{{ complete_count }}</div>
+        <!-- 100% COMPLÈTES -->
+        <a href="?{% if active_filiere %}filiere={{ active_filiere.id }}&{% endif %}{% if semester_req != 'all' %}semester={{ semester_req }}&{% endif %}filter=complete"
+           class="p-4 rounded-2xl border transition-all {% if selected_filter == 'complete' %}bg-emerald-600 text-white border-emerald-600 shadow-md{% else %}bg-white text-slate-800 border-slate-200/80 hover:border-emerald-300 shadow-xs{% endif %}">
+            <div class="text-[10px] font-extrabold uppercase tracking-wider {% if selected_filter == 'complete' %}text-white{% else %}text-emerald-700{% endif %}">
+                100% Complètes
+            </div>
+            <div class="text-2xl font-black mt-1 {% if selected_filter == 'complete' %}text-white{% else %}text-emerald-600{% endif %}">
+                {{ global_complete_count }}
+            </div>
             <div class="text-[11px] font-semibold mt-2 opacity-90">Épreuve + Corr + Fiche</div>
         </a>
-
     </div>
 
-    <!-- FILTER BAR -->
-    <div class="flex items-center space-x-2 overflow-x-auto no-scrollbar pb-1">
-        <a href="?filter=all" class="px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-colors {% if selected_filter == 'all' %}bg-[#071A49] text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">
-            Toutes ({{ total_exams }})
-        </a>
-        <a href="?filter=missing_correction" class="px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-colors {% if selected_filter == 'missing_correction' %}bg-amber-500 text-white{% else %}bg-amber-50 text-amber-700 hover:bg-amber-100{% endif %}">
-            <i class="fa-solid fa-triangle-exclamation mr-1 text-[10px]" aria-hidden="true"></i> Correction manquante ({{ without_correction_count }})
-        </a>
-        <a href="?filter=missing_summary" class="px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-colors {% if selected_filter == 'missing_summary' %}bg-purple-600 text-white{% else %}bg-purple-50 text-purple-700 hover:bg-purple-100{% endif %}">
-            <i class="fa-solid fa-file-circle-question mr-1 text-[10px]" aria-hidden="true"></i> Résumé manquant ({{ without_summary_count }})
-        </a>
-        <a href="?filter=complete" class="px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-colors {% if selected_filter == 'complete' %}bg-emerald-600 text-white{% else %}bg-emerald-50 text-emerald-700 hover:bg-emerald-100{% endif %}">
-            <i class="fa-solid fa-circle-check mr-1 text-[10px]" aria-hidden="true"></i> Complètes ({{ complete_count }})
-        </a>
-    </div>
+    <!-- TABLEAUX PAR SEMESTRE (HIÉRARCHIE STRICTE) -->
+    <div class="space-y-8">
+        {% for sem_group in semesters_data %}
+            <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden space-y-3 p-5 sm:p-6">
+                
+                <!-- HEADER DU SEMESTRE -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                    <div class="flex items-center gap-3">
+                        <span class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#071A49] to-[#2563EB] text-white flex items-center justify-center font-black text-sm shrink-0 shadow-md">
+                            S{{ sem_group.semester.number }}
+                        </span>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-base sm:text-lg font-black text-[#071A49]">
+                                    {{ sem_group.semester.label }} ({{ sem_group.filiere.name }})
+                                </h2>
+                                {% if sem_group.semester.is_active %}
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Semestre Actif
+                                    </span>
+                                {% else %}
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-500 border border-slate-200">
+                                        Inactif
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <p class="text-xs text-slate-500 font-semibold mt-0.5">
+                                {{ sem_group.subjects_count }} Matière{{ sem_group.subjects_count|pluralize }} · {{ sem_group.exams_count }} Épreuve{{ sem_group.exams_count|pluralize }} déposée{{ sem_group.exams_count|pluralize }}
+                            </p>
+                        </div>
+                    </div>
 
-    <!-- TABLE -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse min-w-[700px]">
-                <thead>
-                    <tr class="bg-slate-50 border-b border-slate-200/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                        <th class="py-3 px-4">Épreuve</th>
-                        <th class="py-3 px-4">Matière / Semestre</th>
-                        <th class="py-3 px-4 text-center">Épreuve PDF</th>
-                        <th class="py-3 px-4 text-center">Correction PDF</th>
-                        <th class="py-3 px-4 text-center">Résumé PDF</th>
-                        <th class="py-3 px-4 text-center">Accès</th>
-                        <th class="py-3 px-4 text-right">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-                    {% for exam in exams %}
-                    <tr class="hover:bg-slate-50/60 transition-colors">
-                        <td class="py-3 px-4">
-                            <div class="font-bold text-[#071A49]">{{ exam.title }}</div>
-                            <div class="text-[10px] text-slate-400 font-medium">{{ exam.year }} · {{ exam.get_exam_type_display }}</div>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="font-semibold text-slate-800">{{ exam.subject.name }}</div>
-                            <div class="text-[10px] text-slate-500 font-medium">{{ exam.semester.label }} — {{ exam.filiere.name }}</div>
-                        </td>
-                        <td class="py-3 px-4 text-center">
-                            {% if exam.file %}
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                                    <i class="fa-solid fa-check mr-1" aria-hidden="true"></i> Oui
-                                </span>
-                            {% else %}
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800">
-                                    <i class="fa-solid fa-xmark mr-1" aria-hidden="true"></i> Non
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td class="py-3 px-4 text-center">
-                            {% if exam.has_correction %}
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                                    <i class="fa-solid fa-check mr-1" aria-hidden="true"></i> Disponible
-                                </span>
-                            {% else %}
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
-                                    <i class="fa-solid fa-triangle-exclamation mr-1" aria-hidden="true"></i> Manquante
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td class="py-3 px-4 text-center">
-                            {% if exam.has_summary %}
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                                    <i class="fa-solid fa-check mr-1" aria-hidden="true"></i> Disponible
-                                </span>
-                            {% else %}
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800">
-                                    <i class="fa-solid fa-minus mr-1" aria-hidden="true"></i> Manquant
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td class="py-3 px-4 text-center">
-                            {% if exam.is_free %}
-                                <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">
-                                    Gratuit
-                                </span>
-                            {% else %}
-                                <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
-                                    Premium
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td class="py-3 px-4 text-right">
-                            <a href="{% url 'contributors:exam_edit' exam.pk %}" class="px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors font-bold text-[11px] inline-flex items-center space-x-1">
-                                <i class="fa-solid fa-pen-to-square text-[10px]" aria-hidden="true"></i>
-                                <span>Compléter</span>
-                            </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="py-8 text-center text-slate-400 font-medium">
-                            Aucune épreuve ne correspond à ce filtre pour le contexte actif.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="px-3 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-black">
+                            <i class="fa-solid fa-circle-check mr-1 text-[11px]"></i> {{ sem_group.complete_count }} / {{ sem_group.subjects_count }} complètes
+                        </span>
+                        {% if sem_group.missing_exam_count > 0 %}
+                            <span class="px-3 py-1 rounded-xl bg-rose-50 text-rose-800 border border-rose-200 text-xs font-black">
+                                <i class="fa-solid fa-triangle-exclamation mr-1 text-[11px]"></i> {{ sem_group.missing_exam_count }} sans épreuve
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- TABLEAU DES MATIÈRES DU SEMESTRE -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[750px]">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                                <th class="py-3 px-4">Matière / UE</th>
+                                <th class="py-3 px-4 text-center">Épreuves déposées</th>
+                                <th class="py-3 px-4 text-center">Corrigés détaillés</th>
+                                <th class="py-3 px-4 text-center">Fiche Résumé</th>
+                                <th class="py-3 px-4 text-center">Niveau de Complétude</th>
+                                <th class="py-3 px-4 text-right">Actions rapides</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                            {% for item in sem_group.subjects %}
+                            <tr class="hover:bg-slate-50/70 transition-colors">
+                                <!-- MATIÈRE -->
+                                <td class="py-3.5 px-4">
+                                    <div class="font-black text-[#071A49] text-sm">{{ item.subject.name }}</div>
+                                    <div class="text-[10px] text-slate-400 font-bold mt-0.5">
+                                        {{ item.subject.code|default:"UE" }} · {{ sem_group.filiere.name }}
+                                    </div>
+                                </td>
+
+                                <!-- ÉPREUVES -->
+                                <td class="py-3.5 px-4 text-center">
+                                    {% if item.has_exams %}
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black bg-blue-50 text-blue-800 border border-blue-200">
+                                            <i class="fa-solid fa-file-lines mr-1.5 text-blue-600"></i> {{ item.exams_count }} épreuve{{ item.exams_count|pluralize }}
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-black bg-rose-50 text-rose-700 border border-rose-200">
+                                            <i class="fa-solid fa-triangle-exclamation mr-1.5 text-rose-500"></i> 0 épreuve
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- CORRIGÉS -->
+                                <td class="py-3.5 px-4 text-center">
+                                    {% if item.has_correction %}
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                            <i class="fa-solid fa-check mr-1.5 text-emerald-600"></i> {{ item.corrections_count }} corrigé{{ item.corrections_count|pluralize }}
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                            <i class="fa-solid fa-minus mr-1.5 text-amber-500"></i> Manquant
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- RÉSUMÉ -->
+                                <td class="py-3.5 px-4 text-center">
+                                    {% if item.has_summary %}
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-50 text-purple-800 border border-purple-200">
+                                            <i class="fa-solid fa-book-open mr-1.5 text-purple-600"></i> Disponible
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                                            <i class="fa-solid fa-minus mr-1.5 text-slate-400"></i> Sans fiche
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- STATUT COMPLÉTUDE -->
+                                <td class="py-3.5 px-4 text-center">
+                                    {% if item.is_complete %}
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                            <i class="fa-solid fa-circle-check mr-1"></i> 100% Complète
+                                        </span>
+                                    {% elif not item.has_exams %}
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-300">
+                                            <i class="fa-solid fa-circle-exclamation mr-1"></i> À Créer
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300">
+                                            <i class="fa-solid fa-clock mr-1"></i> Partielle
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- ACTIONS -->
+                                <td class="py-3.5 px-4 text-right">
+                                    <div class="inline-flex items-center gap-1.5">
+                                        <a href="{% url 'contributors:exam_create' %}?subject={{ item.subject.pk }}"
+                                           class="px-2.5 py-1.5 rounded-xl bg-blue-50 text-[#2563EB] hover:bg-[#2563EB] hover:text-white transition-all font-extrabold text-[11px] inline-flex items-center gap-1"
+                                           title="Ajouter une épreuve pour cette matière">
+                                            <i class="fa-solid fa-plus text-[10px]"></i>
+                                            <span>Épreuve</span>
+                                        </a>
+                                        <a href="{% url 'contributors:summary_create' %}?subject={{ item.subject.pk }}"
+                                           class="px-2.5 py-1.5 rounded-xl bg-purple-50 text-purple-700 hover:bg-purple-700 hover:text-white transition-all font-extrabold text-[11px] inline-flex items-center gap-1"
+                                           title="Ajouter un résumé de cours pour cette matière">
+                                            <i class="fa-solid fa-plus text-[10px]"></i>
+                                            <span>Résumé</span>
+                                        </a>
+                                        <a href="{% url 'contributors:exam_list' %}?filiere={{ sem_group.filiere.id }}&semester={{ sem_group.semester.number }}&q={{ item.subject.name|urlencode }}"
+                                           class="p-1.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+                                           title="Voir dans la gestion des épreuves">
+                                            <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="py-8 text-center text-slate-400 font-medium">
+                                    Aucune matière ne correspond aux critères de filtre pour ce semestre.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        {% empty %}
+            <div class="bg-white rounded-3xl border border-slate-200/90 p-12 text-center text-slate-400 font-semibold space-y-2">
+                <i class="fa-solid fa-folder-open text-slate-300 text-3xl block"></i>
+                <p>Aucune donnée académique ne correspond aux filtres sélectionnés.</p>
+            </div>
+        {% endfor %}
     </div>
 
 </div>

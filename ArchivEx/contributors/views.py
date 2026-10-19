@@ -553,6 +553,8 @@ def exam_list_view(request):
             active_semester=active_semester
         )
 
+    semester_req = request.GET.get("semester", "all").strip()
+
     # Base subjects queryset
     subj_qs = Subject.objects.select_related(
         "semester", "semester__filiere", "semester__filiere__school"
@@ -563,6 +565,12 @@ def exam_list_view(request):
         subj_qs = subj_qs.filter(semester__filiere=active_filiere)
     if active_semester:
         subj_qs = subj_qs.filter(semester=active_semester)
+    elif semester_req != "all":
+        try:
+            sem_num = int(semester_req)
+            subj_qs = subj_qs.filter(Q(semester__number=sem_num) | Q(semester__id=sem_num))
+        except (ValueError, TypeError):
+            pass
 
     # Base exams queryset
     qs = Exam.objects.select_related(
@@ -573,6 +581,12 @@ def exam_list_view(request):
         qs = qs.filter(filiere__school=active_school)
     if active_filiere:
         qs = qs.filter(filiere=active_filiere)
+    if semester_req != "all":
+        try:
+            sem_num = int(semester_req)
+            qs = qs.filter(Q(semester__number=sem_num) | Q(subject__semester__number=sem_num) | Q(semester__id=sem_num) | Q(subject__semester__id=sem_num))
+        except (ValueError, TypeError):
+            pass
 
     if q:
         from academics.search import remove_accents
@@ -584,11 +598,11 @@ def exam_list_view(request):
             Q(name__icontains=q) | Q(name__icontains=q_u) | Q(code__icontains=q) | Q(exams__in=qs)
         ).distinct()
 
-    exams = qs.order_by("subject__name", "-created_at")
+    exams = qs.order_by("subject__name", "-year", "-created_at")
 
     # Initialiser la map avec toutes les matières pertinentes
     subjects_map = OrderedDict()
-    for subj in subj_qs.order_by("name"):
+    for subj in subj_qs.order_by("semester__number", "name"):
         subjects_map[subj.pk] = {
             "subject": subj,
             "exams": [],
@@ -660,6 +674,75 @@ def exam_list_view(request):
             continue
         filtered_subjects_data.append(item)
 
+    # Onglets Semestres pour la filière active
+    semesters_tabs = []
+    if active_filiere:
+        available_sems = list(active_filiere.semesters.order_by("number"))
+    else:
+        available_sems = list(Semester.objects.filter(is_active=True).order_by("number"))
+
+    seen_sem_numbers = set()
+    for s in available_sems:
+        if s.number not in seen_sem_numbers:
+            seen_sem_numbers.add(s.number)
+            s_subjs = Subject.objects.filter(semester__number=s.number, is_active=True)
+            if active_filiere:
+                s_subjs = s_subjs.filter(semester__filiere=active_filiere)
+            s_exams = Exam.objects.filter(semester__number=s.number)
+            if active_filiere:
+                s_exams = s_exams.filter(filiere=active_filiere)
+            semesters_tabs.append({
+                "number": str(s.number),
+                "label": f"Semestre {s.number}",
+                "subjects_count": s_subjs.count(),
+                "exams_count": s_exams.count(),
+                "is_active": s.is_active,
+                "is_selected": (str(s.number) == str(semester_req)),
+            })
+
+    # Structuration hiérarchique : Filière -> Semestre -> UE -> Épreuves
+    semesters_grouped_data = []
+    if active_filiere:
+        candidate_semesters = list(active_filiere.semesters.order_by("number"))
+    else:
+        candidate_semesters = list(Semester.objects.select_related("filiere", "filiere__school").order_by("filiere__name", "number"))
+
+    if semester_req != "all":
+        try:
+            target_num = int(semester_req)
+            candidate_semesters = [s for s in candidate_semesters if s.number == target_num or s.id == target_num]
+        except (ValueError, TypeError):
+            pass
+
+    for sem in candidate_semesters:
+        sem_subjects = [item for item in filtered_subjects_data if item["subject"].semester_id == sem.id]
+        if not sem_subjects and filter_status != "all":
+            continue
+        sem_exams_count = sum(len(item["exams"]) for item in sem_subjects)
+        sem_missing_count = sum(1 for item in sem_subjects if len(item["exams"]) == 0)
+        semesters_grouped_data.append({
+            "semester": sem,
+            "filiere": sem.filiere,
+            "subjects": sem_subjects,
+            "subjects_count": len(sem_subjects),
+            "exams_count": sem_exams_count,
+            "missing_count": sem_missing_count,
+            "is_active": sem.is_active,
+        })
+
+    # Matières orphelines éventuelles (sans semestre)
+    orphan_subjects = [item for item in filtered_subjects_data if not item["subject"].semester_id]
+    if orphan_subjects:
+        semesters_grouped_data.append({
+            "semester": None,
+            "filiere": active_filiere,
+            "subjects": orphan_subjects,
+            "subjects_count": len(orphan_subjects),
+            "exams_count": sum(len(item["exams"]) for item in orphan_subjects),
+            "missing_count": sum(1 for item in orphan_subjects if len(item["exams"]) == 0),
+            "is_active": True,
+        })
+
     context = {
         "active_school": active_school,
         "active_filiere": active_filiere,
@@ -668,6 +751,9 @@ def exam_list_view(request):
         "total_all_exams": total_all_exams,
         "total_all_subjs": total_all_subjs,
         "subjects_with_data": filtered_subjects_data,
+        "semesters_grouped_data": semesters_grouped_data,
+        "semesters_tabs": semesters_tabs,
+        "semester_req": semester_req,
         "missing_subjects_count": missing_subjects_count,
         "complete_subjects_count": complete_subjects_count,
         "filter_status": filter_status,
@@ -1697,70 +1783,193 @@ def structure_overview_view(request):
 @contributor_required
 def resource_completeness_view(request):
     """
-    Vue de synthèse de la complétude des ressources pour les contributeurs.
-    Permet d'identifier rapidement les épreuves sans correction ou sans résumé.
+    Vue de supervision et pilotage de la complétude académique pour les contributeurs.
+    Structure strictement hiérarchisée : Filière -> Semestre -> UE (Matières).
+    Permet d'identifier instantanément quelles UE manquent d'épreuves, de corrigés ou de résumés.
     """
+    from content.models import Summary
     active_school, active_filiere, active_semester = get_active_academic_context(request)
 
-    exams = Exam.objects.select_related(
-        "subject", "semester", "filiere", "filiere__school", "summary", "cloud_correction_file", "cloud_summary_file"
-    ).order_by("-created_at")
+    filiere_req = request.GET.get("filiere")
+    if filiere_req:
+        if filiere_req == "all":
+            active_filiere = None
+            request.session["admin_active_filiere_id"] = "all"
+        else:
+            try:
+                fil_candidate = Filiere.objects.filter(pk=int(filiere_req)).first()
+                if fil_candidate:
+                    active_filiere = fil_candidate
+                    request.session["admin_active_filiere_id"] = fil_candidate.id
+            except (ValueError, TypeError):
+                pass
+    elif not active_filiere and not request.session.get("admin_active_filiere_id"):
+        # Sélection par défaut de la première filière active pour un affichage direct et clair
+        active_filiere = Filiere.objects.filter(is_active=True).first()
 
-    if active_school:
-        exams = exams.filter(filiere__school=active_school)
+    semester_req = request.GET.get("semester", "all").strip()
+    filter_type = request.GET.get("filter", "all").strip()  # 'all', 'missing_exam', 'missing_correction', 'missing_summary', 'complete'
+
+    # Onglets Filières
+    base_fils = Filiere.objects.filter(is_active=True).order_by("name")
+    filieres_stats = []
+    for f in base_fils:
+        f_subjs = Subject.objects.filter(semester__filiere=f, is_active=True)
+        f_exams_cnt = Exam.objects.filter(filiere=f).count()
+        f_missing_cnt = f_subjs.annotate(ex_cnt=Count("exams")).filter(ex_cnt=0).count()
+        filieres_stats.append({
+            "filiere": f,
+            "subjects_count": f_subjs.count(),
+            "exams_count": f_exams_cnt,
+            "missing_count": f_missing_cnt,
+            "is_selected": bool(active_filiere and active_filiere.id == f.id),
+        })
+
+    # Onglets Semestres pour la filière sélectionnée
+    semesters_tabs = []
     if active_filiere:
-        exams = exams.filter(filiere=active_filiere)
-    if active_semester:
-        exams = exams.filter(semester=active_semester)
+        available_sems = list(active_filiere.semesters.order_by("number"))
+    else:
+        available_sems = list(Semester.objects.filter(is_active=True).order_by("number"))
 
-    all_exams_list = list(exams)
-    total_exams = len(all_exams_list)
+    seen_numbers = set()
+    for s in available_sems:
+        if s.number not in seen_numbers:
+            seen_numbers.add(s.number)
+            s_subjs = Subject.objects.filter(semester__number=s.number, is_active=True)
+            if active_filiere:
+                s_subjs = s_subjs.filter(semester__filiere=active_filiere)
+            s_exams = Exam.objects.filter(semester__number=s.number)
+            if active_filiere:
+                s_exams = s_exams.filter(filiere=active_filiere)
+            semesters_tabs.append({
+                "number": str(s.number),
+                "label": f"Semestre {s.number}",
+                "subjects_count": s_subjs.count(),
+                "exams_count": s_exams.count(),
+                "is_active": s.is_active,
+                "is_selected": (str(s.number) == str(semester_req)),
+            })
 
-    from content.models import Summary
+    # Déterminer les semestres à afficher
+    if active_filiere:
+        candidate_semesters = list(active_filiere.semesters.order_by("number"))
+    else:
+        candidate_semesters = list(Semester.objects.select_related("filiere").order_by("filiere__name", "number"))
+
+    if semester_req != "all":
+        try:
+            target_num = int(semester_req)
+            candidate_semesters = [s for s in candidate_semesters if s.number == target_num or s.id == target_num]
+        except (ValueError, TypeError):
+            pass
+
     subjects_with_summary = set(
         Summary.objects.filter(publication_status="PUBLISHED").exclude(file="").values_list("subject_id", flat=True)
     )
 
-    with_correction_count = 0
-    with_summary_count = 0
-    complete_count = 0
+    global_total_subjects = 0
+    global_total_exams = 0
+    global_complete_count = 0
+    global_missing_exam_count = 0
+    global_missing_correction_count = 0
+    global_missing_summary_count = 0
 
-    for e in all_exams_list:
-        e._has_subject_summary = (e.subject_id in subjects_with_summary)
-        if e.has_correction:
-            with_correction_count += 1
-        if e.has_summary:
-            with_summary_count += 1
-        if e.has_correction and e.has_summary:
-            complete_count += 1
+    semesters_data = []
 
-    without_correction_count = total_exams - with_correction_count
-    without_summary_count = total_exams - with_summary_count
+    for sem in candidate_semesters:
+        subjs = Subject.objects.filter(semester=sem, is_active=True).order_by("name")
+        sem_subjects_data = []
+        sem_complete_count = 0
+        sem_missing_exam_count = 0
+        sem_missing_corr_count = 0
+        sem_missing_sum_count = 0
+        sem_total_exams = 0
 
-    filter_type = request.GET.get("filter", "all")
-    if filter_type == "missing_correction":
-        exams_list = [e for e in all_exams_list if not e.has_correction]
-    elif filter_type == "missing_summary":
-        exams_list = [e for e in all_exams_list if not e.has_summary]
-    elif filter_type == "missing_both":
-        exams_list = [e for e in all_exams_list if not e.has_correction and not e.has_summary]
-    elif filter_type == "complete":
-        exams_list = [e for e in all_exams_list if e.has_correction and e.has_summary]
-    else:
-        exams_list = all_exams_list[:100]
+        for subj in subjs:
+            subj_exams = list(Exam.objects.filter(subject=subj).order_by("-year", "-created_at"))
+            exams_cnt = len(subj_exams)
+            sem_total_exams += exams_cnt
+            has_exams = exams_cnt > 0
+
+            corr_cnt = sum(1 for e in subj_exams if e.has_correction)
+            has_corr = corr_cnt > 0
+            has_sum = (subj.pk in subjects_with_summary)
+
+            is_complete = has_exams and has_corr and has_sum
+
+            if not has_exams:
+                status_code = "missing_exam"
+                sem_missing_exam_count += 1
+            elif not has_corr:
+                status_code = "missing_correction"
+                sem_missing_corr_count += 1
+            elif not has_sum:
+                status_code = "missing_summary"
+                sem_missing_sum_count += 1
+            else:
+                status_code = "complete"
+                sem_complete_count += 1
+
+            # Filtrage selon le bouton cliqué
+            if filter_type == "missing_exam" and has_exams:
+                continue
+            if filter_type == "missing_correction" and (not has_exams or has_corr):
+                continue
+            if filter_type == "missing_summary" and has_sum:
+                continue
+            if filter_type == "complete" and not is_complete:
+                continue
+
+            sem_subjects_data.append({
+                "subject": subj,
+                "exams": subj_exams,
+                "exams_count": exams_cnt,
+                "has_exams": has_exams,
+                "has_correction": has_corr,
+                "corrections_count": corr_cnt,
+                "has_summary": has_sum,
+                "is_complete": is_complete,
+                "status_code": status_code,
+            })
+
+        global_total_subjects += subjs.count()
+        global_total_exams += sem_total_exams
+        global_complete_count += sem_complete_count
+        global_missing_exam_count += sem_missing_exam_count
+        global_missing_correction_count += sem_missing_corr_count
+        global_missing_summary_count += sem_missing_sum_count
+
+        if sem_subjects_data or filter_type == "all":
+            semesters_data.append({
+                "semester": sem,
+                "filiere": sem.filiere,
+                "subjects": sem_subjects_data,
+                "subjects_count": subjs.count(),
+                "displayed_count": len(sem_subjects_data),
+                "exams_count": sem_total_exams,
+                "complete_count": sem_complete_count,
+                "missing_exam_count": sem_missing_exam_count,
+                "missing_corr_count": sem_missing_corr_count,
+                "missing_sum_count": sem_missing_sum_count,
+                "is_active": sem.is_active,
+            })
 
     context = {
         "active_school": active_school,
         "active_filiere": active_filiere,
         "active_semester": active_semester,
-        "total_exams": total_exams,
-        "with_correction_count": with_correction_count,
-        "without_correction_count": without_correction_count,
-        "with_summary_count": with_summary_count,
-        "without_summary_count": without_summary_count,
-        "complete_count": complete_count,
+        "filieres_stats": filieres_stats,
+        "semesters_tabs": semesters_tabs,
+        "semester_req": semester_req,
         "selected_filter": filter_type,
-        "exams": exams_list,
+        "semesters_data": semesters_data,
+        "global_total_subjects": global_total_subjects,
+        "global_total_exams": global_total_exams,
+        "global_complete_count": global_complete_count,
+        "global_missing_exam_count": global_missing_exam_count,
+        "global_missing_correction_count": global_missing_correction_count,
+        "global_missing_summary_count": global_missing_summary_count,
     }
     return render(request, "contributors/completeness.html", context)
 
